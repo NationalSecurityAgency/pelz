@@ -87,6 +87,6 @@ Contributions you make to this public U.S. Government ("USG") repository are com
 When you submit an issue, bug report, question, enhancement, pull request, etc., you are offering your contribution without expectation of payment, you expressly waive any future pay claims against the USG related to your contribution, and you acknowledge that this does not create an obligation on the part of the USG of any kind.
 Furthermore, your contributing to this project does not create an employer-employee relationship between the United States ("U.S.") Government and the contributor.
 
-[issues]: https://github.com/nsacyber/pelz/issues/
-[repository]: https://github.com/nsacyber/pelz/
+[issues]: https://github.com/NationalSecurityAgency/pelz/issues/
+[repository]: https://github.com/NationalSecurityAgency/pelz/
 [LICENSE]: LICENSE
