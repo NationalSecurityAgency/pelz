@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+
+#include "CharBuf.h"
 
 //The maxim key length
 #define MAX_KEY_LEN 32
@@ -28,40 +29,6 @@ typedef enum
 
 typedef enum
 { TXT_EXT = 1, PEM_EXT = 2, KEY_EXT = 3 } ExtensionType;
-
-typedef struct CharBuffer
-{
-  unsigned char *chars;
-  size_t len;
-} CharBuf;
-
-typedef struct RequestValues_
-{
-  int request_type;
-  CharBuf key_id;
-  CharBuf data_in;
-  CharBuf data_out;
-} RequestValues;
-
-typedef struct TableEntry
-{
-  CharBuf key_id;
-  CharBuf key;
-} KeyEntry;
-
-typedef struct Keys
-{
-  KeyEntry *entries;
-  size_t num_entries;
-  size_t mem_size;
-  pthread_mutex_t lock;
-} KeyTable;
-
-typedef struct ThreadArguments
-{
-  int socket_id;
-  KeyTable *table;
-} ThreadArgs;
 
 typedef struct FILEScheme
 {
@@ -86,5 +53,8 @@ typedef struct URIParseValues
     FTPValues ftp_values;
   };
 } URIValues;
+
+int pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf output, CharBuf * message,
+  int socket_id);
 
 #endif /* INCLUDE_PELZ_REQUEST_HANDLER_H_ */
