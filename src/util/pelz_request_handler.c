@@ -7,7 +7,6 @@
 #include "key_table.h"
 #include "aes_keywrap_3394nopad.h"
 #include "key_table.h"
-#include "pelz_io.h"
 
 //Function to test socket code with working encryption code
 RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data, CharBuf output)
