@@ -13,7 +13,7 @@ void thread_process(void *arg)
   CharBuf request;
   CharBuf message;
   RequestResponseStatus status;
-  char* err_message;
+  char *err_message;
 
   while (!pelz_key_socket_check(new_socket))
   {
@@ -53,40 +53,41 @@ void thread_process(void *arg)
     decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
     freeCharBuf(&data_in);
 
-    status = pelz_request_handler(request_type, key_id, data, output);
+    status = pelz_request_handler(request_type, key_id, data, &output);
     freeCharBuf(&data);
-    if(status != REQUEST_OK)
+    if (status != REQUEST_OK)
+    {
+      pelz_log(LOG_ERR, "%d::Service Error\nSend error message.", new_socket);
+      switch (status)
       {
-	pelz_log(LOG_ERR, "%d::Service Error\nSend error message.", new_socket);
-	switch (status)
-	  {
-	  case KEK_LOAD_ERROR:
-	    err_message = "Key not added";
-	    break;
-	  case KEY_OR_DATA_ERROR:
-	    err_message = "Key or Data Error";
-	    break;
-	  case ENCRYPT_ERROR:
-	    err_message = "Encrypt Error";
-	    break;
-	  case DECRYPT_ERROR:
-	    err_message = "Decrypt Error";
-	    break;
-	  case REQUEST_TYPE_ERROR:
-	    err_message = "Request Type Error";
-	    break;
-	  default:
-	    err_message = "Unrecognized response";
-	  }
-	error_message_encoder(&message, err_message);
+      case KEK_LOAD_ERROR:
+        err_message = "Key not added";
+        break;
+      case KEY_OR_DATA_ERROR:
+        err_message = "Key or Data Error";
+        break;
+      case ENCRYPT_ERROR:
+        err_message = "Encrypt Error";
+        break;
+      case DECRYPT_ERROR:
+        err_message = "Decrypt Error";
+        break;
+      case REQUEST_TYPE_ERROR:
+        err_message = "Request Type Error";
+        break;
+      default:
+        err_message = "Unrecognized response";
       }
-    else{
+      error_message_encoder(&message, err_message);
+    }
+    else
+    {
       encodeBase64Data(output.chars, output.len, &data_out.chars, &data_out.len);
       if (strlen((char *) data_out.chars) != data_out.len)
-	{
-	  data_out.chars[data_out.len] = 0;
-	}
-      
+      {
+        data_out.chars[data_out.len] = 0;
+      }
+
       message_encoder(request_type, key_id, data_out, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", socket_id);
       pelz_log(LOG_DEBUG, "%d::Message: %s, %d", socket_id, message.chars, (int) message.len);
@@ -94,18 +95,18 @@ void thread_process(void *arg)
     freeCharBuf(&key_id);
     freeCharBuf(&data_out);
     freeCharBuf(&output);
-    
+
     pelz_log(LOG_DEBUG, "%d::Message & Length: %s, %d", new_socket, message.chars, (int) message.len);
     //Send processed request back to client
     if (pelz_key_socket_send(new_socket, message))
-      {
-	pelz_log(LOG_ERR, "%d::Socket Send Error", new_socket);
-	freeCharBuf(&message);
-	while (!pelz_key_socket_check(new_socket))
-	  continue;
-	pelz_key_socket_close(new_socket);
-	return;
-      }
+    {
+      pelz_log(LOG_ERR, "%d::Socket Send Error", new_socket);
+      freeCharBuf(&message);
+      while (!pelz_key_socket_check(new_socket))
+        continue;
+      pelz_key_socket_close(new_socket);
+      return;
+    }
     freeCharBuf(&message);
   }
   pelz_key_socket_close(new_socket);

@@ -31,7 +31,7 @@ typedef enum
 { TXT_EXT = 1, PEM_EXT = 2, KEY_EXT = 3 } ExtensionType;
 
 typedef enum
-  { REQUEST_OK, KEK_LOAD_ERROR, KEY_OR_DATA_ERROR, ENCRYPT_ERROR, DECRYPT_ERROR, REQUEST_TYPE_ERROR} RequestResponseStatus;
+{ REQUEST_OK, KEK_LOAD_ERROR, KEY_OR_DATA_ERROR, ENCRYPT_ERROR, DECRYPT_ERROR, REQUEST_TYPE_ERROR } RequestResponseStatus;
 
 typedef struct FILEScheme
 {
