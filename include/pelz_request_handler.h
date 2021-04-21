@@ -57,6 +57,6 @@ typedef struct URIParseValues
   };
 } URIValues;
 
-RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf output);
+RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf * output);
 
 #endif /* INCLUDE_PELZ_REQUEST_HANDLER_H_ */

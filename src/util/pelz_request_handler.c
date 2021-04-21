@@ -9,7 +9,7 @@
 #include "key_table.h"
 
 //Function to test socket code with working encryption code
-RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data, CharBuf output)
+RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data, CharBuf * output)
 {
   CharBuf key;
 
@@ -31,14 +31,14 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key
       secureFreeCharBuf(&key);
       return KEY_OR_DATA_ERROR;
     }
-    if (aes_keywrap_3394nopad_encrypt(key.chars, key.len, data.chars, data.len, &output.chars, &output.len))
+    if (aes_keywrap_3394nopad_encrypt(key.chars, key.len, data.chars, data.len, &output->chars, &output->len))
     {
       secureFreeCharBuf(&key);
       return ENCRYPT_ERROR;
     }
     break;
   case REQ_DEC:
-    if (aes_keywrap_3394nopad_decrypt(key.chars, key.len, data.chars, data.len, &output.chars, &output.len))
+    if (aes_keywrap_3394nopad_decrypt(key.chars, key.len, data.chars, data.len, &output->chars, &output->len))
     {
       secureFreeCharBuf(&key);
       return DECRYPT_ERROR;

@@ -20,8 +20,8 @@
  * @param[in] request.len The length of the request
  *
  * @param[out] request_type Type of Request to determine Encrypt or Decrypt
- * @param[out] key Key for Wrapper
- * @param[out] key_len The length of the key variable
+ * @param[out] key_id.chars The Key ID from the JSON request
+ * @param[out] key_id.len The length of the Key ID variable
  * @param[out] data Data to Wrap or Unwrap
  * @param[out] data_len The length of the data variable
  *
@@ -50,8 +50,8 @@ int error_message_encoder(CharBuf * message, char *err_message);
  * JSON Parser for server message. Parser will combine server message associated variables in single JSON message.
  * <pre>
  *
- * @param[in] key Key for Wrapper
- * @param[in] key_len The length of the key variable
+ * @param[in] key_id.chars The Key ID from the JSON request
+ * @param[in] key_id.len The length of the Key ID variable
  * @param[in] data Data Wrapped or Unwrapped
  * @param[in] data_len The length of the data variable
  *
@@ -70,10 +70,10 @@ int message_encoder(RequestType request_type, CharBuf key_id, CharBuf data, Char
  *
  * @param[in] json Parsed json string in cJSON format to be copied into request values
  *
- * @param[out] request_values.key_id.chars The key identifier
- * @param[out] request_values.key_id.len The length of key identifier
- * @param[out] request_values.data_in.chars The data to be encrypted
- * @param[out] request_values.data_in.len The length of data
+ * @param[out] key_id.chars The key identifier
+ * @param[out] key_id.len The length of key identifier
+ * @param[out] data.chars The data to be encrypted
+ * @param[out] data.len The length of data
  *
  * @return 0 on success, 1 on error
  *
@@ -87,10 +87,10 @@ int encrypt_parser(cJSON * json, CharBuf * key_id, CharBuf * data);
  *
  * @param[in] json Parsed json string in cJSON format to be copied into request values
  *
- * @param[out] request_values.key_id.chars The key identifier
- * @param[out] request_values.key_id.len The length of key identifier
- * @param[out] request_values.data_in.chars The data to be decrypted
- * @param[out] request_values.data_in.len The length of data
+ * @param[out] key_id.chars The key identifier
+ * @param[out] key_id.len The length of key identifier
+ * @param[out] data.chars The data to be decrypted
+ * @param[out] data.len The length of data
  *
  * @return 0 on success, 1 on error
  *
