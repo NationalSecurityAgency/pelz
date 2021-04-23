@@ -31,7 +31,7 @@ typedef enum
 { TXT_EXT = 1, PEM_EXT = 2, KEY_EXT = 3 } ExtensionType;
 
 typedef enum
-  { REQUEST_OK, KEK_LOAD_ERROR, KEY_OR_DATA_ERROR, ENCRYPT_ERROR, DECRYPT_ERROR, REQUEST_TYPE_ERROR} RequestResponseStatus;
+{ REQUEST_OK, KEK_LOAD_ERROR, KEY_OR_DATA_ERROR, ENCRYPT_ERROR, DECRYPT_ERROR, REQUEST_TYPE_ERROR } RequestResponseStatus;
 
 typedef struct FILEScheme
 {
@@ -57,6 +57,6 @@ typedef struct URIParseValues
   };
 } URIValues;
 
-RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf output);
+RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf * output);
 
 #endif /* INCLUDE_PELZ_REQUEST_HANDLER_H_ */
