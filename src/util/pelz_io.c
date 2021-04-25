@@ -58,7 +58,7 @@ int key_load(KeyEntry * key_values)
   {
     return (1);
   }
-
+  
   pelz_log(LOG_DEBUG, "URIValues Parsed\nKey Retrieval Started: %d", key_id_values.type);
   switch (key_id_values.type)
   {
@@ -97,8 +97,7 @@ int key_load(KeyEntry * key_values)
         freeCharBuf(&key_id_values.f_values.f_name);
         return (1);
       case (KEY_EXT):
-        pelz_log(LOG_DEBUG, "Reading Key File");
-        path = calloc(key_id_values.f_values.path.len, sizeof(char));
+        path = calloc(key_id_values.f_values.path.len+1, sizeof(char));
         memcpy(path, &key_id_values.f_values.path.chars[0], key_id_values.f_values.path.len);
         key_key_f = fopen(path, "r");
         fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
