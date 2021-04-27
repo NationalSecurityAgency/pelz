@@ -9,6 +9,6 @@ typedef struct
   pthread_mutex_t lock;
 } ThreadArgs;
 
-void *thread_process(void *arg);
+void thread_process(void *arg);
 
 #endif

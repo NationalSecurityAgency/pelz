@@ -1,15 +1,20 @@
 #include <string.h>
+#include <pthread.h>
+
 #include "CharBuf.h"
 #include "pelz_log.h"
 #include "pelz_socket.h"
 #include "pelz_json_parser.h"
 #include "pelz_io.h"
 #include "pelz_request_handler.h"
+#include "pelz_thread.h"
 
 void thread_process(void *arg)
 {
-  int *socket_id = (int *) arg;
-  int new_socket = *socket_id;
+  ThreadArgs *threadArgs = (ThreadArgs *)arg;
+  int new_socket = threadArgs->socket_id;
+  pthread_mutex_t lock = threadArgs->lock;
+  
   CharBuf request;
   CharBuf message;
   RequestResponseStatus status;
@@ -42,7 +47,7 @@ void thread_process(void *arg)
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
-      pelz_log(LOG_DEBUG, "%d::Error: %s, %d", socket_id, message.chars, (int) message.len);
+      pelz_log(LOG_DEBUG, "%d::Error: %s, %d", new_socket, message.chars, (int) message.len);
       pelz_key_socket_close(new_socket);
       freeCharBuf(&request);
       return;
@@ -53,7 +58,10 @@ void thread_process(void *arg)
     decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
     freeCharBuf(&data_in);
 
+    pthread_mutex_lock(&lock);
     status = pelz_request_handler(request_type, key_id, data, &output);
+    pthread_mutex_unlock(&lock);
+    
     freeCharBuf(&data);
     if (status != REQUEST_OK)
     {
@@ -89,8 +97,8 @@ void thread_process(void *arg)
       }
 
       message_encoder(request_type, key_id, data_out, &message);
-      pelz_log(LOG_DEBUG, "%d::Message Encode Complete", socket_id);
-      pelz_log(LOG_DEBUG, "%d::Message: %s, %d", socket_id, message.chars, (int) message.len);
+      pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
+      pelz_log(LOG_DEBUG, "%d::Message: %s, %d", new_socket, message.chars, (int) message.len);
     }
     freeCharBuf(&key_id);
     freeCharBuf(&data_out);

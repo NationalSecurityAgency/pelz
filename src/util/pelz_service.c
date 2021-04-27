@@ -16,11 +16,7 @@
 
 static void *thread_process_wrapper(void *arg)
 {
-  ThreadArgs *threadArgs = (ThreadArgs *) arg;
-
-  pthread_mutex_lock(&threadArgs->lock);
-  thread_process(&(threadArgs->socket_id));
-  pthread_mutex_unlock(&threadArgs->lock);
+  thread_process(arg);
   pthread_exit(NULL);
 }
 
