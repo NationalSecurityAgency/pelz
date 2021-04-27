@@ -16,28 +16,34 @@
 int get_file_ext(CharBuf buf, int *ext)
 {
   int period_index = 0;
-  char *ext_value;
   int ext_len = 0;
   int ext_type_size = 3;
   char *ext_type[3] = { ".txt", ".pem", ".key" };
 
   period_index = getIndexForChar(buf, '.', (buf.len - 1), 1);
   ext_len = (buf.len - period_index);
-  ext_value = calloc(ext_len, sizeof(char));
-  memcpy(ext_value, &buf.chars[period_index], ext_len);
+
+  // If buf.chars is null terminated we don't want to include
+  // the null terminator in the extension, since we're going
+  // to use strlen (applied to one of the ext_type entries)
+  // to specify a memcmp length, and strlen won't include
+  // the null terminator.
+  if(buf.chars[buf.len-1] == '\0')
+    {
+      ext_len--;
+    }
   pelz_log(LOG_DEBUG, "Finding file extension.");
   for (int i = 0; i < ext_type_size; i++)
   {
     if (ext_len == strlen(ext_type[i]))
     {
-      if (strncmp(ext_value, ext_type[i], strlen(ext_type[i])) == 0)
+      if (memcmp(buf.chars+period_index, ext_type[i], strlen(ext_type[i])) == 0)
       {
         *ext = i + 1;
         break;
       }
     }
   }
-  free(ext_value);
   return (0);
 }
 
