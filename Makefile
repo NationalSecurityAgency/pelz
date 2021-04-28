@@ -12,6 +12,7 @@ LFLAGS = -Wall $(DEBUG) -lcrypto -lssl -pthread -lcjson -lkmyth-logger
 
 OBJ_DIR = objs
 SRC_DIR = src
+TEST_DIR = test
 
 INCLUDE_DIR = include
 
@@ -44,7 +45,7 @@ all: pre pelz
 pelz: $(PELZ_OBJECTS) $(UTIL_OBJECTS)
 	$(CC) $(PELZ_OBJECTS) $(UTIL_OBJECTS) -o bin/pelz $(LLIBS) $(LFLAGS)
 	
-test: $(UTIL_OBJECTS) $(TEST_OBJECTS)
+test_unit: $(UTIL_OBJECTS) $(TEST_OBJECTS)
 	$(CC) $(UTIL_OBJECTS) $(TEST_OBJECTS) -o test/bin/pelz-test $(LLIBS) -lcunit $(LFLAGS) -I$(INCLUDE_DIR)
 
 pre:
@@ -56,8 +57,8 @@ pre:
 	mkdir -p test/bin
 	mkdir -p test/log
 
-test: test
-	./test/bin/pelz-test-unit 2> /dev/null
+test: test_unit
+	./test/bin/pelz-test 2> /dev/null
 
 docs: $(HEADER_FILES) $(CRYPRO_SOURCES) Doxyfile
 	doxygen Doxyfile 

@@ -9,13 +9,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "aes_key_wrap_test_suite.h"
+#include "aes_keywrap_test.h"
 #include <pelz_log.h>
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
-#include <CUnit/Console.h>
-#include <CUnit/Automated.h>
 
 // Blank Suite's init and cleanup code
 int init_suite(void)
@@ -36,22 +34,24 @@ int main(int argc, char **argv)
   set_applog_severity_threshold(LOG_INFO);
 
   pelz_log(LOG_DEBUG, "Start Unit Test");
-  //Initialize CUnit test registry
-  if(CUE_SUCCESS != CU_initialize_registry())
-	    return CU_get_error();
-
-  pelz_log(LOG_DEBUG, "Add AES key wrap suite");
-  // Add AES key wrap suite ---- tests aes_key_wrap/unwrap functions
-  CU_pSuite AES_key_wrap_Suite = NULL;
-  AES_key_wrap_Suite = CU_add_suite("AES Key Wrap Suite", init_suite, clean_suite);
-  if(NULL == AES_key_wrap_Suite){
-    CU_cleanup_registry();
+  // Initialize CUnit test registry
+  if (CUE_SUCCESS != CU_initialize_registry())
+  {
     return CU_get_error();
   }
 
-  pelz_log(LOG_DEBUG, "Add tests to AES key wrap suite");
-  // Add tests to AES key wrap suite
-  if(AES_key_wrap_suite_add_tests(AES_key_wrap_Suite)){
+  // Create and configure the AES Key Wrap cipher test suite
+  CU_pSuite aes_keywrap_test_suite = NULL;
+
+  aes_keywrap_test_suite = CU_add_suite("AES Key Wrap Cipher Test Suite",
+                                        init_suite, clean_suite);
+  if (NULL == aes_keywrap_test_suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if (aes_keywrap_add_tests(aes_keywrap_test_suite))
+  {
     CU_cleanup_registry();
     return CU_get_error();
   }
