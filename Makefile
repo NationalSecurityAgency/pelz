@@ -35,7 +35,7 @@ PELZ_OBJECTS = $(subst $(PELZ_SRC_DIR), $(PELZ_OBJ_DIR), $(PELZ_SOURCES:%.c=%.o)
 UTIL_SOURCES = $(wildcard $(UTIL_SRC_DIR)/*c)
 UTIL_OBJECTS = $(subst $(UTIL_SRC_DIR), $(UTIL_OBJ_DIR), $(UTIL_SOURCES:%.c=%.o))
 
-TEST_SOURCES = $(wildcard $(TEST_SRC_DIR)/*.c)
+TEST_SOURCES = $(wildcard $(TEST_SRC_DIR)/*.c $(TEST_SRC_DIR)/util/*.c)
 TEST_OBJECTS = $(subst $(TEST_SRC_DIR), $(TEST_OBJ_DIR), $(TEST_SOURCES:%.c=%.o))
 
 OBJECTS= $(PELZ_OBJECTS) $(UTIL_OBJECTS) $(TEST_UNIT_OBJECTS)
