@@ -5,7 +5,13 @@
 #ifndef INCLUDE_CHARBUF_H_
 #define INCLUDE_CHARBUF_H_
 
-#include <pelz_request_handler.h>
+#include <stdlib.h>
+
+typedef struct CharBuffer
+{
+  unsigned char *chars;
+  size_t len;
+} CharBuf;
 
 /**
  * <pre>

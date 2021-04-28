@@ -2,12 +2,11 @@
  * CharBuf.c
  */
 
-#include <CharBuf.h>
-
 #include <stdio.h>
 
-#include <util.h>
-#include <pelz_log.h>
+#include "CharBuf.h"
+#include "util.h"
+#include "pelz_log.h"
 
 CharBuf newCharBuf(size_t len)
 {
@@ -50,40 +49,6 @@ void secureFreeCharBuf(CharBuf * buf)
 {
   secure_memset(buf->chars, 0, buf->len);
   freeCharBuf(buf);
-}
-
-int printCharBuf(CharBuf buf, int format)
-{
-  FILE *tmp = stdout;
-
-  if (buf.len <= 0)
-  {
-    char *n = NULL;
-
-    printf("%s", n);
-  }
-  else
-  {
-    switch (format)
-    {
-    case (ASCII):
-      for (int i = 0; i < buf.len; i++)
-      {
-        fprintf(tmp, "%c", buf.chars[i]);
-      }
-      break;
-    case (HEX):
-      for (int i = 0; i < buf.len; i++)
-      {
-        fprintf(tmp, "%#x", buf.chars[i]);
-      }
-      break;
-    default:
-      pelz_log(LOG_ERR, "Format value invalid.");
-      return (1);
-    }
-  }
-  return (0);
 }
 
 int getIndexForChar(CharBuf buf, char c, int index, int direction)
