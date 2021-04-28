@@ -6,8 +6,24 @@
 #ifndef INCLUDE_KEY_TABLE_H_
 #define INCLUDE_KEY_TABLE_H_
 
-#include <util.h>
 #include <stdbool.h>
+
+#include "CharBuf.h"
+
+typedef struct TableEntry
+{
+  CharBuf key_id;
+  CharBuf key;
+} KeyEntry;
+
+typedef struct Keys
+{
+  KeyEntry *entries;
+  size_t num_entries;
+  size_t mem_size;
+} KeyTable;
+
+extern KeyTable key_table;
 
 /**
  * <pre>
@@ -19,7 +35,7 @@
  *
  * @return 0 on success, 1 on error
  */
-int key_table_init(KeyTable * key_table);
+int key_table_init(void);
 
 /**
  * <pre>
@@ -30,7 +46,7 @@ int key_table_init(KeyTable * key_table);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_destroy(KeyTable * key_table);
+int key_table_destroy(void);
 
 /**
  * <pre>
@@ -44,7 +60,7 @@ int key_table_destroy(KeyTable * key_table);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_delete(CharBuf key_id, KeyTable * key_table);
+int key_table_delete(CharBuf key_id);
 
 /**
  * <pre>
@@ -60,7 +76,7 @@ int key_table_delete(CharBuf key_id, KeyTable * key_table);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_add(CharBuf key_id, CharBuf * key, KeyTable * key_table);
+int key_table_add(CharBuf key_id, CharBuf * key);
 
 /**
  * <pre>
@@ -73,11 +89,10 @@ int key_table_add(CharBuf key_id, CharBuf * key, KeyTable * key_table);
  * @param[out] key.len The length of the key
  * @param[in] key_table The key table that has the key and is used for the lookup
  * @param[out] key_table The key table returned if key was added
- * @param[in] hasLock bool value to let function know mutex is locked (true if locked, false if unlocked)
  * @param max_key_entries The max number of key entries for the table default set at 100000
  *
  * @return 0 on success, 1 on failure
  */
-int key_table_lookup(CharBuf key_id, CharBuf * key, KeyTable * key_table, bool hasLock);
+int key_table_lookup(CharBuf key_id, CharBuf * key);
 
 #endif /* INCLUDE_KEY_TABLE_H_ */
