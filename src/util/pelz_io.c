@@ -28,16 +28,16 @@ int get_file_ext(CharBuf buf, int *ext)
   // to use strlen (applied to one of the ext_type entries)
   // to specify a memcmp length, and strlen won't include
   // the null terminator.
-  if(buf.chars[buf.len-1] == '\0')
-    {
-      ext_len--;
-    }
+  if (buf.chars[buf.len - 1] == '\0')
+  {
+    ext_len--;
+  }
   pelz_log(LOG_DEBUG, "Finding file extension.");
   for (int i = 0; i < ext_type_size; i++)
   {
     if (ext_len == strlen(ext_type[i]))
     {
-      if (memcmp(buf.chars+period_index, ext_type[i], strlen(ext_type[i])) == 0)
+      if (memcmp(buf.chars + period_index, ext_type[i], strlen(ext_type[i])) == 0)
       {
         *ext = i + 1;
         break;
@@ -64,7 +64,7 @@ int key_load(KeyEntry * key_values)
   {
     return (1);
   }
-  
+
   pelz_log(LOG_DEBUG, "URIValues Parsed\nKey Retrieval Started: %d", key_id_values.type);
   switch (key_id_values.type)
   {
@@ -103,7 +103,7 @@ int key_load(KeyEntry * key_values)
         freeCharBuf(&key_id_values.f_values.f_name);
         return (1);
       case (KEY_EXT):
-        path = calloc(key_id_values.f_values.path.len+1, sizeof(char));
+        path = calloc(key_id_values.f_values.path.len + 1, sizeof(char));
         memcpy(path, &key_id_values.f_values.path.chars[0], key_id_values.f_values.path.len);
         key_key_f = fopen(path, "r");
         fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);

@@ -29,6 +29,7 @@ int pelz_service(int max_requests)
   socket_id = 0;
 
   pthread_mutex_t lock;
+
   pthread_mutex_init(&lock, NULL);
 
   //Initializing Socket for Pelz Key Service

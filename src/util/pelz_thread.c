@@ -11,10 +11,10 @@
 
 void thread_process(void *arg)
 {
-  ThreadArgs *threadArgs = (ThreadArgs *)arg;
+  ThreadArgs *threadArgs = (ThreadArgs *) arg;
   int new_socket = threadArgs->socket_id;
   pthread_mutex_t lock = threadArgs->lock;
-  
+
   CharBuf request;
   CharBuf message;
   RequestResponseStatus status;
@@ -61,7 +61,7 @@ void thread_process(void *arg)
     pthread_mutex_lock(&lock);
     status = pelz_request_handler(request_type, key_id, data, &output);
     pthread_mutex_unlock(&lock);
-    
+
     freeCharBuf(&data);
     if (status != REQUEST_OK)
     {
