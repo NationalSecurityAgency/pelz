@@ -49,19 +49,19 @@ void test_file_check(void)
   fclose(fp);
 
   // NULL input file path should error
-  CU_ASSERT(verifyInputFilePath(NULL) == 1);
+  CU_ASSERT(file_check(NULL) == 1);
 
   // real file input path without read permission should error
   chmod("testfile", 0333);
-  CU_ASSERT(verifyInputFilePath("testfile") == 1);
+  CU_ASSERT(file_check("testfile") == 1);
 
   // real file input path with read permission should verify successfully
   chmod("testfile", 0444);
-  CU_ASSERT(verifyInputFilePath("testfile") == 0);
+  CU_ASSERT(file_check("testfile") == 0);
 
   // non-existing input file path should error
   remove("testfile");
-  CU_ASSERT(verifyInputFilePath("testfile") == 1);
+  CU_ASSERT(file_check("testfile") == 1);
 }
 
 /*

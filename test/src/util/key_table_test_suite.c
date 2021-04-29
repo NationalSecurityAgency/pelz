@@ -148,7 +148,7 @@ void test_table_initLookupAddDestroy(void)
   secureFreeCharBuf(&key);
   freeCharBuf(&tmp);
 
-  CU_ASSERT(key_table_destroy(&key_table) == 0)
+  CU_ASSERT(key_table_destroy() == 0)
   pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
 }
 

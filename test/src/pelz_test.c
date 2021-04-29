@@ -10,6 +10,8 @@
 #include <unistd.h>
 
 #include "aes_keywrap_test.h"
+#include "key_table_test_suite.h"
+#include "util_test_suite.h"
 #include <pelz_log.h>
 #include <CharBuf.h>
 
@@ -33,7 +35,7 @@ int main(int argc, char **argv)
   char *tmp_id;
   CharBuf id;
   char *key[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
-		           "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"};
+		   "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"};
 
   set_app_name("pelz");
   set_app_version("0.0.0");
@@ -41,18 +43,21 @@ int main(int argc, char **argv)
   set_applog_severity_threshold(LOG_INFO);
 
   getcwd(cwd, sizeof(cwd));
-  tmp_id = "file:/test/key1.txt"
+  tmp_id = "file:/test/key1.txt";
   id = newCharBuf(strlen(tmp_id) + strlen(cwd));
   memcpy(id.chars, tmp_id, 5);
   memcpy(&id.chars[5], cwd, strlen(cwd));
   memcpy(&id.chars[5 + strlen(cwd)], &tmp_id[5], (id.len - strlen(cwd) - 5));
-  for (int i = 1, i < 7; i++)
+  for (int i = 1; i < 7; i++)
   {
-	  memcpy(id.chars[id.len - 5], i, 1);
-	  FILE *fp = fopen(id.chars, "w");
-	  fprintf(fp, key[i -1]);
+	  id.chars[id.len - 5] = i;
+	  tmp_id = calloc((id.len + 1), sizeof(char));
+	  memcpy(tmp_id, &id.chars[0], id.len); 
+	  FILE *fp = fopen(tmp_id, "w");
+	  fprintf(fp, "%s", key[i-1]);
 	  fclose(fp);
   }
+  free(tmp_id);
 
   pelz_log(LOG_DEBUG, "Start Unit Test");
   // Initialize CUnit test registry
@@ -113,11 +118,14 @@ int main(int argc, char **argv)
   //CU_console_run_tests();
   //CU_automated_run_tests();
 
-  for (int i = 1, i < 7; i++)
+  for (int i = 1; i < 7; i++)
   {
-	  memcpy(id.chars[id.len - 5], i, 1);
-	  remove(id.chars);
+	  id.chars[id.len - 5] = i;
+	  tmp_id = calloc((id.len + 1), sizeof(char));
+          memcpy(tmp_id, &id.chars[0], id.len);
+	  remove(tmp_id);
   }
+  free(tmp_id);
 
   pelz_log(LOG_DEBUG, "Clean up registry and return");
   // Clean up registry and return
