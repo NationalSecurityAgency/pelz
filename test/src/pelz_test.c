@@ -43,21 +43,20 @@ int main(int argc, char **argv)
   set_applog_severity_threshold(LOG_INFO);
 
   getcwd(cwd, sizeof(cwd));
-  tmp_id = "file:/test/key1.txt";
+  tmp_id = "/test/key1.txt";
   id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(id.chars, tmp_id, 5);
-  memcpy(&id.chars[5], cwd, strlen(cwd));
-  memcpy(&id.chars[5 + strlen(cwd)], &tmp_id[5], (id.len - strlen(cwd) - 5));
+  memcpy(id.chars, cwd, strlen(cwd));
+  memcpy(&id.chars[strlen(cwd)], tmp_id, (id.len - strlen(cwd)));
   for (int i = 1; i < 7; i++)
   {
-	  id.chars[id.len - 5] = i;
-	  tmp_id = calloc((id.len + 1), sizeof(char));
-	  memcpy(tmp_id, &id.chars[0], id.len); 
-	  FILE *fp = fopen(tmp_id, "w");
-	  fprintf(fp, "%s", key[i-1]);
-	  fclose(fp);
+    tmp_id = calloc((id.len + 1), sizeof(char));
+    memcpy(tmp_id, id.chars, id.len);
+    tmp_id[id.len - 5] = i + '0';
+    FILE *fp = fopen(tmp_id, "w");
+    fprintf(fp, "%s", key[i-1]);
+    fclose(fp);
+    free(tmp_id);
   }
-  free(tmp_id);
 
   pelz_log(LOG_DEBUG, "Start Unit Test");
   // Initialize CUnit test registry
@@ -120,12 +119,12 @@ int main(int argc, char **argv)
 
   for (int i = 1; i < 7; i++)
   {
-	  id.chars[id.len - 5] = i;
-	  tmp_id = calloc((id.len + 1), sizeof(char));
-          memcpy(tmp_id, &id.chars[0], id.len);
-	  remove(tmp_id);
+    tmp_id = calloc((id.len + 1), sizeof(char));
+    memcpy(tmp_id, id.chars, id.len);
+    tmp_id[id.len - 5] = i + '0';
+    remove(tmp_id);
+    free(tmp_id);
   }
-  free(tmp_id);
 
   pelz_log(LOG_DEBUG, "Clean up registry and return");
   // Clean up registry and return
