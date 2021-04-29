@@ -6,6 +6,7 @@
 #define UTIL_TEST_SUITE_H_
 
 #include <util.h>
+#include <pelz_io.h>
 #include <CUnit/CUnit.h>
 
 // Adds all tests to utility suite in main test runner

@@ -42,47 +42,26 @@ int utility_suite_add_tests(CU_pSuite suite)
  */
 void test_file_check(void)
 {
-  char cwd[1024];
-  char *tmp_id;
-  CharBuf id;
+  // create "testfile", with sample data, as test input file path
+  FILE *fp = fopen("testfile", "w");
 
-  getcwd(cwd, sizeof(cwd));
-  // NULL path should return 1
-  CU_ASSERT(file_check(NULL) == 1);
+  fprintf(fp, "Testing...");
+  fclose(fp);
 
-  // Fake file path should return 1
-  tmp_id = "file:/test/fake_file_path";
-  id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(id.chars, cwd, strlen(cwd));
-  memcpy(&id.chars[ strlen(cwd)], tmp_id, (id.len - strlen(cwd)));
-  tmp_id = calloc((id.len + 1), sizeof(char));
-  memcpy(tmp_id, id.chars, id.len);
-  CU_ASSERT(file_check(tmp_id) ==1);
-  freeCharBuf(&id);
-  free(tmp_id);
+  // NULL input file path should error
+  CU_ASSERT(verifyInputFilePath(NULL) == 1);
 
-  // Real file with permission should return 0
-  tmp_id = "/test/temp_file.txt";
-  id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(id.chars, cwd, strlen(cwd));
-  memcpy(&id.chars[ strlen(cwd)], tmp_id, (id.len - strlen(cwd)));
-  tmp_id = calloc((id.len + 1), sizeof(char));
-  memcpy(tmp_id, id.chars, id.len);
-  CU_ASSERT(file_check(tmp_id) ==0);
-  freeCharBuf(&id);
-  free(tmp_id);
+  // real file input path without read permission should error
+  chmod("testfile", 0333);
+  CU_ASSERT(verifyInputFilePath("testfile") == 1);
 
-  // Real file that I don't have permission to read
-  // should return 1
-  tmp_id = "/test/temp_file2.txt";
-  id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(id.chars, cwd, strlen(cwd));
-  memcpy(&id.chars[ strlen(cwd)], tmp_id, (id.len - strlen(cwd)));
-  tmp_id = calloc((id.len + 1), sizeof(char));
-  memcpy(tmp_id, id.chars, id.len);
-  CU_ASSERT(file_check(tmp_id) ==1);
-  freeCharBuf(&id);
-  free(tmp_id);
+  // real file input path with read permission should verify successfully
+  chmod("testfile", 0444);
+  CU_ASSERT(verifyInputFilePath("testfile") == 0);
+
+  // non-existing input file path should error
+  remove("testfile");
+  CU_ASSERT(verifyInputFilePath("testfile") == 1);
 }
 
 /*
@@ -95,14 +74,14 @@ void test_key_id_parse(void)
   int id_len = 0;
   char cwd[1024];
   char *tmp_id;
-  char *valid_id[7] = { "file:/test/testkeys/key1.txt", "file:///test/testkeys/key1.txt", "file://host.example.com/test/testkeys/key1.txt",
-			"file://localhost/test/testkeys/key1.txt", "ftp://user:password@host:port/test/testkeys/key1.txt",
-			"ftp://user@host:port/test/testkeys/key1.txt", "ftp://localhost:port/test/testkeys/key1.txt"};
-  char *invalid_id[16] = { "file:///test/testkeys/key.txt", "file:/test/testkeys/key.txt", "file://host.example.com/test/testkeys/key.txt",
-			"file://localhost/test/testkeys/key.txt", "file:/test/testkeys/key.pem", "file:///test/testkeys/key1txt", "file:/test/testkeys/key1txt",
-			"file://host.example.com/test/testkeys/key1txt", "file://localhost/test/testkeys/key1txt", "file:/test/testkeys/key1.tt",
-			"file:/test/testkeyskey1.txt", "file:/tet/testkeys/key1.txt", "ftp:/localhost:port/test/testkeys/key1.txt",
-			"ftp://localhost:portkey1.txt", "ftp://localhostport/test/testkeys/key1.txt", "adkl;jalfkdja;lkdjal" };
+  char *valid_id[7] = { "file:/test/key1.txt", "file:///test/key1.txt", "file://host.example.com/test/key1.txt",
+			"file://localhost/test/key1.txt", "ftp://user:password@host:port/test/key1.txt",
+			"ftp://user@host:port/test/key1.txt", "ftp://localhost:port/test/key1.txt"};
+  char *invalid_id[16] = { "file:///test/key.txt", "file:/test/key.txt", "file://host.example.com/test/key.txt",
+			"file://localhost/test/key.txt", "file:/test/key.pem", "file:///test/key1txt", "file:/test/key1txt",
+			"file://host.example.com/test/key1txt", "file://localhost/test/key1txt", "file:/test/key1.tt",
+			"file:/testkey1.txt", "file:/tet/key1.txt", "ftp:/localhost:port/test/key1.txt",
+			"ftp://localhost:portkey1.txt", "ftp://localhostport/test/key1.txt", "adkl;jalfkdja;lkdjal" };
 
   getcwd(cwd, sizeof(cwd));
   pelz_log(LOG_DEBUG, "Start Key ID Parse Test");
@@ -184,8 +163,8 @@ void test_key_load(void)
   int ftp_len = 0;
   char cwd[1024];
   char *tmp_id;
-  char *key_id[5] = { "file:/test/testkeys/key.txt", "file:/test/testkeys/key.pem", "ftp://user:password@host:port/test/testkeys/key1.txt",
-  			"ftp://user@host:port/test/testkeys/key1.txt", "ftp://localhost:port/test/testkeys/key1.txt"};
+  char *key_id[5] = { "file:/test/key.txt", "file:/test/key.pem", "ftp://user:password@host:port/test/key1.txt",
+  			"ftp://user@host:port/test/key1.txt", "ftp://localhost:port/test/key1.txt"};
 
   getcwd(cwd, sizeof(cwd));
   pelz_log(LOG_DEBUG, "Start Key Load Test");
@@ -197,6 +176,7 @@ void test_key_load(void)
   CU_ASSERT(key_load(&key_values) == 0);
   freeCharBuf(&key_values.key_id);
   freeCharBuf(&key_values.key);
+
   tmp_id = "file://localhost/test/key1.txt";
   key_values.key_id = newCharBuf(strlen(tmp_id) + strlen(cwd));
   memcpy(key_values.key_id.chars, tmp_id, 16);
@@ -225,19 +205,6 @@ void test_key_load(void)
 	  CU_ASSERT(key_load(&key_values) == 1);
 	  freeCharBuf(&key_values.key_id);
   }
-
-  // Real file with permission
-  FILE* fp = fopen("temp_file.pem", "w");
-  fprintf(fp, "Testing...");
-  fclose(fp);
-  tmp_id = "file:/temp_file.pem";
-  key_values.key_id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(key_values.key_id.chars, tmp_id, 5);
-  memcpy(&key_values.key_id.chars[5], cwd, strlen(cwd));
-  memcpy(&key_values.key_id.chars[5 + strlen(cwd)], &tmp_id[5], (key_values.key_id.len - strlen(cwd) - 5));
-  CU_ASSERT(key_load(&key_values) == 1);
-  freeCharBuf(&key_values.key_id);
-  remove("temp_file.pem");
 }
 
 void test_decodeEncodeBase64Data(void){
