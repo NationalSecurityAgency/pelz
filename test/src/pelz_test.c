@@ -56,6 +56,36 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
 
+  // Add key table suite ---- tests key table init/add/lookup/destroy functions
+  CU_pSuite key_table_Suite = NULL;
+
+  key_table_Suite = CU_add_suite("Key Table Suite", init_suite, clean_suite);
+  if(NULL == key_table_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if(key_table_suite_add_tests(key_table_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
+  // Add utility suite --- tests util/util.h functions
+  CU_pSuite utility_Suite = NULL;
+
+  utility_Suite = CU_add_suite("Utility Suite", init_suite, clean_suite);
+  if(NULL == utility_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if(utility_suite_add_tests(utility_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
   pelz_log(LOG_DEBUG, "Run tests using basic interface");
   // Run tests using basic interface
   CU_basic_run_tests();
