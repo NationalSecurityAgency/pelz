@@ -285,16 +285,6 @@ public class PelzCryptoTest {
     assertTrue(Arrays.equals(unwrapped, fek.getEncoded()));
   }
 
-  /*
-   * @Test public void testPelzKeyUtilsFailUnwrapWithWrongKEK() throws NoSuchAlgorithmException,
-   * NoSuchProviderException { SecureRandom sr = SecureRandom.getInstance("SHA1PRNG", "SUN");
-   * java.security.Key fek = AESKeyUtils.generateKey(sr, 32); byte[] wrongBytes = kek.getEncoded();
-   * wrongBytes[0]++; java.security.Key wrongKek = new SecretKeySpec(wrongBytes, "AES");
-   * 
-   * byte[] wrapped = AESKeyUtils.wrapKey(fek, kek); assertThrows(CryptoException.class, () ->
-   * AESKeyUtils.unwrapKey(wrapped, wrongKek)); }
-   */
-
   private ArrayList<Key> testData() {
     ArrayList<Key> keys = new ArrayList<>();
     keys.add(new Key("a", "cf", "cq"));
