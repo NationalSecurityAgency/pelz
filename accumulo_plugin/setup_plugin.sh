@@ -3,17 +3,32 @@
 install=false;
 uninstall=false;
 VERSION=plugin-accumulo;
+HELP=false;
 
-while getopts ioud: flag
+while getopts ihoud: flag
 do
 	case "${flag}" in
 		d) DIR_ACCUMULO=${OPTARG};;
 		i) install=true;;
 		u) uninstall=true;;
 		o) VERSION+=-2.0;;
+		h) HELP=true;
 	esac
 done
 
+if $HELP
+then
+	echo "setup_plugin.sh is used to install source files into Apache Accumulo"
+	echo -e "        Accumulo must be rebuilt after install in order to build the pelz plugin class files\n"
+	echo -e "usage: ./setup_plugin.sh [options]\n"
+	echo -e "options:\n"
+	echo " -d    Directory containing Accumulo code, must be specified"
+	echo " -i    Indicates 'install' of pelz plugin source code -- only installs java sources"
+	echo " -u    Indicates 'uninstall' of pelz plugin source code -- only removes java sources"
+	echo " -o    Install according to package structures as of the Accumulo 2.0 release"
+	echo " -h    Display help"
+	exit 0
+fi
 
 DIR_PELZ_PLUGIN=$DIR_ACCUMULO/core/src/main/java/org/apache/accumulo/core/pelz/
 DIR_PELZ_TESTS=$DIR_ACCUMULO/core/src/test/java/org/apache/accumulo/core/pelz/
