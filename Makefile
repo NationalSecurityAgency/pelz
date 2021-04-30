@@ -57,7 +57,7 @@ pre:
 	mkdir -p test/bin
 	mkdir -p test/log
 
-test: test_unit
+test: pre test_unit
 	./test/bin/pelz-test 2> /dev/null
 
 docs: $(HEADER_FILES) $(CRYPRO_SOURCES) Doxyfile

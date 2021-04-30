@@ -31,31 +31,21 @@ int clean_suite(void)
 //Main function for the unit testing of the Pelz Service application
 int main(int argc, char **argv)
 {
-  char cwd[1024];
-  char *tmp_id;
-  CharBuf id;
-  char *key[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
-		   "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"};
+  char *key_file_id[6] = {"test/key1.txt", "test/key2.txt", "test/key3.txt", "test/key4.txt", "test/key5.txt",
+	                  "test/key6.txt"};
+  char *key[6] = {"KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
+		  "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"};
 
   set_app_name("pelz");
   set_app_version("0.0.0");
   set_applog_path("./test/log/pelz.log");
   set_applog_severity_threshold(LOG_INFO);
 
-  getcwd(cwd, sizeof(cwd));
-  tmp_id = "/test/key1.txt";
-  id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(id.chars, cwd, strlen(cwd));
-  memcpy(&id.chars[strlen(cwd)], tmp_id, (id.len - strlen(cwd)));
-  for (int i = 1; i < 7; i++)
+  for (int i = 0; i < 6; i++)
   {
-    tmp_id = calloc((id.len + 1), sizeof(char));
-    memcpy(tmp_id, id.chars, id.len);
-    tmp_id[id.len - 5] = i + '0';
-    FILE *fp = fopen(tmp_id, "w");
-    fprintf(fp, "%s", key[i-1]);
+    FILE *fp = fopen(key_file_id[i], "w");
+    fprintf(fp, "%s", key[i]);
     fclose(fp);
-    free(tmp_id);
   }
 
   pelz_log(LOG_DEBUG, "Start Unit Test");
@@ -117,13 +107,9 @@ int main(int argc, char **argv)
   //CU_console_run_tests();
   //CU_automated_run_tests();
 
-  for (int i = 1; i < 7; i++)
+  for (int i = 0; i < 6; i++)
   {
-    tmp_id = calloc((id.len + 1), sizeof(char));
-    memcpy(tmp_id, id.chars, id.len);
-    tmp_id[id.len - 5] = i + '0';
-    remove(tmp_id);
-    free(tmp_id);
+    remove(key_file_id[i]);
   }
 
   pelz_log(LOG_DEBUG, "Clean up registry and return");
