@@ -1,4 +1,22 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +37,7 @@
  * It was obtained from: https://github.com/apache/accumulo 
  */
 
-package org.apache.accumulo.core.crypto;
+package org.apache.accumulo.core.pelz;
 
 import static org.apache.accumulo.core.file.rfile.RFilePelzTest.getAccumuloConfig;
 import static org.junit.Assert.assertEquals;
@@ -58,11 +76,11 @@ import org.apache.accumulo.core.conf.AccumuloConfiguration;
 import org.apache.accumulo.core.conf.ConfigurationCopy;
 import org.apache.accumulo.core.conf.DefaultConfiguration;
 import org.apache.accumulo.core.conf.Property;
+import org.apache.accumulo.core.crypto.CryptoServiceFactory;
 import org.apache.accumulo.core.crypto.CryptoServiceFactory.ClassloaderType;
+import org.apache.accumulo.core.crypto.CryptoUtils;
 import org.apache.accumulo.core.crypto.streams.NoFlushOutputStream;
 import org.apache.accumulo.core.cryptoImpl.CryptoEnvironmentImpl;
-import org.apache.accumulo.core.cryptoImpl.PelzCryptoService;
-import org.apache.accumulo.core.cryptoImpl.pelzPlugin.PelzKeyUtils;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.spi.crypto.CryptoEnvironment;
@@ -87,10 +105,10 @@ public class PelzCryptoTest {
   public static final String MARKER_STRING = "1 2 3 4 5 6 7 8 a b c d e f g h ";
   public static final String CRYPTO_ON_CONF = "ON";
   public static final String CRYPTO_OFF_CONF = "OFF";
-  public static final String keyPath = "file:" + System.getProperty("user.dir") 
-      + "/target/CryptoTest-testkeyfile.key";
-  public static final String emptyKeyPath = "file:" + System.getProperty("user.dir") 
-      + "/target/CryptoTest-emptykeyfile.key";
+  public static final String keyPath =
+      "file:" + System.getProperty("user.dir") + "/target/CryptoTest-testkeyfile.key";
+  public static final String emptyKeyPath =
+      "file:" + System.getProperty("user.dir") + "/target/CryptoTest-emptykeyfile.key";
   private static Configuration hadoopConf = new Configuration();
 
   @BeforeClass
@@ -240,8 +258,7 @@ public class PelzCryptoTest {
     for (Map.Entry<String,String> e : conf) {
       aconf.set(e.getKey(), e.getValue());
     }
-    aconf.set(Property.INSTANCE_CRYPTO_SERVICE,
-        "org.apache.accumulo.core.cryptoImpl.PelzCryptoService");
+    aconf.set(Property.INSTANCE_CRYPTO_SERVICE, "org.apache.accumulo.core.pelz.PelzCryptoService");
     String configuredClass = aconf.get(Property.INSTANCE_CRYPTO_SERVICE.getKey());
     Class<? extends CryptoService> clazz =
         ClassLoaderUtil.loadClass(configuredClass, CryptoService.class);
@@ -265,7 +282,7 @@ public class PelzCryptoTest {
       assertThrows(InvalidKeyException.class, () -> verifyKeySizeForCBC(sr, i));
     }
   }
-  
+
   // this has to be a separate method, for spotbugs, because spotbugs annotation doesn't seem to
   // apply to the lambda inline
   @SuppressFBWarnings(value = "CIPHER_INTEGRITY", justification = "CBC is being tested")
@@ -287,19 +304,14 @@ public class PelzCryptoTest {
   }
 
   /*
-  @Test
-  public void testPelzKeyUtilsFailUnwrapWithWrongKEK()
-      throws NoSuchAlgorithmException, NoSuchProviderException {
-    SecureRandom sr = SecureRandom.getInstance("SHA1PRNG", "SUN");
-    java.security.Key fek = AESKeyUtils.generateKey(sr, 32);
-    byte[] wrongBytes = kek.getEncoded();
-    wrongBytes[0]++;
-    java.security.Key wrongKek = new SecretKeySpec(wrongBytes, "AES");
-
-    byte[] wrapped = AESKeyUtils.wrapKey(fek, kek);
-    assertThrows(CryptoException.class, () -> AESKeyUtils.unwrapKey(wrapped, wrongKek));
-  }
-  */
+   * @Test public void testPelzKeyUtilsFailUnwrapWithWrongKEK() throws NoSuchAlgorithmException,
+   * NoSuchProviderException { SecureRandom sr = SecureRandom.getInstance("SHA1PRNG", "SUN");
+   * java.security.Key fek = AESKeyUtils.generateKey(sr, 32); byte[] wrongBytes = kek.getEncoded();
+   * wrongBytes[0]++; java.security.Key wrongKek = new SecretKeySpec(wrongBytes, "AES");
+   * 
+   * byte[] wrapped = AESKeyUtils.wrapKey(fek, kek); assertThrows(CryptoException.class, () ->
+   * AESKeyUtils.unwrapKey(wrapped, wrongKek)); }
+   */
 
   private ArrayList<Key> testData() {
     ArrayList<Key> keys = new ArrayList<>();

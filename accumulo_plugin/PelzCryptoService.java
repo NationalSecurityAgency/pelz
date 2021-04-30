@@ -19,7 +19,7 @@
  * It was obtained from: https://github.com/apache/accumulo 
  */
 
-package org.apache.accumulo.core.cryptoImpl;
+package org.apache.accumulo.core.pelz;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -52,7 +52,7 @@ import org.apache.accumulo.core.crypto.streams.BlockedInputStream;
 import org.apache.accumulo.core.crypto.streams.BlockedOutputStream;
 import org.apache.accumulo.core.crypto.streams.DiscardCloseOutputStream;
 import org.apache.accumulo.core.crypto.streams.RFileCipherOutputStream;
-import org.apache.accumulo.core.cryptoImpl.pelzPlugin.PelzKeyUtils;
+import org.apache.accumulo.core.cryptoImpl.NoFileDecrypter;
 import org.apache.accumulo.core.spi.crypto.CryptoEnvironment;
 import org.apache.accumulo.core.spi.crypto.CryptoService;
 import org.apache.accumulo.core.spi.crypto.FileDecrypter;
@@ -67,7 +67,7 @@ public class PelzCryptoService implements CryptoService {
   // Hard coded NoCryptoService.VERSION - this permits the removal of NoCryptoService from the
   // core jar, allowing use of only one crypto service
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
-  
+
   private String keyLocation = null;
   private String keyManager = null;
   private SecureRandom sr = null;
@@ -112,7 +112,8 @@ public class PelzCryptoService implements CryptoService {
       return new NoFileDecrypter();
 
     ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams);
-    Key fek = new SecretKeySpec(PelzKeyUtils.unwrapKey(parsed.getEncFek(), parsed.getKekId()), "AES");
+    Key fek =
+        new SecretKeySpec(PelzKeyUtils.unwrapKey(parsed.getEncFek(), parsed.getKekId()), "AES");
     switch (parsed.getCryptoServiceVersion()) {
       case AESCBCCryptoModule.VERSION:
         cm = new AESCBCCryptoModule(this.keyLocation, this.keyManager);
@@ -301,8 +302,8 @@ public class PelzCryptoService implements CryptoService {
           throw new CryptoException("Unable to initialize cipher", e);
         }
 
-        RFileCipherOutputStream cos = new RFileCipherOutputStream(
-            new DiscardCloseOutputStream(outputStream), cipher);
+        RFileCipherOutputStream cos =
+            new RFileCipherOutputStream(new DiscardCloseOutputStream(outputStream), cipher);
         // Prevent underlying stream from being closed with DiscardCloseOutputStream
         // Without this, when the crypto stream is closed (in order to flush its last bytes)
         // the underlying RFile stream will *also* be closed, and that's undesirable as the

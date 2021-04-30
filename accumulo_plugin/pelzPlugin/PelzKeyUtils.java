@@ -19,7 +19,7 @@
  * It was obtained from: https://github.com/apache/accumulo 
  */
 
-package org.apache.accumulo.core.cryptoImpl.pelzPlugin;
+package org.apache.accumulo.core.pelz;
 
 import java.security.Key;
 import java.security.SecureRandom;
