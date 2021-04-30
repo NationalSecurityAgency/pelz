@@ -24,13 +24,13 @@ then
 	then
 		#Install java plugin
 		mkdir -p $DIR_PELZ_PLUGIN
-		cp PelzCryptoService.java $DIR_PELZ_PLUGIN
+		cp $VERSION/PelzCryptoService.java $DIR_PELZ_PLUGIN
 		cp pelzPlugin/* $DIR_PELZ_PLUGIN
 		#Install plugin tests for Accumulo
 		mkdir -p $DIR_PELZ_TESTS
 		cp $VERSION/testfiles/PelzCryptoTest.java $DIR_PELZ_TESTS
-		cp $VERSION/testfiles/RFilePelzTest.java $DIR_ACCUMULO/core/src/test/java/org/apache/accumulo/core/file/rfile/
-		cp $VERSION/testfiles/WriteAheadLogPelzEncryptedIT.java $DIR_ACCUMULO/test/src/main/java/org/apache/accumulo/test/functional/
+		cp testfiles/RFilePelzTest.java $DIR_ACCUMULO/core/src/test/java/org/apache/accumulo/core/file/rfile/
+		cp testfiles/WriteAheadLogPelzEncryptedIT.java $DIR_ACCUMULO/test/src/main/java/org/apache/accumulo/test/functional/
 		echo "Install Complete"
 	elif $uninstall
 	then
