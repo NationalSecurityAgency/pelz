@@ -16,7 +16,7 @@
 #define MAX_SOC_DATA_SIZE 1024
 
 typedef enum
-{ REQ_ENC = 1, REQ_DEC = 2 } RequestType;
+  { REQ_UNK = 0, REQ_ENC = 1, REQ_DEC = 2 } RequestType;
 
 typedef enum
 { ASCII = 0, HEX = 1 } FormatType;
@@ -57,6 +57,11 @@ typedef struct URIParseValues
   };
 } URIValues;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf * output);
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* INCLUDE_PELZ_REQUEST_HANDLER_H_ */

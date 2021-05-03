@@ -13,6 +13,11 @@
 #include <CharBuf.h>
 #include <pelz_log.h>
 
+#ifdef SGX
+#include "sgx_urts.h"
+#include "pelz_enclave_t.h"
+#endif
+
 KeyTable key_table;
 
 //Initialize key table
@@ -115,7 +120,13 @@ int key_table_add(CharBuf key_id, CharBuf * key)
   tmp_entry.key_id = newCharBuf(key_id.len);
   memcpy(tmp_entry.key_id.chars, key_id.chars, tmp_entry.key_id.len);
 
-  if (key_load(&tmp_entry))
+  int ret;
+  #ifdef SGX
+  key_load(&ret, &tmp_entry);
+  #else
+  ret = key_load(&tmp_entry);
+  #endif
+  if (ret)
   {
     //If the code cannot retrieve the key from the URI provided by the Key ID, then we error out of the function before touching the Key Table.
     freeCharBuf(&tmp_entry.key_id);

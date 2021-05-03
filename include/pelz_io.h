@@ -5,6 +5,9 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * <pre>
  * This function creates a new CharBuf that contains the file extension of a file name sting in a CharBuf
@@ -29,8 +32,9 @@ int get_file_ext(CharBuf buf, int *ext);
  *
  * @return 0 on success, 1 on error
  */
+  #ifndef SGX
 int key_load(KeyEntry * key_values);
-
+#endif
 /**
  * <pre>
  * URI parsing of Key ID per RFC 8089 (The "file" URI Scheme) and RFC 959 (FILE TRANSFER PROTOCOL (FTP)) with
@@ -88,4 +92,8 @@ int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned cha
  */
 int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
 
+#ifdef __cplusplus
+}
+#endif
+  
 #endif
