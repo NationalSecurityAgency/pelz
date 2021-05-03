@@ -6,8 +6,14 @@
 #include "pelz_socket.h"
 #include "pelz_json_parser.h"
 #include "pelz_io.h"
-#include "pelz_request_handler.h"
+#include "pelz_request_handler_wrapper.h"
 #include "pelz_thread.h"
+
+#ifdef SGX
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_t.h"
+#endif
 
 void thread_process(void *arg)
 {
@@ -34,7 +40,7 @@ void thread_process(void *arg)
 
     pelz_log(LOG_DEBUG, "%d::Request & Length: %s, %d", new_socket, request.chars, (int) request.len);
 
-    RequestType request_type = 0;
+    RequestType request_type = REQ_UNK;
     CharBuf key_id;
     CharBuf data_in;
     CharBuf data_out;
@@ -59,7 +65,11 @@ void thread_process(void *arg)
     freeCharBuf(&data_in);
 
     pthread_mutex_lock(&lock);
+    #ifdef SGX
+    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+    #else
     status = pelz_request_handler(request_type, key_id, data, &output);
+    #endif
     pthread_mutex_unlock(&lock);
 
     freeCharBuf(&data);

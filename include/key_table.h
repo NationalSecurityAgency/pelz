@@ -25,6 +25,7 @@ typedef struct Keys
 
 extern KeyTable key_table;
 
+#ifndef SGX
 /**
  * <pre>
  * This function initializes a key table for lookup.
@@ -47,6 +48,7 @@ int key_table_init(void);
  * @return 0 on success, 1 on error
  */
 int key_table_destroy(void);
+#endif
 
 /**
  * <pre>

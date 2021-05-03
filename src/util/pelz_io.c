@@ -77,7 +77,7 @@ int key_load(KeyEntry * key_values)
       switch (file_type)
       {
       case (TXT_EXT):
-        path = calloc((key_id_values.f_values.path.len + 1), sizeof(char));
+        path = (char*)calloc((key_id_values.f_values.path.len + 1), sizeof(char));
         memcpy(path, &key_id_values.f_values.path.chars[0], key_id_values.f_values.path.len);
         key_txt_f = fopen(path, "r");
         fgets((char *) tmp_key, (MAX_KEY_LEN + 1), key_txt_f);
@@ -103,7 +103,7 @@ int key_load(KeyEntry * key_values)
         freeCharBuf(&key_id_values.f_values.f_name);
         return (1);
       case (KEY_EXT):
-        path = calloc(key_id_values.f_values.path.len + 1, sizeof(char));
+        path = (char*)calloc(key_id_values.f_values.path.len + 1, sizeof(char));
         memcpy(path, &key_id_values.f_values.path.chars[0], key_id_values.f_values.path.len);
         key_key_f = fopen(path, "r");
         fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
@@ -207,7 +207,7 @@ int key_id_parse(CharBuf key_id, URIValues * uri)
       memcpy(uri->f_values.f_name.chars, &buf.chars[(index + 1)], uri->f_values.f_name.len);
     }
     freeCharBuf(&buf);
-    path = calloc((uri->f_values.path.len + 1), sizeof(char));
+    path = (char*)calloc((uri->f_values.path.len + 1), sizeof(char));
     memcpy(path, &uri->f_values.path.chars[0], uri->f_values.path.len);
     if (file_check(path))       //Removing the first char from the string is so we can test and needs to be fixed for production.
     {
