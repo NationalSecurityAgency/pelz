@@ -96,6 +96,6 @@ CharBuf copyCWDToId(char *prefix, char *postfix)
   newBuf = newCharBuf(strlen(prefix) + strlen(cwd) + strlen(postfix));
   memcpy(newBuf.chars, prefix, strlen(prefix));
   memcpy(&newBuf.chars[strlen(prefix)], cwd, strlen(cwd));
-  memcpy(&newBuf.chars[strlen(prefix) + strlen(cwd)], postfix, strlen(psotfix));
-  retun(newBuf);
+  memcpy(&newBuf.chars[strlen(prefix) + strlen(cwd)], postfix, strlen(postfix));
+  return (newBuf);
 }

@@ -117,6 +117,6 @@ CharBuf copyBytesFromBuf(CharBuf buf, int index);
  *
  * @return CharBuf copy of key_id with current working directory
  */
-CharBuf copyCWDToId(char *prefix, char postfix);
+CharBuf copyCWDToId(char *prefix, char *postfix);
 
 #endif /* INCLUDE_CHARBUF_H_ */

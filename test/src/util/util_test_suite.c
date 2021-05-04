@@ -75,14 +75,12 @@ void test_key_id_parse(void)
   char *valid_id[7] = { "file:", "file://", "file://host.example.com",
 			"file://localhost", "ftp://user:password@host:port",
 			"ftp://user@host:port", "ftp://localhost:port"};
-  char *invalid_id_prefix[16] = { "file://", "file:", "file://host.example.com", "file://localhost", "file:", "file://", "file:",
-			"file://host.example.com", "file://localhost", "file:", "file:", "file:", "ftp:/localhost:port","ftp://localhost:port",
-			"ftp://localhostport", "adkl;jalfkdja;lkdjal" };
-  char *invalid_id_postfix[16] = { "/test/key.txt", "/test/key.txt", "/test/key.txt", "/test/key.txt", "/test/key.pem", "/test/key1txt",
-		    "/test/key1txt", "/test/key1txt", "/test/key1txt", "/test/key1.tt", "/testkey1.txt", "/tet/key1.txt", "/test/key1.txt",
-			"key1.txt", "/test/key1.txt", "" };
+  char *invalid_id[16] = { "file:///test/testkeys/key.txt", "file:/test/testkeys/key.txt", "file://host.example.com/test/testkeys/key.txt",
+			"file://localhost/test/testkeys/key.txt", "file:/test/testkeys/key.pem", "file:///test/testkeys/key1txt", "file:/test/testkeys/key1txt",
+			"file://host.example.com/test/testkeys/key1txt", "file://localhost/test/testkeys/key1txt", "file:/test/testkeys/key1.tt",
+			"file:/test/testkeyskey1.txt", "file:/tet/testkeys/key1.txt", "ftp:/localhost:port/test/testkeys/key1.txt",
+			"ftp://localhost:portkey1.txt", "ftp://localhostport/test/testkeys/key1.txt", "adkl;jalfkdja;lkdjal"};
 
-  getcwd(cwd, sizeof(cwd));
   pelz_log(LOG_DEBUG, "Start Key ID Parse Test");
   //Testing all valid Key IDs
   for (int i = 0; i < 7; i++)
@@ -110,7 +108,8 @@ void test_key_id_parse(void)
   //Test assumes for FTP that the host, port, url_path are correct (code later needs to be able to check these)
   for (int i = 0; i < 16; i++)
   {
-	  id = copyCWDToId(invalid_id_prefix[i], invalid_id_postfix[i]);
+	  id = newCharBuf(strlen(invalid_id[i]));
+	  memcpy(id.chars, invalid_id[i], id.len);
 	  //Test invalid Key IDs
 	  CU_ASSERT(key_id_parse(id, &uri) == 1);
 	  freeCharBuf(&id);
@@ -145,13 +144,9 @@ void test_key_id_parse(void)
 void test_key_load(void)
 {
   KeyEntry key_values;
-
-  int ftp_len = 0;
-  char cwd[1024];
   char *key_id_prefix[5] = { "file:/", "file:", "ftp://user:password@host:port", "ftp://user@host:port", "ftp://localhost:port/"};
   char *key_id_postfix[5] = { "/test/key.txt", "/test/key.pem", "/test/key1.txt", "/test/key1.txt", "/test/key1.txt"};
 
-  getcwd(cwd, sizeof(cwd));
   pelz_log(LOG_DEBUG, "Start Key Load Test");
   key_values.key_id = copyCWDToId("file:", "/test/key1.txt");
   CU_ASSERT(key_load(&key_values) == 0);
@@ -165,7 +160,7 @@ void test_key_load(void)
 
   for (int i = 0; i < 5; i++)
   {
-	  key_values.key_id = opyCWDToId(key_id_prefix[i], key_id_postfix[i]);
+	  key_values.key_id = copyCWDToId(key_id_prefix[i], key_id_postfix[i]);
 	  CU_ASSERT(key_load(&key_values) == 1);
 	  freeCharBuf(&key_values.key_id);
   }
