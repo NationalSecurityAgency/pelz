@@ -60,7 +60,6 @@ import org.apache.accumulo.core.conf.DefaultConfiguration;
 import org.apache.accumulo.core.conf.Property;
 import org.apache.accumulo.core.crypto.CryptoServiceFactory;
 import org.apache.accumulo.core.crypto.CryptoServiceFactory.ClassloaderType;
-import org.apache.accumulo.core.crypto.PelzCryptoTest;
 import org.apache.accumulo.core.data.ArrayByteSequence;
 import org.apache.accumulo.core.data.ByteSequence;
 import org.apache.accumulo.core.data.Key;
@@ -83,6 +82,7 @@ import org.apache.accumulo.core.metadata.MetadataTable;
 import org.apache.accumulo.core.metadata.schema.MetadataSchema.TabletsSection;
 import org.apache.accumulo.core.metadata.schema.MetadataSchema.TabletsSection.ServerColumnFamily;
 import org.apache.accumulo.core.metadata.schema.MetadataSchema.TabletsSection.TabletColumnFamily;
+import org.apache.accumulo.core.pelz.PelzCryptoTest;
 import org.apache.accumulo.core.sample.impl.SamplerConfigurationImpl;
 import org.apache.accumulo.core.sample.impl.SamplerFactory;
 import org.apache.accumulo.core.spi.cache.BlockCacheManager;
@@ -137,7 +137,7 @@ public class RFilePelzTest {
 
   @BeforeClass
   public static void setupCryptoKeyFile() throws Exception {
-	  PelzCryptoTest.setupKeyFiles();
+    PelzCryptoTest.setupKeyFiles();
   }
 
   static class SeekableByteArrayInputStream extends ByteArrayInputStream
@@ -1804,7 +1804,7 @@ public class RFilePelzTest {
     switch (cryptoOn) {
       case PelzCryptoTest.CRYPTO_ON_CONF:
         cfg.set(Property.INSTANCE_CRYPTO_SERVICE,
-            "org.apache.accumulo.core.cryptoImpl.PelzCryptoService");
+            "org.apache.accumulo.core.pelz.PelzCryptoService");
         cfg.set(INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri", PelzCryptoTest.keyPath);
     }
     return cfg;

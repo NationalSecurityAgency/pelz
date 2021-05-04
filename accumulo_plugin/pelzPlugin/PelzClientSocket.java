@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package org.apache.accumulo.core.cryptoImpl.pelzPlugin;
+package org.apache.accumulo.core.pelz;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

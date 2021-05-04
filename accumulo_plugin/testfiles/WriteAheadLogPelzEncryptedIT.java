@@ -39,46 +39,46 @@ import org.slf4j.LoggerFactory;
 
 public class WriteAheadLogPelzEncryptedIT extends AccumuloClusterHarness {
 
-	  private static final Logger log = LoggerFactory.getLogger(WriteAheadLogEncryptedIT.class);
+  private static final Logger log = LoggerFactory.getLogger(WriteAheadLogEncryptedIT.class);
 
-	  @Override
-	  public void configureMiniCluster(MiniAccumuloConfigImpl cfg, Configuration hadoopCoreSite) {
-	    String keyPath =
-	        System.getProperty("user.dir") + "/target/mini-tests/WriteAheadLogEncryptedIT-testkeyfile";
-	    cfg.setProperty(Property.INSTANCE_CRYPTO_SERVICE,
-	        "org.apache.accumulo.core.cryptoImpl.PelzCryptoService");
-	    cfg.setProperty(INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri", keyPath);
+  @Override
+  public void configureMiniCluster(MiniAccumuloConfigImpl cfg, Configuration hadoopCoreSite) {
+    String keyPath =
+        System.getProperty("user.dir") + "/target/mini-tests/WriteAheadLogEncryptedIT-testkeyfile";
+    cfg.setProperty(Property.INSTANCE_CRYPTO_SERVICE,
+        "org.apache.accumulo.core.pelz.PelzCryptoService");
+    cfg.setProperty(INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri", keyPath);
 
-	    WriteAheadLogIT.setupConfig(cfg, hadoopCoreSite);
+    WriteAheadLogIT.setupConfig(cfg, hadoopCoreSite);
 
-	    // setup key file
-	    try {
-	      Path keyFile = new Path(keyPath);
-	      FileSystem fs = FileSystem.getLocal(new Configuration());
-	      fs.delete(keyFile, true);
-	      if (fs.createNewFile(keyFile))
-	        log.info("Created keyfile at {}", keyPath);
-	      else
-	        log.error("Failed to create key file at {}", keyPath);
+    // setup key file
+    try {
+      Path keyFile = new Path(keyPath);
+      FileSystem fs = FileSystem.getLocal(new Configuration());
+      fs.delete(keyFile, true);
+      if (fs.createNewFile(keyFile))
+        log.info("Created keyfile at {}", keyPath);
+      else
+        log.error("Failed to create key file at {}", keyPath);
 
-	      try (FSDataOutputStream out = fs.create(keyFile)) {
-	        out.writeUTF("sixteenbytekey"); // 14 + 2 from writeUTF
-	      }
-	    } catch (Exception e) {
-	      log.error("Exception during configure", e);
-	    }
-	  }
+      try (FSDataOutputStream out = fs.create(keyFile)) {
+        out.writeUTF("sixteenbytekey"); // 14 + 2 from writeUTF
+      }
+    } catch (Exception e) {
+      log.error("Exception during configure", e);
+    }
+  }
 
-	  @Override
-	  protected int defaultTimeoutSeconds() {
-	    return 10 * 60;
-	  }
+  @Override
+  protected int defaultTimeoutSeconds() {
+    return 10 * 60;
+  }
 
-	  @Test
-	  public void test() throws Exception {
-	    try (AccumuloClient c = Accumulo.newClient().from(getClientProps()).build()) {
-	      testWAL(c, getUniqueNames(1)[0]);
-	    }
-	  }
+  @Test
+  public void test() throws Exception {
+    try (AccumuloClient c = Accumulo.newClient().from(getClientProps()).build()) {
+      testWAL(c, getUniqueNames(1)[0]);
+    }
+  }
 
-	}
+}
