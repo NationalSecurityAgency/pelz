@@ -71,28 +71,23 @@ void test_key_id_parse(void)
 {
   URIValues uri;
   CharBuf id;
-  int id_len = 0;
-  char cwd[1024];
-  char *tmp_id;
-  char *valid_id[7] = { "file:/test/key1.txt", "file:///test/key1.txt", "file://host.example.com/test/key1.txt",
-			"file://localhost/test/key1.txt", "ftp://user:password@host:port/test/key1.txt",
-			"ftp://user@host:port/test/key1.txt", "ftp://localhost:port/test/key1.txt"};
-  char *invalid_id[16] = { "file:///test/key.txt", "file:/test/key.txt", "file://host.example.com/test/key.txt",
-			"file://localhost/test/key.txt", "file:/test/key.pem", "file:///test/key1txt", "file:/test/key1txt",
-			"file://host.example.com/test/key1txt", "file://localhost/test/key1txt", "file:/test/key1.tt",
-			"file:/testkey1.txt", "file:/tet/key1.txt", "ftp:/localhost:port/test/key1.txt",
-			"ftp://localhost:portkey1.txt", "ftp://localhostport/test/key1.txt", "adkl;jalfkdja;lkdjal" };
+  char *postfix = "/test/key1.txt";
+  char *valid_id[7] = { "file:", "file://", "file://host.example.com",
+			"file://localhost", "ftp://user:password@host:port",
+			"ftp://user@host:port", "ftp://localhost:port"};
+  char *invalid_id_prefix[16] = { "file://", "file:", "file://host.example.com", "file://localhost", "file:", "file://", "file:",
+			"file://host.example.com", "file://localhost", "file:", "file:", "file:", "ftp:/localhost:port","ftp://localhost:port",
+			"ftp://localhostport", "adkl;jalfkdja;lkdjal" };
+  char *invalid_id_postfix[16] = { "/test/key.txt", "/test/key.txt", "/test/key.txt", "/test/key.txt", "/test/key.pem", "/test/key1txt",
+		    "/test/key1txt", "/test/key1txt", "/test/key1txt", "/test/key1.tt", "/testkey1.txt", "/tet/key1.txt", "/test/key1.txt",
+			"key1.txt", "/test/key1.txt", "" };
 
   getcwd(cwd, sizeof(cwd));
   pelz_log(LOG_DEBUG, "Start Key ID Parse Test");
   //Testing all valid Key IDs
   for (int i = 0; i < 7; i++)
   {
-	  id_len = strlen(valid_id[i]) - 14;
-	  id = newCharBuf(strlen(valid_id[i]) + strlen(cwd));
-	  memcpy(id.chars, valid_id[i], id_len);
-	  memcpy(&id.chars[id_len], cwd, strlen(cwd));
-	  memcpy(&id.chars[id_len + strlen(cwd)], &valid_id[i][id_len], 14);
+	  id = copyCWDToId(valid_id[i], postfix);
 	  //Test valid Key IDs
 	  CU_ASSERT(key_id_parse(id, &uri) == 0);
 	  freeCharBuf(&id);
@@ -115,8 +110,7 @@ void test_key_id_parse(void)
   //Test assumes for FTP that the host, port, url_path are correct (code later needs to be able to check these)
   for (int i = 0; i < 16; i++)
   {
-	  id = newCharBuf(strlen(invalid_id[i]));
-	  memcpy(id.chars, invalid_id[i], id.len);
+	  id = copyCWDToId(invalid_id_prefix[i], invalid_id_postfix[i]);
 	  //Test invalid Key IDs
 	  CU_ASSERT(key_id_parse(id, &uri) == 1);
 	  freeCharBuf(&id);
@@ -126,11 +120,7 @@ void test_key_id_parse(void)
   FILE* fp = fopen("temp_file.pem", "w");
   fprintf(fp, "Testing...");
   fclose(fp);
-  tmp_id = "file:/temp_file.pem";
-  id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(id.chars, tmp_id, 5);
-  memcpy(&id.chars[5], cwd, strlen(cwd));
-  memcpy(&id.chars[5 + strlen(cwd)], &tmp_id[5], (id.len - strlen(cwd) - 5));
+  id = copyCWDToId("file:", "/temp_file.pem");
   CU_ASSERT(key_id_parse(id, &uri) == 0);
   freeCharBuf(&id);
   freeCharBuf(&uri.f_values.path);
@@ -141,11 +131,7 @@ void test_key_id_parse(void)
   fp = fopen("temp_file.py", "w");
   fprintf(fp, "Testing...");
   fclose(fp);
-  tmp_id = "file:/temp_file.py";
-  id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(id.chars, tmp_id, 5);
-  memcpy(&id.chars[5], cwd, strlen(cwd));
-  memcpy(&id.chars[5 + strlen(cwd)], &tmp_id[5], (id.len - strlen(cwd) - 5));
+  id = copyCWDToId("file:", "/temp_file.py");
   CU_ASSERT(key_id_parse(id, &uri) == 0);
   freeCharBuf(&id);
   freeCharBuf(&uri.f_values.path);
@@ -162,46 +148,24 @@ void test_key_load(void)
 
   int ftp_len = 0;
   char cwd[1024];
-  char *tmp_id;
-  char *key_id[5] = { "file:/test/key.txt", "file:/test/key.pem", "ftp://user:password@host:port/test/key1.txt",
-  			"ftp://user@host:port/test/key1.txt", "ftp://localhost:port/test/key1.txt"};
+  char *key_id_prefix[5] = { "file:/", "file:", "ftp://user:password@host:port", "ftp://user@host:port", "ftp://localhost:port/"};
+  char *key_id_postfix[5] = { "/test/key.txt", "/test/key.pem", "/test/key1.txt", "/test/key1.txt", "/test/key1.txt"};
 
   getcwd(cwd, sizeof(cwd));
   pelz_log(LOG_DEBUG, "Start Key Load Test");
-  tmp_id = "file:/test/key1.txt";
-  key_values.key_id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(key_values.key_id.chars, tmp_id, 5);
-  memcpy(&key_values.key_id.chars[5], cwd, strlen(cwd));
-  memcpy(&key_values.key_id.chars[5 + strlen(cwd)], &tmp_id[5], (key_values.key_id.len - strlen(cwd) - 5));
+  key_values.key_id = copyCWDToId("file:", "/test/key1.txt");
   CU_ASSERT(key_load(&key_values) == 0);
   freeCharBuf(&key_values.key_id);
   freeCharBuf(&key_values.key);
 
-  tmp_id = "file://localhost/test/key1.txt";
-  key_values.key_id = newCharBuf(strlen(tmp_id) + strlen(cwd));
-  memcpy(key_values.key_id.chars, tmp_id, 16);
-  memcpy(&key_values.key_id.chars[16], cwd, strlen(cwd));
-  memcpy(&key_values.key_id.chars[16 + strlen(cwd)], &tmp_id[16], (key_values.key_id.len - strlen(cwd) - 16));
+  key_values.key_id = copyCWDToId("file://localhost", "/test/key1.txt");
   CU_ASSERT(key_load(&key_values) == 0);
   freeCharBuf(&key_values.key_id);
   freeCharBuf(&key_values.key);
 
   for (int i = 0; i < 5; i++)
   {
-	  key_values.key_id = newCharBuf(strlen(key_id[i]) + strlen(cwd));
-	  if (i < 2)
-	  {
-		  memcpy(key_values.key_id.chars, key_id[i], 5);
-		  memcpy(&key_values.key_id.chars[5], cwd, strlen(cwd));
-		  memcpy(&key_values.key_id.chars[5 + strlen(cwd)], &key_id[i][5], (key_values.key_id.len - strlen(cwd) - 5));
-	  }
-	  else
-	  {
-		  ftp_len = strlen(key_id[i]) - 14;
-		  memcpy(key_values.key_id.chars, key_id[i], ftp_len);
- 		  memcpy(&key_values.key_id.chars[ftp_len], cwd, strlen(cwd));
-  		  memcpy(&key_values.key_id.chars[ftp_len + strlen(cwd)], &key_id[i][ftp_len], 14);
-	  }
+	  key_values.key_id = opyCWDToId(key_id_prefix[i], key_id_postfix[i]);
 	  CU_ASSERT(key_load(&key_values) == 1);
 	  freeCharBuf(&key_values.key_id);
   }
