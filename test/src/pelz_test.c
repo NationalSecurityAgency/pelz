@@ -11,7 +11,6 @@
 
 #include "aes_keywrap_test.h"
 #include "pelz_json_parser_test_suite.h"
-#include "pelz_service_test_suite.h"
 #include <pelz_log.h>
 
 #include <CUnit/CUnit.h>
@@ -69,21 +68,6 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
   if(pelz_json_parser_suite_add_tests(pelz_json_parser_Suite))
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
-
-  // Add Pelz Service suite ---- tests pelz service function
-  CU_pSuite pelz_service_Suite = NULL;
-
-  pelz_service_Suite = CU_add_suite("Pelz Service Suite", init_suite, clean_suite);
-  if(NULL == pelz_service_Suite)
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
-  if(pelz_service_suite_add_tests(pelz_service_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();

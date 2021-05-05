@@ -44,11 +44,11 @@ void test_encrypt_parser(void)
   CharBuf key_id;
   CharBuf data;
   char buf[1024];
-  int request[3] = [1, 2, 3];
-  char *json_key_id[4] = ["file:/test/key1.txt", "test/key1.txt", "Anything", "25416857"];
-  int json_key_id_len[4] = [28, 22, 8, 8];
-  char *enc_data[2] = ["QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "Anything"];
-  int *enc_data_len[2] = [45, 8];
+  int request[3] = {1, 2, 3};
+  char *json_key_id[4] = {"file:/test/key1.txt", "test/key1.txt", "Anything", "25416857"};
+  int json_key_id_len[4] = {28, 22, 8, 8};
+  char *enc_data[2] = {"QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "Anything"};
+  int *enc_data_len[2] = {45, 8};
   char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
   int dec_data_len = 57;
 
@@ -119,11 +119,11 @@ void test_decrypt_parser(void)
   CharBuf key_id;
   CharBuf data;
   char buf[1024];
-  int request[3] = [1, 2, 3];
-  char *json_key_id[4] = ["file:/test/key1.txt", "test/key1.txt", "Anything", "25416857"];
-  int json_key_id_len[4] = [19, 13, 8, 8];
-  char *dec_data[2] = ["SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", "Anything"];
-  int *dec_data_len[2] = [57, 8];
+  int request[3] = {1, 2, 3};
+  char *json_key_id[4] = {"file:/test/key1.txt", "test/key1.txt", "Anything", "25416857"};
+  int json_key_id_len[4] = {19, 13, 8, 8};
+  char *dec_data[2] = {"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", "Anything"};
+  int *dec_data_len[2] = {57, 8};
   char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
   int enc_data_len = 45;
 
@@ -197,17 +197,17 @@ void test_request_decoder(void)
   CharBuf data;
   cJSON *json_enc;
   cJSON *json_dec;
-  char *json_key_id[6] = ["file:/test/key1.txt", "file:/test/key2.txt", "file:/test/key3.txt",
-						  "file:/test/key4.txt", "file:/test/key5.txt", "file:/test/key6.txt"];
+  char *json_key_id[6] = {"file:/test/key1.txt", "file:/test/key2.txt", "file:/test/key3.txt",
+						  "file:/test/key4.txt", "file:/test/key5.txt", "file:/test/key6.txt"};
   int json_key_id_len = 19;
-  char *enc_data[6] = ["QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=\n",
+  char *enc_data[6] = {"QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=\n",
 					   "QUJDREVGR0hJSktMTU5PUFFSU1RVVldY\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n",
-					   "QUJDREVGR0hJSktMTU5PUA==\n", "YWJjZGVmZ2hpamtsbW5vcA==\n"];
-  int enc_data_len[6] = [45, 45, 33, 33, 25, 25];
-  char *dec_data[6] = ["SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", "txQhouR/i5+lycST2QXuN39gQqVQYVy9mWf3RdSdXfZNUy4CsQqwBg==\n",
+					   "QUJDREVGR0hJSktMTU5PUA==\n", "YWJjZGVmZ2hpamtsbW5vcA==\n"};
+  int enc_data_len[6] = {45, 45, 33, 33, 25, 25};
+  char *dec_data[6] = {"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", "txQhouR/i5+lycST2QXuN39gQqVQYVy9mWf3RdSdXfZNUy4CsQqwBg==\n",
 					   "+n4yYCmMXyNbyEtsJuFlBtkCbVDXhjVRON/osW5dbz8=\n", "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n",
-					   "K2YZ6dTyLpmXRseKg+wwlPUZCnFmYBEn\n", "K6iS75+hIrCNuo9LWeEhjDQ2L9miNR07\n"];
-  int dec_data_len[6] = [57, 57, 45, 45, 33, 33];
+					   "K2YZ6dTyLpmXRseKg+wwlPUZCnFmYBEn\n", "K6iS75+hIrCNuo9LWeEhjDQ2L9miNR07\n"};
+  int dec_data_len[6] = {57, 57, 45, 45, 33, 33};
 
   pelz_log(LOG_DEBUG, "Start Request Decoder Test");
   cJSON_AddItemToObject(json_enc, "request_type", cJSON_CreateNumber(1));
