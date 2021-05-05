@@ -37,6 +37,7 @@ int main(int argc, char **argv)
 
   set_app_name("pelz");
   set_app_version("0.0.0");
+  set_applog_max_msg_len(1024);
   set_applog_path("/var/log/pelz.log");
   set_applog_severity_threshold(LOG_WARNING);
 

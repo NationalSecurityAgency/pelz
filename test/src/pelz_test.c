@@ -10,6 +10,8 @@
 #include <unistd.h>
 
 #include "aes_keywrap_test.h"
+#include "pelz_json_parser_test_suite.h"
+#include "pelz_service_test_suite.h"
 #include <pelz_log.h>
 
 #include <CUnit/CUnit.h>
@@ -30,6 +32,7 @@ int main(int argc, char **argv)
 {
   set_app_name("pelz");
   set_app_version("0.0.0");
+  set_applog_max_msg_len(1024);
   set_applog_path("./test/log/pelz.log");
   set_applog_severity_threshold(LOG_INFO);
 
@@ -51,6 +54,36 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
   if (aes_keywrap_add_tests(aes_keywrap_test_suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
+  // Add pelz json parser suite ---- tests pelz json parser encrypt_parse/decrypt_parse/request_decode/message_encode/error_message_encode functions
+  CU_pSuite pelz_json_parser_Suite = NULL;
+
+  pelz_json_parser_Suite = CU_add_suite("Pelz JSON Parser Suite", init_suite, clean_suite);
+  if(NULL == pelz_json_parser_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if(pelz_json_parser_suite_add_tests(pelz_json_parser_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
+  // Add Pelz Service suite ---- tests pelz service function
+  CU_pSuite pelz_service_Suite = NULL;
+
+  pelz_service_Suite = CU_add_suite("Pelz Service Suite", init_suite, clean_suite);
+  if(NULL == pelz_service_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if(pelz_service_suite_add_tests(pelz_service_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();
