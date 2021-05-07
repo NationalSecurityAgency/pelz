@@ -1,5 +1,9 @@
-
-
+#include "CharBuf.h"
+#include "pelz_request_handler_impl.h"
+#include "pelz_request_handler.h"
+#include "pelz_log.h"
+#include "key_table.h"
+#include "aes_keywrap_3394nopad.h"
 
 //Function to test socket code with working encryption code
 RequestResponseStatus pelz_request_handler_impl(RequestType request_type, CharBuf key_id, CharBuf data, CharBuf * output)

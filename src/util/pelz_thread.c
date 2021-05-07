@@ -6,7 +6,7 @@
 #include "pelz_socket.h"
 #include "pelz_json_parser.h"
 #include "pelz_io.h"
-#include "pelz_request_handler_wrapper.h"
+#include "pelz_request_handler.h"
 #include "pelz_thread.h"
 
 #ifdef SGX
@@ -65,11 +65,7 @@ void thread_process(void *arg)
     freeCharBuf(&data_in);
 
     pthread_mutex_lock(&lock);
-    #ifdef SGX
-    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
-    #else
     status = pelz_request_handler(request_type, key_id, data, &output);
-    #endif
     pthread_mutex_unlock(&lock);
 
     freeCharBuf(&data);
