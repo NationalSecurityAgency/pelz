@@ -12,7 +12,7 @@
 static void usage(const char *prog)
 {
   fprintf(stdout,
-    "\nusage: %s [options] \n\n"
+    "usage: %s [options] \n\n"
     "options are: \n\n"
     " -h or --help          Help (displays this usage).\n"
     " -m or --max_requests  Maximum number of sockets pelz can make available at any given time, default: 100\n"
@@ -29,12 +29,6 @@ const struct option longopts[] = {
 //Main function for the Pelz Service application
 int main(int argc, char **argv)
 {
-  if (argc == 1)
-  {
-    usage(argv[0]);
-    return 0;
-  }
-
   set_app_name("pelz");
   set_app_version("0.0.0");
   set_applog_max_msg_len(1024);
