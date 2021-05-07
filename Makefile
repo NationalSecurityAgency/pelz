@@ -25,6 +25,12 @@ UTIL_OBJ_DIR = $(OBJ_DIR)/util
 TEST_SRC_DIR = $(TEST_DIR)/src
 TEST_OBJ_DIR = $(OBJ_DIR)
 
+TEST_DATA_DIR ?= $(TEST_DIR)/data
+
+# Create consolidated list of test vector directories
+TEST_VEC_DIRS = $(TEST_DATA_DIR)/kwtestvectors
+TEST_VEC_DIRS += $(TEST_DATA_DIR)/gcmtestvectors
+
 TEST_HEADER_FILES = $(wildcard $(TEST_DIR)/include/*h)
 
 HEADER_FILES = $(wildcard $(INCLUDE_DIR)/*h)
@@ -57,7 +63,7 @@ pre:
 	mkdir -p test/bin
 	mkdir -p test/log
 
-test: test_unit
+test: pre test_unit
 	./test/bin/pelz-test 2> /dev/null
 
 docs: $(HEADER_FILES) $(CRYPRO_SOURCES) Doxyfile
@@ -92,6 +98,20 @@ install:
 uninstall:
 	rm -f $(PREFIX)/bin/pelz
 	rm -f var/log/pelz.log
+
+.PHONY: install-test-vectors
+install-test-vectors: uninstall-test-vectors
+	mkdir -p $(TEST_VEC_DIRS)
+	wget https://csrc.nist.gov/groups/STM/cavp/documents/mac/kwtestvectors.zip
+	unzip kwtestvectors.zip -d $(TEST_DATA_DIR)
+	rm kwtestvectors.zip
+	wget https://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
+	unzip gcmtestvectors.zip -d $(TEST_DATA_DIR)/gcmtestvectors/
+	rm gcmtestvectors.zip
+
+.PHONY: uninstall-test-vectors
+uninstall-test-vectors:
+	rm -fr $(TEST_VEC_DIRS)
 
 clean:
 	-rm -fr $(OBJECTS) bin/pelz test/bin/pelz-test

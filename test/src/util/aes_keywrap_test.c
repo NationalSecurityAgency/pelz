@@ -11,7 +11,7 @@
 
 #include "aes_keywrap_test.h"
 
-#define AES_KW_VECTOR_PATH "test/key_wrap_test_vectors"
+#define AES_KW_VECTOR_PATH "test/data/kwtestvectors"
 
 //---------------------- AES Key Wrap Cipher Test Configuration --------------
 
@@ -310,29 +310,29 @@ void test_aes_keywrap_vectors(void)
   // specify the compilation of test vector mappings for Pelz AES GCM
   // decrypt cipher testing.
   const cipher_vector_compilation aes_keywrap_vectors = {
-    .count = 12,
+    .count = 6,
     .sets = {
              {.desc = "AES-128, RFC-3394 Key Wrap no padding (KW-AE), forward",
               .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AE_128.txt"},
+              .path = "./test/data/kwtestvectors/KW_AE_128.txt"},
              {.desc =
               "AES-128, RFC-3394 Key Unwrap no padding (KW-AD), forward",
               .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AD_128.txt"},
+              .path = "./test/data/kwtestvectors/KW_AD_128.txt"},
              {.desc = "AES-192, RFC-3394 Key Wrap no padding (KW-AE), forward",
               .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AE_192.txt"},
+              .path = "./test/data/kwtestvectors/KW_AE_192.txt"},
              {.desc =
               "AES-192, RFC-3394 Key Unwrap no padding (KW-AD), forward",
               .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AD_192.txt"},
+              .path = "./test/data/kwtestvectors/KW_AD_192.txt"},
              {.desc = "AES-256, RFC-3394 Key Wrap no padding (KW-AE), forward",
               .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AE_256.txt"},
+              .path = "./test/data/kwtestvectors/KW_AE_256.txt"},
              {.desc =
               "AES-256, RFC-3394 Key Unwrap no padding (KW-AD), forward",
               .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AD_256.txt"},
+              .path = "./test/data/kwtestvectors/KW_AD_256.txt"}
              }
   };
 
