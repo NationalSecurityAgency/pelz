@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include "CharBuf.h"
 #include "util.h"
@@ -83,5 +84,18 @@ CharBuf copyBytesFromBuf(CharBuf buf, int index)
 
   newBuf = newCharBuf((buf.len - index));
   memcpy(newBuf.chars, &buf.chars[index], newBuf.len);
+  return (newBuf);
+}
+
+CharBuf copyCWDToId(char *prefix, char *postfix)
+{
+  CharBuf newBuf;
+  char cwd[100];
+
+  getcwd(cwd, sizeof(cwd));
+  newBuf = newCharBuf(strlen(prefix) + strlen(cwd) + strlen(postfix));
+  memcpy(newBuf.chars, prefix, strlen(prefix));
+  memcpy(&newBuf.chars[strlen(prefix)], cwd, strlen(cwd));
+  memcpy(&newBuf.chars[strlen(prefix) + strlen(cwd)], postfix, strlen(postfix));
   return (newBuf);
 }
