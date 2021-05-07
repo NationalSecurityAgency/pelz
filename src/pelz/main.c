@@ -34,7 +34,6 @@ const struct option longopts[] = {
   {0, 0, 0, 0}
 };
 
-
 //Main function for the Pelz Service application
 int main(int argc, char **argv)
 {
@@ -80,10 +79,9 @@ int main(int argc, char **argv)
       return 1;
     }
   }
-
-  int ret;
   
   #ifdef SGX
+  int ret;
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
   key_table_init(eid, &ret);
   #else
