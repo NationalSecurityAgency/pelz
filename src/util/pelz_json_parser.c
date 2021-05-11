@@ -53,8 +53,9 @@ int request_decoder(CharBuf request, RequestType * request_type, CharBuf * key_i
     }
     break;
   default:
-    pelz_log(LOG_WARNING, "Request Type not recognized.");
-    break;
+    pelz_log(LOG_WARNING, "Invalid Request Type");
+    cJSON_Delete(json);
+    return (1);
   }
   cJSON_Delete(json);
   return (0);
