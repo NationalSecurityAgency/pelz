@@ -54,7 +54,7 @@ void test_encrypt_parser(void)
   json = cJSON_CreateObject();
   for(int i = 0; i < 3; i++)
   {
-	cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(request[i]));
+    cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(request[i]));
 	CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
 	if (key_id.chars != NULL)
 	  freeCharBuf(&key_id);
@@ -75,8 +75,8 @@ void test_encrypt_parser(void)
 	  	  freeCharBuf(&key_id);
 	  	if (data.chars != NULL)
 	  	  freeCharBuf(&data);
-   	  JSON_DeleteItemFromObject(json, "request_type");
-	  JSON_DeleteItemFromObject(json, "key_id");
+   	  cJSON_DeleteItemFromObject(json, "request_type");
+	  cJSON_DeleteItemFromObject(json, "key_id");
 	  for(int x = 0; x < 4; x++)
 	  {
 		cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len[x]));
@@ -97,9 +97,9 @@ void test_encrypt_parser(void)
 	  	  freeCharBuf(&key_id);
 	  	if (data.chars != NULL)
 	  	  freeCharBuf(&data);
-	  	JSON_DeleteItemFromObject(json, "request_type");
-	  	JSON_DeleteItemFromObject(json, "key_id");
-	  	JSON_DeleteItemFromObject(json, "key_id_len");
+	  	cJSON_DeleteItemFromObject(json, "request_type");
+	  	cJSON_DeleteItemFromObject(json, "key_id");
+	  	cJSON_DeleteItemFromObject(json, "key_id_len");
 	  	for(int y = 0; y < 2; y++)
 	  	{
 	      cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data[y]));
@@ -126,10 +126,10 @@ void test_encrypt_parser(void)
 	      	freeCharBuf(&key_id);
 	      if (data.chars != NULL)
 	      	freeCharBuf(&data);
-	      JSON_DeleteItemFromObject(json, "request_type");
-	      JSON_DeleteItemFromObject(json, "key_id");
-	      JSON_DeleteItemFromObject(json, "key_id_len");
-	      JSON_DeleteItemFromObject(json, "enc_data");
+	      cJSON_DeleteItemFromObject(json, "request_type");
+	      cJSON_DeleteItemFromObject(json, "key_id");
+	      cJSON_DeleteItemFromObject(json, "key_id_len");
+	      cJSON_DeleteItemFromObject(json, "enc_data");
 	      for(int z = 0; z < 2; z++)
 	      {
 	    	cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len[z]));
@@ -169,21 +169,21 @@ void test_encrypt_parser(void)
 	  	  	if (data.chars != NULL)
 	  	  	  freeCharBuf(&data);
 	  	  	cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id[j]));
-	  	  	if (j == x && y == x)
-	  	  	  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
-	  	  	else
-	  	  	  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+	  	  	if (j == x && y == z){
+	  	  	  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);}
+	  	  	else{
+	  	  	  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);}
 	  	  	if (key_id.chars != NULL)
 	  	  	  freeCharBuf(&key_id);
 	  	  	if (data.chars != NULL)
 	  	  	  freeCharBuf(&data);
-	  	    JSON_DeleteItemFromObject(json, "request_type");
-	  	  	JSON_DeleteItemFromObject(json, "key_id");
-	  	  	JSON_DeleteItemFromObject(json, "key_id_len");
-	  	  	JSON_DeleteItemFromObject(json, "enc_data");
-	  	    JSON_DeleteItemFromObject(json, "enc_data_len");
-	  	    JSON_DeleteItemFromObject(json, "dec_data");
-	  	    JSON_DeleteItemFromObject(json, "dec_data_len");
+	  	    cJSON_DeleteItemFromObject(json, "request_type");
+	  	  	cJSON_DeleteItemFromObject(json, "key_id");
+	  	  	cJSON_DeleteItemFromObject(json, "key_id_len");
+	  	  	cJSON_DeleteItemFromObject(json, "enc_data");
+	  	    cJSON_DeleteItemFromObject(json, "enc_data_len");
+	  	    cJSON_DeleteItemFromObject(json, "dec_data");
+	  	    cJSON_DeleteItemFromObject(json, "dec_data_len");
 	      }
 	  	}
 	  }
@@ -229,8 +229,8 @@ void test_decrypt_parser(void)
 	  	  freeCharBuf(&key_id);
 	  	if (data.chars != NULL)
 	  	  freeCharBuf(&data);
-   	  JSON_DeleteItemFromObject(json, "request_type");
-	  JSON_DeleteItemFromObject(json, "key_id");
+   	  cJSON_DeleteItemFromObject(json, "request_type");
+	  cJSON_DeleteItemFromObject(json, "key_id");
 	  for(int x = 0; x < 4; x++)
 	  {
 		cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len[x]));
@@ -251,12 +251,12 @@ void test_decrypt_parser(void)
 	  	  freeCharBuf(&key_id);
 	  	if (data.chars != NULL)
 	  	  freeCharBuf(&data);
-	  	JSON_DeleteItemFromObject(json, "request_type");
-	  	JSON_DeleteItemFromObject(json, "key_id");
-	  	JSON_DeleteItemFromObject(json, "key_id_len");
+	  	cJSON_DeleteItemFromObject(json, "request_type");
+	  	cJSON_DeleteItemFromObject(json, "key_id");
+	  	cJSON_DeleteItemFromObject(json, "key_id_len");
 	  	for(int y = 0; y < 2; y++)
 	  	{
-	      cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data[y]));
+	      cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data[y]));
 		  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
   	  	  if (key_id.chars != NULL)
 	  	    freeCharBuf(&key_id);
@@ -280,25 +280,25 @@ void test_decrypt_parser(void)
 	      	freeCharBuf(&key_id);
 	      if (data.chars != NULL)
 	      	freeCharBuf(&data);
-	      JSON_DeleteItemFromObject(json, "request_type");
-	      JSON_DeleteItemFromObject(json, "key_id");
-	      JSON_DeleteItemFromObject(json, "key_id_len");
-	      JSON_DeleteItemFromObject(json, "enc_data");
+	      cJSON_DeleteItemFromObject(json, "request_type");
+	      cJSON_DeleteItemFromObject(json, "key_id");
+	      cJSON_DeleteItemFromObject(json, "key_id_len");
+	      cJSON_DeleteItemFromObject(json, "dec_data");
 	      for(int z = 0; z < 2; z++)
 	      {
-	    	cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len[z]));
+	    	cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len[z]));
 	  		CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
 	  	 	if (key_id.chars != NULL)
 	  	  	  freeCharBuf(&key_id);
 	  	  	if (data.chars != NULL)
 	  	  	  freeCharBuf(&data);
-	  	    cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
+	  	    cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 	  	  	CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
 	  	  	if (key_id.chars != NULL)
 	  	  	  freeCharBuf(&key_id);
 	  	  	if (data.chars != NULL)
 	  	  	  freeCharBuf(&data);
-	  	  	cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+	  	  	cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 	  	  	CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
 	  	  	if (key_id.chars != NULL)
 	  	  	  freeCharBuf(&key_id);
@@ -310,7 +310,7 @@ void test_decrypt_parser(void)
 	  	  	  freeCharBuf(&key_id);
 	  	  	if (data.chars != NULL)
 	  	  	  freeCharBuf(&data);
-	  	    cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data[y]));
+	  	    cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data[y]));
 	  	  	CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
 	  	    if (key_id.chars != NULL)
 	  	  	  freeCharBuf(&key_id);
@@ -323,21 +323,21 @@ void test_decrypt_parser(void)
 	  	  	if (data.chars != NULL)
 	  	  	  freeCharBuf(&data);
 	  	  	cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id[j]));
-	  	  	if (j == x && y == x)
-	  	  	  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
-	  	  	else
-	  	  	  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+	  	  	if (j == x && y == z){
+	  	  	  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);}
+	  	  	else{
+	  	  	  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);}
 	  	  	if (key_id.chars != NULL)
 	  	  	  freeCharBuf(&key_id);
 	  	  	if (data.chars != NULL)
 	  	  	  freeCharBuf(&data);
-	  	    JSON_DeleteItemFromObject(json, "request_type");
-	  	  	JSON_DeleteItemFromObject(json, "key_id");
-	  	  	JSON_DeleteItemFromObject(json, "key_id_len");
-	  	  	JSON_DeleteItemFromObject(json, "enc_data");
-	  	    JSON_DeleteItemFromObject(json, "enc_data_len");
-	  	    JSON_DeleteItemFromObject(json, "dec_data");
-	  	    JSON_DeleteItemFromObject(json, "dec_data_len");
+	  	    cJSON_DeleteItemFromObject(json, "request_type");
+	  	  	cJSON_DeleteItemFromObject(json, "key_id");
+	  	  	cJSON_DeleteItemFromObject(json, "key_id_len");
+	  	  	cJSON_DeleteItemFromObject(json, "dec_data");
+	  	    cJSON_DeleteItemFromObject(json, "dec_data_len");
+	  	    cJSON_DeleteItemFromObject(json, "enc_data");
+	  	    cJSON_DeleteItemFromObject(json, "enc_data_len");
 	      }
 	  	}
 	  }
