@@ -268,6 +268,12 @@ int decrypt_parser(cJSON * json, CharBuf * key_id, CharBuf * data)
     freeCharBuf(key_id);
     return (1);
   }
+  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "dec_data_len")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: dec_data_len. Data type should be integer.");
+    freeCharBuf(key_id);
+    return (1);
+  }
   *data = newCharBuf(cJSON_GetObjectItemCaseSensitive(json, "dec_data_len")->valueint);
   if (!cJSON_IsString(cJSON_GetObjectItem(json, "dec_data")))
   {

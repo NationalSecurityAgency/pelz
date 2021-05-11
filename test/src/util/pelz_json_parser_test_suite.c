@@ -43,107 +43,119 @@ void test_encrypt_parser(void)
   cJSON *json;
   CharBuf key_id;
   CharBuf data;
-  int request[3] = { 1, 2, 3 };
-  char *json_key_id[4] = { "file:/test/key1.txt", "test/key1.txt", "Anything", "25416857" };
-  int json_key_id_len[4] = { 19, 13, 8, 8 };
-  char *enc_data[2] = { "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "Anything" };
-  int enc_data_len[2] = { 44, 8 };
+  //Valid Test Values
+  char *json_key_id = "file:/test/key1.txt";
+  int json_key_id_len = 19;
+  char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
+  int enc_data_len = 45;
   char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
-  int dec_data_len = 56;
+  int dec_data_len = 57;
 
-  //Building of the json request and most combinations
+  //Building of a standard valid JSON request
   json = cJSON_CreateObject();
-  for (int i = 0; i < 3; i++)
-  {
-    cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(request[i]));
-    CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-    cJSON_DeleteItemFromObject(json, "request_type");
-    for (int j = 0; j < 4; j++)
-    {
-      cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id[j]));
-      CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(1));
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
+  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
+  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len)));
+  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
-      cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(request[i]));
-      CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  //Test standard valid JSON request
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
 
-      cJSON_DeleteItemFromObject(json, "request_type");
-      cJSON_DeleteItemFromObject(json, "key_id");
-      for (int k = 0; k < 4; k++)
-      {
-        cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len[k]));
-        CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  //Test check of JSON request hasObject
+  cJSON_DeleteItemFromObject(json, "key_id");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
 
-        cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id[j]));
-        CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
 
-        cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(request[i]));
-        CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 
-        cJSON_DeleteItemFromObject(json, "request_type");
-        cJSON_DeleteItemFromObject(json, "key_id");
-        cJSON_DeleteItemFromObject(json, "key_id_len");
-        for (int y = 0; y < 2; y++)
-        {
-          cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data[y]));
-          CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data_len");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len)));
 
-          cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len[k]));
-          CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "dec_data");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
-          cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id[j]));
-          CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len)));
 
-          cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(request[i]));
-          CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  //Test check of JSON request isNumber
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateString("19"));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
 
-          cJSON_DeleteItemFromObject(json, "request_type");
-          cJSON_DeleteItemFromObject(json, "key_id");
-          cJSON_DeleteItemFromObject(json, "key_id_len");
-          cJSON_DeleteItemFromObject(json, "enc_data");
-          for (int z = 0; z < 2; z++)
-          {
-            cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len[z]));
-            CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data_len");
+  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateString("45"));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data_len");
+  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len)));
 
-            cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
-            CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateString("57"));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len)));
 
-            cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
-            CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  //Test check of JSON request isString
+  cJSON_DeleteItemFromObject(json, "key_id");
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482);
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id");
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
 
-            cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(request[i]));
-            CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data");
+  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateNumber(6842);
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data");
+  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 
-            cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data[y]));
-            CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "dec_data");
+  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateNumber(2146);
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  cJSON_DeleteItemFromObject(json, "dec_data");
+  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
-            cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len[k]));
-            CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  //Test check of JSON request string length match
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(20));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
 
-            cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id[j]));
-            if (j == k && y == z)
-            {
-              CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
-              freeCharBuf(&key_id);
-              freeCharBuf(&data);
-            }
-            else
-            {
-              CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-            }
+  cJSON_DeleteItemFromObject(json, "enc_data_len");
+  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(50)));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data_len");
+  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len)));
 
-            cJSON_DeleteItemFromObject(json, "request_type");
-            cJSON_DeleteItemFromObject(json, "key_id");
-            cJSON_DeleteItemFromObject(json, "key_id_len");
-            cJSON_DeleteItemFromObject(json, "enc_data");
-            cJSON_DeleteItemFromObject(json, "enc_data_len");
-            cJSON_DeleteItemFromObject(json, "dec_data");
-            cJSON_DeleteItemFromObject(json, "dec_data_len");
-          }
-        }
-      }
-    }
-  }
+  //Test check of JSON request string is null
+  cJSON_DeleteItemFromObject(json, "key_id");
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(NULL));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id");
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
+
+  cJSON_DeleteItemFromObject(json, "enc_data");
+  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(NULL);
+  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "enc_data");
+  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
+
+  //Clean-up JSON
   cJSON_Delete(json);
 }
 
@@ -156,9 +168,9 @@ void test_decrypt_parser(void)
   char *json_key_id[4] = { "file:/test/key1.txt", "test/key1.txt", "Anything", "25416857" };
   int json_key_id_len[4] = { 19, 13, 8, 8 };
   char *dec_data[2] = { "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", "Anything" };
-  int dec_data_len[2] = { 56, 8 };
+  int dec_data_len[2] = { 57, 8 };
   char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
-  int enc_data_len = 44;
+  int enc_data_len = 45;
 
   //Building of the json request and most combinations
   json = cJSON_CreateObject();
@@ -279,13 +291,13 @@ void test_request_decoder(void)
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldY\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n",
     "QUJDREVGR0hJSktMTU5PUA==\n", "YWJjZGVmZ2hpamtsbW5vcA==\n"
   };
-  int enc_data_len[6] = { 44, 44, 32, 32, 24, 24 };
+  int enc_data_len[6] = { 45, 45, 33, 33, 25, 25 };
   char *dec_data[6] = { "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n",
     "txQhouR/i5+lycST2QXuN39gQqVQYVy9mWf3RdSdXfZNUy4CsQqwBg==\n",
     "+n4yYCmMXyNbyEtsJuFlBtkCbVDXhjVRON/osW5dbz8=\n", "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n",
     "K2YZ6dTyLpmXRseKg+wwlPUZCnFmYBEn\n", "K6iS75+hIrCNuo9LWeEhjDQ2L9miNR07\n"
   };
-  int dec_data_len[6] = { 56, 56, 44, 44, 32, 32 };
+  int dec_data_len[6] = { 57, 57, 45, 45, 33, 33 };
 
   pelz_log(LOG_DEBUG, "Start Request Decoder Test");
 
