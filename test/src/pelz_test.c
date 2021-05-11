@@ -22,20 +22,23 @@
 // Blank Suite's init and cleanup code
 int init_suite(void)
 {
-	return (0);
+  return (0);
 }
+
 int clean_suite(void)
 {
-	return (0);
+  return (0);
 }
 
 //Main function for the unit testing of the Pelz Service application
 int main(int argc, char **argv)
 {
-  char *key_file_id[6] = {"test/key1.txt", "test/key2.txt", "test/key3.txt", "test/key4.txt", "test/key5.txt",
-	                  "test/key6.txt"};
-  char *key[6] = {"KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
-		  "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"};
+  char *key_file_id[6] = { "test/key1.txt", "test/key2.txt", "test/key3.txt", "test/key4.txt", "test/key5.txt",
+    "test/key6.txt"
+  };
+  char *key[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
+    "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
+  };
 
   set_app_name("pelz");
   set_app_version("0.0.0");
@@ -46,6 +49,7 @@ int main(int argc, char **argv)
   for (int i = 0; i < 6; i++)
   {
     FILE *fp = fopen(key_file_id[i], "w");
+
     fprintf(fp, "%s", key[i]);
     fclose(fp);
   }
@@ -60,8 +64,7 @@ int main(int argc, char **argv)
   // Create and configure the AES Key Wrap cipher test suite
   CU_pSuite aes_keywrap_test_suite = NULL;
 
-  aes_keywrap_test_suite = CU_add_suite("AES Key Wrap Cipher Test Suite",
-                                        init_suite, clean_suite);
+  aes_keywrap_test_suite = CU_add_suite("AES Key Wrap Cipher Test Suite", init_suite, clean_suite);
   if (NULL == aes_keywrap_test_suite)
   {
     CU_cleanup_registry();
@@ -77,12 +80,12 @@ int main(int argc, char **argv)
   CU_pSuite key_table_Suite = NULL;
 
   key_table_Suite = CU_add_suite("Key Table Suite", init_suite, clean_suite);
-  if(NULL == key_table_Suite)
+  if (NULL == key_table_Suite)
   {
     CU_cleanup_registry();
     return CU_get_error();
   }
-  if(key_table_suite_add_tests(key_table_Suite))
+  if (key_table_suite_add_tests(key_table_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();
@@ -92,12 +95,12 @@ int main(int argc, char **argv)
   CU_pSuite utility_Suite = NULL;
 
   utility_Suite = CU_add_suite("Utility Suite", init_suite, clean_suite);
-  if(NULL == utility_Suite)
+  if (NULL == utility_Suite)
   {
     CU_cleanup_registry();
     return CU_get_error();
   }
-  if(utility_suite_add_tests(utility_Suite))
+  if (utility_suite_add_tests(utility_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();
@@ -107,12 +110,12 @@ int main(int argc, char **argv)
   CU_pSuite pelz_json_parser_Suite = NULL;
 
   pelz_json_parser_Suite = CU_add_suite("Pelz JSON Parser Suite", init_suite, clean_suite);
-  if(NULL == pelz_json_parser_Suite)
+  if (NULL == pelz_json_parser_Suite)
   {
     CU_cleanup_registry();
     return CU_get_error();
   }
-  if(pelz_json_parser_suite_add_tests(pelz_json_parser_Suite))
+  if (pelz_json_parser_suite_add_tests(pelz_json_parser_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();

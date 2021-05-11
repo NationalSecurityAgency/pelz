@@ -16,69 +16,62 @@
 // Adds all key table tests to main test runner.
 int key_table_suite_add_tests(CU_pSuite suite)
 {
-  if(NULL == CU_add_test(suite, "Test Key Table Initialization/Destruction", test_table_initDestroy))
-		  {
+  if (NULL == CU_add_test(suite, "Test Key Table Initialization/Destruction", test_table_initDestroy))
+  {
     return (1);
-		  }
-  if(NULL == CU_add_test(suite, "Test all combinations for adding keys to Key Table", test_table_initAddDestroy))
-		  {
+  }
+  if (NULL == CU_add_test(suite, "Test all combinations for adding keys to Key Table", test_table_initAddDestroy))
+  {
     return (1);
-		  }
-  if(NULL == CU_add_test(suite, "Test all Key Table Lookup combinations", test_table_initLookupAddDestroy))
-		  {
+  }
+  if (NULL == CU_add_test(suite, "Test all Key Table Lookup combinations", test_table_initLookupAddDestroy))
+  {
     return (1);
-		  }
-  if(NULL == CU_add_test(suite, "Test Key Table Delete", test_table_initLookupAddDeleteDestroy))
-		  {
+  }
+  if (NULL == CU_add_test(suite, "Test Key Table Delete", test_table_initLookupAddDeleteDestroy))
+  {
     return (1);
-		  }
-    return (0);
+  }
+  return (0);
 }
 
 void test_table_initDestroy(void)
 {
-  CU_ASSERT(key_table_init() == 0)
-  CU_ASSERT(key_table_destroy() == 0)
-}
+CU_ASSERT(key_table_init() == 0) CU_ASSERT(key_table_destroy() == 0)}
 
 void test_table_initAddDestroy(void)
 {
   CharBuf tmp;
   CharBuf key;
   char *prefix = "file:";
-  char *valid_id[3] = {"/test/key1.txt", "/test/key2.txt", "/test/key3.txt"};
+  char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
   char *tmp_id;
 
   pelz_log(LOG_DEBUG, "Test Key Table Add Function");
   CU_ASSERT(key_table_init() == 0)
-
-  //Test that the keys are added to the key table
-  for (int i = 0; i < 3; i++)
+    //Test that the keys are added to the key table
+    for (int i = 0; i < 3; i++)
   {
     tmp = copyCWDToId(prefix, valid_id[i]);
-    CU_ASSERT(key_table_add(tmp, &key) == 0)
-    freeCharBuf(&tmp);
+    CU_ASSERT(key_table_add(tmp, &key) == 0) freeCharBuf(&tmp);
     freeCharBuf(&key);
   }
 
   //Test that keys are added if valid without checking if already in table
   for (int i = 0; i < 3; i++)
   {
-	tmp = copyCWDToId(prefix, valid_id[i]);
-	CU_ASSERT(key_table_add(tmp, &key) == 0)
-	freeCharBuf(&tmp);
-	freeCharBuf(&key);
+    tmp = copyCWDToId(prefix, valid_id[i]);
+    CU_ASSERT(key_table_add(tmp, &key) == 0) freeCharBuf(&tmp);
+    freeCharBuf(&key);
   }
 
   //Test that non-valid keys are not added
   tmp_id = "/test/key7.txt";
   tmp = copyCWDToId(prefix, tmp_id);
-  CU_ASSERT(key_table_add(tmp, &key) == 1)
-  freeCharBuf(&tmp);
+  CU_ASSERT(key_table_add(tmp, &key) == 1) freeCharBuf(&tmp);
   freeCharBuf(&key);
 
-  CU_ASSERT(key_table_destroy() == 0)
-  pelz_log(LOG_DEBUG, "Test Key Table Add Function Complete");
+  CU_ASSERT(key_table_destroy() == 0) pelz_log(LOG_DEBUG, "Test Key Table Add Function Complete");
 }
 
 void test_table_initLookupAddDestroy(void)
@@ -86,45 +79,39 @@ void test_table_initLookupAddDestroy(void)
   CharBuf key;
   CharBuf tmp;
   char *prefix = "file:";
-  char *valid_id[3] = {"/test/key1.txt", "/test/key2.txt", "/test/key3.txt"};
+  char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
   char *tmp_id;
 
   pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
   CU_ASSERT(key_table_init() == 0)
-
-  //Initial check if the keys are added when the lookup does not find them
-  for (int i = 0; i < 3; i++)
+    //Initial check if the keys are added when the lookup does not find them
+    for (int i = 0; i < 3; i++)
   {
-	tmp = copyCWDToId(prefix, valid_id[i]);
-    CU_ASSERT(key_table_add(tmp, &key) == 0)
-    secureFreeCharBuf(&key);
+    tmp = copyCWDToId(prefix, valid_id[i]);
+    CU_ASSERT(key_table_add(tmp, &key) == 0) secureFreeCharBuf(&key);
     freeCharBuf(&tmp);
   }
 
   //Check that the keys are found and not added twice
   for (int i = 0; i < 3; i++)
   {
-	tmp = copyCWDToId(prefix, valid_id[i]);
-    CU_ASSERT(key_table_lookup(tmp, &key) == 0)
-    secureFreeCharBuf(&key);
+    tmp = copyCWDToId(prefix, valid_id[i]);
+    CU_ASSERT(key_table_lookup(tmp, &key) == 0) secureFreeCharBuf(&key);
     freeCharBuf(&tmp);
   }
 
   //Check that non-valid file does not load key
   tmp_id = "/test/key7.txt";
   tmp = copyCWDToId(prefix, tmp_id);
-  CU_ASSERT(key_table_lookup(tmp, &key) == 1)
-  secureFreeCharBuf(&key);
+  CU_ASSERT(key_table_lookup(tmp, &key) == 1) secureFreeCharBuf(&key);
   freeCharBuf(&tmp);
 
   tmp_id = "/test/key1txt";
   tmp = copyCWDToId(prefix, tmp_id);
-  CU_ASSERT(key_table_lookup(tmp, &key) == 1)
-  secureFreeCharBuf(&key);
+  CU_ASSERT(key_table_lookup(tmp, &key) == 1) secureFreeCharBuf(&key);
   freeCharBuf(&tmp);
 
-  CU_ASSERT(key_table_destroy() == 0)
-  pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
+  CU_ASSERT(key_table_destroy() == 0) pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
 }
 
 void test_table_initLookupAddDeleteDestroy(void)
@@ -132,51 +119,44 @@ void test_table_initLookupAddDeleteDestroy(void)
   CharBuf key;
   CharBuf tmp;
   char *prefix = "file:";
-  char *valid_id[6] = {"/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
-			"/test/key4.txt", "/test/key5.txt", "/test/key6.txt" };
+
+  char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
+    "/test/key4.txt", "/test/key5.txt", "/test/key6.txt"
+  };
   char *tmp_id;
 
   pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
   CU_ASSERT(key_table_init() == 0)
-
-  //Initial load of keys into the key table
-  for (int i = 0; i < 6; i++)
+    //Initial load of keys into the key table
+    for (int i = 0; i < 6; i++)
   {
-	tmp = copyCWDToId(prefix, valid_id[i]);
-    CU_ASSERT(key_table_add(tmp, &key) == 0)
-	secureFreeCharBuf(&key);
-	freeCharBuf(&tmp);
+    tmp = copyCWDToId(prefix, valid_id[i]);
+    CU_ASSERT(key_table_add(tmp, &key) == 0) secureFreeCharBuf(&key);
+    freeCharBuf(&tmp);
   }
 
   //Testing the delete function
   tmp = copyCWDToId(prefix, valid_id[3]);
-  CU_ASSERT(key_table_delete(tmp) == 0)
-  freeCharBuf(&tmp);
+  CU_ASSERT(key_table_delete(tmp) == 0) freeCharBuf(&tmp);
 
   tmp = copyCWDToId(prefix, valid_id[5]);
-  CU_ASSERT(key_table_delete(tmp) == 0)
-  freeCharBuf(&tmp);
+  CU_ASSERT(key_table_delete(tmp) == 0) freeCharBuf(&tmp);
 
   tmp = copyCWDToId(prefix, valid_id[0]);
-  CU_ASSERT(key_table_delete(tmp) == 0)
-  freeCharBuf(&tmp);
+  CU_ASSERT(key_table_delete(tmp) == 0) freeCharBuf(&tmp);
 
   //Testing that if the delete function does not find key_id then does not delete for valid files and non-valid files
   tmp_id = "/test/key.txt";
   tmp = copyCWDToId(prefix, tmp_id);
-  CU_ASSERT(key_table_delete(tmp) == 1)
-  freeCharBuf(&tmp);
+  CU_ASSERT(key_table_delete(tmp) == 1) freeCharBuf(&tmp);
 
   tmp_id = "/test/key1txt";
   tmp = copyCWDToId(prefix, tmp_id);
-  CU_ASSERT(key_table_delete(tmp) == 1)
-  freeCharBuf(&tmp);
+  CU_ASSERT(key_table_delete(tmp) == 1) freeCharBuf(&tmp);
 
   tmp = newCharBuf(strlen("adaj;ldkjidka;dfkjai"));
   memcpy(tmp.chars, "adaj;ldkjidka;dfkjai", tmp.len);
-  CU_ASSERT(key_table_delete(tmp) == 1)
-  freeCharBuf(&tmp);
+  CU_ASSERT(key_table_delete(tmp) == 1) freeCharBuf(&tmp);
 
-  CU_ASSERT(key_table_destroy() == 0)
-  pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
+  CU_ASSERT(key_table_destroy() == 0) pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
 }
