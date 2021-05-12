@@ -86,10 +86,14 @@ void test_encrypt_parser(void)
 
   cJSON_DeleteItemFromObject(json, "dec_data");
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
   cJSON_DeleteItemFromObject(json, "dec_data_len");
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
   //Test check of JSON request isNumber
@@ -108,6 +112,8 @@ void test_encrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "dec_data_len");
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateString("57"));
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_DeleteItemFromObject(json, "dec_data_len");
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
@@ -127,6 +133,8 @@ void test_encrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "dec_data");
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateNumber(2146));
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_DeleteItemFromObject(json, "dec_data");
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
@@ -142,19 +150,6 @@ void test_encrypt_parser(void)
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
   cJSON_DeleteItemFromObject(json, "enc_data_len");
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
-
-  //Test check of JSON request string is null
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(NULL));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-
-  cJSON_DeleteItemFromObject(json, "enc_data");
-  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(NULL));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "enc_data");
-  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 
   //Clean-up JSON
   cJSON_Delete(json);
@@ -208,10 +203,14 @@ void test_decrypt_parser(void)
 
   cJSON_DeleteItemFromObject(json, "enc_data");
   CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 
   cJSON_DeleteItemFromObject(json, "enc_data_len");
   CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
   //Test check of JSON request isNumber
@@ -230,6 +229,8 @@ void test_decrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "enc_data_len");
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateString("45"));
   CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_DeleteItemFromObject(json, "enc_data_len");
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
@@ -249,6 +250,8 @@ void test_decrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "enc_data");
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateNumber(2146));
   CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
+  freeCharBuf(&key_id);
+  freeCharBuf(&data);
   cJSON_DeleteItemFromObject(json, "enc_data");
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 
@@ -263,20 +266,7 @@ void test_decrypt_parser(void)
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(50));
   CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
   cJSON_DeleteItemFromObject(json, "dec_data_len");
-  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(enc_data_len));
-
-  //Test check of JSON request string is null
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(NULL));
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-
-  cJSON_DeleteItemFromObject(json, "dec_data");
-  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(NULL));
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "dec_data");
-  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
   //Clean-up JSON
   cJSON_Delete(json);
@@ -319,6 +309,7 @@ void test_request_decoder(void)
   int dec_data_len[6] = {
     57, 57, 45, 45, 33, 33
   };
+
   pelz_log(LOG_DEBUG, "Start Request Decoder Test");
   //Test Invalid Requests with bad request_types
   for (int i = 0; i < 4; i++)
@@ -335,18 +326,23 @@ void test_request_decoder(void)
   json_dec = cJSON_CreateObject();
   cJSON_AddItemToObject(json_enc, "request_type", cJSON_CreateNumber(1));
   cJSON_AddItemToObject(json_dec, "request_type", cJSON_CreateNumber(2));
+
   tmp = cJSON_PrintUnformatted(json_enc);
   request = newCharBuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
+  free(tmp);
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 1);
   freeCharBuf(&request);
   request_type = 0;
+
   tmp = cJSON_PrintUnformatted(json_dec);
   request = newCharBuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
+  free(tmp);
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 1);
   freeCharBuf(&request);
   request_type = 0;
+
   for (int i = 0; i < 6; i++)
   {
     cJSON_AddItemToObject(json_enc, "key_id", cJSON_CreateString(json_key_id[i]));
@@ -357,24 +353,29 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec, "dec_data", cJSON_CreateString(dec_data[i]));
     cJSON_AddItemToObject(json_enc, "enc_data_len", cJSON_CreateNumber(enc_data_len[i]));
     cJSON_AddItemToObject(json_dec, "dec_data_len", cJSON_CreateNumber(dec_data_len[i]));
+
     //Creating the request CharBuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
     request = newCharBuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
+    free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
     freeCharBuf(&request);
     request_type = 0;
     freeCharBuf(&key_id);
     freeCharBuf(&data);
+
     //Creating the request CharBuf for the JSON then testing request_decoder for decryption
     tmp = cJSON_PrintUnformatted(json_dec);
     request = newCharBuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
+    free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
     freeCharBuf(&request);
     request_type = 0;
     freeCharBuf(&key_id);
     freeCharBuf(&data);
+
     //Free the cJSON Objects to allow the addition of the next Object per the loop
     cJSON_DeleteItemFromObject(json_dec, "dec_data");
     cJSON_DeleteItemFromObject(json_dec, "dec_data_len");
@@ -385,48 +386,41 @@ void test_request_decoder(void)
     cJSON_DeleteItemFromObject(json_dec, "key_id");
     cJSON_DeleteItemFromObject(json_dec, "key_id_len");
   }
+
   cJSON_Delete(json_enc);
   cJSON_Delete(json_dec);
-  free(tmp);
 }
 
 void test_message_encoder(void)
 {
-  RequestType request_type[4] = {
-    0, 1, 2, 3
-  };
+  RequestType request_type[4] = { 0, 1, 2, 3 };
   CharBuf key_id;
   CharBuf data;
   CharBuf message;
+  char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
 
-  char *test[5] = {
-    "file:/test/key1.txt", "test/key1.txt", "file", "anything", ""
-  };
+  //Start Message Encoder Test
   pelz_log(LOG_DEBUG, "Start Message Encoder Test");
+
   data = newCharBuf(57);
   memcpy(data.chars, "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", data.len);
-  for (int i = 0; i < 4; i++)
-  {
+  key_id = newCharBuf(strlen(test[0]));
+  memcpy(key_id.chars, test[0], key_id.len);
+  CU_ASSERT(message_encoder(request_type[0], key_id, data, &message) == 1);
+  CU_ASSERT(message_encoder(request_type[3], key_id, data, &message) == 1);
+  freeCharBuf(&key_id);
 
-    for (int j = 0; j < 5; j++)
-    {
-      key_id = newCharBuf(strlen(test[j]));
-      memcpy(key_id.chars, test[j], key_id.len);
-      pelz_log(LOG_DEBUG, "Request Message Values: %d, %s, %d, %s, %d", request_type[i], key_id.chars, (int) key_id.len,
-        data.chars, (int) data.len);
-      if (i == 1 || i == 2)
-      {
-        CU_ASSERT(message_encoder(request_type[i], key_id, data, &message) == 0);
-        freeCharBuf(&message);
-        freeCharBuf(&data);
-      }
-      else
-      {
-        CU_ASSERT(message_encoder(request_type[i], key_id, data, &message) == 1);
-        freeCharBuf(&data);
-      }
-    }
+  for (int i = 0; i < 5; i++)
+  {
+    key_id = newCharBuf(strlen(test[i]));
+    memcpy(key_id.chars, test[i], key_id.len);
+    CU_ASSERT(message_encoder(request_type[1], key_id, data, &message) == 0);
+    freeCharBuf(&message);
+    CU_ASSERT(message_encoder(request_type[2], key_id, data, &message) == 0);
+    freeCharBuf(&message);
+    freeCharBuf(&key_id);
   }
+  freeCharBuf(&data);
 }
 
 void test_error_message_encoder(void)
@@ -440,7 +434,7 @@ void test_error_message_encoder(void)
   for (int i = 0; i < 5; i++)
   {
     CU_ASSERT(error_message_encoder(&message, err_msg[i]) == 0);
-    pelz_log(LOG_DEBUG, "Error Message: %s", message.chars);
+    pelz_log(LOG_DEBUG, "Error Message: %.*s", message.len, message.chars);
     freeCharBuf(&message);
   }
 }

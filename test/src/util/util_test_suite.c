@@ -28,12 +28,11 @@ int utility_suite_add_tests(CU_pSuite suite)
   {
     return 1;
   }
-  /*
-     if(NULL == CU_add_test(suite, "Test decode and encode Base64Data", test_decodeEncodeBase64Data))
-     {
-     return 1;
-     }
-   */
+  if (NULL == CU_add_test(suite, "Test decode and encode Base64Data", test_decodeEncodeBase64Data))
+  {
+    return 1;
+  }
+
   return 0;
 }
 
@@ -109,6 +108,7 @@ void test_key_id_parse(void)
     }
 
   }
+
   //Testing invalid Key IDs
   //Test assumes for FTP that the host, port, url_path are correct (code later needs to be able to check these)
   for (int i = 0; i < 16; i++)
@@ -201,5 +201,5 @@ void test_decodeEncodeBase64Data(void)
 
   // This should fail for data too long.
   CU_ASSERT(decodeBase64Data(base64_data, ((size_t) INT_MAX) + 1, &raw_data, &raw_data_size) == 1);
-
+  free(base64_data);
 }
