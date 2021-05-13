@@ -352,7 +352,6 @@ void test_request_decoder(void)
     memcpy(request.chars, tmp, request.len);
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
     CU_ASSERT(request_type == 2);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
@@ -385,6 +384,20 @@ void test_message_encoder(void)
   CharBuf data;
   CharBuf message;
   char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
+  char *valid_enc_message[5] =
+    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"file\",\"key_id_len\":4,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"anything\",\"key_id_len\":8,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"\",\"key_id_len\":0,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}"
+  };
+  char *valid_dec_message[5] =
+    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"file\",\"key_id_len\":4,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"anything\",\"key_id_len\":8,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"\",\"key_id_len\":0,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}"
+  };
 
   //Start Message Encoder Test
   pelz_log(LOG_DEBUG, "Start Message Encoder Test");
@@ -402,8 +415,10 @@ void test_message_encoder(void)
     key_id = newCharBuf(strlen(test[i]));
     memcpy(key_id.chars, test[i], key_id.len);
     CU_ASSERT(message_encoder(request_type[1], key_id, data, &message) == 0);
+    CU_ASSERT(memcmp(message.chars, valid_enc_message[i], message.len) == 0);
     freeCharBuf(&message);
     CU_ASSERT(message_encoder(request_type[2], key_id, data, &message) == 0);
+    CU_ASSERT(memcmp(message.chars, valid_dec_message[i], message.len) == 0);
     freeCharBuf(&message);
     freeCharBuf(&key_id);
   }
