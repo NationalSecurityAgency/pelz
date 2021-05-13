@@ -64,6 +64,10 @@ void test_encrypt_parser(void)
 
   //Test standard valid JSON request
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
+  CU_ASSERT(key_id.len == json_key_id_len);
+  CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
+  CU_ASSERT(data.len == enc_data_len);
+  CU_ASSERT(memcmp(data.chars, enc_data, data.len) == 0);
   freeCharBuf(&key_id);
   freeCharBuf(&data);
 
@@ -109,14 +113,6 @@ void test_encrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "enc_data_len");
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
-  cJSON_DeleteItemFromObject(json, "dec_data_len");
-  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateString("57"));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
-  freeCharBuf(&key_id);
-  freeCharBuf(&data);
-  cJSON_DeleteItemFromObject(json, "dec_data_len");
-  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
-
   //Test check of JSON request isString
   cJSON_DeleteItemFromObject(json, "key_id");
   cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482));
@@ -129,14 +125,6 @@ void test_encrypt_parser(void)
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
   cJSON_DeleteItemFromObject(json, "enc_data");
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
-
-  cJSON_DeleteItemFromObject(json, "dec_data");
-  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateNumber(2146));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
-  freeCharBuf(&key_id);
-  freeCharBuf(&data);
-  cJSON_DeleteItemFromObject(json, "dec_data");
-  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
   //Test check of JSON request string length match
   cJSON_DeleteItemFromObject(json, "key_id_len");
@@ -181,6 +169,10 @@ void test_decrypt_parser(void)
 
   //Test standard valid JSON request
   CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
+  CU_ASSERT(key_id.len == json_key_id_len);
+  CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
+  CU_ASSERT(data.len == dec_data_len);
+  CU_ASSERT(memcmp(data.chars, dec_data, data.len) == 0);
   freeCharBuf(&key_id);
   freeCharBuf(&data);
 
@@ -226,14 +218,6 @@ void test_decrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "dec_data_len");
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
-  cJSON_DeleteItemFromObject(json, "enc_data_len");
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateString("45"));
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
-  freeCharBuf(&key_id);
-  freeCharBuf(&data);
-  cJSON_DeleteItemFromObject(json, "enc_data_len");
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
-
   //Test check of JSON request isString
   cJSON_DeleteItemFromObject(json, "key_id");
   cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482));
@@ -246,14 +230,6 @@ void test_decrypt_parser(void)
   CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
   cJSON_DeleteItemFromObject(json, "dec_data");
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
-
-  cJSON_DeleteItemFromObject(json, "enc_data");
-  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateNumber(2146));
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
-  freeCharBuf(&key_id);
-  freeCharBuf(&data);
-  cJSON_DeleteItemFromObject(json, "enc_data");
-  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 
   //Test check of JSON request string length match
   cJSON_DeleteItemFromObject(json, "key_id_len");
@@ -360,6 +336,11 @@ void test_request_decoder(void)
     memcpy(request.chars, tmp, request.len);
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
+    CU_ASSERT(request_type == 1);
+    CU_ASSERT(key_id.len == json_key_id_len);
+    CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
+    CU_ASSERT(data.len == enc_data_len[i]);
+    CU_ASSERT(memcmp(data.chars, enc_data[i], data.len) == 0);
     freeCharBuf(&request);
     request_type = 0;
     freeCharBuf(&key_id);
@@ -371,6 +352,12 @@ void test_request_decoder(void)
     memcpy(request.chars, tmp, request.len);
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
+    CU_ASSERT(request_type == 2);
+    CU_ASSERT(key_id.len == json_key_id_len);
+    CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
+    CU_ASSERT(data.len == dec_data_len[i]);
+    CU_ASSERT(memcmp(data.chars, dec_data[i], data.len) == 0);
     freeCharBuf(&request);
     request_type = 0;
     freeCharBuf(&key_id);
