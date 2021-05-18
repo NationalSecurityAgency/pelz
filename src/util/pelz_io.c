@@ -13,6 +13,11 @@
 #include "pelz_request_handler.h"
 #include "util.h"
 
+void ocall_malloc(size_t size, char** buf){
+  *buf = (char*)malloc(size);
+}
+
+
 int get_file_ext(CharBuf buf, int *ext)
 {
   int period_index = 0;

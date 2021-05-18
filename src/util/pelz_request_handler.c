@@ -2,25 +2,30 @@
 #include <stdlib.h>
 
 #include "CharBuf.h"
-#include "pelz_log.h"
 #include "pelz_request_handler.h"
+
+#ifdef APP
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+#else
 #include "pelz_request_handler_impl.h"
-#include "key_table.h"
-#include "aes_keywrap_3394nopad.h"
+#endif
 
 #ifdef SGX
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include "pelz_enclave_t.h"
 #endif
 
 RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf * output)
 {
-#ifdef SGX
-  RequestResponseStatus status;
 
+  RequestResponseStatus status;
+#if defined(SGX) || defined(APP)
   pelz_request_handler_impl(eid, &status, request_type, key_id, data_in, output);
 #else
-  return pelz_request_handler_impl(request_type, key_id, data_in, output);
+  status = pelz_request_handler_impl(request_type, key_id, data_in, output);
 #endif
+  return status;
 }

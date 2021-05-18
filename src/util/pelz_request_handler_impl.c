@@ -5,11 +5,17 @@
 #include "key_table.h"
 #include "aes_keywrap_3394nopad.h"
 
+#ifdef SGX
+#include "sgx_urts.h"
+#include "pelz_enclave_t.h"
+#endif
+
 //Function to test socket code with working encryption code
 RequestResponseStatus pelz_request_handler_impl(RequestType request_type, CharBuf key_id, CharBuf data, CharBuf * output)
 {
+  
   CharBuf key;
-
+  
   if (key_table_lookup(key_id, &key))
   {
     if (key_table_add(key_id, &key))

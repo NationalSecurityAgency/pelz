@@ -9,11 +9,11 @@
 #include "pelz_request_handler.h"
 #include "pelz_thread.h"
 
-#ifdef SGX
-#include "sgx_urts.h"
-#include "pelz_enclave.h"
-#include "pelz_enclave_t.h"
-#endif
+/* #ifdef SGX */
+/* #include "sgx_urts.h" */
+/* #include "pelz_enclave.h" */
+/* #include "pelz_enclave_t.h" */
+/* #endif */
 
 void thread_process(void *arg)
 {

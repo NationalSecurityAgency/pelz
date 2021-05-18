@@ -77,12 +77,12 @@ else
 endif
 
 App_Cpp_Files := src/pelz/main.c \
+		 src/util/pelz_request_handler.c \
 		 src/util/pelz_io.c
 
+App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 
 
-App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -I$(SGX_SSL_INCLUDE_PATH)
-
-App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DSGX
+App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DAPP
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -96,9 +96,8 @@ else
 		App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
 endif
 
-App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DSGX
-#App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_pthread -lsgx_usgxssl
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger
+App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DAPP
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lpthread
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim
@@ -107,8 +106,8 @@ else
 endif
 
 
-App_Cpp_Objects := sgx/pelz_io.o \
-		   sgx/main.o 
+App_Cpp_Objects := sgx/pelz_request_handler.o \
+		   sgx/main.o
 
 App_Name := pelz
 
@@ -123,7 +122,7 @@ Lib_Cpp_Files := src/util/CharBuf.c \
 
 Lib_Include_Paths := -Iinclude
 Lib_C_Flags := -Wall -fPIC -Wno-attributes $(Lib_Include_Paths)
-Lib_Cpp_Flags := -std=c++11 -DSGX
+Lib_Cpp_Flags := -std=c++11
 Lib_Link_Flags := -lkmyth-logger -lpthread -lcrypt -lssl -lcjson
 
 Lib_Cpp_Objects := objs/CharBuf.o \
@@ -151,9 +150,10 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Cpp_Files := src/aes_keywrap_3394nopad.c \
-		     src/key_table.c \
-		     src/pelz_request_handler.c
+Enclave_Cpp_Files := src/util/aes_keywrap_3394nopad.c \
+		     src/util/key_table.c \
+		     src/util/pelz_request_handler.c \
+		     src/util/pelz_request_handler_impl.c
 
 Enclave_Include_Paths := -Iinclude -Isgx/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SSL_INCLUDE_PATH) -Isgx
 
@@ -170,7 +170,8 @@ Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefau
 
 Enclave_Cpp_Objects := sgx/objs/aes_keywrap_3394nopad.o \
 		       sgx/objs/key_table.o \
-		       sgx/objs/pelz_request_handler.o
+		       sgx/objs/pelz_request_handler.o \
+		       sgx/objs/pelz_request_handler_impl.o
 
 Enclave_Name := pelz_enclave.so
 Signed_Enclave_Name := pelz_enclave.signed.so
@@ -219,8 +220,8 @@ sgx/libpelz-sgx.so: $(Lib_Cpp_Files)
 	@$(CXX) $^ -o $@ $(Lib_Cpp_Flags) $(Lib_C_Flags) $(Lib_Link_Flags) -shared
 	@echo "LINK => $@"
 
-$(App_Name): sgx/pelz_enclave_u.o $(App_Cpp_Files)
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) $(App_C_Flags) $(App_Link_Flags) -lpelz-sgx -Lsgx -lcrypto
+$(App_Name): $(Lib_Cpp_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
 	@echo "LINK =>  $@"
 
 
@@ -242,6 +243,10 @@ sgx/aes_keywrap_3394nopad.o: src/util/aes_keywrap_3394nopad.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <=  $<"
 
+sgx/pelz_request_handler_impl.o: src/util/pelz_request_handler_impl.c
+	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <=  $<"
+
 sgx/pelz_request_handler.o: src/util/pelz_request_handler.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <=  $<"
@@ -254,7 +259,7 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/pelz_enclave.so: sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/CharBuf.o sgx/util.o
+sgx/pelz_enclave.so: sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler_impl.o sgx/CharBuf.o sgx/util.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -265,4 +270,4 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name)
 .PHONY: clean
 
 clean:
-	@rm -f $(App_Name) $(Enclave_Name) $(Signed_Enclave_Name) $(App_Cpp_Objects) App/Enclave_u.* $(Enclave_Cpp_Objects) Enclave/Enclave_t.*
+	@rm -f pelz sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o

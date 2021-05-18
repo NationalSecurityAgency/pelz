@@ -7,7 +7,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if !defined(APP) || !defined(SGX)  
   RequestResponseStatus pelz_request_handler_impl(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf* output);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

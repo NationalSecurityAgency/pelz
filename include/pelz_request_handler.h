@@ -60,7 +60,9 @@ typedef struct URIParseValues
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf * output);
+  
 #ifdef __cplusplus
 }
 #endif

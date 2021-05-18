@@ -32,9 +32,12 @@ int get_file_ext(CharBuf buf, int *ext);
  *
  * @return 0 on success, 1 on error
  */
-  #ifndef SGX
-int key_load(KeyEntry * key_values);
+#ifndef SGX
+  int key_load(KeyEntry * key_values);
+  void ocall_malloc(size_t size, char** buf);
 #endif
+
+
 /**
  * <pre>
  * URI parsing of Key ID per RFC 8089 (The "file" URI Scheme) and RFC 959 (FILE TRANSFER PROTOCOL (FTP)) with

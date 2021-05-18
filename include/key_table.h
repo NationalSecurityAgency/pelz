@@ -25,7 +25,11 @@ typedef struct Keys
 
 extern KeyTable key_table;
 
-#ifndef SGX
+#ifdef __cplusplus
+extern "C" {
+#endif
+  
+#ifndef APP
 /**
  * <pre>
  * This function initializes a key table for lookup.
@@ -97,4 +101,7 @@ int key_table_add(CharBuf key_id, CharBuf * key);
  */
 int key_table_lookup(CharBuf key_id, CharBuf * key);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* INCLUDE_KEY_TABLE_H_ */
