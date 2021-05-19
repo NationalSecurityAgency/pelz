@@ -156,12 +156,8 @@ int convert_HexString_to_ByteArray(char **result, char *hex_str, int str_size);
  * @return     0 on success, 1 on error
  */
 int get_aes_keywrap_vector_from_file(FILE * fid,
-                                     uint8_t ** K_vec,
-                                     size_t * K_vec_len,
-                                     uint8_t ** P_vec,
-                                     size_t * P_vec_len,
-                                     uint8_t ** C_vec,
-                                     size_t * C_vec_len, bool * expect_pass);
+  uint8_t ** K_vec,
+  size_t * K_vec_len, uint8_t ** P_vec, size_t * P_vec_len, uint8_t ** C_vec, size_t * C_vec_len, bool * expect_pass);
 
 //--------------------- Tests ------------------------------------------------
 

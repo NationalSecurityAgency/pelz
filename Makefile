@@ -57,8 +57,14 @@ test_unit: $(UTIL_OBJECTS) $(TEST_OBJECTS)
 pre:
 	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 src/*/*.c
 	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 include/*.h
+	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/src/*.c
+	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/src/*/*.c
+	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/include/*.h
 	rm -f src/*/*.c~
 	rm -f include/*.h~
+	rm -f test/src/*.c~
+	rm -f test/src/*/*.c~
+	rm -f test/include/*.h~
 	mkdir -p bin
 	mkdir -p test/bin
 	mkdir -p test/log
