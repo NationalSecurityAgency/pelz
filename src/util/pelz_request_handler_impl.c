@@ -1,5 +1,4 @@
 #include "CharBuf.h"
-#include "pelz_request_handler_impl.h"
 #include "pelz_request_handler.h"
 #include "pelz_log.h"
 #include "key_table.h"

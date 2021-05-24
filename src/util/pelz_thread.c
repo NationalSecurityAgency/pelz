@@ -9,12 +9,6 @@
 #include "pelz_request_handler.h"
 #include "pelz_thread.h"
 
-/* #ifdef SGX */
-/* #include "sgx_urts.h" */
-/* #include "pelz_enclave.h" */
-/* #include "pelz_enclave_t.h" */
-/* #endif */
-
 void thread_process(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
@@ -67,8 +61,8 @@ void thread_process(void *arg)
     pthread_mutex_lock(&lock);
     status = pelz_request_handler(request_type, key_id, data, &output);
     pthread_mutex_unlock(&lock);
-
     freeCharBuf(&data);
+
     if (status != REQUEST_OK)
     {
       pelz_log(LOG_ERR, "%d::Service Error\nSend error message.", new_socket);
@@ -101,7 +95,6 @@ void thread_process(void *arg)
       {
         data_out.chars[data_out.len] = 0;
       }
-
       message_encoder(request_type, key_id, data_out, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
       pelz_log(LOG_DEBUG, "%d::Message: %s, %d", new_socket, message.chars, (int) message.len);
