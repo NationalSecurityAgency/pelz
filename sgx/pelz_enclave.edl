@@ -7,7 +7,7 @@ enclave {
 	trusted {
 	public int key_table_init(void);
 	public int key_table_destroy(void);
-	public RequestResponseStatus pelz_request_handler_impl(RequestType request_type, CharBuf key_id, CharBuf data, [user_check] CharBuf* output);
+	public RequestResponseStatus pelz_request_handler_impl(RequestType request_type, CharBuf key_id, CharBuf data, [out] CharBuf* output);
 	};
 	untrusted {
 	int key_load([user_check] KeyEntry* key_values);
