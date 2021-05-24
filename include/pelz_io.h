@@ -25,15 +25,15 @@ int get_file_ext(CharBuf buf, int *ext);
  * Load key from location stated by Key ID
  * <pre>
  *
- * @param[in] key_values.key_id The Key Identifier
- * @param[in] key_values.key_id_len Length of Key Identifier
- * @param[out] key_values.key The key value
- * @param[out] key_values.key_len The length of the key
+ * @param[in] key_data.key_id The Key Identifier
+ * @param[in] key_data.key_id_len Length of Key Identifier
+ * @param[out] key_data.key The key value
+ * @param[out] key_data.key_len The length of the key
  *
  * @return 0 on success, 1 on error
  */
 #ifndef SGX
-  int key_load(KeyEntry * key_values);
+  int key_load(KeyEntry * key_data);
   void ocall_malloc(size_t size, char** buf);
 #endif
 

@@ -10,7 +10,7 @@ enclave {
 	public RequestResponseStatus pelz_request_handler_impl(RequestType request_type, CharBuf key_id, CharBuf data, [out] CharBuf* output);
 	};
 	untrusted {
-	int key_load([user_check] KeyEntry* key_values);
+	int key_load([user_check] KeyEntry* key_data);
 	void ocall_malloc(size_t size, [user_check] char** buf);
 	void ocall_print(void);
 	};

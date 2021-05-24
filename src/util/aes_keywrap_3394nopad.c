@@ -9,7 +9,7 @@
 #include "pelz_log.h"
 
 #ifdef SGX
-#include "sgx_urts.h"
+#include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #endif
 
@@ -44,6 +44,9 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   *outData = NULL;
   #ifdef SGX
   ocall_malloc(*outData_len, (char**)outData);
+  if(!sgx_is_outside_enclave(*outData, *outData_len)){
+      return 1;
+    }
   #else
   *outData = (unsigned char*)malloc(*outData_len);
   #endif
@@ -169,6 +172,9 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   *outData = NULL;
   #ifdef SGX
   ocall_malloc(*outData_len, (char**)outData);
+  if(!sgx_is_outside_enclave(*outData, *outData_len)){
+      return 1;
+    }
   #else
   *outData = (unsigned char*)malloc(*outData_len);
   #endif
