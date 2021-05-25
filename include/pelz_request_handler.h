@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "CharBuf.h"
+#include "charbuf.h"
 
 //The maxim key length
 #define MAX_KEY_LEN 32
@@ -35,16 +35,16 @@ typedef enum
 
 typedef struct FILEScheme
 {
-  CharBuf auth;
-  CharBuf path;
-  CharBuf f_name;
+  charbuf auth;
+  charbuf path;
+  charbuf f_name;
 } FValues;
 
 typedef struct FTPScheme
 {
-  CharBuf host;
-  CharBuf port;
-  CharBuf url_path;
+  charbuf host;
+  charbuf port;
+  charbuf url_path;
 } FTPValues;
 
 typedef struct URIParseValues
@@ -57,6 +57,6 @@ typedef struct URIParseValues
   };
 } URIValues;
 
-RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf * output);
+RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data_in, charbuf * output);
 
 #endif /* INCLUDE_PELZ_REQUEST_HANDLER_H_ */

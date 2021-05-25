@@ -10,7 +10,7 @@
 #include <key_table.h>
 #include <util.h>
 #include <pelz_request_handler.h>
-#include <CharBuf.h>
+#include <charbuf.h>
 #include <pelz_log.h>
 
 KeyTable key_table;
@@ -39,11 +39,11 @@ int key_table_destroy(void)
     {
       if (key_table.entries[i].key_id.len != 0)
       {
-        freeCharBuf(&key_table.entries[i].key_id);
+        free_charbuf(&key_table.entries[i].key_id);
       }
       if (key_table.entries[i].key.len != 0)
       {
-        secureFreeCharBuf(&key_table.entries[i].key);
+        secure_free_charbuf(&key_table.entries[i].key);
       }
     }
   }
@@ -59,20 +59,20 @@ int key_table_destroy(void)
   return (0);
 }
 
-int key_table_delete(CharBuf key_id)
+int key_table_delete(charbuf key_id)
 {
   int index;
 
   index = 0;
   for (int i = 0; i < key_table.num_entries; i++)
   {
-    if (cmpCharBuf(key_id, key_table.entries[i].key_id) == 0)
+    if (cmp_charbuf(key_id, key_table.entries[i].key_id) == 0)
     {
       key_table.mem_size = key_table.mem_size -
         ((key_table.entries[i].key.len * sizeof(char)) + (key_table.entries[i].key_id.len * sizeof(char)) +
         (2 * sizeof(size_t)));
-      freeCharBuf(&key_table.entries[i].key_id);
-      secureFreeCharBuf(&key_table.entries[i].key);
+      free_charbuf(&key_table.entries[i].key_id);
+      secure_free_charbuf(&key_table.entries[i].key);
       index = i + 1;
       break;
     }
@@ -98,11 +98,11 @@ int key_table_delete(CharBuf key_id)
   return (0);
 }
 
-int key_table_add(CharBuf key_id, CharBuf * key)
+int key_table_add(charbuf key_id, charbuf * key)
 {
   KeyEntry tmp_entry;
   size_t max_mem_size;
-  CharBuf tmpkey;
+  charbuf tmpkey;
 
   max_mem_size = 1000000;
 
@@ -112,33 +112,33 @@ int key_table_add(CharBuf key_id, CharBuf * key)
     return (1);
   }
 
-  tmp_entry.key_id = newCharBuf(key_id.len);
+  tmp_entry.key_id = new_charbuf(key_id.len);
   memcpy(tmp_entry.key_id.chars, key_id.chars, tmp_entry.key_id.len);
 
   if (key_load(&tmp_entry))
   {
     //If the code cannot retrieve the key from the URI provided by the Key ID, then we error out of the function before touching the Key Table.
-    freeCharBuf(&tmp_entry.key_id);
+    free_charbuf(&tmp_entry.key_id);
     return (1);
   }
 
   if (!key_table_lookup(tmp_entry.key_id, &tmpkey))
   {
-    if (cmpCharBuf(tmpkey, tmp_entry.key) == 0)
+    if (cmp_charbuf(tmpkey, tmp_entry.key) == 0)
     {
       pelz_log(LOG_DEBUG, "Key already added.");
-      *key = copyBytesFromBuf(tmpkey, 0);
-      freeCharBuf(&tmp_entry.key_id);
-      secureFreeCharBuf(&tmp_entry.key);
-      secureFreeCharBuf(&tmpkey);
+      *key = copy_chars_from_charbuf(tmpkey, 0);
+      free_charbuf(&tmp_entry.key_id);
+      secure_free_charbuf(&tmp_entry.key);
+      secure_free_charbuf(&tmpkey);
       return (0);
     }
     else
     {
       pelz_log(LOG_ERR, "Key entry and Key ID lookup do not match.");
-      freeCharBuf(&tmp_entry.key_id);
-      secureFreeCharBuf(&tmp_entry.key);
-      secureFreeCharBuf(&tmpkey);
+      free_charbuf(&tmp_entry.key_id);
+      secure_free_charbuf(&tmp_entry.key);
+      secure_free_charbuf(&tmpkey);
       return (1);
     }
   }
@@ -146,8 +146,8 @@ int key_table_add(CharBuf key_id, CharBuf * key)
   if ((key_table.entries = (KeyEntry *) realloc(key_table.entries, (key_table.num_entries + 1) * sizeof(KeyEntry))) == NULL)
   {
     pelz_log(LOG_ERR, "Key List Space Reallocation Error");
-    freeCharBuf(&tmp_entry.key_id);
-    secureFreeCharBuf(&tmp_entry.key);
+    free_charbuf(&tmp_entry.key_id);
+    secure_free_charbuf(&tmp_entry.key);
     return (1);
   }
   key_table.entries[key_table.num_entries] = tmp_entry;
@@ -155,17 +155,17 @@ int key_table_add(CharBuf key_id, CharBuf * key)
   key_table.mem_size =
     key_table.mem_size + ((tmp_entry.key.len * sizeof(char)) + (tmp_entry.key_id.len * sizeof(char)) + (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Key Added");
-  *key = copyBytesFromBuf(tmp_entry.key, 0);
+  *key = copy_chars_from_charbuf(tmp_entry.key, 0);
   return (0);
 }
 
-int key_table_lookup(CharBuf key_id, CharBuf * key)
+int key_table_lookup(charbuf key_id, charbuf * key)
 {
   for (int i = 0; i < key_table.num_entries; i++)
   {
-    if (cmpCharBuf(key_id, key_table.entries[i].key_id) == 0)
+    if (cmp_charbuf(key_id, key_table.entries[i].key_id) == 0)
     {
-      *key = newCharBuf(key_table.entries[i].key.len);
+      *key = new_charbuf(key_table.entries[i].key.len);
       memcpy(key->chars, key_table.entries[i].key.chars, key->len);
       return (0);
     }
