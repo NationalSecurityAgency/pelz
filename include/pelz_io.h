@@ -1,21 +1,21 @@
 #ifndef INCLUDE_PELZ_IO_H_
 #define INCLUDE_PELZ_IO_H_
 
-#include "CharBuf.h"
+#include "charbuf.h"
 #include "key_table.h"
 #include "pelz_request_handler.h"
 
 /**
  * <pre>
- * This function creates a new CharBuf that contains the file extension of a file name sting in a CharBuf
+ * This function creates a new charbuf that contains the file extension of a file name sting in a charbuf
  * </pre>
  *
- * @param[in] buf The CharBuf that contains the file name string
+ * @param[in] buf The charbuf that contains the file name string
  * @param[out] ext The integer representation of the file extension type
  *
  * @return 0 on success, 1 on error
  */
-int get_file_ext(CharBuf buf, int *ext);
+int get_file_ext(charbuf buf, int *ext);
 
 /**
  * <pre>
@@ -49,7 +49,7 @@ int key_load(KeyEntry * key_values);
  *
  * @return 0 on success, 1 on error
  */
-int key_id_parse(CharBuf key_id, URIValues * uri);
+int key_id_parse(charbuf key_id, URIValues * uri);
 
 /**
  * <pre>

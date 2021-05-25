@@ -14,7 +14,7 @@
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
 #include <pelz_log.h>
-#include <CharBuf.h>
+#include <charbuf.h>
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>

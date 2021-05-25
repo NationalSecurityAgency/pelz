@@ -11,7 +11,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 
-#include <CharBuf.h>
+#include <charbuf.h>
 #include <pelz_log.h>
 
 // Adds tests to utility suite that get executed by pelz-test-unit
@@ -70,7 +70,7 @@ void test_file_check(void)
 void test_key_id_parse(void)
 {
   URIValues uri;
-  CharBuf id;
+  charbuf id;
   char *postfix = "/test/key1.txt";
 
   char *valid_id[7] = { "file:", "file://", "file://host.example.com",
@@ -90,22 +90,22 @@ void test_key_id_parse(void)
   //Testing all valid Key IDs
   for (int i = 0; i < 7; i++)
   {
-    id = copyCWDToId(valid_id[i], postfix);
+    id = copy_CWD_to_id(valid_id[i], postfix);
     //Test valid Key IDs
     CU_ASSERT(key_id_parse(id, &uri) == 0);
-    freeCharBuf(&id);
+    free_charbuf(&id);
     if (uri.type == 1)
     {
       if (uri.f_values.auth.len != 0)
-        freeCharBuf(&uri.f_values.auth);
-      freeCharBuf(&uri.f_values.path);
-      freeCharBuf(&uri.f_values.f_name);
+        free_charbuf(&uri.f_values.auth);
+      free_charbuf(&uri.f_values.path);
+      free_charbuf(&uri.f_values.f_name);
     }
     else if (uri.type == 2)
     {
-      freeCharBuf(&uri.ftp_values.host);
-      freeCharBuf(&uri.ftp_values.port);
-      freeCharBuf(&uri.ftp_values.url_path);
+      free_charbuf(&uri.ftp_values.host);
+      free_charbuf(&uri.ftp_values.port);
+      free_charbuf(&uri.ftp_values.url_path);
     }
 
   }
@@ -114,11 +114,11 @@ void test_key_id_parse(void)
   //Test assumes for FTP that the host, port, url_path are correct (code later needs to be able to check these)
   for (int i = 0; i < 16; i++)
   {
-    id = newCharBuf(strlen(invalid_id[i]));
+    id = new_charbuf(strlen(invalid_id[i]));
     memcpy(id.chars, invalid_id[i], id.len);
     //Test invalid Key IDs
     CU_ASSERT(key_id_parse(id, &uri) == 1);
-    freeCharBuf(&id);
+    free_charbuf(&id);
   }
 
   // Real file with permission
@@ -126,22 +126,22 @@ void test_key_id_parse(void)
 
   fprintf(fp, "Testing...");
   fclose(fp);
-  id = copyCWDToId("file:", "/temp_file.pem");
+  id = copy_CWD_to_id("file:", "/temp_file.pem");
   CU_ASSERT(key_id_parse(id, &uri) == 0);
-  freeCharBuf(&id);
-  freeCharBuf(&uri.f_values.path);
-  freeCharBuf(&uri.f_values.f_name);
+  free_charbuf(&id);
+  free_charbuf(&uri.f_values.path);
+  free_charbuf(&uri.f_values.f_name);
   remove("temp_file.pem");
 
   // Real file with permission
   fp = fopen("temp_file.py", "w");
   fprintf(fp, "Testing...");
   fclose(fp);
-  id = copyCWDToId("file:", "/temp_file.py");
+  id = copy_CWD_to_id("file:", "/temp_file.py");
   CU_ASSERT(key_id_parse(id, &uri) == 0);
-  freeCharBuf(&id);
-  freeCharBuf(&uri.f_values.path);
-  freeCharBuf(&uri.f_values.f_name);
+  free_charbuf(&id);
+  free_charbuf(&uri.f_values.path);
+  free_charbuf(&uri.f_values.f_name);
   remove("temp_file.py");
 }
 
@@ -156,21 +156,21 @@ void test_key_load(void)
   char *key_id_postfix[5] = { "/test/key.txt", "/test/key.pem", "/test/key1.txt", "/test/key1.txt", "/test/key1.txt" };
 
   pelz_log(LOG_DEBUG, "Start Key Load Test");
-  key_values.key_id = copyCWDToId("file:", "/test/key1.txt");
+  key_values.key_id = copy_CWD_to_id("file:", "/test/key1.txt");
   CU_ASSERT(key_load(&key_values) == 0);
-  freeCharBuf(&key_values.key_id);
-  freeCharBuf(&key_values.key);
+  free_charbuf(&key_values.key_id);
+  free_charbuf(&key_values.key);
 
-  key_values.key_id = copyCWDToId("file://localhost", "/test/key1.txt");
+  key_values.key_id = copy_CWD_to_id("file://localhost", "/test/key1.txt");
   CU_ASSERT(key_load(&key_values) == 0);
-  freeCharBuf(&key_values.key_id);
-  freeCharBuf(&key_values.key);
+  free_charbuf(&key_values.key_id);
+  free_charbuf(&key_values.key);
 
   for (int i = 0; i < 5; i++)
   {
-    key_values.key_id = copyCWDToId(key_id_prefix[i], key_id_postfix[i]);
+    key_values.key_id = copy_CWD_to_id(key_id_prefix[i], key_id_postfix[i]);
     CU_ASSERT(key_load(&key_values) == 1);
-    freeCharBuf(&key_values.key_id);
+    free_charbuf(&key_values.key_id);
   }
 }
 

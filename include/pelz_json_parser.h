@@ -28,7 +28,7 @@
  * @return 0 on success, 1 on error
  *
  */
-int request_decoder(CharBuf request, RequestType * request_type, CharBuf * key_id, CharBuf * data);
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data);
 
 /**
  * <pre>
@@ -43,7 +43,7 @@ int request_decoder(CharBuf request, RequestType * request_type, CharBuf * key_i
  * @return 0 on success, 1 on error
  *
  */
-int error_message_encoder(CharBuf * message, char *err_message);
+int error_message_encoder(charbuf * message, char *err_message);
 
 /**
  * <pre>
@@ -61,7 +61,7 @@ int error_message_encoder(CharBuf * message, char *err_message);
  * @return 0 on success, 1 on error
  *
  */
-int message_encoder(RequestType request_type, CharBuf key_id, CharBuf data, CharBuf * message);
+int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf * message);
 
 /**
  * <pre>
@@ -78,7 +78,7 @@ int message_encoder(RequestType request_type, CharBuf key_id, CharBuf data, Char
  * @return 0 on success, 1 on error
  *
  */
-int encrypt_parser(cJSON * json, CharBuf * key_id, CharBuf * data);
+int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
 
 /**
  * <pre>
@@ -95,6 +95,6 @@ int encrypt_parser(cJSON * json, CharBuf * key_id, CharBuf * data);
  * @return 0 on success, 1 on error
  *
  */
-int decrypt_parser(cJSON * json, CharBuf * key_id, CharBuf * data);
+int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
 
 #endif /* INCLUDE_JSON_PARSER_H_ */

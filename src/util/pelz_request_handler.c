@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "CharBuf.h"
+#include "charbuf.h"
 #include "pelz_log.h"
 #include "pelz_request_handler.h"
 #include "key_table.h"
@@ -9,9 +9,9 @@
 #include "key_table.h"
 
 //Function to test socket code with working encryption code
-RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data, CharBuf * output)
+RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
 {
-  CharBuf key;
+  charbuf key;
 
   if (key_table_lookup(key_id, &key))
   {
@@ -28,27 +28,27 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key
   case REQ_ENC:
     if ((key.len < 16 || key.len % 8 != 0) && (data.len < 16 || data.len % 8 != 0))
     {
-      secureFreeCharBuf(&key);
+      secure_free_charbuf(&key);
       return KEY_OR_DATA_ERROR;
     }
     if (aes_keywrap_3394nopad_encrypt(key.chars, key.len, data.chars, data.len, &output->chars, &output->len))
     {
-      secureFreeCharBuf(&key);
+      secure_free_charbuf(&key);
       return ENCRYPT_ERROR;
     }
     break;
   case REQ_DEC:
     if (aes_keywrap_3394nopad_decrypt(key.chars, key.len, data.chars, data.len, &output->chars, &output->len))
     {
-      secureFreeCharBuf(&key);
+      secure_free_charbuf(&key);
       return DECRYPT_ERROR;
     }
     break;
   default:
-    secureFreeCharBuf(&key);
+    secure_free_charbuf(&key);
     return REQUEST_TYPE_ERROR;
 
   }
-  secureFreeCharBuf(&key);
+  secure_free_charbuf(&key);
   return REQUEST_OK;
 }
