@@ -3,6 +3,7 @@
  */
 
 #include "key_table_test_suite.h"
+#include "test_helper_functions.h"
 
 #include <string.h>
 #include <stdio.h>
