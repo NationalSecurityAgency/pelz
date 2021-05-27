@@ -32,8 +32,9 @@ int get_file_ext(CharBuf buf, int *ext);
  *
  * @return 0 on success, 1 on error
  */
-#ifndef SGX
-  int key_load(KeyEntry * key_data);
+#if !defined(SGX) // && !defined(APP)
+  //  int key_load(KeyEntry * key_data);
+  int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned char** key);
   void ocall_malloc(size_t size, char** buf);
 #endif
 

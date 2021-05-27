@@ -122,9 +122,9 @@ int key_table_add(CharBuf key_id, CharBuf * key)
 
   int ret;
   #ifdef SGX
-  key_load(&ret, &tmp_entry);
+  key_load(&ret, tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));    
   #else
-  ret = key_load(&tmp_entry);
+  ret = key_load(tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
   #endif
   if (ret)
   {

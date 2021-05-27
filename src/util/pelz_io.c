@@ -52,7 +52,7 @@ int get_file_ext(CharBuf buf, int *ext)
   return (0);
 }
 
-int key_load(KeyEntry * key_data)
+int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned char** key)
 {
   URIValues key_id_data;
   int file_type = 0;
@@ -61,11 +61,15 @@ int key_load(KeyEntry * key_data)
   FILE *key_txt_f = 0;
   FILE *key_key_f = 0;
 
+  CharBuf key_data;
+  key_data.chars = key_id;
+  key_data.len = key_id_len;
+
   key_id_data.type = 0;
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
-  pelz_log(LOG_DEBUG, "Key ID: %s", key_data->key_id.chars);
-  if (key_id_parse(key_data->key_id, &key_id_data) != 0)
+  pelz_log(LOG_DEBUG, "Key ID: %s", key_id);
+  if (key_id_parse(key_data, &key_id_data) != 0)
   {
     return (1);
   }
@@ -88,9 +92,10 @@ int key_load(KeyEntry * key_data)
         fgets((char *) tmp_key, (MAX_KEY_LEN + 1), key_txt_f);
         fclose(key_txt_f);
         free(path);
-        key_data->key = newCharBuf(strlen((char *) tmp_key));
-        memcpy(key_data->key.chars, tmp_key, key_data->key.len);
-        secure_memset(tmp_key, 0, key_data->key.len);
+	*key = (unsigned char*)malloc(strlen((char*)tmp_key));
+	*key_len = strlen((char*)tmp_key);
+	memcpy(*key, tmp_key, *key_len);
+	secure_memset(tmp_key, 0, *key_len);
         if (key_id_data.f_values.auth.len != 0)
         {
           freeCharBuf(&key_id_data.f_values.auth);
@@ -114,9 +119,10 @@ int key_load(KeyEntry * key_data)
         fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
         fclose(key_key_f);
         free(path);
-        key_data->key = newCharBuf(MAX_KEY_LEN);
-        memcpy(key_data->key.chars, tmp_key, key_data->key.len);
-        secure_memset(tmp_key, 0, key_data->key.len);
+	*key = (unsigned char*)malloc(MAX_KEY_LEN);
+	*key_len = MAX_KEY_LEN;
+	memcpy(*key, tmp_key, *key_len);
+	secure_memset(tmp_key, 0, *key_len);
         if (key_id_data.f_values.auth.len != 0)
         {
           freeCharBuf(&key_id_data.f_values.auth);
@@ -151,6 +157,7 @@ int key_load(KeyEntry * key_data)
     pelz_log(LOG_ERR, "Error: Scheme Type Undetermined.");
     return (1);
   }
+  
   return (0);
 }
 
