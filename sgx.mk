@@ -113,7 +113,7 @@ App_Name := pelz
 
 
 ######## (Untrusted) library code ########
-Lib_Cpp_Files := src/util/CharBuf.c \
+Lib_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
@@ -125,7 +125,7 @@ Lib_C_Flags := -Wall -fPIC -Wno-attributes $(Lib_Include_Paths)
 Lib_Cpp_Flags := -std=c++11
 Lib_Link_Flags := -lkmyth-logger -lpthread -lcrypt -lssl -lcjson
 
-Lib_Cpp_Objects := objs/CharBuf.o \
+Lib_Cpp_Objects := objs/charbuf.o \
 		   objs/pelz_json_parser.o \
 		   objs/pelz_service.o \
 		   objs/pelz_socket.o \
@@ -251,7 +251,7 @@ sgx/pelz_request_handler.o: src/util/pelz_request_handler.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <=  $<"
 
-sgx/CharBuf.o: src/util/CharBuf.c
+sgx/charbuf.o: src/util/charbuf.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <=  $<"
 
@@ -259,7 +259,7 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/pelz_enclave.so: sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler_impl.o sgx/CharBuf.o sgx/util.o
+sgx/pelz_enclave.so: sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler_impl.o sgx/charbuf.o sgx/util.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
