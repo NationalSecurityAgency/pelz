@@ -17,10 +17,6 @@ sgx_enclave_id_t eid = 0;
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 #endif
 
-void ocall_print(void){
-  printf("Hello!\n");
-}
-
 static void usage(const char *prog)
 {
   fprintf(stdout,
