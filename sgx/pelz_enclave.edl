@@ -4,6 +4,7 @@ enclave {
 	include "key_table.h"
 	include "pelz_io.h"
 	include "CharBuf.h"
+	include "util.h"
 	trusted {
 	public int key_table_init(void);
 	public int key_table_destroy(void);

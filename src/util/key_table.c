@@ -14,7 +14,7 @@
 #include <pelz_log.h>
 
 #ifdef SGX
-#include "sgx_urts.h"
+#include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #endif
 
@@ -122,7 +122,11 @@ int key_table_add(CharBuf key_id, CharBuf * key)
 
   int ret;
   #ifdef SGX
-  key_load(&ret, tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));    
+  key_load(&ret, tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
+  if(!sgx_is_outside_enclave(tmp_entry.key.chars, tmp_entry.key.len)){
+    freeCharBuf(&tmp_entry.key_id);
+    return (1);
+  }
   #else
   ret = key_load(tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
   #endif
