@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "CharBuf.h"
+#include "charbuf.h"
 #include "pelz_request_handler.h"
 
 #ifdef APP
@@ -18,7 +18,7 @@
 #include "pelz_enclave_t.h"
 #endif
 
-RequestResponseStatus pelz_request_handler(RequestType request_type, CharBuf key_id, CharBuf data_in, CharBuf * output)
+RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data_in, charbuf * output)
 {
 
   RequestResponseStatus status;

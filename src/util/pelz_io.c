@@ -6,7 +6,7 @@
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 
-#include "CharBuf.h"
+#include "charbuf.h"
 #include "pelz_log.h"
 #include "pelz_io.h"
 #include "key_table.h"
@@ -18,14 +18,14 @@ void ocall_malloc(size_t size, char** buf){
 }
 
 
-int get_file_ext(CharBuf buf, int *ext)
+int get_file_ext(charbuf buf, int *ext)
 {
   int period_index = 0;
   int ext_len = 0;
   int ext_type_size = 3;
   char *ext_type[3] = { ".txt", ".pem", ".key" };
 
-  period_index = getIndexForChar(buf, '.', (buf.len - 1), 1);
+  period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
   ext_len = (buf.len - period_index);
 
   // If buf.chars is null terminated we don't want to include
@@ -61,7 +61,7 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
   FILE *key_txt_f = 0;
   FILE *key_key_f = 0;
 
-  CharBuf key_data;
+  charbuf key_data;
   key_data.chars = key_id;
   key_data.len = key_id_len;
 
@@ -98,19 +98,19 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
 	secure_memset(tmp_key, 0, *key_len);
         if (key_id_data.f_values.auth.len != 0)
         {
-          freeCharBuf(&key_id_data.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        freeCharBuf(&key_id_data.f_values.path);
-        freeCharBuf(&key_id_data.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
         break;
       case (PEM_EXT):
         pelz_log(LOG_INFO, "PEM file retrieve is not setup yet.");
         if (&key_id_data.f_values.auth != 0)
         {
-          freeCharBuf(&key_id_data.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        freeCharBuf(&key_id_data.f_values.path);
-        freeCharBuf(&key_id_data.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
         return (1);
       case (KEY_EXT):
         path = (char*)calloc(key_id_data.f_values.path.len + 1, sizeof(char));
@@ -125,32 +125,32 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
 	secure_memset(tmp_key, 0, *key_len);
         if (key_id_data.f_values.auth.len != 0)
         {
-          freeCharBuf(&key_id_data.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        freeCharBuf(&key_id_data.f_values.path);
-        freeCharBuf(&key_id_data.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
         break;
       default:
         if (&key_id_data.f_values.auth != 0)
         {
-          freeCharBuf(&key_id_data.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        freeCharBuf(&key_id_data.f_values.path);
-        freeCharBuf(&key_id_data.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
         pelz_log(LOG_ERR, "Error: File Type Undetermined\n");
         return (1);
       }
       break;
     }
-    freeCharBuf(&key_id_data.f_values.auth);
-    freeCharBuf(&key_id_data.f_values.path);
-    freeCharBuf(&key_id_data.f_values.f_name);
+    free_charbuf(&key_id_data.f_values.auth);
+    free_charbuf(&key_id_data.f_values.path);
+    free_charbuf(&key_id_data.f_values.f_name);
     pelz_log(LOG_WARNING, "Non localhost authorities are not valid.\n");
     return (1);
   case (FTP):
-    freeCharBuf(&key_id_data.ftp_values.host);
-    freeCharBuf(&key_id_data.ftp_values.port);
-    freeCharBuf(&key_id_data.ftp_values.url_path);
+    free_charbuf(&key_id_data.ftp_values.host);
+    free_charbuf(&key_id_data.ftp_values.port);
+    free_charbuf(&key_id_data.ftp_values.url_path);
     pelz_log(LOG_ERR, "Socket file retrieve is not setup yet.");
     return (1);
   default:
@@ -161,9 +161,9 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
   return (0);
 }
 
-int key_id_parse(CharBuf key_id, URIValues * uri)
+int key_id_parse(charbuf key_id, URIValues * uri)
 {
-  CharBuf buf;
+  charbuf buf;
   int index = 0;
   char *path = NULL;
 
@@ -172,32 +172,32 @@ int key_id_parse(CharBuf key_id, URIValues * uri)
   {
     pelz_log(LOG_DEBUG, "Key ID File Scheme");
     uri->type = 1;
-    buf = newCharBuf(key_id.len - 5);
+    buf = new_charbuf(key_id.len - 5);
     memcpy(buf.chars, &key_id.chars[5], buf.len);
     if (buf.chars[1] == '/')
     {
       pelz_log(LOG_DEBUG, "File Scheme Auth-Path");
-      index = getIndexForChar(buf, '/', 2, 0);
+      index = get_index_for_char(buf, '/', 2, 0);
       if (index == -1)
       {
         pelz_log(LOG_ERR, "Invalid FILE Syntax");
-        freeCharBuf(&buf);
+        free_charbuf(&buf);
         return (1);
       }
-      uri->f_values.auth = newCharBuf(index);
+      uri->f_values.auth = new_charbuf(index);
       memcpy(uri->f_values.auth.chars, buf.chars, uri->f_values.auth.len);
-      uri->f_values.path = newCharBuf(buf.len - index);
+      uri->f_values.path = new_charbuf(buf.len - index);
       memcpy(uri->f_values.path.chars, &buf.chars[index], uri->f_values.path.len);
-      index = getIndexForChar(buf, '/', (buf.len - 1), 1);
+      index = get_index_for_char(buf, '/', (buf.len - 1), 1);
       if (index == -1)
       {
         pelz_log(LOG_ERR, "Invalid FILE Syntax");
-        freeCharBuf(&buf);
-        freeCharBuf(&uri->f_values.auth);
-        freeCharBuf(&uri->f_values.path);
+        free_charbuf(&buf);
+        free_charbuf(&uri->f_values.auth);
+        free_charbuf(&uri->f_values.path);
         return (1);
       }
-      uri->f_values.f_name = newCharBuf((buf.len - index - 1));
+      uri->f_values.f_name = new_charbuf((buf.len - index - 1));
       memcpy(uri->f_values.f_name.chars, &buf.chars[(index + 1)], uri->f_values.f_name.len);
     }
     else
@@ -205,20 +205,20 @@ int key_id_parse(CharBuf key_id, URIValues * uri)
       pelz_log(LOG_DEBUG, "No File Scheme Auth-Path");
       uri->f_values.auth.chars = NULL;
       uri->f_values.auth.len = 0;
-      uri->f_values.path = newCharBuf(buf.len);
+      uri->f_values.path = new_charbuf(buf.len);
       memcpy(uri->f_values.path.chars, buf.chars, buf.len);
-      index = getIndexForChar(buf, '/', (buf.len - 1), 1);
+      index = get_index_for_char(buf, '/', (buf.len - 1), 1);
       if (index == -1)
       {
         pelz_log(LOG_ERR, "Invalid FILE Syntax");
-        freeCharBuf(&buf);
-        freeCharBuf(&uri->f_values.path);
+        free_charbuf(&buf);
+        free_charbuf(&uri->f_values.path);
         return (1);
       }
-      uri->f_values.f_name = newCharBuf((buf.len - index - 1));
+      uri->f_values.f_name = new_charbuf((buf.len - index - 1));
       memcpy(uri->f_values.f_name.chars, &buf.chars[(index + 1)], uri->f_values.f_name.len);
     }
-    freeCharBuf(&buf);
+    free_charbuf(&buf);
     path = (char*)calloc((uri->f_values.path.len + 1), sizeof(char));
     memcpy(path, &uri->f_values.path.chars[0], uri->f_values.path.len);
     if (file_check(path))       //Removing the first char from the string is so we can test and needs to be fixed for production.
@@ -227,10 +227,10 @@ int key_id_parse(CharBuf key_id, URIValues * uri)
       free(path);
       if (uri->f_values.auth.len != 0)
       {
-        freeCharBuf(&uri->f_values.auth);
+        free_charbuf(&uri->f_values.auth);
       }
-      freeCharBuf(&uri->f_values.path);
-      freeCharBuf(&uri->f_values.f_name);
+      free_charbuf(&uri->f_values.path);
+      free_charbuf(&uri->f_values.f_name);
       return (1);
     }
     free(path);
@@ -243,40 +243,40 @@ int key_id_parse(CharBuf key_id, URIValues * uri)
   {
     pelz_log(LOG_DEBUG, "Key ID FTP Scheme");
     uri->type = 2;
-    buf = newCharBuf(key_id.len - 4);
+    buf = new_charbuf(key_id.len - 4);
     memcpy(buf.chars, &key_id.chars[4], buf.len);
     pelz_log(LOG_DEBUG, "Buf: %s", buf.chars);
     if (buf.chars[1] == '/')
     {
       pelz_log(LOG_DEBUG, "FTP Start Parse");
-      index = getIndexForChar(buf, '/', 2, 0);
+      index = get_index_for_char(buf, '/', 2, 0);
       if (index != -1)
       {
         pelz_log(LOG_DEBUG, "URL Found");
-        uri->ftp_values.url_path = newCharBuf(buf.len - index);
+        uri->ftp_values.url_path = new_charbuf(buf.len - index);
         memcpy(uri->ftp_values.url_path.chars, &buf.chars[index], uri->ftp_values.url_path.len);
-        freeCharBuf(&buf);
-        buf = newCharBuf(index);
+        free_charbuf(&buf);
+        buf = new_charbuf(index);
         memcpy(buf.chars, &key_id.chars[4], buf.len);
-        index = getIndexForChar(buf, ':', (buf.len - 1), 1);
+        index = get_index_for_char(buf, ':', (buf.len - 1), 1);
         if (index != -1)
         {
           pelz_log(LOG_DEBUG, "Port valid");
-          uri->ftp_values.port = newCharBuf(buf.len - index - 1);
+          uri->ftp_values.port = new_charbuf(buf.len - index - 1);
           memcpy(uri->ftp_values.port.chars, &buf.chars[(index + 1)], uri->ftp_values.port.len);
-          uri->ftp_values.host = newCharBuf(index);
+          uri->ftp_values.host = new_charbuf(index);
           memcpy(uri->ftp_values.host.chars, buf.chars, uri->ftp_values.host.len);
-          freeCharBuf(&buf);
+          free_charbuf(&buf);
           pelz_log(LOG_DEBUG, "File Host/Port/Path: %s, %s, %s", uri->ftp_values.host.chars, uri->ftp_values.port.chars,
             uri->ftp_values.url_path.chars);
           return (0);
         }
-        freeCharBuf(&uri->ftp_values.url_path);
+        free_charbuf(&uri->ftp_values.url_path);
       }
     }
     if (buf.len != 0)
     {
-      freeCharBuf(&buf);
+      free_charbuf(&buf);
     }
     pelz_log(LOG_ERR, "Invalid FTP Syntax");
     return (1);

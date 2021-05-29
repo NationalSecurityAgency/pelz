@@ -68,7 +68,7 @@ int pelz_key_socket_accept(int socket_listen_id, int *socket_id);
  * @return 0 on success, 1 on error
  *
  */
-int pelz_key_socket_recv(int socket_id, CharBuf * message);
+int pelz_key_socket_recv(int socket_id, charbuf * message);
 
 /**
  * <pre>
@@ -84,7 +84,7 @@ int pelz_key_socket_recv(int socket_id, CharBuf * message);
  * @return 0 on success, 1 on error
  *
  */
-int pelz_key_socket_send(int socket_id, CharBuf response);
+int pelz_key_socket_send(int socket_id, charbuf response);
 
 /**
  * <pre>

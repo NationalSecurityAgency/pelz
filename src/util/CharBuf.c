@@ -1,30 +1,30 @@
 /*
- * CharBuf.c
+ * charbuf.c
  */
 
 #include <stdio.h>
 
-#include "CharBuf.h"
+#include "charbuf.h"
 #include "util.h"
 #include "pelz_log.h"
 
-CharBuf newCharBuf(size_t len)
+charbuf new_charbuf(size_t len)
 {
-  CharBuf newBuf;
+  charbuf newBuf;
 
   newBuf.chars = (unsigned char *) malloc(len);
   newBuf.len = len;
   return (newBuf);
 }
 
-void freeCharBuf(CharBuf * buf)
+void free_charbuf(charbuf * buf)
 {
   free((*buf).chars);
   (*buf).chars = NULL;
   (*buf).len = 0;
 }
 
-int cmpCharBuf(CharBuf buf1, CharBuf buf2)
+int cmp_charbuf(charbuf buf1, charbuf buf2)
 {
   if (buf1.len == buf2.len)
   {
@@ -45,13 +45,13 @@ int cmpCharBuf(CharBuf buf1, CharBuf buf2)
   return (-3);
 }
 
-void secureFreeCharBuf(CharBuf * buf)
+void secure_free_charbuf(charbuf * buf)
 {
   secure_memset(buf->chars, 0, buf->len);
-  freeCharBuf(buf);
+  free_charbuf(buf);
 }
 
-int getIndexForChar(CharBuf buf, char c, int index, int direction)
+int get_index_for_char(charbuf buf, char c, int index, int direction)
 {
   if (0 <= index && index < buf.len)
   {
@@ -77,11 +77,11 @@ int getIndexForChar(CharBuf buf, char c, int index, int direction)
   return (-1);
 }
 
-CharBuf copyBytesFromBuf(CharBuf buf, int index)
+charbuf copy_chars_from_charbuf(charbuf buf, int index)
 {
-  CharBuf newBuf;
+  charbuf newBuf;
 
-  newBuf = newCharBuf((buf.len - index));
+  newBuf = new_charbuf((buf.len - index));
   memcpy(newBuf.chars, &buf.chars[index], newBuf.len);
   return (newBuf);
 }

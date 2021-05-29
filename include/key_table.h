@@ -8,12 +8,12 @@
 
 #include <stdbool.h>
 
-#include "CharBuf.h"
+#include "charbuf.h"
 
 typedef struct TableEntry
 {
-  CharBuf key_id;
-  CharBuf key;
+  charbuf key_id;
+  charbuf key;
 } KeyEntry;
 
 typedef struct Keys
@@ -66,7 +66,7 @@ int key_table_destroy(void);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_delete(CharBuf key_id);
+int key_table_delete(charbuf key_id);
 
 /**
  * <pre>
@@ -82,7 +82,7 @@ int key_table_delete(CharBuf key_id);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_add(CharBuf key_id, CharBuf * key);
+int key_table_add(charbuf key_id, charbuf * key);
 
 /**
  * <pre>
@@ -99,7 +99,7 @@ int key_table_add(CharBuf key_id, CharBuf * key);
  *
  * @return 0 on success, 1 on failure
  */
-int key_table_lookup(CharBuf key_id, CharBuf * key);
+int key_table_lookup(charbuf key_id, charbuf * key);
 
 #ifdef __cplusplus
 }

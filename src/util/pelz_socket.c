@@ -16,7 +16,7 @@
 #include <stdlib.h>
 
 #include <pelz_request_handler.h>
-#include <CharBuf.h>
+#include <charbuf.h>
 #include <pelz_log.h>
 
 #define ISVALIDSOCKET(s) ((s) >= 0)
@@ -110,7 +110,7 @@ int pelz_key_socket_accept(int socket_listen_id, int *socket_id)
 }
 
 //Received request from client
-int pelz_key_socket_recv(int socket_id, CharBuf * message)
+int pelz_key_socket_recv(int socket_id, charbuf * message)
 {
   char client_request[MAX_SOC_DATA_SIZE];
 
@@ -129,13 +129,13 @@ int pelz_key_socket_recv(int socket_id, CharBuf * message)
   }
 
   pelz_log(LOG_INFO, "%d::Received %d bytes.", socket_id, bytes_received);
-  *message = newCharBuf(bytes_received);
+  *message = new_charbuf(bytes_received);
   memcpy(message->chars, client_request, bytes_received);
   return (0);
 }
 
 //Send response to client
-int pelz_key_socket_send(int socket_id, CharBuf response)
+int pelz_key_socket_send(int socket_id, charbuf response)
 {
   int bytes_sent = send(socket_id, response.chars, response.len, 0);
 
