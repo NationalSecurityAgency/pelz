@@ -67,7 +67,7 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
   key_id_data.type = 0;
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
-  pelz_log(LOG_DEBUG, "Key ID: %.*s", key_values->key_id_len, key_id);
+  pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id_len, key_id);
   if (key_id_parse(key_data, &key_id_data) != 0)
   {
     return (1);
