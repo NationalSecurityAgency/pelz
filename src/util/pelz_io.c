@@ -13,9 +13,11 @@
 #include "pelz_request_handler.h"
 #include "util.h"
 
+#ifdef APP
 void ocall_malloc(size_t size, char** buf){
   *buf = (char*)malloc(size);
 }
+#endif
 
 int get_file_ext(charbuf buf, int *ext)
 {
