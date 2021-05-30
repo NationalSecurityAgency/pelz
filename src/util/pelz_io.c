@@ -17,7 +17,6 @@ void ocall_malloc(size_t size, char** buf){
   *buf = (char*)malloc(size);
 }
 
-
 int get_file_ext(charbuf buf, int *ext)
 {
   int period_index = 0;
@@ -68,7 +67,7 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
   key_id_data.type = 0;
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
-  pelz_log(LOG_DEBUG, "Key ID: %s", key_id);
+  pelz_log(LOG_DEBUG, "Key ID: %.*s", key_values->key_id_len, key_id);
   if (key_id_parse(key_data, &key_id_data) != 0)
   {
     return (1);
@@ -234,8 +233,8 @@ int key_id_parse(charbuf key_id, URIValues * uri)
       return (1);
     }
     free(path);
-    pelz_log(LOG_DEBUG, "File Auth/Path/File: %s, %s, %s", uri->f_values.auth.chars, uri->f_values.path.chars,
-      uri->f_values.f_name.chars);
+    pelz_log(LOG_DEBUG, "File Auth/Path/File: %.*s, %.*s, %.*s", uri->f_values.auth.len, uri->f_values.auth.chars,
+      uri->f_values.path.len, uri->f_values.path.chars, uri->f_values.f_name.len, uri->f_values.f_name.chars);
     return (0);
   }
 
@@ -245,7 +244,7 @@ int key_id_parse(charbuf key_id, URIValues * uri)
     uri->type = 2;
     buf = new_charbuf(key_id.len - 4);
     memcpy(buf.chars, &key_id.chars[4], buf.len);
-    pelz_log(LOG_DEBUG, "Buf: %s", buf.chars);
+    pelz_log(LOG_DEBUG, "Buf: %.*s", buf.len, buf.chars);
     if (buf.chars[1] == '/')
     {
       pelz_log(LOG_DEBUG, "FTP Start Parse");
@@ -267,8 +266,8 @@ int key_id_parse(charbuf key_id, URIValues * uri)
           uri->ftp_values.host = new_charbuf(index);
           memcpy(uri->ftp_values.host.chars, buf.chars, uri->ftp_values.host.len);
           free_charbuf(&buf);
-          pelz_log(LOG_DEBUG, "File Host/Port/Path: %s, %s, %s", uri->ftp_values.host.chars, uri->ftp_values.port.chars,
-            uri->ftp_values.url_path.chars);
+          pelz_log(LOG_DEBUG, "File Host/Port/Path: %.*s, %.*s, %.*s", uri->ftp_values.host.len, uri->ftp_values.host.chars,
+            uri->ftp_values.port.len, uri->ftp_values.port.chars, uri->ftp_values.url_path.len, uri->ftp_values.url_path.chars);
           return (0);
         }
         free_charbuf(&uri->ftp_values.url_path);

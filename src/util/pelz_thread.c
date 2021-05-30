@@ -35,6 +35,7 @@ void thread_process(void *arg)
     pelz_log(LOG_DEBUG, "%d::Request & Length: %s, %d", new_socket, request.chars, (int) request.len);
 
     RequestType request_type = REQ_UNK;
+
     charbuf key_id;
     charbuf data_in;
     charbuf data_out;

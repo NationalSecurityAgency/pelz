@@ -25,6 +25,12 @@ UTIL_OBJ_DIR = $(OBJ_DIR)/util
 TEST_SRC_DIR = $(TEST_DIR)/src
 TEST_OBJ_DIR = $(OBJ_DIR)
 
+TEST_DATA_DIR ?= $(TEST_DIR)/data
+
+# Create consolidated list of test vector directories
+TEST_VEC_DIRS = $(TEST_DATA_DIR)/kwtestvectors
+TEST_VEC_DIRS += $(TEST_DATA_DIR)/gcmtestvectors
+
 TEST_HEADER_FILES = $(wildcard $(TEST_DIR)/include/*h)
 
 HEADER_FILES = $(wildcard $(INCLUDE_DIR)/*h)
@@ -51,13 +57,19 @@ test_unit: $(UTIL_OBJECTS) $(TEST_OBJECTS)
 pre:
 	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 src/*/*.c
 	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 include/*.h
+	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/src/*.c
+	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/src/*/*.c
+	indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/include/*.h
 	rm -f src/*/*.c~
 	rm -f include/*.h~
+	rm -f test/src/*.c~
+	rm -f test/src/*/*.c~
+	rm -f test/include/*.h~
 	mkdir -p bin
 	mkdir -p test/bin
 	mkdir -p test/log
 
-test: test_unit
+test: pre test_unit
 	./test/bin/pelz-test 2> /dev/null
 
 docs: $(HEADER_FILES) $(CRYPRO_SOURCES) Doxyfile
@@ -92,6 +104,20 @@ install:
 uninstall:
 	rm -f $(PREFIX)/bin/pelz
 	rm -f var/log/pelz.log
+
+.PHONY: install-test-vectors
+install-test-vectors: uninstall-test-vectors
+	mkdir -p $(TEST_VEC_DIRS)
+	wget https://csrc.nist.gov/groups/STM/cavp/documents/mac/kwtestvectors.zip
+	unzip kwtestvectors.zip -d $(TEST_DATA_DIR)
+	rm kwtestvectors.zip
+	wget https://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
+	unzip gcmtestvectors.zip -d $(TEST_DATA_DIR)/gcmtestvectors/
+	rm gcmtestvectors.zip
+
+.PHONY: uninstall-test-vectors
+uninstall-test-vectors:
+	rm -fr $(TEST_VEC_DIRS)
 
 clean:
 	-rm -fr $(OBJECTS) bin/pelz test/bin/pelz-test

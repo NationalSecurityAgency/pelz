@@ -53,8 +53,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     }
     break;
   default:
-    pelz_log(LOG_WARNING, "Request Type not recognized.");
-    break;
+    pelz_log(LOG_WARNING, "Invalid Request Type");
+    cJSON_Delete(json);
+    return (1);
   }
   cJSON_Delete(json);
   return (0);
@@ -264,6 +265,12 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
   else
   {
     pelz_log(LOG_ERR, "No value in JSON key: key_id.");
+    free_charbuf(key_id);
+    return (1);
+  }
+  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "dec_data_len")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: dec_data_len. Data type should be integer.");
     free_charbuf(key_id);
     return (1);
   }

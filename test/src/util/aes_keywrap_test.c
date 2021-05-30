@@ -11,7 +11,7 @@
 
 #include "aes_keywrap_test.h"
 
-#define AES_KW_VECTOR_PATH "test/key_wrap_test_vectors"
+#define AES_KW_VECTOR_PATH "test/data/kwtestvectors"
 
 //---------------------- AES Key Wrap Cipher Test Configuration --------------
 
@@ -20,16 +20,12 @@
 //----------------------------------------------------------------------------
 int aes_keywrap_add_tests(CU_pSuite suite)
 {
-  if (NULL == CU_add_test(suite,
-                          "Test Pelz AES key wrap/unwrap parameter handling",
-                          test_aes_keywrap_parameters))
+  if (NULL == CU_add_test(suite, "Test Pelz AES key wrap/unwrap parameter handling", test_aes_keywrap_parameters))
   {
     return 1;
   }
 
-  if (NULL == CU_add_test(suite,
-                          "Run AES key wrap test vectors",
-                          test_aes_keywrap_vectors))
+  if (NULL == CU_add_test(suite, "Run AES key wrap test vectors", test_aes_keywrap_vectors))
   {
     return 1;
   }
@@ -68,12 +64,8 @@ int convert_HexString_to_ByteArray(char **result, char *hex_str, int str_size)
 // get_aes_keywrap_vector_from_file()
 //----------------------------------------------------------------------------
 int get_aes_keywrap_vector_from_file(FILE * fid,
-                                     uint8_t ** K_vec,
-                                     size_t * K_vec_len,
-                                     uint8_t ** P_vec,
-                                     size_t * P_vec_len,
-                                     uint8_t ** C_vec,
-                                     size_t * C_vec_len, bool * expect_pass)
+  uint8_t ** K_vec,
+  size_t * K_vec_len, uint8_t ** P_vec, size_t * P_vec_len, uint8_t ** C_vec, size_t * C_vec_len, bool * expect_pass)
 {
   // create buffer to hold vector data read in from file a line at a time
   // specify buffer size to handle largest vector component (must include
@@ -118,9 +110,7 @@ int get_aes_keywrap_vector_from_file(FILE * fid,
         step = 2;
         K_str_len = strlen(buffer) - 4; // strip leading 'K = ' sub-string
         memcpy(K_str, buffer + 4, K_str_len * sizeof(char));
-        while ((K_str_len > 0) &&
-               ((K_str[K_str_len - 1] == '\n') ||
-                (K_str[K_str_len - 1] == '\r')))
+        while ((K_str_len > 0) && ((K_str[K_str_len - 1] == '\n') || (K_str[K_str_len - 1] == '\r')))
         {
           K_str[--K_str_len] = '\0';  // strip any trailing '\n' or '\r'
         }
@@ -142,9 +132,7 @@ int get_aes_keywrap_vector_from_file(FILE * fid,
           step++;
           P_str_len = strlen(buffer) - 4; // strip leading 'P = ' sub-string
           memcpy(P_str, buffer + 4, P_str_len * sizeof(char));
-          while ((P_str_len > 0) &&
-                 ((P_str[P_str_len - 1] == '\n') ||
-                  (P_str[P_str_len - 1] == '\r')))
+          while ((P_str_len > 0) && ((P_str[P_str_len - 1] == '\n') || (P_str[P_str_len - 1] == '\r')))
           {
             P_str[--P_str_len] = '\0';  // strip any trailing '\n' or '\r'
           }
@@ -167,9 +155,7 @@ int get_aes_keywrap_vector_from_file(FILE * fid,
           step++;
           C_str_len = strlen(buffer) - 4; // strip leading 'C = ' sub-string
           memcpy(C_str, buffer + 4, C_str_len * sizeof(char));
-          while ((C_str_len > 0) &&
-                 ((C_str[C_str_len - 1] == '\n') ||
-                  (C_str[C_str_len - 1] == '\r')))
+          while ((C_str_len > 0) && ((C_str[C_str_len - 1] == '\n') || (C_str[C_str_len - 1] == '\r')))
           {
             C_str[--C_str_len] = '\0';  // strip any trailing '\n' or '\r'
           }
@@ -253,49 +239,39 @@ void test_aes_keywrap_parameters(void)
   inData = malloc(16);
   inData_len = 16;
   key_len = 16;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure on key of length 0
   key = malloc(16);
   key_len = 0;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure on input data of length 0
   key_len = 16;
   inData_len = 0;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure with input data too short
   inData_len = 8;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure with input data that's not a multiple of 8 bytes long
   inData_len = 17;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt
-            (key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   free(key);
@@ -310,30 +286,27 @@ void test_aes_keywrap_vectors(void)
   // specify the compilation of test vector mappings for Pelz AES GCM
   // decrypt cipher testing.
   const cipher_vector_compilation aes_keywrap_vectors = {
-    .count = 12,
+    .count = 6,
     .sets = {
-             {.desc = "AES-128, RFC-3394 Key Wrap no padding (KW-AE), forward",
-              .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AE_128.txt"},
-             {.desc =
-              "AES-128, RFC-3394 Key Unwrap no padding (KW-AD), forward",
-              .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AD_128.txt"},
-             {.desc = "AES-192, RFC-3394 Key Wrap no padding (KW-AE), forward",
-              .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AE_192.txt"},
-             {.desc =
-              "AES-192, RFC-3394 Key Unwrap no padding (KW-AD), forward",
-              .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AD_192.txt"},
-             {.desc = "AES-256, RFC-3394 Key Wrap no padding (KW-AE), forward",
-              .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AE_256.txt"},
-             {.desc =
-              "AES-256, RFC-3394 Key Unwrap no padding (KW-AD), forward",
-              .func_to_test = "aes_keywrap_3394nopad_encrypt",
-              .path = "./test/key_wrap_test_vectors/KW_AD_256.txt"},
-             }
+        {.desc = "AES-128, RFC-3394 Key Wrap no padding (KW-AE), forward",
+            .func_to_test = "aes_keywrap_3394nopad_encrypt",
+          .path = "./test/data/kwtestvectors/KW_AE_128.txt"},
+        {.desc = "AES-128, RFC-3394 Key Unwrap no padding (KW-AD), forward",
+            .func_to_test = "aes_keywrap_3394nopad_encrypt",
+          .path = "./test/data/kwtestvectors/KW_AD_128.txt"},
+        {.desc = "AES-192, RFC-3394 Key Wrap no padding (KW-AE), forward",
+            .func_to_test = "aes_keywrap_3394nopad_encrypt",
+          .path = "./test/data/kwtestvectors/KW_AE_192.txt"},
+        {.desc = "AES-192, RFC-3394 Key Unwrap no padding (KW-AD), forward",
+            .func_to_test = "aes_keywrap_3394nopad_encrypt",
+          .path = "./test/data/kwtestvectors/KW_AD_192.txt"},
+        {.desc = "AES-256, RFC-3394 Key Wrap no padding (KW-AE), forward",
+            .func_to_test = "aes_keywrap_3394nopad_encrypt",
+          .path = "./test/data/kwtestvectors/KW_AE_256.txt"},
+        {.desc = "AES-256, RFC-3394 Key Unwrap no padding (KW-AD), forward",
+            .func_to_test = "aes_keywrap_3394nopad_encrypt",
+          .path = "./test/data/kwtestvectors/KW_AD_256.txt"}
+      }
   };
 
   // array of file pointers for test vector files
@@ -381,12 +354,7 @@ void test_aes_keywrap_vectors(void)
       {
         // Parse next vector from file
         if (get_aes_keywrap_vector_from_file(test_vector_fd[i],
-                                             &key_data,
-                                             &key_data_len,
-                                             &pt_data,
-                                             &pt_data_len,
-                                             &ct_data,
-                                             &ct_data_len, &result_bool) == 0)
+            &key_data, &key_data_len, &pt_data, &pt_data_len, &ct_data, &ct_data_len, &result_bool) == 0)
         {
           // Create a new buffer to hold the result for each vector applied
           unsigned char *out = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
@@ -409,23 +377,15 @@ void test_aes_keywrap_vectors(void)
           unsigned char *exp_result = NULL;
           size_t exp_result_len = 0;
 
-          if (strncmp(aes_keywrap_vectors.sets[i].func_to_test,
-                      "aes_keywrap_3394nopad_encrypt", 29) == 0)
+          if (strncmp(aes_keywrap_vectors.sets[i].func_to_test, "aes_keywrap_3394nopad_encrypt", 29) == 0)
           {
-            rc = aes_keywrap_3394nopad_encrypt(key_data,
-                                               key_data_len,
-                                               pt_data,
-                                               pt_data_len, &out, &out_len);
+            rc = aes_keywrap_3394nopad_encrypt(key_data, key_data_len, pt_data, pt_data_len, &out, &out_len);
             exp_result = ct_data;
             exp_result_len = ct_data_len;
           }
-          else if (strncmp(aes_keywrap_vectors.sets[i].func_to_test,
-                           "aes_keywrap_3394nopad_decrypt", 29) == 0)
+          else if (strncmp(aes_keywrap_vectors.sets[i].func_to_test, "aes_keywrap_3394nopad_decrypt", 29) == 0)
           {
-            rc = aes_keywrap_3394nopad_decrypt(key_data,
-                                               key_data_len,
-                                               ct_data,
-                                               ct_data_len, &out, &out_len);
+            rc = aes_keywrap_3394nopad_decrypt(key_data, key_data_len, ct_data, ct_data_len, &out, &out_len);
             exp_result = pt_data;
             exp_result_len = pt_data_len;
           }
@@ -507,7 +467,7 @@ void test_aes_keywrap_vectors(void)
 
   // print message to inform about optional tests run
   printf("\nINFO: %ld of %ld optional AES keywrap test vector files parsed\n",
-         parsed_test_vector_files, aes_keywrap_vectors.count);
+    parsed_test_vector_files, aes_keywrap_vectors.count);
   if (cumulative_test_vector_count > 0)
   {
     printf("      %ld test vectors applied\n", cumulative_test_vector_count);

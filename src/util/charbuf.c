@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include "charbuf.h"
 #include "util.h"
