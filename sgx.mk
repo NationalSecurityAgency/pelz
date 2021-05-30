@@ -126,11 +126,6 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Cpp_Files := src/util/aes_keywrap_3394nopad.c \
-		     src/util/key_table.c \
-		     src/util/pelz_request_handler.c \
-		     src/util/pelz_request_handler_impl.c
-
 Enclave_Include_Paths := -Iinclude -Isgx/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SSL_INCLUDE_PATH) -Isgx
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)
@@ -143,11 +138,6 @@ Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefau
 	-Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
 	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
 	-Wl,--defsym,__ImageBase=0 \
-
-Enclave_Cpp_Objects := sgx/objs/aes_keywrap_3394nopad.o \
-		       sgx/objs/key_table.o \
-		       sgx/objs/pelz_request_handler.o \
-		       sgx/objs/pelz_request_handler_impl.o
 
 Enclave_Name := pelz_enclave.so
 Signed_Enclave_Name := pelz_enclave.signed.so
