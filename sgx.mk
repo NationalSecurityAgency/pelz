@@ -77,6 +77,12 @@ else
 endif
 
 App_Cpp_Files := src/pelz/main.c \
+		 src/util/charbuf.c \
+		 src/util/pelz_json_parser.c \
+		 src/util/pelz_service.c \
+		 src/util/pelz_socket.c \
+		 src/util/pelz_thread.c \
+		 src/util/util.c \
 		 src/util/pelz_request_handler.c \
 		 src/util/pelz_io.c
 
@@ -105,37 +111,7 @@ else
 	App_Link_Flags += -lsgx_uae_service
 endif
 
-
-App_Cpp_Objects := sgx/pelz_request_handler.o \
-		   sgx/main.o
-
-App_Name := pelz
-
-
-######## (Untrusted) library code ########
-Lib_Cpp_Files := src/util/charbuf.c \
-		 src/util/pelz_json_parser.c \
-		 src/util/pelz_service.c \
-		 src/util/pelz_socket.c \
-		 src/util/pelz_thread.c \
-		 src/util/util.c
-
-Lib_Include_Paths := -Iinclude
-Lib_C_Flags := -Wall -fPIC -Wno-attributes $(Lib_Include_Paths)
-Lib_Cpp_Flags := -std=c++11
-Lib_Link_Flags := -lkmyth-logger -lpthread -lcrypt -lssl -lcjson
-
-Lib_Cpp_Objects := objs/charbuf.o \
-		   objs/pelz_json_parser.o \
-		   objs/pelz_service.o \
-		   objs/pelz_socket.o \
-		   objs/pelz_thread.o \
-		   objs/util.o
-
-Lib_Name := pelz-sgx
-Lib_Dir_Name := lib$(Lib_Name)
-Lib_File_Name := lib$(Lib_Name).so
-
+App_Name := pelz-sgx
 
 
 
@@ -216,11 +192,7 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-sgx/libpelz-sgx.so: $(Lib_Cpp_Files)
-	@$(CXX) $^ -o $@ $(Lib_Cpp_Flags) $(Lib_C_Flags) $(Lib_Link_Flags) -shared
-	@echo "LINK => $@"
-
-$(App_Name): $(Lib_Cpp_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+bin/$(App_Name): $(App_Cpp_Files) sgx/pelz_enclave_u.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
 	@echo "LINK =>  $@"
 
@@ -270,4 +242,4 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name)
 .PHONY: clean
 
 clean:
-	@rm -f pelz sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o
+	@rm -f bin/pelz-sgx sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o
