@@ -44,6 +44,10 @@ With all the setup complete, pelz-sgx can be built by:
 
      make -f sgx.mk bin/pelz-sgx
      make -f sgx.mk sgx/pelz_enclave.signed.so
+     
+and executed by running
+
+	./bin/pelz-sgx
 
 All pelz-sgx related files can be cleaned up with
 
