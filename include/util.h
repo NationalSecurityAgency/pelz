@@ -9,10 +9,6 @@
 #include <pthread.h>
 #include <pelz_request_handler.h>
 
-//The maxim key length
-//#define MAX_KEY_LEN 1024
-//#define MAX_SOC_DATA_SIZE 1024
-
 /**
  * <pre>
  * Clears the contents of a pointer, without running into issues of gcc optimizing around memset.
