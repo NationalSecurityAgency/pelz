@@ -6,7 +6,8 @@
 #include "pelz_request_handler.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 /**
  * <pre>
@@ -18,7 +19,7 @@ extern "C" {
  *
  * @return 0 on success, 1 on error
  */
-int get_file_ext(charbuf buf, int *ext);
+  int get_file_ext(charbuf buf, int *ext);
 
 /**
  * <pre>
@@ -33,14 +34,13 @@ int get_file_ext(charbuf buf, int *ext);
  * @return 0 on success, 1 on error
  */
 #if !defined(PELZ_SGX)
-  int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned char** key);
+  int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key);
 #endif
 
 #if defined(PELZ_APP)
-  void ocall_malloc(size_t size, char** buf);
-  void ocall_free(void* ptr);
+  void ocall_malloc(size_t size, char **buf);
+  void ocall_free(void *ptr);
 #endif
-
 
 /**
  * <pre>
@@ -60,7 +60,7 @@ int get_file_ext(charbuf buf, int *ext);
  *
  * @return 0 on success, 1 on error
  */
-int key_id_parse(charbuf key_id, URIValues * uri);
+  int key_id_parse(charbuf key_id, URIValues * uri);
 
 /**
  * <pre>
@@ -71,7 +71,7 @@ int key_id_parse(charbuf key_id, URIValues * uri);
  *
  * @return 0 on success, 1 on error
  */
-int file_check(char *file_path);
+  int file_check(char *file_path);
 
 /**
  * <pre>
@@ -83,7 +83,7 @@ int file_check(char *file_path);
  * @return 0 if success, 1 if error
  */
 
-int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned char **base64_data, size_t * base64_data_size);
+  int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned char **base64_data, size_t * base64_data_size);
 
 /**
  * <pre>
@@ -97,10 +97,10 @@ int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned cha
  *
  * @return 0 if success, 1 if error
  */
-int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
+  int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
 
 #ifdef __cplusplus
 }
 #endif
-  
+
 #endif

@@ -12,9 +12,9 @@
 //Function to test socket code with working encryption code
 RequestResponseStatus pelz_request_handler_impl(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
 {
-  
+
   charbuf key;
-  
+
   if (key_table_lookup(key_id, &key))
   {
     if (key_table_add(key_id, &key))
@@ -54,4 +54,3 @@ RequestResponseStatus pelz_request_handler_impl(RequestType request_type, charbu
   secure_free_charbuf(&key);
   return REQUEST_OK;
 }
-

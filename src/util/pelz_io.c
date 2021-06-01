@@ -14,11 +14,13 @@
 #include "util.h"
 
 #ifdef PELZ_APP
-void ocall_malloc(size_t size, char** buf){
-  *buf = (char*)malloc(size);
+void ocall_malloc(size_t size, char **buf)
+{
+  *buf = (char *) malloc(size);
 }
 
-void ocall_free(void* ptr){
+void ocall_free(void *ptr)
+{
   free(ptr);
 }
 #endif
@@ -57,7 +59,7 @@ int get_file_ext(charbuf buf, int *ext)
   return (0);
 }
 
-int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned char** key)
+int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
 {
   URIValues key_id_data;
   int file_type = 0;
@@ -67,6 +69,7 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
   FILE *key_key_f = 0;
 
   charbuf key_data;
+
   key_data.chars = key_id;
   key_data.len = key_id_len;
 
@@ -91,16 +94,16 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
       switch (file_type)
       {
       case (TXT_EXT):
-        path = (char*)calloc((key_id_data.f_values.path.len + 1), sizeof(char));
+        path = (char *) calloc((key_id_data.f_values.path.len + 1), sizeof(char));
         memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
         key_txt_f = fopen(path, "r");
         fgets((char *) tmp_key, (MAX_KEY_LEN + 1), key_txt_f);
         fclose(key_txt_f);
         free(path);
-	*key = (unsigned char*)malloc(strlen((char*)tmp_key));
-	*key_len = strlen((char*)tmp_key);
-	memcpy(*key, tmp_key, *key_len);
-	secure_memset(tmp_key, 0, *key_len);
+        *key = (unsigned char *) malloc(strlen((char *) tmp_key));
+        *key_len = strlen((char *) tmp_key);
+        memcpy(*key, tmp_key, *key_len);
+        secure_memset(tmp_key, 0, *key_len);
         if (key_id_data.f_values.auth.len != 0)
         {
           free_charbuf(&key_id_data.f_values.auth);
@@ -118,30 +121,31 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
         free_charbuf(&key_id_data.f_values.f_name);
         return (1);
       case (KEY_EXT):
-        path = (char*)calloc(key_id_data.f_values.path.len + 1, sizeof(char));
+        path = (char *) calloc(key_id_data.f_values.path.len + 1, sizeof(char));
         memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
         key_key_f = fopen(path, "r");
         *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
 
-	if (key_id_data.f_values.auth.len != 0)
+        if (key_id_data.f_values.auth.len != 0)
         {
           free_charbuf(&key_id_data.f_values.auth);
         }
         free_charbuf(&key_id_data.f_values.path);
         free_charbuf(&key_id_data.f_values.f_name);
-	free(path);
+        free(path);
 
-	// If we've read MAX_KEY_LEN but not reached EOF there's probably
-	// been a problem.
-	if((*key_len == MAX_KEY_LEN) && !feof(key_key_f)){
-	  pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
-	  fclose(key_key_f);
-	  return (1);
-	}
-	*key = (unsigned char*)malloc(*key_len);
-	memcpy(*key, tmp_key, *key_len);
-	secure_memset(tmp_key, 0, *key_len);
-	fclose(key_key_f);
+        // If we've read MAX_KEY_LEN but not reached EOF there's probably
+        // been a problem.
+        if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
+        {
+          pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
+          fclose(key_key_f);
+          return (1);
+        }
+        *key = (unsigned char *) malloc(*key_len);
+        memcpy(*key, tmp_key, *key_len);
+        secure_memset(tmp_key, 0, *key_len);
+        fclose(key_key_f);
         break;
       default:
         if (&key_id_data.f_values.auth != 0)
@@ -170,7 +174,7 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
     pelz_log(LOG_ERR, "Error: Scheme Type Undetermined.");
     return (1);
   }
-  
+
   return (0);
 }
 
@@ -232,7 +236,7 @@ int key_id_parse(charbuf key_id, URIValues * uri)
       memcpy(uri->f_values.f_name.chars, &buf.chars[(index + 1)], uri->f_values.f_name.len);
     }
     free_charbuf(&buf);
-    path = (char*)calloc((uri->f_values.path.len + 1), sizeof(char));
+    path = (char *) calloc((uri->f_values.path.len + 1), sizeof(char));
     memcpy(path, &uri->f_values.path.chars[0], uri->f_values.path.len);
     if (file_check(path))       //Removing the first char from the string is so we can test and needs to be fixed for production.
     {

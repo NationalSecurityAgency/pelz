@@ -22,6 +22,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
 {
 
   RequestResponseStatus status;
+
 #if defined(PELZ_SGX) || defined(PELZ_APP)
   pelz_request_handler_impl(eid, &status, request_type, key_id, data_in, output);
 #else

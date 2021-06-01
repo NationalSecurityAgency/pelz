@@ -5,10 +5,11 @@
 #include "pelz_request_handler.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
-RequestResponseStatus pelz_request_handler_impl(RequestType request_type, charbuf key_id, charbuf data_in, charbuf* output);
+  RequestResponseStatus pelz_request_handler_impl(RequestType request_type, charbuf key_id, charbuf data_in, charbuf * output);
 
 #ifdef __cplusplus
 }

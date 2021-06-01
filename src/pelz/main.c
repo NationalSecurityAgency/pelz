@@ -14,6 +14,7 @@
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 sgx_enclave_id_t eid = 0;
+
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 #endif
 
@@ -76,26 +77,27 @@ int main(int argc, char **argv)
   }
 
   int ret;
-  #ifdef PELZ_APP
+
+#ifdef PELZ_APP
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
   key_table_init(eid, &ret);
-  #else
+#else
   ret = key_table_init();
-  #endif
-  
+#endif
+
   if (ret)
   {
     pelz_log(LOG_ERR, "Key Table Init Failure");
     return (1);
   }
-  
+
   pelz_service((const int) max_requests);
 
-  #ifdef PELZ_APP
+#ifdef PELZ_APP
   key_table_destroy(eid, &ret);
   sgx_destroy_enclave(eid);
-  #else
+#else
   key_table_destroy();
-  #endif
+#endif
   return (0);
 }
