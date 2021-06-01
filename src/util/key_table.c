@@ -13,7 +13,7 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 
-#ifdef SGX
+#ifdef PELZ_SGX
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #endif
@@ -121,7 +121,7 @@ int key_table_add(charbuf key_id, charbuf * key)
   memcpy(tmp_entry.key_id.chars, key_id.chars, tmp_entry.key_id.len);
 
   int ret;
-  #ifdef SGX
+  #ifdef PELZ_SGX
   size_t ocall_key_len = 0;
   unsigned char* ocall_key_data = NULL;
   

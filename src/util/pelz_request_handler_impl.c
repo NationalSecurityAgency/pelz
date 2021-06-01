@@ -4,7 +4,7 @@
 #include "key_table.h"
 #include "aes_keywrap_3394nopad.h"
 
-#ifdef SGX
+#ifdef PELZ_SGX
 #include "sgx_urts.h"
 #include "pelz_enclave_t.h"
 #endif

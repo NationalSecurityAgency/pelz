@@ -29,7 +29,7 @@ extern KeyTable key_table;
 extern "C" {
 #endif
   
-#ifndef APP
+#ifndef PELZ_APP
 /**
  * <pre>
  * This function initializes a key table for lookup.

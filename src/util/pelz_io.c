@@ -13,7 +13,7 @@
 #include "pelz_request_handler.h"
 #include "util.h"
 
-#ifdef APP
+#ifdef PELZ_APP
 void ocall_malloc(size_t size, char** buf){
   *buf = (char*)malloc(size);
 }

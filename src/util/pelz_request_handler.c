@@ -4,7 +4,7 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 
-#ifdef APP
+#ifdef PELZ_APP
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
@@ -12,7 +12,7 @@
 #include "pelz_request_handler_impl.h"
 #endif
 
-#ifdef SGX
+#ifdef PELZ_SGX
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_t.h"
@@ -22,7 +22,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
 {
 
   RequestResponseStatus status;
-#if defined(SGX) || defined(APP)
+#if defined(PELZ_SGX) || defined(PELZ_APP)
   pelz_request_handler_impl(eid, &status, request_type, key_id, data_in, output);
 #else
   status = pelz_request_handler_impl(request_type, key_id, data_in, output);

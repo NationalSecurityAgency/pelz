@@ -5,7 +5,7 @@
 #ifndef INCLUDE_PELZ_LOG_H_
 #define INCLUDE_PELZ_LOG_H_
 
-#ifndef SGX
+#ifndef PELZ_SGX
 #include <kmyth/kmyth_log.h>
 
 /**

@@ -32,11 +32,11 @@ int get_file_ext(charbuf buf, int *ext);
  *
  * @return 0 on success, 1 on error
  */
-#if !defined(SGX)
+#if !defined(PELZ_SGX)
   int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned char** key);
 #endif
 
-#if defined(APP)
+#if defined(PELZ_APP)
   void ocall_malloc(size_t size, char** buf);
   void ocall_free(void* ptr);
 #endif

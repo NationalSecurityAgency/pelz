@@ -88,7 +88,7 @@ App_Cpp_Files := src/pelz/main.c \
 
 App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 
 
-App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DAPP
+App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_APP
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -102,7 +102,7 @@ else
 		App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
 endif
 
-App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DAPP
+App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DPELZ_APP
 App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lpthread
 
 ifneq ($(SGX_MODE), HW)
@@ -129,7 +129,7 @@ Crypto_Library_Name := sgx_tcrypto
 Enclave_Include_Paths := -Iinclude -Isgx/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SSL_INCLUDE_PATH) -Isgx
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths)
-Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++03 -nostdinc++ --include "tsgxsslio.h" -DSGX
+Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++03 -nostdinc++ --include "tsgxsslio.h" -DPELZ_SGX
 Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_SSL_TRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) \
 	-Wl,--whole-archive -lsgx_tsgxssl \
 	-Wl,--no-whole-archive -lsgx_tsgxssl_crypto \
@@ -194,7 +194,7 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
-	@$(CC) $(Enclave_C_Flags) -DSGX -c $< -o $@
+	@$(CC) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/key_table.o: src/util/key_table.c

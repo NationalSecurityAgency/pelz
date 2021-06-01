@@ -8,7 +8,7 @@
 #include "util.h"
 #include "pelz_log.h"
 
-#ifdef SGX
+#ifdef PELZ_SGX
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #endif
@@ -42,7 +42,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // Key wrap always adds 8 bytes of data.
   *outData_len = inData_len + 8;
   *outData = NULL;
-  #ifdef SGX
+  #ifdef PELZ_SGX
   ocall_malloc(*outData_len, (char**)outData);
   if(!sgx_is_outside_enclave(*outData, *outData_len)){
       return 1;
@@ -170,7 +170,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   *outData_len = inData_len - 8;
 
   *outData = NULL;
-  #ifdef SGX
+  #ifdef PELZ_SGX
   ocall_malloc(*outData_len, (char**)outData);
   if(!sgx_is_outside_enclave(*outData, *outData_len)){
       return 1;
