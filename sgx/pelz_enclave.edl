@@ -1,5 +1,6 @@
 enclave {
 	from "sgx_tsgxssl.edl" import *;
+	from "sgx_pthread.edl" import *;
 	include "pelz_request_handler.h"
 	include "key_table.h"
 	include "pelz_io.h"
