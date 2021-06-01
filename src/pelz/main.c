@@ -93,6 +93,7 @@ int main(int argc, char **argv)
 
   #ifdef APP
   key_table_destroy(eid, &ret);
+  sgx_destroy_enclave(eid);
   #else
   key_table_destroy();
   #endif
