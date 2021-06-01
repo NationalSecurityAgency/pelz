@@ -122,11 +122,18 @@ int key_table_add(charbuf key_id, charbuf * key)
 
   int ret;
   #ifdef SGX
-  key_load(&ret, tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
-  if(!sgx_is_outside_enclave(tmp_entry.key.chars, tmp_entry.key.len)){
+  size_t ocall_key_len = 0;
+  unsigned char* ocall_key_data = NULL;
+  
+  key_load(&ret, tmp_entry.key_id.len, tmp_entry.key_id.chars, &ocall_key_len, &ocall_key_data);
+  if(!sgx_is_outside_enclave(ocall_key_data, ocall_key_len)){
     free_charbuf(&tmp_entry.key_id);
     return (1);
   }
+  tmp_entry.key.len = ocall_key_len;
+  tmp_entry.key.chars = (unsigned char*)malloc(ocall_key_len);
+  memcpy(tmp_entry.key.chars, ocall_key_data, ocall_key_len);
+  ocall_free(ocall_key_data);
   #else
   ret = key_load(tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
   #endif

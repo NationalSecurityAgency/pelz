@@ -17,6 +17,10 @@
 void ocall_malloc(size_t size, char** buf){
   *buf = (char*)malloc(size);
 }
+
+void ocall_free(void* ptr){
+  free(ptr);
+}
 #endif
 
 int get_file_ext(charbuf buf, int *ext)
