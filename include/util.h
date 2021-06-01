@@ -10,8 +10,8 @@
 #include <pelz_request_handler.h>
 
 //The maxim key length
-#define MAX_KEY_LEN 32
-#define MAX_SOC_DATA_SIZE 1024
+//#define MAX_KEY_LEN 1024
+//#define MAX_SOC_DATA_SIZE 1024
 
 /**
  * <pre>

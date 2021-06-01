@@ -121,19 +121,27 @@ int key_load(size_t key_id_len, unsigned char* key_id, size_t* key_len, unsigned
         path = (char*)calloc(key_id_data.f_values.path.len + 1, sizeof(char));
         memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
         key_key_f = fopen(path, "r");
-        fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
-        fclose(key_key_f);
-        free(path);
-	*key = (unsigned char*)malloc(MAX_KEY_LEN);
-	*key_len = MAX_KEY_LEN;
-	memcpy(*key, tmp_key, *key_len);
-	secure_memset(tmp_key, 0, *key_len);
-        if (key_id_data.f_values.auth.len != 0)
+        *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
+
+	if (key_id_data.f_values.auth.len != 0)
         {
           free_charbuf(&key_id_data.f_values.auth);
         }
         free_charbuf(&key_id_data.f_values.path);
         free_charbuf(&key_id_data.f_values.f_name);
+	free(path);
+
+	// If we've read MAX_KEY_LEN but not reached EOF there's probably
+	// been a problem.
+	if((*key_len == MAX_KEY_LEN) && !feof(key_key_f)){
+	  pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
+	  fclose(key_key_f);
+	  return (1);
+	}
+	*key = (unsigned char*)malloc(*key_len);
+	memcpy(*key, tmp_key, *key_len);
+	secure_memset(tmp_key, 0, *key_len);
+	fclose(key_key_f);
         break;
       default:
         if (&key_id_data.f_values.auth != 0)
