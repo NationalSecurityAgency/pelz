@@ -32,7 +32,7 @@ void thread_process(void *arg)
       return;
     }
 
-    pelz_log(LOG_DEBUG, "%d::Request & Length: %s, %d", new_socket, request.chars, (int) request.len);
+    pelz_log(LOG_DEBUG, "%d::Request & Length: %.*s, %d", new_socket, (int) request.len, request.chars, (int) request.len);
 
     RequestType request_type = 0;
     charbuf key_id;
@@ -47,7 +47,7 @@ void thread_process(void *arg)
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
-      pelz_log(LOG_DEBUG, "%d::Error: %s, %d", new_socket, message.chars, (int) message.len);
+      pelz_log(LOG_DEBUG, "%d::Error: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
       pelz_key_socket_close(new_socket);
       free_charbuf(&request);
       return;
@@ -98,13 +98,13 @@ void thread_process(void *arg)
 
       message_encoder(request_type, key_id, data_out, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
-      pelz_log(LOG_DEBUG, "%d::Message: %s, %d", new_socket, message.chars, (int) message.len);
+      pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     }
     free_charbuf(&key_id);
     free_charbuf(&data_out);
     free_charbuf(&output);
 
-    pelz_log(LOG_DEBUG, "%d::Message & Length: %s, %d", new_socket, message.chars, (int) message.len);
+    pelz_log(LOG_DEBUG, "%d::Message & Length: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     //Send processed request back to client
     if (pelz_key_socket_send(new_socket, message))
     {
