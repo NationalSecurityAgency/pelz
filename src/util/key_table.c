@@ -135,7 +135,14 @@ int key_table_add(charbuf key_id, charbuf * key)
   tmp_entry.key.len = ocall_key_len;
   tmp_entry.key.chars = (unsigned char *) malloc(ocall_key_len);
   memcpy(tmp_entry.key.chars, ocall_key_data, ocall_key_len);
-  ocall_free(ocall_key_data);
+  if (!sgx_is_outside_enclave(ocall_key_data, ocall_key_len))
+  {
+    ret = 1;
+  }
+  else
+  {
+    ocall_free(ocall_key_data, ocall_key_len);
+  }
 #else
   ret = key_load(tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
 #endif

@@ -15,7 +15,7 @@ enclave {
 	int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
 	             [out] size_t* key_len, [user_check] unsigned char** key);
 	void ocall_malloc(size_t size, [user_check] char** buf);
-	void ocall_free([user_check] void* ptr);
+	void ocall_free([user_check] void* ptr, size_t len);
 	};
 };	
 	

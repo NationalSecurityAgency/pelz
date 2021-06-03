@@ -19,8 +19,9 @@ void ocall_malloc(size_t size, char **buf)
   *buf = (char *) malloc(size);
 }
 
-void ocall_free(void *ptr)
+void ocall_free(void *ptr, size_t len)
 {
+  secure_memset(ptr, 0, len);
   free(ptr);
 }
 #endif
