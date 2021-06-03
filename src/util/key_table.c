@@ -13,7 +13,7 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 
-#ifdef PELZ_SGX
+#ifdef PELZ_SGX_TRUSTED
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #endif
@@ -122,7 +122,7 @@ int key_table_add(charbuf key_id, charbuf * key)
 
   int ret;
 
-#ifdef PELZ_SGX
+#ifdef PELZ_SGX_TRUSTED
   size_t ocall_key_len = 0;
   unsigned char *ocall_key_data = NULL;
 

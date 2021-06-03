@@ -4,8 +4,8 @@
 #include "key_table.h"
 #include "aes_keywrap_3394nopad.h"
 
-#ifdef PELZ_SGX
-#include "sgx_urts.h"
+#ifdef PELZ_SGX_TRUSTED
+#include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #endif
 

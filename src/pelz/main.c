@@ -9,7 +9,7 @@
 #include "pelz_service.h"
 #include "pelz_log.h"
 
-#ifdef PELZ_APP
+#ifdef PELZ_SGX_UNTRUSTED
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 
   int ret;
 
-#ifdef PELZ_APP
+#ifdef PELZ_SGX_UNTRUSTED
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
   key_table_init(eid, &ret);
 #else
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
   pelz_service((const int) max_requests);
 
-#ifdef PELZ_APP
+#ifdef PELZ_SGX_UNTRUSTED
   key_table_destroy(eid, &ret);
   sgx_destroy_enclave(eid);
 #else

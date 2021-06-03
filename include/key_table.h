@@ -30,7 +30,7 @@ extern "C"
 {
 #endif
 
-#ifndef PELZ_APP
+#ifndef PELZ_SGX_UNTRUSTED
 /**
  * <pre>
  * This function initializes a key table for lookup.
