@@ -9,6 +9,15 @@
 #include "pelz_service.h"
 #include "pelz_log.h"
 
+#ifdef PELZ_SGX_UNTRUSTED
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+sgx_enclave_id_t eid = 0;
+
+#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
+#endif
+
 static void usage(const char *prog)
 {
   fprintf(stdout,
@@ -67,14 +76,28 @@ int main(int argc, char **argv)
     }
   }
 
-  //Initializing Key Table with max key entries set to key_max
-  if (key_table_init())
+  int ret;
+
+#ifdef PELZ_SGX_UNTRUSTED
+  sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+  key_table_init(eid, &ret);
+#else
+  ret = key_table_init();
+#endif
+
+  if (ret)
   {
     pelz_log(LOG_ERR, "Key Table Init Failure");
     return (1);
   }
 
   pelz_service((const int) max_requests);
+
+#ifdef PELZ_SGX_UNTRUSTED
+  key_table_destroy(eid, &ret);
+  sgx_destroy_enclave(eid);
+#else
   key_table_destroy();
+#endif
   return (0);
 }

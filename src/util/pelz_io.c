@@ -13,6 +13,19 @@
 #include "pelz_request_handler.h"
 #include "util.h"
 
+#ifdef PELZ_SGX_UNTRUSTED
+void ocall_malloc(size_t size, char **buf)
+{
+  *buf = (char *) malloc(size);
+}
+
+void ocall_free(void *ptr, size_t len)
+{
+  secure_memset(ptr, 0, len);
+  free(ptr);
+}
+#endif
+
 int get_file_ext(charbuf buf, int *ext)
 {
   int period_index = 0;
@@ -47,105 +60,122 @@ int get_file_ext(charbuf buf, int *ext)
   return (0);
 }
 
-int key_load(KeyEntry * key_values)
+int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
 {
-  URIValues key_id_values;
+  URIValues key_id_data;
   int file_type = 0;
   unsigned char tmp_key[MAX_KEY_LEN];
   char *path = NULL;
   FILE *key_txt_f = 0;
   FILE *key_key_f = 0;
 
-  key_id_values.type = 0;
+  charbuf key_data;
+
+  key_data.chars = key_id;
+  key_data.len = key_id_len;
+
+  key_id_data.type = 0;
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
-  pelz_log(LOG_DEBUG, "Key ID: %.*s", key_values->key_id.len, key_values->key_id.chars);
-  if (key_id_parse(key_values->key_id, &key_id_values) != 0)
+  pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id_len, key_id);
+  if (key_id_parse(key_data, &key_id_data) != 0)
   {
     return (1);
   }
 
-  pelz_log(LOG_DEBUG, "URIValues Parsed\nKey Retrieval Started: %d", key_id_values.type);
-  switch (key_id_values.type)
+  pelz_log(LOG_DEBUG, "URIValues Parsed\nKey Retrieval Started: %d", key_id_data.type);
+  switch (key_id_data.type)
   {
   case (F_SCHEME):
-    get_file_ext(key_id_values.f_values.f_name, &file_type);
+    get_file_ext(key_id_data.f_values.f_name, &file_type);
     pelz_log(LOG_DEBUG, "File Type: %d", file_type);
-    if (key_id_values.f_values.auth.len == 0 || strncmp((char *) key_id_values.f_values.auth.chars, "//localhost", 11) == 0 ||
-      strncmp((char *) key_id_values.f_values.auth.chars, "//", 2) == 0)
+    if (key_id_data.f_values.auth.len == 0 || strncmp((char *) key_id_data.f_values.auth.chars, "//localhost", 11) == 0 ||
+      strncmp((char *) key_id_data.f_values.auth.chars, "//", 2) == 0)
     {
       switch (file_type)
       {
       case (TXT_EXT):
-        path = calloc((key_id_values.f_values.path.len + 1), sizeof(char));
-        memcpy(path, &key_id_values.f_values.path.chars[0], key_id_values.f_values.path.len);
+        path = (char *) calloc((key_id_data.f_values.path.len + 1), sizeof(char));
+        memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
         key_txt_f = fopen(path, "r");
         fgets((char *) tmp_key, (MAX_KEY_LEN + 1), key_txt_f);
         fclose(key_txt_f);
         free(path);
-        key_values->key = new_charbuf(strlen((char *) tmp_key));
-        memcpy(key_values->key.chars, tmp_key, key_values->key.len);
-        secure_memset(tmp_key, 0, key_values->key.len);
-        if (key_id_values.f_values.auth.len != 0)
+        *key = (unsigned char *) malloc(strlen((char *) tmp_key));
+        *key_len = strlen((char *) tmp_key);
+        memcpy(*key, tmp_key, *key_len);
+        secure_memset(tmp_key, 0, *key_len);
+        if (key_id_data.f_values.auth.len != 0)
         {
-          free_charbuf(&key_id_values.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        free_charbuf(&key_id_values.f_values.path);
-        free_charbuf(&key_id_values.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
         break;
       case (PEM_EXT):
         pelz_log(LOG_INFO, "PEM file retrieve is not setup yet.");
-        if (&key_id_values.f_values.auth != 0)
+        if (&key_id_data.f_values.auth != 0)
         {
-          free_charbuf(&key_id_values.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        free_charbuf(&key_id_values.f_values.path);
-        free_charbuf(&key_id_values.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
         return (1);
       case (KEY_EXT):
-        path = calloc(key_id_values.f_values.path.len + 1, sizeof(char));
-        memcpy(path, &key_id_values.f_values.path.chars[0], key_id_values.f_values.path.len);
+        path = (char *) calloc(key_id_data.f_values.path.len + 1, sizeof(char));
+        memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
         key_key_f = fopen(path, "r");
-        fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
-        fclose(key_key_f);
-        free(path);
-        key_values->key = new_charbuf(MAX_KEY_LEN);
-        memcpy(key_values->key.chars, tmp_key, key_values->key.len);
-        secure_memset(tmp_key, 0, key_values->key.len);
-        if (key_id_values.f_values.auth.len != 0)
+        *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
+
+        if (key_id_data.f_values.auth.len != 0)
         {
-          free_charbuf(&key_id_values.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        free_charbuf(&key_id_values.f_values.path);
-        free_charbuf(&key_id_values.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
+        free(path);
+
+        // If we've read MAX_KEY_LEN but not reached EOF there's probably
+        // been a problem.
+        if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
+        {
+          pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
+          fclose(key_key_f);
+          return (1);
+        }
+        *key = (unsigned char *) malloc(*key_len);
+        memcpy(*key, tmp_key, *key_len);
+        secure_memset(tmp_key, 0, *key_len);
+        fclose(key_key_f);
         break;
       default:
-        if (&key_id_values.f_values.auth != 0)
+        if (&key_id_data.f_values.auth != 0)
         {
-          free_charbuf(&key_id_values.f_values.auth);
+          free_charbuf(&key_id_data.f_values.auth);
         }
-        free_charbuf(&key_id_values.f_values.path);
-        free_charbuf(&key_id_values.f_values.f_name);
+        free_charbuf(&key_id_data.f_values.path);
+        free_charbuf(&key_id_data.f_values.f_name);
         pelz_log(LOG_ERR, "Error: File Type Undetermined\n");
         return (1);
       }
       break;
     }
-    free_charbuf(&key_id_values.f_values.auth);
-    free_charbuf(&key_id_values.f_values.path);
-    free_charbuf(&key_id_values.f_values.f_name);
+    free_charbuf(&key_id_data.f_values.auth);
+    free_charbuf(&key_id_data.f_values.path);
+    free_charbuf(&key_id_data.f_values.f_name);
     pelz_log(LOG_WARNING, "Non localhost authorities are not valid.\n");
     return (1);
   case (FTP):
-    free_charbuf(&key_id_values.ftp_values.host);
-    free_charbuf(&key_id_values.ftp_values.port);
-    free_charbuf(&key_id_values.ftp_values.url_path);
+    free_charbuf(&key_id_data.ftp_values.host);
+    free_charbuf(&key_id_data.ftp_values.port);
+    free_charbuf(&key_id_data.ftp_values.url_path);
     pelz_log(LOG_ERR, "Socket file retrieve is not setup yet.");
     return (1);
   default:
     pelz_log(LOG_ERR, "Error: Scheme Type Undetermined.");
     return (1);
   }
+
   return (0);
 }
 
@@ -207,7 +237,7 @@ int key_id_parse(charbuf key_id, URIValues * uri)
       memcpy(uri->f_values.f_name.chars, &buf.chars[(index + 1)], uri->f_values.f_name.len);
     }
     free_charbuf(&buf);
-    path = calloc((uri->f_values.path.len + 1), sizeof(char));
+    path = (char *) calloc((uri->f_values.path.len + 1), sizeof(char));
     memcpy(path, &uri->f_values.path.chars[0], uri->f_values.path.len);
     if (file_check(path))       //Removing the first char from the string is so we can test and needs to be fixed for production.
     {

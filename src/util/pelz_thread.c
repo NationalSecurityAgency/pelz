@@ -34,7 +34,8 @@ void thread_process(void *arg)
 
     pelz_log(LOG_DEBUG, "%d::Request & Length: %.*s, %d", new_socket, (int) request.len, request.chars, (int) request.len);
 
-    RequestType request_type = 0;
+    RequestType request_type = REQ_UNK;
+
     charbuf key_id;
     charbuf data_in;
     charbuf data_out;
@@ -61,8 +62,8 @@ void thread_process(void *arg)
     pthread_mutex_lock(&lock);
     status = pelz_request_handler(request_type, key_id, data, &output);
     pthread_mutex_unlock(&lock);
-
     free_charbuf(&data);
+
     if (status != REQUEST_OK)
     {
       pelz_log(LOG_ERR, "%d::Service Error\nSend error message.", new_socket);
@@ -95,7 +96,6 @@ void thread_process(void *arg)
       {
         data_out.chars[data_out.len] = 0;
       }
-
       message_encoder(request_type, key_id, data_out, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
       pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);

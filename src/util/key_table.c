@@ -13,6 +13,11 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 
+#ifdef PELZ_SGX_TRUSTED
+#include "sgx_trts.h"
+#include "pelz_enclave_t.h"
+#endif
+
 KeyTable key_table;
 
 //Initialize key table
@@ -115,7 +120,33 @@ int key_table_add(charbuf key_id, charbuf * key)
   tmp_entry.key_id = new_charbuf(key_id.len);
   memcpy(tmp_entry.key_id.chars, key_id.chars, tmp_entry.key_id.len);
 
-  if (key_load(&tmp_entry))
+  int ret;
+
+#ifdef PELZ_SGX_TRUSTED
+  size_t ocall_key_len = 0;
+  unsigned char *ocall_key_data = NULL;
+
+  key_load(&ret, tmp_entry.key_id.len, tmp_entry.key_id.chars, &ocall_key_len, &ocall_key_data);
+  if (!sgx_is_outside_enclave(ocall_key_data, ocall_key_len))
+  {
+    free_charbuf(&tmp_entry.key_id);
+    return (1);
+  }
+  tmp_entry.key.len = ocall_key_len;
+  tmp_entry.key.chars = (unsigned char *) malloc(ocall_key_len);
+  memcpy(tmp_entry.key.chars, ocall_key_data, ocall_key_len);
+  if (!sgx_is_outside_enclave(ocall_key_data, ocall_key_len))
+  {
+    ret = 1;
+  }
+  else
+  {
+    ocall_free(ocall_key_data, ocall_key_len);
+  }
+#else
+  ret = key_load(tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
+#endif
+  if (ret)
   {
     //If the code cannot retrieve the key from the URI provided by the Key ID, then we error out of the function before touching the Key Table.
     free_charbuf(&tmp_entry.key_id);

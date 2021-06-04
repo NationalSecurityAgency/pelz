@@ -8,6 +8,11 @@
 #include "util.h"
 #include "pelz_log.h"
 
+#ifdef PELZ_SGX_TRUSTED
+#include "sgx_trts.h"
+#include "pelz_enclave_t.h"
+#endif
+
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 
@@ -37,7 +42,15 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // Key wrap always adds 8 bytes of data.
   *outData_len = inData_len + 8;
   *outData = NULL;
-  *outData = malloc(*outData_len);
+#ifdef PELZ_SGX_TRUSTED
+  ocall_malloc(*outData_len, (char **) outData);
+  if (!sgx_is_outside_enclave(*outData, *outData_len))
+  {
+    return 1;
+  }
+#else
+  *outData = (unsigned char *) malloc(*outData_len);
+#endif
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "Failed to allocate memory for output data.");
@@ -158,7 +171,15 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   *outData_len = inData_len - 8;
 
   *outData = NULL;
-  *outData = malloc(*outData_len);
+#ifdef PELZ_SGX_TRUSTED
+  ocall_malloc(*outData_len, (char **) outData);
+  if (!sgx_is_outside_enclave(*outData, *outData_len))
+  {
+    return 1;
+  }
+#else
+  *outData = (unsigned char *) malloc(*outData_len);
+#endif
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "Failed to allocate memory for plaintext data.");
@@ -218,7 +239,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!EVP_DecryptUpdate(ctx, *outData, &tmp_len, inData, inData_len))
   {
     pelz_log(LOG_ERR, "Failed to perform AES Key Unwrap.");
-    *outData = secure_memset(*outData, 0, *outData_len);
+    *outData = (unsigned char *) secure_memset(*outData, 0, *outData_len);
     *outData_len = 0;
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
@@ -229,7 +250,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!EVP_DecryptFinal_ex(ctx, *outData + plaintext_len, &tmp_len))
   {
     pelz_log(LOG_ERR, "Failed to finalize AES Key Unwrap.");
-    *outData = secure_memset(*outData, 0, *outData_len);
+    *outData = (unsigned char *) secure_memset(*outData, 0, *outData_len);
     *outData_len = 0;
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
@@ -241,7 +262,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   {
     pelz_log(LOG_ERR, "Unwrapped data does not match expected length (%lu bytes expected, %d bytes found.)", *outData_len,
       plaintext_len);
-    *outData = secure_memset(*outData, 0, *outData_len);
+    *outData = (unsigned char *) secure_memset(*outData, 0, *outData_len);
     *outData_len = 0;
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);

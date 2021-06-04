@@ -5,6 +5,10 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /**
  * <pre>
  * This function creates a new charbuf that contains the file extension of a file name sting in a charbuf
@@ -15,21 +19,55 @@
  *
  * @return 0 on success, 1 on error
  */
-int get_file_ext(charbuf buf, int *ext);
+  int get_file_ext(charbuf buf, int *ext);
 
+#if !defined(PELZ_SGX_TRUSTED)
 /**
  * <pre>
  * Load key from location stated by Key ID
  * <pre>
  *
- * @param[in] key_values.key_id The Key Identifier
- * @param[in] key_values.key_id_len Length of Key Identifier
- * @param[out] key_values.key The key value
- * @param[out] key_values.key_len The length of the key
+ * @param[in] key_id_len   the length of the key identifierr
+ * @param[in] key_id       a pointer to the key identifier
+ * @param[out] key_len     the length of the loaded key
+ * @param[out] key         a pointer to a pointer to the key, will be
+ *                         allocated within key_load
  *
  * @return 0 on success, 1 on error
  */
-int key_load(KeyEntry * key_values);
+  int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key);
+#endif
+
+#if defined(PELZ_SGX_UNTRUSTED)
+/**
+ * <pre>
+ * Malloc untrusted memory from within the enclave. The result must
+ * be checked to ensure it lies outside the enclave by calling
+ * sgx_is_outside_enclave(*buf, size);
+ * <pre>
+ *
+ * @param[in]     size the size to allocate (in bytes).
+ * @param[in,out] buf  a pointer to a pointer to hold the allocated space
+ *
+ * @return none
+ */
+  void ocall_malloc(size_t size, char **buf);
+
+/**
+ * <pre>
+ * Frees untrusted memory from within the enclave. If the length of the
+ * buffer is available the caller should check that it is entirely outside
+ * enclave memory by calling
+ * sgx_is_outside_enclave(ptr, len);
+ * <pre>
+
+ * @param[in] ptr the pointer to be freed
+ * @param[in] len the length of the buffer pointed to by ptr
+ *
+ * @return none
+ */
+  void ocall_free(void *ptr, size_t len);
+#endif
 
 /**
  * <pre>
@@ -49,7 +87,7 @@ int key_load(KeyEntry * key_values);
  *
  * @return 0 on success, 1 on error
  */
-int key_id_parse(charbuf key_id, URIValues * uri);
+  int key_id_parse(charbuf key_id, URIValues * uri);
 
 /**
  * <pre>
@@ -60,7 +98,7 @@ int key_id_parse(charbuf key_id, URIValues * uri);
  *
  * @return 0 on success, 1 on error
  */
-int file_check(char *file_path);
+  int file_check(char *file_path);
 
 /**
  * <pre>
@@ -72,7 +110,7 @@ int file_check(char *file_path);
  * @return 0 if success, 1 if error
  */
 
-int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned char **base64_data, size_t * base64_data_size);
+  int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned char **base64_data, size_t * base64_data_size);
 
 /**
  * <pre>
@@ -86,6 +124,10 @@ int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned cha
  *
  * @return 0 if success, 1 if error
  */
-int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
+  int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -25,6 +25,12 @@ typedef struct Keys
 
 extern KeyTable key_table;
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#ifndef PELZ_SGX_UNTRUSTED
 /**
  * <pre>
  * This function initializes a key table for lookup.
@@ -35,7 +41,7 @@ extern KeyTable key_table;
  *
  * @return 0 on success, 1 on error
  */
-int key_table_init(void);
+  int key_table_init(void);
 
 /**
  * <pre>
@@ -46,7 +52,8 @@ int key_table_init(void);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_destroy(void);
+  int key_table_destroy(void);
+#endif
 
 /**
  * <pre>
@@ -60,7 +67,7 @@ int key_table_destroy(void);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_delete(charbuf key_id);
+  int key_table_delete(charbuf key_id);
 
 /**
  * <pre>
@@ -76,7 +83,7 @@ int key_table_delete(charbuf key_id);
  *
  * @return 0 on success, 1 on error
  */
-int key_table_add(charbuf key_id, charbuf * key);
+  int key_table_add(charbuf key_id, charbuf * key);
 
 /**
  * <pre>
@@ -93,6 +100,9 @@ int key_table_add(charbuf key_id, charbuf * key);
  *
  * @return 0 on success, 1 on failure
  */
-int key_table_lookup(charbuf key_id, charbuf * key);
+  int key_table_lookup(charbuf key_id, charbuf * key);
 
-#endif /* INCLUDE_KEY_TABLE_H_ */
+#ifdef __cplusplus
+}
+#endif
+#endif                          /* INCLUDE_KEY_TABLE_H_ */

@@ -17,7 +17,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   cJSON *json;
   char *str = NULL;
 
-  str = calloc((request.len + 1), sizeof(char));
+  str = (char *) calloc((request.len + 1), sizeof(char));
   memcpy(str, request.chars, request.len);
   json = cJSON_Parse(str);
   free(str);
@@ -33,7 +33,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     cJSON_Delete(json);
     return (1);
   }
-  *request_type = cJSON_GetObjectItemCaseSensitive(json, "request_type")->valueint;
+  *request_type = (RequestType) cJSON_GetObjectItemCaseSensitive(json, "request_type")->valueint;
   switch (*request_type)
   {
   case REQ_ENC:
@@ -91,24 +91,24 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
   switch (request_type)
   {
   case REQ_ENC:
-    tmp = calloc((key_id.len + 1), sizeof(char));
+    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
     memcpy(tmp, key_id.chars, key_id.len);
     cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
     free(tmp);
     cJSON_AddItemToObject(root, "key_id_len", cJSON_CreateNumber(key_id.len));
-    tmp = calloc((data.len + 1), sizeof(char));
+    tmp = (char *) calloc((data.len + 1), sizeof(char));
     memcpy(tmp, data.chars, data.len);
     cJSON_AddItemToObject(root, "enc_out", cJSON_CreateString(tmp));
     free(tmp);
     cJSON_AddItemToObject(root, "enc_out_len", cJSON_CreateNumber(data.len));
     break;
   case REQ_DEC:
-    tmp = calloc((key_id.len + 1), sizeof(char));
+    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
     memcpy(tmp, key_id.chars, key_id.len);
     cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
     free(tmp);
     cJSON_AddItemToObject(root, "key_id_len", cJSON_CreateNumber(key_id.len));
-    tmp = calloc((data.len + 1), sizeof(char));
+    tmp = (char *) calloc((data.len + 1), sizeof(char));
     memcpy(tmp, data.chars, data.len);
     cJSON_AddItemToObject(root, "dec_out", cJSON_CreateString(tmp));
     free(tmp);

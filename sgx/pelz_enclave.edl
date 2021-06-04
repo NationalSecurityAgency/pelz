@@ -1,0 +1,21 @@
+enclave {
+	from "sgx_tsgxssl.edl" import *;
+	from "sgx_pthread.edl" import *;
+	include "pelz_request_handler.h"
+	include "key_table.h"
+	include "pelz_io.h"
+	include "charbuf.h"
+	include "util.h"
+	trusted {
+	public int key_table_init(void);
+	public int key_table_destroy(void);
+	public RequestResponseStatus pelz_request_handler_impl(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
+	};
+	untrusted {
+	int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
+	             [out] size_t* key_len, [user_check] unsigned char** key);
+	void ocall_malloc(size_t size, [user_check] char** buf);
+	void ocall_free([user_check] void* ptr, size_t len);
+	};
+};	
+	
