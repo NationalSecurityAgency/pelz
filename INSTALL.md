@@ -38,13 +38,12 @@ Pelz can now be built to keep its key table inside an SGX enclave. This function
  * Install the [Intel Linux SGX SDK](https://github.com/intel/linux-sgx)
  * Install the [Intel SGX SSL library](https://github.com/intel/intel-sgx-ssl)
  * Source the SGX SDK environment
+ * Generate or install the enclave signing key (sgx/pelz_enclave_private.pem). For example, use ```openssl genrsa -out sgx/pelz_enclave_private.pem -3 3072```
 
 With all the setup complete, pelz-sgx can be built by:
 
      make -f sgx.mk
 
-Note: The build will create and use an enclave signing key generated with ```openssl genrsa -out sgx/pelz_enclave_private.pem -3 3072```
-     
 and executed by running
 
 	./bin/pelz-sgx
