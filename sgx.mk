@@ -227,8 +227,8 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394no
 	@echo "LINK =>  $@"
 
 sgx/$(Enclave_Signing_Key):
-	@echo "No Enclave Signing Key found - must generate or install sgx/$(Enclave_Signing_Key)"
-	@echo "  e.g., run 'openssl genrsa -out sgx/$(Enclave_Signing_Key) -3 3072'"
+	@echo "FAIL: No Enclave Signing Key found - must generate or install sgx/$(Enclave_Signing_Key)"
+	@echo "      e.g., run 'openssl genrsa -out sgx/$(Enclave_Signing_Key) -3 3072'"
 
 sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
