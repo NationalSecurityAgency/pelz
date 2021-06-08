@@ -31,7 +31,7 @@ int get_file_ext(charbuf buf, int *ext)
   int period_index = 0;
   int ext_len = 0;
   int ext_type_size = 3;
-  char *ext_type[3] = { ".txt", ".pem", ".key" };
+  const char *ext_type[3] = { ".txt", ".pem", ".key" };
 
   period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
   ext_len = (buf.len - period_index);
