@@ -31,7 +31,7 @@ int get_file_ext(charbuf buf, int *ext)
   int period_index = 0;
   int ext_len = 0;
   int ext_type_size = 3;
-  char *ext_type[3] = { ".txt", ".pem", ".key" };
+  const char *ext_type[3] = { ".txt", ".pem", ".key" };
 
   period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
   ext_len = (buf.len - period_index);
@@ -64,7 +64,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
 {
   URIValues key_id_data;
   int file_type = 0;
-  unsigned char tmp_key[MAX_KEY_LEN];
+  unsigned char tmp_key[MAX_KEY_LEN + 1];
   char *path = NULL;
   FILE *key_txt_f = 0;
   FILE *key_key_f = 0;
@@ -98,9 +98,16 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
         path = (char *) calloc((key_id_data.f_values.path.len + 1), sizeof(char));
         memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
         key_txt_f = fopen(path, "r");
-        fgets((char *) tmp_key, (MAX_KEY_LEN + 1), key_txt_f);
+        if (fgets((char *) tmp_key, (MAX_KEY_LEN + 1), key_txt_f) != (char *) tmp_key)
+        {
+          pelz_log(LOG_ERR, "Failed to read key file %s", path);
+          fclose(key_txt_f);
+          free(path);
+          return (1);
+        }
         fclose(key_txt_f);
         free(path);
+
         *key = (unsigned char *) malloc(strlen((char *) tmp_key));
         *key_len = strlen((char *) tmp_key);
         memcpy(*key, tmp_key, *key_len);

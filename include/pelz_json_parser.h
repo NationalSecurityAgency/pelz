@@ -43,7 +43,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
  * @return 0 on success, 1 on error
  *
  */
-int error_message_encoder(charbuf * message, char *err_message);
+int error_message_encoder(charbuf * message, const char *err_message);
 
 /**
  * <pre>

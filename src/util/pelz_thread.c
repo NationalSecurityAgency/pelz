@@ -18,7 +18,7 @@ void thread_process(void *arg)
   charbuf request;
   charbuf message;
   RequestResponseStatus status;
-  char *err_message;
+  const char *err_message;
 
   while (!pelz_key_socket_check(new_socket))
   {
