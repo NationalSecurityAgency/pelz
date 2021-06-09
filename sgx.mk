@@ -152,6 +152,13 @@ endif
 endif
 endif
 
+# Message for missing Enclave Signing Key - Fatal Build Error
+define err_no_enclave_signing_key
+FAIL - No Enclave Signing Key found
+Generate or install sgx/$(Enclave_Signing_Key)
+e.g., run 'openssl genrsa -out sgx/$(Enclave_Signing_Key) -3 3072'
+endef
+
 
 .PHONY: all run
 
@@ -227,8 +234,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394no
 	@echo "LINK =>  $@"
 
 sgx/$(Enclave_Signing_Key):
-	@echo "FAIL: No Enclave Signing Key found - must generate or install sgx/$(Enclave_Signing_Key)"
-	@echo "      e.g., run 'openssl genrsa -out sgx/$(Enclave_Signing_Key) -3 3072'"
+	$(error $(err_no_enclave_signing_key))
 
 sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
