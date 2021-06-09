@@ -140,6 +140,7 @@ Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefau
 	-Wl,--defsym,__ImageBase=0 \
 
 Enclave_Name := pelz_enclave.so
+Enclave_Signing_Key := pelz_enclave_private.pem
 Signed_Enclave_Name := pelz_enclave.signed.so
 Enclave_Config_File := sgx/pelz_enclave.config.xml
 
@@ -150,6 +151,13 @@ Build_Mode = HW_RELEASE
 endif
 endif
 endif
+
+# Message for missing Enclave Signing Key - Fatal Build Error
+define err_no_enclave_signing_key
+FAIL - No Enclave Signing Key found
+Generate or install sgx/$(Enclave_Signing_Key)
+e.g., run 'openssl genrsa -out sgx/$(Enclave_Signing_Key) -3 3072'
+endef
 
 
 .PHONY: all run
@@ -163,7 +171,7 @@ all: $(App_Name) $(Enclave_Name)
 	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
 	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
 else
-all: $(App_Name) $(Signed_Enclave_Name)
+all: bin/$(App_Name) sgx/$(Signed_Enclave_Name)
 endif
 
 run: all
@@ -221,15 +229,19 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/pelz_enclave.so: sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler_impl.o sgx/charbuf.o sgx/util.o
+sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler_impl.o sgx/charbuf.o sgx/util.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
-sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name)
-	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/pelz_enclave_private.pem -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
+sgx/$(Enclave_Signing_Key):
+	$(error $(err_no_enclave_signing_key))
+
+sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
+	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
 .PHONY: clean
 
 clean:
 	@rm -f bin/pelz-sgx sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o
+
