@@ -3,7 +3,7 @@
 ## Dependencies
 
 ### For Ubuntu:
-apt install make cmake indent gcc openssl libssl-dev libffi-dev libcunit1 libcunit1-dev libcunit1-doc
+apt install make cmake indent gcc openssl libssl-dev libffi-dev libcunit1 libcunit1-dev libcunit1-doc liburiparser-dev
 
 #### cJSON:
 cJSON is required to build pelz.  
