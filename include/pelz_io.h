@@ -1,6 +1,8 @@
 #ifndef INCLUDE_PELZ_IO_H_
 #define INCLUDE_PELZ_IO_H_
 
+#include <uriparser/Uri.h>
+
 #include "charbuf.h"
 #include "key_table.h"
 #include "pelz_request_handler.h"

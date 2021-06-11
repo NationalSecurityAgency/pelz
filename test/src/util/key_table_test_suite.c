@@ -140,7 +140,6 @@ void test_table_initLookupAddDeleteDestroy(void)
 
   pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
   CU_ASSERT(key_table_init() == 0);
-
   //Initial load of keys into the key table
   for (int i = 0; i < 6; i++)
   {

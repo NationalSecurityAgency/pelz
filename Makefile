@@ -7,7 +7,7 @@ DEBUG = -g
 INCLUDES = 
 LLIBS = 
 CFLAGS = -Wall -c $(DEBUG) -D_GNU_SOURCE $(INCLUDES) 
-LFLAGS = -Wall $(DEBUG) -lcrypto -lssl -pthread -lcjson -lurisparser -lkmyth-logger
+LFLAGS = -Wall $(DEBUG) -lcrypto -lssl -pthread -lcjson -luriparser -lkmyth-logger
 
 
 OBJ_DIR = objs

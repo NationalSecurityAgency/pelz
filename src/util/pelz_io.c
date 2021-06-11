@@ -5,6 +5,7 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
+#include <uriparser/Uri.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -62,124 +63,67 @@ int get_file_ext(charbuf buf, int *ext)
 
 int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
 {
-  URIValues key_id_data;
-  int file_type = 0;
+  UriUriA key_id_data;
   unsigned char tmp_key[MAX_KEY_LEN + 1];
-  char *path = NULL;
-  FILE *key_txt_f = 0;
   FILE *key_key_f = 0;
 
-  charbuf key_data;
+  const char *error_pos = NULL;
 
-  key_data.chars = key_id;
-  key_data.len = key_id_len;
+  char *key_uri_to_parse = NULL;
 
-  key_id_data.type = 0;
+  key_uri_to_parse = calloc(key_id_len + 1, 1);
+  memcpy(key_uri_to_parse, key_id, key_id_len);
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
   pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id_len, key_id);
-  if (key_id_parse(key_data, &key_id_data) != 0)
+  if (uriParseSingleUriA(&key_id_data, (const char *) key_uri_to_parse, &error_pos) != URI_SUCCESS
+    || key_id_data.scheme.first == NULL || key_id_data.scheme.afterLast == NULL)
   {
+    free(key_uri_to_parse);
     return (1);
   }
 
-  pelz_log(LOG_DEBUG, "URIValues Parsed\nKey Retrieval Started: %d", key_id_data.type);
-  switch (key_id_data.type)
+  if (strncmp(key_id_data.scheme.first, "file", 4) == 0)
   {
-  case (F_SCHEME):
-    get_file_ext(key_id_data.f_values.f_name, &file_type);
-    pelz_log(LOG_DEBUG, "File Type: %d", file_type);
-    if (key_id_data.f_values.auth.len == 0 || strncmp((char *) key_id_data.f_values.auth.chars, "//localhost", 11) == 0 ||
-      strncmp((char *) key_id_data.f_values.auth.chars, "//", 2) == 0)
+    char *filename = NULL;
+
+    // Magic 5 is inherited from uriparser
+    filename = malloc(key_id_len - 5);
+    if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
     {
-      switch (file_type)
-      {
-      case (TXT_EXT):
-        path = (char *) calloc((key_id_data.f_values.path.len + 1), sizeof(char));
-        memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
-        key_txt_f = fopen(path, "r");
-        if (fgets((char *) tmp_key, (MAX_KEY_LEN + 1), key_txt_f) != (char *) tmp_key)
-        {
-          pelz_log(LOG_ERR, "Failed to read key file %s", path);
-          fclose(key_txt_f);
-          free(path);
-          return (1);
-        }
-        fclose(key_txt_f);
-        free(path);
-
-        *key = (unsigned char *) malloc(strlen((char *) tmp_key));
-        *key_len = strlen((char *) tmp_key);
-        memcpy(*key, tmp_key, *key_len);
-        secure_memset(tmp_key, 0, *key_len);
-        if (key_id_data.f_values.auth.len != 0)
-        {
-          free_charbuf(&key_id_data.f_values.auth);
-        }
-        free_charbuf(&key_id_data.f_values.path);
-        free_charbuf(&key_id_data.f_values.f_name);
-        break;
-      case (PEM_EXT):
-        pelz_log(LOG_INFO, "PEM file retrieve is not setup yet.");
-        if (&key_id_data.f_values.auth != 0)
-        {
-          free_charbuf(&key_id_data.f_values.auth);
-        }
-        free_charbuf(&key_id_data.f_values.path);
-        free_charbuf(&key_id_data.f_values.f_name);
-        return (1);
-      case (KEY_EXT):
-        path = (char *) calloc(key_id_data.f_values.path.len + 1, sizeof(char));
-        memcpy(path, &key_id_data.f_values.path.chars[0], key_id_data.f_values.path.len);
-        key_key_f = fopen(path, "r");
-        *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
-
-        if (key_id_data.f_values.auth.len != 0)
-        {
-          free_charbuf(&key_id_data.f_values.auth);
-        }
-        free_charbuf(&key_id_data.f_values.path);
-        free_charbuf(&key_id_data.f_values.f_name);
-        free(path);
-
-        // If we've read MAX_KEY_LEN but not reached EOF there's probably
-        // been a problem.
-        if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
-        {
-          pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
-          fclose(key_key_f);
-          return (1);
-        }
-        *key = (unsigned char *) malloc(*key_len);
-        memcpy(*key, tmp_key, *key_len);
-        secure_memset(tmp_key, 0, *key_len);
-        fclose(key_key_f);
-        break;
-      default:
-        if (&key_id_data.f_values.auth != 0)
-        {
-          free_charbuf(&key_id_data.f_values.auth);
-        }
-        free_charbuf(&key_id_data.f_values.path);
-        free_charbuf(&key_id_data.f_values.f_name);
-        pelz_log(LOG_ERR, "Error: File Type Undetermined\n");
-        return (1);
-      }
-      break;
+      free(filename);
+      free(key_uri_to_parse);
+      return (1);
     }
-    free_charbuf(&key_id_data.f_values.auth);
-    free_charbuf(&key_id_data.f_values.path);
-    free_charbuf(&key_id_data.f_values.f_name);
-    pelz_log(LOG_WARNING, "Non localhost authorities are not valid.\n");
-    return (1);
-  case (FTP):
-    free_charbuf(&key_id_data.ftp_values.host);
-    free_charbuf(&key_id_data.ftp_values.port);
-    free_charbuf(&key_id_data.ftp_values.url_path);
-    pelz_log(LOG_ERR, "Socket file retrieve is not setup yet.");
-    return (1);
-  default:
-    pelz_log(LOG_ERR, "Error: Scheme Type Undetermined.");
+    free(key_uri_to_parse);
+
+    key_key_f = fopen(filename, "r");
+
+    if (key_key_f == NULL)
+    {
+      pelz_log(LOG_ERR, "Failed to read key file %s\n", filename);
+      free(filename);
+      return (1);
+    }
+    free(filename);
+
+    *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
+    // If we've read MAX_KEY_LEN but not reached EOF there's probably
+    // been a problem.
+    if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
+    {
+      pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
+      fclose(key_key_f);
+      return (1);
+    }
+    *key = (unsigned char *) malloc(*key_len);
+    memcpy(*key, tmp_key, *key_len);
+    secure_memset(tmp_key, 0, *key_len);
+    fclose(key_key_f);
+  }
+  else
+  {
+    free(key_uri_to_parse);
     return (1);
   }
 
