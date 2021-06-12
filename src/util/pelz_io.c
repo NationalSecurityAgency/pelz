@@ -74,13 +74,16 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
 
   char *key_uri_to_parse = NULL;
 
+  // URI parser expects a null-terminated string to parse,
+  // so we embed the key_id in a 1-longer array and
+  // ensure it is null terminated.
   key_uri_to_parse = (char *) calloc(key_id_len + 1, 1);
   memcpy(key_uri_to_parse, key_id, key_id_len);
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
   pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id_len, key_id);
   if (uriParseSingleUriA(&key_id_data, (const char *) key_uri_to_parse, &error_pos) != URI_SUCCESS
-    || key_id_data.scheme.first == NULL || key_id_data.scheme.afterLast == NULL)
+    || key_id_data.scheme.first == NULL || key_id_data.scheme.afterLast == NULL || error_pos != NULL)
   {
     free(key_uri_to_parse);
     return (1);
