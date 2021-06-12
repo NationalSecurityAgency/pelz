@@ -3,7 +3,7 @@
 ## Dependencies
 
 ### For Ubuntu:
-apt install make cmake indent gcc openssl libssl-dev libffi-dev libcunit1 libcunit1-dev libcunit1-doc liburiparser-dev
+apt install make cmake indent gcc openssl libssl-dev libffi-dev libcunit1 libcunit1-dev libcunit1-doc
 
 #### cJSON:
 cJSON is required to build pelz.  
@@ -17,6 +17,9 @@ cJSON is required to build pelz.
     make install
 
 For more information on building cJSON, please see their [build instructions](https://github.com/DaveGamble/cJSON#building).
+
+#### uriparser
+[uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser/README#compilation). 
 
 #### kmyth logger:
 The kmyth logger is used by pelz. It requires building the logger, but not all of kmyth.  
