@@ -21,10 +21,6 @@ int utility_suite_add_tests(CU_pSuite suite)
   {
     return 1;
   }
-  if (NULL == CU_add_test(suite, "Verify Key Id is parsed correctly with differing inputs", test_key_id_parse))
-  {
-    return 1;
-  }
   if (NULL == CU_add_test(suite, "Verify Key Load with differing inputs", test_key_load))
   {
     return 1;
@@ -62,87 +58,6 @@ void test_file_check(void)
   // non-existing input file path should error
   remove("testfile");
   CU_ASSERT(file_check("testfile") == 1);
-}
-
-/*
- * Tests function key_id_parse
- */
-void test_key_id_parse(void)
-{
-  URIValues uri;
-  charbuf id;
-  char *postfix = "/test/key1.txt";
-
-  char *valid_id[7] = { "file:", "file://", "file://host.example.com",
-    "file://localhost", "ftp://user:password@host:port",
-    "ftp://user@host:port", "ftp://localhost:port"
-  };
-  char *invalid_id[16] =
-    { "file:///test/testkeys/key.txt", "file:/test/testkeys/key.txt", "file://host.example.com/test/testkeys/key.txt",
-    "file://localhost/test/testkeys/key.txt", "file:/test/testkeys/key.pem", "file:///test/testkeys/key1txt",
-    "file:/test/testkeys/key1txt",
-    "file://host.example.com/test/testkeys/key1txt", "file://localhost/test/testkeys/key1txt", "file:/test/testkeys/key1.tt",
-    "file:/test/testkeyskey1.txt", "file:/tet/testkeys/key1.txt", "ftp:/localhost:port/test/testkeys/key1.txt",
-    "ftp://localhost:portkey1.txt", "ftp://localhostport/test/testkeys/key1.txt", "adkl;jalfkdja;lkdjal"
-  };
-
-  pelz_log(LOG_DEBUG, "Start Key ID Parse Test");
-  //Testing all valid Key IDs
-  for (int i = 0; i < 7; i++)
-  {
-    id = copy_CWD_to_id(valid_id[i], postfix);
-    //Test valid Key IDs
-    CU_ASSERT(key_id_parse(id, &uri) == 0);
-    free_charbuf(&id);
-    if (uri.type == 1)
-    {
-      if (uri.f_values.auth.len != 0)
-        free_charbuf(&uri.f_values.auth);
-      free_charbuf(&uri.f_values.path);
-      free_charbuf(&uri.f_values.f_name);
-    }
-    else if (uri.type == 2)
-    {
-      free_charbuf(&uri.ftp_values.host);
-      free_charbuf(&uri.ftp_values.port);
-      free_charbuf(&uri.ftp_values.url_path);
-    }
-
-  }
-
-  //Testing invalid Key IDs
-  //Test assumes for FTP that the host, port, url_path are correct (code later needs to be able to check these)
-  for (int i = 0; i < 16; i++)
-  {
-    id = new_charbuf(strlen(invalid_id[i]));
-    memcpy(id.chars, invalid_id[i], id.len);
-    //Test invalid Key IDs
-    CU_ASSERT(key_id_parse(id, &uri) == 1);
-    free_charbuf(&id);
-  }
-
-  // Real file with permission
-  FILE *fp = fopen("temp_file.pem", "w");
-
-  fprintf(fp, "Testing...");
-  fclose(fp);
-  id = copy_CWD_to_id("file:", "/temp_file.pem");
-  CU_ASSERT(key_id_parse(id, &uri) == 0);
-  free_charbuf(&id);
-  free_charbuf(&uri.f_values.path);
-  free_charbuf(&uri.f_values.f_name);
-  remove("temp_file.pem");
-
-  // Real file with permission
-  fp = fopen("temp_file.py", "w");
-  fprintf(fp, "Testing...");
-  fclose(fp);
-  id = copy_CWD_to_id("file:", "/temp_file.py");
-  CU_ASSERT(key_id_parse(id, &uri) == 0);
-  free_charbuf(&id);
-  free_charbuf(&uri.f_values.path);
-  free_charbuf(&uri.f_values.f_name);
-  remove("temp_file.py");
 }
 
 /*
