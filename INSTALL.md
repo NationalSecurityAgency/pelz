@@ -19,7 +19,7 @@ cJSON is required to build pelz.
 For more information on building cJSON, please see their [build instructions](https://github.com/DaveGamble/cJSON#building).
 
 #### uriparser
-[uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser/README#compilation). 
+[uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser#compilation). 
 
 #### kmyth logger:
 The kmyth logger is used by pelz. It requires building the logger, but not all of kmyth.  
