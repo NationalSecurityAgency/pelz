@@ -5,7 +5,10 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
+
+#if !defined(PELZ_SGX_TRUSTED)
 #include <uriparser/Uri.h>
+#endif
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -71,7 +74,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
 
   char *key_uri_to_parse = NULL;
 
-  key_uri_to_parse = calloc(key_id_len + 1, 1);
+  key_uri_to_parse = (char*)calloc(key_id_len + 1, 1);
   memcpy(key_uri_to_parse, key_id, key_id_len);
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
@@ -88,7 +91,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     char *filename = NULL;
 
     // Magic 5 is inherited from uriparser
-    filename = malloc(key_id_len - 5);
+    filename = (char*)malloc(key_id_len - 5);
     if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
     {
       free(filename);
