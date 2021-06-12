@@ -74,7 +74,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
 
   char *key_uri_to_parse = NULL;
 
-  key_uri_to_parse = (char*)calloc(key_id_len + 1, 1);
+  key_uri_to_parse = (char *) calloc(key_id_len + 1, 1);
   memcpy(key_uri_to_parse, key_id, key_id_len);
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
@@ -91,7 +91,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     char *filename = NULL;
 
     // Magic 5 is inherited from uriparser
-    filename = (char*)malloc(key_id_len - 5);
+    filename = (char *) malloc(key_id_len - 5);
     if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
     {
       free(filename);
@@ -131,132 +131,6 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   }
 
   return (0);
-}
-
-int key_id_parse(charbuf key_id, URIValues * uri)
-{
-  charbuf buf;
-  int index = 0;
-  char *path = NULL;
-
-  pelz_log(LOG_DEBUG, "Starting Key ID Parse");
-  if (strncmp((char *) key_id.chars, "file:", 5) == 0)
-  {
-    pelz_log(LOG_DEBUG, "Key ID File Scheme");
-    uri->type = 1;
-    buf = new_charbuf(key_id.len - 5);
-    memcpy(buf.chars, &key_id.chars[5], buf.len);
-    if (buf.chars[1] == '/')
-    {
-      pelz_log(LOG_DEBUG, "File Scheme Auth-Path");
-      index = get_index_for_char(buf, '/', 2, 0);
-      if (index == -1)
-      {
-        pelz_log(LOG_ERR, "Invalid FILE Syntax");
-        free_charbuf(&buf);
-        return (1);
-      }
-      uri->f_values.auth = new_charbuf(index);
-      memcpy(uri->f_values.auth.chars, buf.chars, uri->f_values.auth.len);
-      uri->f_values.path = new_charbuf(buf.len - index);
-      memcpy(uri->f_values.path.chars, &buf.chars[index], uri->f_values.path.len);
-      index = get_index_for_char(buf, '/', (buf.len - 1), 1);
-      if (index == -1)
-      {
-        pelz_log(LOG_ERR, "Invalid FILE Syntax");
-        free_charbuf(&buf);
-        free_charbuf(&uri->f_values.auth);
-        free_charbuf(&uri->f_values.path);
-        return (1);
-      }
-      uri->f_values.f_name = new_charbuf((buf.len - index - 1));
-      memcpy(uri->f_values.f_name.chars, &buf.chars[(index + 1)], uri->f_values.f_name.len);
-    }
-    else
-    {
-      pelz_log(LOG_DEBUG, "No File Scheme Auth-Path");
-      uri->f_values.auth.chars = NULL;
-      uri->f_values.auth.len = 0;
-      uri->f_values.path = new_charbuf(buf.len);
-      memcpy(uri->f_values.path.chars, buf.chars, buf.len);
-      index = get_index_for_char(buf, '/', (buf.len - 1), 1);
-      if (index == -1)
-      {
-        pelz_log(LOG_ERR, "Invalid FILE Syntax");
-        free_charbuf(&buf);
-        free_charbuf(&uri->f_values.path);
-        return (1);
-      }
-      uri->f_values.f_name = new_charbuf((buf.len - index - 1));
-      memcpy(uri->f_values.f_name.chars, &buf.chars[(index + 1)], uri->f_values.f_name.len);
-    }
-    free_charbuf(&buf);
-    path = (char *) calloc((uri->f_values.path.len + 1), sizeof(char));
-    memcpy(path, &uri->f_values.path.chars[0], uri->f_values.path.len);
-    if (file_check(path))       //Removing the first char from the string is so we can test and needs to be fixed for production.
-    {
-      pelz_log(LOG_ERR, "File Error");
-      free(path);
-      if (uri->f_values.auth.len != 0)
-      {
-        free_charbuf(&uri->f_values.auth);
-      }
-      free_charbuf(&uri->f_values.path);
-      free_charbuf(&uri->f_values.f_name);
-      return (1);
-    }
-    free(path);
-    pelz_log(LOG_DEBUG, "File Auth/Path/File: %.*s, %.*s, %.*s", uri->f_values.auth.len, uri->f_values.auth.chars,
-      uri->f_values.path.len, uri->f_values.path.chars, uri->f_values.f_name.len, uri->f_values.f_name.chars);
-    return (0);
-  }
-
-  if (strncmp((char *) key_id.chars, "ftp:", 4) == 0)
-  {
-    pelz_log(LOG_DEBUG, "Key ID FTP Scheme");
-    uri->type = 2;
-    buf = new_charbuf(key_id.len - 4);
-    memcpy(buf.chars, &key_id.chars[4], buf.len);
-    pelz_log(LOG_DEBUG, "Buf: %.*s", buf.len, buf.chars);
-    if (buf.chars[1] == '/')
-    {
-      pelz_log(LOG_DEBUG, "FTP Start Parse");
-      index = get_index_for_char(buf, '/', 2, 0);
-      if (index != -1)
-      {
-        pelz_log(LOG_DEBUG, "URL Found");
-        uri->ftp_values.url_path = new_charbuf(buf.len - index);
-        memcpy(uri->ftp_values.url_path.chars, &buf.chars[index], uri->ftp_values.url_path.len);
-        free_charbuf(&buf);
-        buf = new_charbuf(index);
-        memcpy(buf.chars, &key_id.chars[4], buf.len);
-        index = get_index_for_char(buf, ':', (buf.len - 1), 1);
-        if (index != -1)
-        {
-          pelz_log(LOG_DEBUG, "Port valid");
-          uri->ftp_values.port = new_charbuf(buf.len - index - 1);
-          memcpy(uri->ftp_values.port.chars, &buf.chars[(index + 1)], uri->ftp_values.port.len);
-          uri->ftp_values.host = new_charbuf(index);
-          memcpy(uri->ftp_values.host.chars, buf.chars, uri->ftp_values.host.len);
-          free_charbuf(&buf);
-          pelz_log(LOG_DEBUG, "File Host/Port/Path: %.*s, %.*s, %.*s", uri->ftp_values.host.len, uri->ftp_values.host.chars,
-            uri->ftp_values.port.len, uri->ftp_values.port.chars, uri->ftp_values.url_path.len, uri->ftp_values.url_path.chars);
-          return (0);
-        }
-        free_charbuf(&uri->ftp_values.url_path);
-      }
-    }
-    if (buf.len != 0)
-    {
-      free_charbuf(&buf);
-    }
-    pelz_log(LOG_ERR, "Invalid FTP Syntax");
-    return (1);
-  }
-
-  //Key ID is invalid because it does not follow the file scheme (RFC 8089) or ftp scheme (RFC 959).
-  pelz_log(LOG_ERR, "Key ID is Invalid");
-  return (1);
 }
 
 int file_check(char *file_path)
