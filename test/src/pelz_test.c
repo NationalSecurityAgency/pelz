@@ -90,20 +90,20 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
 
-  /* // Add utility suite --- tests util/util.h functions */
-  /* CU_pSuite utility_Suite = NULL; */
+  // Add utility suite --- tests util/util.h functions
+  CU_pSuite utility_Suite = NULL;
 
-  /* utility_Suite = CU_add_suite("Utility Suite", init_suite, clean_suite); */
-  /* if (NULL == utility_Suite) */
-  /* { */
-  /*   CU_cleanup_registry(); */
-  /*   return CU_get_error(); */
-  /* } */
-  /* if (utility_suite_add_tests(utility_Suite)) */
-  /* { */
-  /*   CU_cleanup_registry(); */
-  /*   return CU_get_error(); */
-  /* } */
+  utility_Suite = CU_add_suite("Utility Suite", init_suite, clean_suite);
+  if (NULL == utility_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if (utility_suite_add_tests(utility_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
 
   // Add pelz json parser suite ---- tests pelz json parser encrypt_parse/decrypt_parse/request_decode/message_encode/error_message_encode functions
   CU_pSuite pelz_json_parser_Suite = NULL;
