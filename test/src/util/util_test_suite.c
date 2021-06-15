@@ -66,27 +66,12 @@ void test_file_check(void)
 void test_key_load(void)
 {
   KeyEntry key_values;
-  char *key_id_prefix[5] =
-    { "file:/", "file:", "ftp://user:password@host:port", "ftp://user@host:port", "ftp://localhost:port/" };
-  char *key_id_postfix[5] = { "/test/key.txt", "/test/key.pem", "/test/key1.txt", "/test/key1.txt", "/test/key1.txt" };
 
   pelz_log(LOG_DEBUG, "Start Key Load Test");
   key_values.key_id = copy_CWD_to_id("file:", "/test/key1.txt");
   CU_ASSERT(key_load(key_values.key_id.len, key_values.key_id.chars, &key_values.key.len, &key_values.key.chars) == 0);
   free_charbuf(&key_values.key_id);
   free_charbuf(&key_values.key);
-
-  key_values.key_id = copy_CWD_to_id("file://localhost", "/test/key1.txt");
-  CU_ASSERT(key_load(key_values.key_id.len, key_values.key_id.chars, &key_values.key.len, &key_values.key.chars) == 0);
-  free_charbuf(&key_values.key_id);
-  free_charbuf(&key_values.key);
-
-  for (int i = 0; i < 5; i++)
-  {
-    key_values.key_id = copy_CWD_to_id(key_id_prefix[i], key_id_postfix[i]);
-    CU_ASSERT(key_load(key_values.key_id.len, key_values.key_id.chars, &key_values.key.len, &key_values.key.chars) == 1);
-    free_charbuf(&key_values.key_id);
-  }
 }
 
 void test_decodeEncodeBase64Data(void)
