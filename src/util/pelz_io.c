@@ -89,11 +89,15 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     return (1);
   }
 
-  if (strncmp(key_id_data.scheme.first, "file", 4) == 0)
+  if (strncmp(key_id_data.scheme.first, "file:", 5) == 0)
   {
     char *filename = NULL;
 
-    // Magic 5 is inherited from uriparser
+    // The magic 5 here is derived from the uriparser documentation. It says 
+    // the length of the filename returned by uriUriStringToUnixFilenameA
+    // will be 6 bytes less than the length of the length of the input
+    // uri string including its null terminator. Since key_id_len doesn't include
+    // space for a null terminator that means we offset by 5.
     filename = (char *) malloc(key_id_len - 5);
     if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
     {
