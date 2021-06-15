@@ -101,17 +101,18 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     filename = (char *) malloc(key_id_len - 5);
     if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
     {
+      uriFreeUriMembersA(&key_id_data);
       free(filename);
       free(key_uri_to_parse);
       return (1);
     }
     free(key_uri_to_parse);
-
     key_key_f = fopen(filename, "r");
 
     if (key_key_f == NULL)
     {
       pelz_log(LOG_ERR, "Failed to read key file %s\n", filename);
+      uriFreeUriMembersA(&key_id_data);
       free(filename);
       return (1);
     }
@@ -123,6 +124,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
     {
       pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
+      uriFreeUriMembersA(&key_id_data);
       fclose(key_key_f);
       return (1);
     }
@@ -133,10 +135,12 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   }
   else
   {
+    uriFreeUriMembersA(&key_id_data);
     free(key_uri_to_parse);
     return (1);
   }
 
+  uriFreeUriMembersA(&key_id_data);
   return (0);
 }
 
