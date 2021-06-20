@@ -124,6 +124,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
     {
       pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
+      secure_memset(tmp_key, 0, *key_len);
       uriFreeUriMembersA(&key_id_data);
       fclose(key_key_f);
       return (1);
