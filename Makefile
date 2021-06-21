@@ -7,7 +7,7 @@ DEBUG = -g
 INCLUDES = 
 LLIBS = 
 CFLAGS = -Wall -c $(DEBUG) -D_GNU_SOURCE $(INCLUDES) 
-LFLAGS = -Wall $(DEBUG) -lcrypto -lssl -pthread -lcjson -lkmyth-logger
+LFLAGS = -Wall $(DEBUG) -lcrypto -lssl -pthread -lcjson -luriparser -lkmyth-logger
 
 
 OBJ_DIR = objs
@@ -50,7 +50,7 @@ all: pre pelz
 
 pelz: $(PELZ_OBJECTS) $(UTIL_OBJECTS)
 	$(CC) $(PELZ_OBJECTS) $(UTIL_OBJECTS) -o bin/pelz $(LLIBS) $(LFLAGS)
-	
+
 test_unit: $(UTIL_OBJECTS) $(TEST_OBJECTS)
 	$(CC) $(UTIL_OBJECTS) $(TEST_OBJECTS) -o test/bin/pelz-test $(LLIBS) -lcunit $(LFLAGS) -I$(INCLUDE_DIR)
 
@@ -86,7 +86,7 @@ $(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c | $(TEST_OBJ_DIR)
 
 $(PELZ_OBJ_DIR):
 	mkdir -p $(OBJ_DIR) $(PELZ_OBJ_DIR)
-	
+
 $(UTIL_OBJ_DIR):
 	mkdir -p $(OBJ_DIR) $(UTIL_OBJ_DIR)
 

@@ -71,26 +71,6 @@ extern "C"
 
 /**
  * <pre>
- * URI parsing of Key ID per RFC 8089 (The "file" URI Scheme) and RFC 959 (FILE TRANSFER PROTOCOL (FTP)) with
- * RFC 1738 (Uniform Resource Locators) Section 3.1 (Common Internet Scheme Syntax).
- * File path will be assumed to be the absolute path to file for production but uses local path for testing.
- * <pre>
- *
- * @param[in] key_id The Key Identifier to be parsed
- * @param[out] uri.type The type of scheme used for key_id
- * @param[out] uri.auth The file authority
- * @param[out] uri.path The path to file that contains the key
- * @param[out] uri.file The file that contains the key
- * @param[out] uri.host The IP address for the key host server
- * @param[out] uri.port The port to access the key host server
- * @param[out] uri.url_path The location path on key host server
- *
- * @return 0 on success, 1 on error
- */
-  int key_id_parse(charbuf key_id, URIValues * uri);
-
-/**
- * <pre>
  * Using key_id to check if there is actual file
  * <pre>
  *
