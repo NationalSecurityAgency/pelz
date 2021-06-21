@@ -58,7 +58,7 @@ import org.apache.accumulo.core.spi.crypto.FileDecrypter;
 import org.apache.accumulo.core.spi.crypto.FileEncrypter;
 import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
 import org.apache.accumulo.core.spi.crypto.NoFileEncrypter;
-import org.apache.accumulo.core.spi.crypto.AESCryptoSerivce:
+//import org.apache.accumulo.core.spi.crypto.AESCryptoSerivce;
 import org.apache.commons.io.IOUtils;
 
 /*
