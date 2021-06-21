@@ -57,19 +57,26 @@ import org.apache.accumulo.core.spi.crypto.CryptoService;
 import org.apache.accumulo.core.spi.crypto.FileDecrypter;
 import org.apache.accumulo.core.spi.crypto.FileEncrypter;
 import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
+import org.apache.accumulo.core.spi.crypto.AESCryptoSerivce:
 import org.apache.commons.io.IOUtils;
 
 /*
  * Example implementation of AES encryption for Accumulo
  */
 public class PelzCryptoService implements CryptoService {
-
+  // properties required for using this service
+  private static final String CRYPTO_PREFIX = "instance.crypto.opts.";
+  private static final String KEY_URI = CRYPTO_PREFIX + "key.uri";
+  // optional properties
+  // defaults to true
+  private static final String ENCRYPT_ENABLED = CRYPTO_PREFIX + "enabled";
+	
   // Hard coded NoCryptoService.VERSION - this permits the removal of NoCryptoService from the
   // core jar, allowing use of only one crypto service
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
 
   //Version String for AESCryptoService
-  private static final String NO_CRYPTO_VERSION = "U+1F43B";
+  private static final String AES_CRYPTO_VERSION = "U+1F43B";
 
   private String keyLocation = null;
   private String keyManager = null;
@@ -77,8 +84,12 @@ public class PelzCryptoService implements CryptoService {
 
   @Override
   public void init(Map<String,String> conf) throws CryptoException {
-    String keyLocation = conf.get("instance.crypto.opts.key.uri");
-    // get key from URI for now, keyMgr framework could be expanded on in the future
+    String keyLocation =
+        Objects.requireNonNull(conf.get(KEY_URI), "Config property " + KEY_URI + " is required.");
+    String enabledProp = conf.get(ENCRYPT_ENABLED);
+    if (enabledProp != null)
+      encryptEnabled = Boolean.parseBoolean(enabledProp);
+		    
     String keyMgr = "pelz";
     Objects.requireNonNull(keyLocation,
         "Config property instance.crypto.opts.key.uri is required.");
@@ -92,6 +103,9 @@ public class PelzCryptoService implements CryptoService {
 
   @Override
   public FileEncrypter getFileEncrypter(CryptoEnvironment environment) {
+    if (!encryptEnabled) {
+      return DISABLED;
+    }
     CryptoModule cm;
     switch (environment.getScope()) {
       case WAL:
@@ -113,7 +127,10 @@ public class PelzCryptoService implements CryptoService {
     byte[] decryptionParams = environment.getDecryptionParams();
     if (decryptionParams == null || checkNoCrypto(decryptionParams))
       return new NoFileDecrypter();
-
+    if (checkAESCrypto(decryptionParams))
+      throw new CryptoException(
+   		  "AESCryptoService File Decrypter not implemented"):
+    
     ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams);
     Key fek =
         new SecretKeySpec(PelzKeyUtils.unwrapKey(parsed.getEncFek(), parsed.getKekId()), "AES");
@@ -135,6 +152,11 @@ public class PelzCryptoService implements CryptoService {
     return Arrays.equals(params, noCryptoBytes);
   }
 
+  private static boolean checkAESCrypto(byte[] params) {
+    byte[] AESCryptoBytes = AES_CRYPTO_VERSION.getBytes(UTF_8);
+    return Arrays.equals(params, AESCryptoBytes);
+  }
+  
   static class ParsedCryptoParameters {
     String cryptoServiceName;
     String cryptoServiceVersion;
