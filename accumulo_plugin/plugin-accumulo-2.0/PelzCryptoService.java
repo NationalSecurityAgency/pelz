@@ -57,6 +57,7 @@ import org.apache.accumulo.core.spi.crypto.CryptoService;
 import org.apache.accumulo.core.spi.crypto.FileDecrypter;
 import org.apache.accumulo.core.spi.crypto.FileEncrypter;
 import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
+import org.apache.accumulo.core.spi.crypto.NoFileEncrypter;
 import org.apache.accumulo.core.spi.crypto.AESCryptoSerivce:
 import org.apache.commons.io.IOUtils;
 
@@ -81,6 +82,9 @@ public class PelzCryptoService implements CryptoService {
   private String keyLocation = null;
   private String keyManager = null;
   private SecureRandom sr = null;
+  private boolean encryptEnabled = true;
+
+  private static final FileEncrypter DISABLED = new NoFileEncrypter();
 
   @Override
   public void init(Map<String,String> conf) throws CryptoException {
@@ -129,7 +133,7 @@ public class PelzCryptoService implements CryptoService {
       return new NoFileDecrypter();
     if (checkAESCrypto(decryptionParams))
       throw new CryptoException(
-   		  "AESCryptoService File Decrypter not implemented"):
+   		  "AESCryptoService File Decrypter not implemented");
     
     ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams);
     Key fek =
