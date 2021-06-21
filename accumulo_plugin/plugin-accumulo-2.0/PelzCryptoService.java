@@ -52,11 +52,11 @@ import org.apache.accumulo.core.crypto.streams.BlockedInputStream;
 import org.apache.accumulo.core.crypto.streams.BlockedOutputStream;
 import org.apache.accumulo.core.crypto.streams.DiscardCloseOutputStream;
 import org.apache.accumulo.core.crypto.streams.RFileCipherOutputStream;
-import org.apache.accumulo.core.cryptoImpl.NoFileDecrypter;
 import org.apache.accumulo.core.spi.crypto.CryptoEnvironment;
 import org.apache.accumulo.core.spi.crypto.CryptoService;
 import org.apache.accumulo.core.spi.crypto.FileDecrypter;
 import org.apache.accumulo.core.spi.crypto.FileEncrypter;
+import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
 import org.apache.commons.io.IOUtils;
 
 /*
@@ -67,6 +67,9 @@ public class PelzCryptoService implements CryptoService {
   // Hard coded NoCryptoService.VERSION - this permits the removal of NoCryptoService from the
   // core jar, allowing use of only one crypto service
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
+
+  //Version String for AESCryptoService
+  private static final String NO_CRYPTO_VERSION = "U+1F43B";
 
   private String keyLocation = null;
   private String keyManager = null;
