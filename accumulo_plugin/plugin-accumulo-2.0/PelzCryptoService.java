@@ -58,7 +58,6 @@ import org.apache.accumulo.core.spi.crypto.FileDecrypter;
 import org.apache.accumulo.core.spi.crypto.FileEncrypter;
 import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
 import org.apache.accumulo.core.spi.crypto.NoFileEncrypter;
-//import org.apache.accumulo.core.spi.crypto.AESCryptoSerivce;
 import org.apache.commons.io.IOUtils;
 
 /*
@@ -76,8 +75,9 @@ public class PelzCryptoService implements CryptoService {
   // core jar, allowing use of only one crypto service
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
 
-  //Version String for AESCryptoService
-  private static final String AES_CRYPTO_VERSION = "U+1F43B";
+  //Version Strings for AESCryptoService
+  private static final String AES_GCM_CRYPTO_VERSION = "U+1F43B";
+  private static final String AES_CBC_CRYPTO_VERSION = "U+1f600";
 
   private String keyLocation = null;
   private String keyManager = null;
@@ -131,9 +131,6 @@ public class PelzCryptoService implements CryptoService {
     byte[] decryptionParams = environment.getDecryptionParams();
     if (decryptionParams == null || checkNoCrypto(decryptionParams))
       return new NoFileDecrypter();
-    if (checkAESCrypto(decryptionParams))
-      throw new CryptoException(
-   		  "AESCryptoService File Decrypter not implemented");
     
     ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams);
     Key fek =
@@ -145,6 +142,12 @@ public class PelzCryptoService implements CryptoService {
       case AESGCMCryptoModule.VERSION:
         cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
         return (cm.getDecrypter(fek));
+      case AES_CBC_CRYPTO_VERSION:
+    	cm = new AESCBCCryptoModule(this.keyLocation, this.keyManager);
+        return (cm.getDecrypter(fek));  
+      case AES_GCM_CRYPTO_VERSION:
+    	cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
+        return (cm.getDecrypter(fek));
       default:
         throw new CryptoException(
             "Unknown crypto module version: " + parsed.getCryptoServiceVersion());
@@ -154,11 +157,6 @@ public class PelzCryptoService implements CryptoService {
   private static boolean checkNoCrypto(byte[] params) {
     byte[] noCryptoBytes = NO_CRYPTO_VERSION.getBytes(UTF_8);
     return Arrays.equals(params, noCryptoBytes);
-  }
-
-  private static boolean checkAESCrypto(byte[] params) {
-    byte[] AESCryptoBytes = AES_CRYPTO_VERSION.getBytes(UTF_8);
-    return Arrays.equals(params, AESCryptoBytes);
   }
   
   static class ParsedCryptoParameters {
