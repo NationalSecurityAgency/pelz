@@ -137,16 +137,12 @@ public class PelzCryptoService implements CryptoService {
         new SecretKeySpec(PelzKeyUtils.unwrapKey(parsed.getEncFek(), parsed.getKekId()), "AES");
     switch (parsed.getCryptoServiceVersion()) {
       case AESCBCCryptoModule.VERSION:
+      case AES_CRYPTO_SERVICE_CBC_VERSION:
         cm = new AESCBCCryptoModule(this.keyLocation, this.keyManager);
         return (cm.getDecrypter(fek));
       case AESGCMCryptoModule.VERSION:
-        cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
-        return (cm.getDecrypter(fek));
-      case AES_CRYPTO_SERVICE_CBC_VERSION:
-    	cm = new AESCBCCryptoModule(this.keyLocation, this.keyManager);
-        return (cm.getDecrypter(fek));  
       case AES_CRYPTO_SERVICE_GCM_VERSION:
-    	cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
+        cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
         return (cm.getDecrypter(fek));
       default:
         throw new CryptoException(
