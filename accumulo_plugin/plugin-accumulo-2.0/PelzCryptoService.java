@@ -76,8 +76,8 @@ public class PelzCryptoService implements CryptoService {
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
 
   //Version Strings for AESCryptoService
-  private static final String AES_GCM_CRYPTO_VERSION = "U+1F43B";
-  private static final String AES_CBC_CRYPTO_VERSION = "U+1f600";
+  private static final String AES_CRYPTO_SERVICE_GCM_VERSION = "U+1F43B";
+  private static final String AES_CRYPTO_SERVICE_CBC_VERSION = "U+1f600";
 
   private String keyLocation = null;
   private String keyManager = null;
