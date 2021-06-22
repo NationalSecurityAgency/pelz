@@ -142,10 +142,10 @@ public class PelzCryptoService implements CryptoService {
       case AESGCMCryptoModule.VERSION:
         cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
         return (cm.getDecrypter(fek));
-      case AES_CBC_CRYPTO_VERSION:
+      case AES_CRYPTO_SERVICE_CBC_VERSION:
     	cm = new AESCBCCryptoModule(this.keyLocation, this.keyManager);
         return (cm.getDecrypter(fek));  
-      case AES_GCM_CRYPTO_VERSION:
+      case AES_CRYPTO_SERVICE_GCM_VERSION:
     	cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
         return (cm.getDecrypter(fek));
       default:
