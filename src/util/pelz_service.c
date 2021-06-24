@@ -26,7 +26,7 @@ int pelz_service(int max_requests)
   int socket_listen_id;
   pthread_t tid[max_requests];
 
-  char *buf;
+  char buf[25];                 //25 is used because the input line most likely will not be more then 25 characters
 
   socket_id = 0;
 
@@ -48,6 +48,10 @@ int pelz_service(int max_requests)
       pelz_log(LOG_ERR, "Socket Client Connection Error");
       continue;
     }
+
+    scanf("%s", buf);
+    if (!memcmp(buf, "exit", 4))
+      break;
 
     if (socket_id == 0)         //This is to reset the while loop if select() times out
       continue;
@@ -71,12 +75,10 @@ int pelz_service(int max_requests)
     }
 
     pelz_log(LOG_INFO, "Thread %d, %d", (int) tid[socket_id], socket_id);
-
-    scanf("%s", buf);
-    if (buf == "exit")
-      break;
   }
   while (socket_listen_id >= 0 && socket_id <= (max_requests + 1));
+
+  pelz_log(LOG_INFO, "Exit Pelz Program");
 
   //Close and Teardown Socket before ending program
   pelz_key_socket_teardown(&socket_listen_id);
