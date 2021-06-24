@@ -26,6 +26,8 @@ int pelz_service(int max_requests)
   int socket_listen_id;
   pthread_t tid[max_requests];
 
+  char buf[25]; //25 is used because the input line most likely will not be more then 25 characters
+
   socket_id = 0;
 
   pthread_mutex_t lock;
@@ -69,6 +71,10 @@ int pelz_service(int max_requests)
     }
 
     pelz_log(LOG_INFO, "Thread %d, %d", (int) tid[socket_id], socket_id);
+
+    scanf("%s", buf);
+    if (buf == 'exit')
+      break;
   }
   while (socket_listen_id >= 0 && socket_id <= (max_requests + 1));
 
