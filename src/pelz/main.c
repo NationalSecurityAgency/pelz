@@ -61,7 +61,7 @@ int main(int argc, char **argv)
   charbuf key_id;
   charbuf tmp_key;
 
-  while ((options = getopt_long(argc, argv, "mck:hv", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "m:c:k:hv", longopts, &option_index)) != -1)
   {
     switch (options)
     {
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
       }
       else
       {
-        pelz_log(LOG_ERR, "max_request must be an integer. Received invalid option '%s'", optarg);
+        pelz_log(LOG_ERR, "Key Initialization file path invalid");
         return 1;
       }
     default:
@@ -141,6 +141,7 @@ int main(int argc, char **argv)
     }
     if (feof(key_txt_f))
     {
+      pelz_log(LOG_INFO, "Key initialization file read and keys added to Key Table.");
       fclose(key_txt_f);
     }
     else
