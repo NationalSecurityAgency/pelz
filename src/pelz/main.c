@@ -9,7 +9,7 @@
 #include "pelz_service.h"
 #include "pelz_log.h"
 #include "pelz_io.h"
-#include "charbuf.c"
+#include "charbuf.h"
 
 #ifdef PELZ_SGX_UNTRUSTED
 #include "sgx_urts.h"
@@ -54,10 +54,10 @@ int main(int argc, char **argv)
   int options;
   int option_index;
   long mr = 0;
-  char *cert;
+  char *cert = NULL;
   char *key_init = NULL;
   FILE *key_txt_f = 0;
-  char buffer[100];      //Buffer size is set to 100 because the file path lengths should be less then that
+  char buffer[100];             //Buffer size is set to 100 because the file path lengths should be less then that
   charbuf key_id;
   charbuf tmp_key;
 
@@ -125,27 +125,35 @@ int main(int argc, char **argv)
     return (1);
   }
 
-  key_txt_f = fopen(key_init, "r");
-  while(fscanf(key_txt_f, "%s", buffer) == 1)
+  if (key_init != NULL)
   {
-	if(!file_check(buffer))
-	{
-	  key_id = new_charbuf(len(buffer));
-	  memcpy = (key_id.chars, buffer, key_id.len);
-	  key_table_add(key_id, *tmp_key);
-	  secure_free_charbuf(tmp_key);
-	  free_charbuf(key_id);
-	}
+    key_txt_f = fopen(key_init, "r");
+    while (fscanf(key_txt_f, "%s", buffer) == 1)
+    {
+      if (!file_check(buffer))
+      {
+        key_id = new_charbuf(strlen(buffer));
+        memcpy(key_id.chars, buffer, key_id.len);
+        key_table_add(key_id, &tmp_key);
+        secure_free_charbuf(&tmp_key);
+        free_charbuf(&key_id);
+      }
+    }
+    if (feof(key_txt_f))
+    {
+      fclose(key_txt_f);
+    }
+    else
+    {
+      pelz_log(LOG_ERR, "Key initialization file read error.");
+      fclose(key_txt_f);
+      return (1);
+    }
   }
-  if (feof(stream))
+
+  if (cert != NULL)
   {
-    fclose(key_txt_f);
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "Key initialization file read error.")
-    fclose(key_txt_f);
-    return(1);
+    file_check(cert);
   }
 
   pelz_service((const int) max_requests);
