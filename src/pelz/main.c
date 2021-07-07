@@ -4,6 +4,8 @@
 
 #include <getopt.h>
 #include <stdlib.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
 
 #include "key_table.h"
 #include "pelz_service.h"
@@ -60,6 +62,7 @@ int main(int argc, char **argv)
   char buffer[100];             //Buffer size is set to 100 because the file path lengths should be less then that
   charbuf key_id;
   charbuf tmp_key;
+  EVP_PKEY *pkey = NULL;
 
   while ((options = getopt_long(argc, argv, "m:c:k:hv", longopts, &option_index)) != -1)
   {
@@ -154,7 +157,14 @@ int main(int argc, char **argv)
 
   if (cert != NULL)
   {
-    file_check(cert);
+    if(cert_extract(cert, &pkey))
+    {
+      pelz_log(LOG_ERR, "Public Certificate Key failure to extract.");
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Add function to pass key to Key Server.");
+    }
   }
 
   pelz_service((const int) max_requests);

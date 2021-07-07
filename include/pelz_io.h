@@ -4,6 +4,7 @@
 #include "charbuf.h"
 #include "key_table.h"
 #include "pelz_request_handler.h"
+#include <openssl/pem.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -105,6 +106,18 @@ extern "C"
  * @return 0 if success, 1 if error
  */
   int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
+
+/**
+   * <pre>
+   * Reads key information from a public certificate
+   * </pre>
+   *
+   * @param[in] cert_file The file path for the public certificate
+   * @param[out] pkey The key information form the public certificate
+   *
+   * @return 0 if success, 1 if error
+   */
+    int cert_extract(char *cert_file, EVP_PKEY &pkey));
 
 #ifdef __cplusplus
 }

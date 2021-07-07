@@ -5,6 +5,9 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/x509.h>
 
 #if !defined(PELZ_SGX_TRUSTED)
 #include <uriparser/Uri.h>
@@ -265,7 +268,7 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 
   if ((bio_mem = BIO_new_mem_buf(base64_data, base64_data_size)) == NULL)
   {
-    pelz_log(LOG_ERR, "Create source BIO error.\n");
+    pelz_log(LOG_ERR, "Create source BIO error.");
     BIO_free_all(bio64);
     return 1;
   }
@@ -275,7 +278,7 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 
   if (bytes_read < 0)
   {
-    pelz_log(LOG_ERR, "Error reading bytes from BIO chain.\n");
+    pelz_log(LOG_ERR, "Error reading bytes from BIO chain.");
     BIO_free_all(bio64);
     return 1;
   }
@@ -284,4 +287,31 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
   *raw_data_size = bytes_read;
   BIO_free_all(bio64);
   return (0);
+}
+
+int cert_extract(char *cert_file, EVP_PKEY &pkey)
+{
+  BIO      *certbio = NULL;
+  X509     *cert = NULL;
+  int ret;
+
+  OpenSSL_add_all_algorithms();
+  ERR_load_BIO_strings();
+  ERR_load_crypto_strings();
+
+  certbio = BIO_new(BIO_s_file());
+
+  ret = BIO_read_filename(certbio, cert_file);
+  if (! (cert = PEM_read_bio_X509(certbio, NULL, 0, NULL)))
+  {
+    pelz_log(LOG_ERR, "Error loading cert into memory.");
+    return 1;
+  }
+
+  if ((pkey = X509_get_pubkey(cert)) == NULL)
+    pelz_log(LOG_ERR, "Error getting public key from certificate.");
+
+  X509_free(cert);
+  BIO_free_all(certbio);
+  return 0;
 }
