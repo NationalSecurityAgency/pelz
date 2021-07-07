@@ -8,6 +8,8 @@
 #include "key_table.h"
 #include "pelz_service.h"
 #include "pelz_log.h"
+#include "pelz_io.h"
+#include "charbuf.c"
 
 #ifdef PELZ_SGX_UNTRUSTED
 #include "sgx_urts.h"
@@ -23,15 +25,19 @@ static void usage(const char *prog)
   fprintf(stdout,
     "usage: %s [options] \n\n"
     "options are: \n\n"
-    " -h or --help          Help (displays this usage).\n"
-    " -m or --max_requests  Maximum number of sockets pelz can make available at any given time, default: 100\n"
-    " -v or --verbose       Enable detailed logging.\n", prog);
+    " -h or --help                Help (displays this usage).\n"
+    " -m or --max_requests        Maximum number of sockets pelz can make available at any given time, default: 100\n"
+    " -v or --verbose             Enable detailed logging.\n"
+    " -c or --certificate         File path for the Key Server Certificate.\n"
+    " -k or --key initialization  File path to text file with Key IDs to be pre loaded into Key Table.\n", prog);
 }
 
 const struct option longopts[] = {
   {"help", no_argument, 0, 'h'},
   {"max_requests", required_argument, 0, 'm'},
   {"verbose", no_argument, 0, 'v'},
+  {"certificate", required_argument, 0, 'c'},
+  {"key initialization", required_argument, 0, 'k'},
   {0, 0, 0, 0}
 };
 
@@ -48,8 +54,14 @@ int main(int argc, char **argv)
   int options;
   int option_index;
   long mr = 0;
+  char *cert;
+  char *key_init = NULL;
+  FILE *key_txt_f = 0;
+  char buffer[100];      //Buffer size is set to 100 because the file path lengths should be less then that
+  charbuf key_id;
+  charbuf tmp_key;
 
-  while ((options = getopt_long(argc, argv, "m:hv", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "mck:hv", longopts, &option_index)) != -1)
   {
     switch (options)
     {
@@ -71,6 +83,28 @@ int main(int argc, char **argv)
       set_applog_severity_threshold(LOG_DEBUG);
       set_applog_output_mode(0);
       break;
+    case 'c':
+      if (optarg && !file_check(optarg))
+      {
+        cert = optarg;
+        break;
+      }
+      else
+      {
+        pelz_log(LOG_ERR, "Key Server Certificate file path invalid");
+        return 1;
+      }
+    case 'k':
+      if (optarg && !file_check(optarg))
+      {
+        key_init = optarg;
+        break;
+      }
+      else
+      {
+        pelz_log(LOG_ERR, "max_request must be an integer. Received invalid option '%s'", optarg);
+        return 1;
+      }
     default:
       return 1;
     }
@@ -89,6 +123,29 @@ int main(int argc, char **argv)
   {
     pelz_log(LOG_ERR, "Key Table Init Failure");
     return (1);
+  }
+
+  key_txt_f = fopen(key_init, "r");
+  while(fscanf(key_txt_f, "%s", buffer) == 1)
+  {
+	if(!file_check(buffer))
+	{
+	  key_id = new_charbuf(len(buffer));
+	  memcpy = (key_id.chars, buffer, key_id.len);
+	  key_table_add(key_id, *tmp_key);
+	  secure_free_charbuf(tmp_key);
+	  free_charbuf(key_id);
+	}
+  }
+  if (feof(stream))
+  {
+    fclose(key_txt_f);
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "Key initialization file read error.")
+    fclose(key_txt_f);
+    return(1);
   }
 
   pelz_service((const int) max_requests);
