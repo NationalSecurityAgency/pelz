@@ -157,9 +157,10 @@ int main(int argc, char **argv)
 
   if (cert != NULL)
   {
-    if(cert_extract(cert, &pkey))
+    if (cert_extract(cert, &pkey))
     {
       pelz_log(LOG_ERR, "Public Certificate Key failure to extract.");
+      return (1);
     }
     else
     {

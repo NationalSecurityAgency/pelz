@@ -117,7 +117,7 @@ extern "C"
    *
    * @return 0 if success, 1 if error
    */
-    int cert_extract(char *cert_file, EVP_PKEY &pkey));
+  int cert_extract(char *cert_file, EVP_PKEY ** pkey);
 
 #ifdef __cplusplus
 }
