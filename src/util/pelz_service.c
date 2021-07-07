@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "pelz_socket.h"
 #include "pelz_log.h"
@@ -26,7 +29,15 @@ int pelz_service(int max_requests)
   int socket_listen_id;
   pthread_t tid[max_requests];
 
+  int fd;
+  int mode = 0666;              //the file premissions to set rw for all users
   char buf[25];                 //25 is used because the input line most likely will not be more then 25 characters
+  char myfifo[13] = "/tmp/pelzfifo";  //FIFO file path
+
+  if (mkfifo(myfifo, mode) == 0)
+    pelz_log(LOG_INFO, "Pipe created successfully");
+  else
+    pelz_log(LOG_INFO, "Error: Pipe not created");
 
   socket_id = 0;
 
@@ -49,9 +60,17 @@ int pelz_service(int max_requests)
       continue;
     }
 
-    scanf("%s", buf);
+    fd = open(myfifo, O_RDONLY);
+    read(fd, buf, sizeof(buf));
+    close(fd);
     if (!memcmp(buf, "exit", 4))
+    {
+      if (unlink(myfifo) == 0)
+        pelz_log(LOG_INFO, "Pipe deleted successfully");
+      else
+        pelz_log(LOG_INFO, "Failed to delete the pipe");
       break;
+    }
 
     if (socket_id == 0)         //This is to reset the while loop if select() times out
       continue;
