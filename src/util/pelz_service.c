@@ -32,12 +32,12 @@ int pelz_service(int max_requests)
   int fd;
   int mode = 0777;              //the file premissions to set rw for all users
   char buf[25];                 //25 is used because the input line most likely will not be more then 25 characters
-  char myfifo[8] = "pelzfifo";  //FIFO file path
+  char myfifo[10] = "./pelzfifo"; //FIFO file path
 
   if (mkfifo(myfifo, mode) == 0)
     pelz_log(LOG_INFO, "Pipe created successfully");
   else
-    pelz_log(LOG_INFO, "Error: Pipe not created");
+    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
 
   socket_id = 0;
 
@@ -68,7 +68,7 @@ int pelz_service(int max_requests)
       if (unlink(myfifo) == 0)
         pelz_log(LOG_INFO, "Pipe deleted successfully");
       else
-        pelz_log(LOG_INFO, "Failed to delete the pipe");
+        pelz_log(LOG_INFO, "Failed to delete the pipe: %s", strerror(errno));
       break;
     }
 
