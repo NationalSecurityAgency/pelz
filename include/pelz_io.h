@@ -9,17 +9,6 @@
 extern "C"
 {
 #endif
-/**
- * <pre>
- * This function creates a new charbuf that contains the file extension of a file name sting in a charbuf
- * </pre>
- *
- * @param[in] buf The charbuf that contains the file name string
- * @param[out] ext The integer representation of the file extension type
- *
- * @return 0 on success, 1 on error
- */
-  int get_file_ext(charbuf buf, int *ext);
 
 #if !defined(PELZ_SGX_TRUSTED)
 /**

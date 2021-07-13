@@ -30,40 +30,6 @@ void ocall_free(void *ptr, size_t len)
 }
 #endif
 
-int get_file_ext(charbuf buf, int *ext)
-{
-  int period_index = 0;
-  int ext_len = 0;
-  int ext_type_size = 3;
-  const char *ext_type[3] = { ".txt", ".pem", ".key" };
-
-  period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
-  ext_len = (buf.len - period_index);
-
-  // If buf.chars is null terminated we don't want to include
-  // the null terminator in the extension, since we're going
-  // to use strlen (applied to one of the ext_type entries)
-  // to specify a memcmp length, and strlen won't include
-  // the null terminator.
-  if (buf.chars[buf.len - 1] == '\0')
-  {
-    ext_len--;
-  }
-  pelz_log(LOG_DEBUG, "Finding file extension.");
-  for (int i = 0; i < ext_type_size; i++)
-  {
-    if (ext_len == strlen(ext_type[i]))
-    {
-      if (memcmp(buf.chars + period_index, ext_type[i], strlen(ext_type[i])) == 0)
-      {
-        *ext = i + 1;
-        break;
-      }
-    }
-  }
-  return (0);
-}
-
 int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
 {
   UriUriA key_id_data;

@@ -22,40 +22,7 @@ typedef enum
 { ASCII = 0, HEX = 1 } FormatType;
 
 typedef enum
-{ TXT_F = 1, PEM_F = 2, SOCKET = 3 } LocationType;
-
-typedef enum
-{ F_SCHEME = 1, FTP = 2 } SchemeType;
-
-typedef enum
-{ TXT_EXT = 1, PEM_EXT = 2, KEY_EXT = 3 } ExtensionType;
-
-typedef enum
 { REQUEST_OK, KEK_LOAD_ERROR, KEY_OR_DATA_ERROR, ENCRYPT_ERROR, DECRYPT_ERROR, REQUEST_TYPE_ERROR } RequestResponseStatus;
-
-typedef struct FILEScheme
-{
-  charbuf auth;
-  charbuf path;
-  charbuf f_name;
-} FValues;
-
-typedef struct FTPScheme
-{
-  charbuf host;
-  charbuf port;
-  charbuf url_path;
-} FTPValues;
-
-typedef struct URIParseValues
-{
-  int type;
-  union
-  {
-    FValues f_values;
-    FTPValues ftp_values;
-  };
-} URIValues;
 
 #ifdef __cplusplus
 extern "C"
