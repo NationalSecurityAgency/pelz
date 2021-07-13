@@ -32,7 +32,7 @@ int pelz_service(int max_requests)
   int fd;
   int mode = 0777;              //the file premissions to set rw for all users
   char buf[25];                 //25 is used because the input line most likely will not be more then 25 characters
-  char myfifo[10] = "./pelzfifo"; //FIFO file path
+  char myfifo[14] = "/tmp/pelzfifo";  //FIFO file path
 
   if (mkfifo(myfifo, mode) == 0)
     pelz_log(LOG_INFO, "Pipe created successfully");
