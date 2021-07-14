@@ -62,7 +62,6 @@ int main(int argc, char **argv)
   char buffer[100];             //Buffer size is set to 100 because the file path lengths should be less then that
   charbuf key_id;
   charbuf tmp_key;
-  EVP_PKEY *pkey = NULL;
 
   while ((options = getopt_long(argc, argv, "m:c:k:hv", longopts, &option_index)) != -1)
   {
@@ -154,7 +153,7 @@ int main(int argc, char **argv)
 
   if (cert != NULL)
   {
-    if (cert_extract(cert))
+    if (cert_import(cert))
     {
       pelz_log(LOG_ERR, "Public Certificate Key failure to extract.");
       return (1);
