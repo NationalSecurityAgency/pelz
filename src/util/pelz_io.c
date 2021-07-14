@@ -289,11 +289,10 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
   return (0);
 }
 
-int cert_extract(char *cert_file, EVP_PKEY ** pkey)
+int cert_import(char *cert_file)
 {
   BIO *certbio = NULL;
   X509 *cert = NULL;
-  int ret;
 
   OpenSSL_add_all_algorithms();
   ERR_load_BIO_strings();
@@ -301,21 +300,13 @@ int cert_extract(char *cert_file, EVP_PKEY ** pkey)
 
   certbio = BIO_new(BIO_s_file());
 
-  ret = BIO_read_filename(certbio, cert_file);
-  if (ret == 1)
+  if (BIO_read_filename(certbio, cert_file))
   {
     cert = PEM_read_bio_X509(certbio, NULL, 0, NULL);
   }
   else
   {
-    pelz_log(LOG_ERR, "Error loading cert into memory.");
-    return 1;
-  }
-
-  *pkey = X509_get_pubkey(cert);
-  if (*pkey == NULL)
-  {
-    pelz_log(LOG_ERR, "Error getting public key from certificate.");
+    pelz_log(LOG_ERR, "Error loading certificate into memory.");
     return 1;
   }
 

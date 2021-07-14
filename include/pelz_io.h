@@ -4,7 +4,6 @@
 #include "charbuf.h"
 #include "key_table.h"
 #include "pelz_request_handler.h"
-#include <openssl/pem.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -109,15 +108,14 @@ extern "C"
 
 /**
    * <pre>
-   * Reads key information from a public certificate
+   * Import Key Server Certificate and pass the certificate to the enclave
    * </pre>
    *
    * @param[in] cert_file The file path for the public certificate
-   * @param[out] pkey The key information form the public certificate
    *
    * @return 0 if success, 1 if error
    */
-  int cert_extract(char *cert_file, EVP_PKEY ** pkey);
+  int cert_import(char *cert_file);
 
 #ifdef __cplusplus
 }

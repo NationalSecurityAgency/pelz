@@ -133,14 +133,11 @@ int main(int argc, char **argv)
     key_txt_f = fopen(key_init, "r");
     while (fscanf(key_txt_f, "%s", buffer) == 1)
     {
-      if (!file_check(buffer))
-      {
-        key_id = new_charbuf(strlen(buffer));
-        memcpy(key_id.chars, buffer, key_id.len);
-        key_table_add(key_id, &tmp_key);
-        secure_free_charbuf(&tmp_key);
-        free_charbuf(&key_id);
-      }
+      key_id = new_charbuf(strlen(buffer));
+      memcpy(key_id.chars, buffer, key_id.len);
+      key_table_add(key_id, &tmp_key);
+      secure_free_charbuf(&tmp_key);
+      free_charbuf(&key_id);
     }
     if (feof(key_txt_f))
     {
@@ -157,14 +154,10 @@ int main(int argc, char **argv)
 
   if (cert != NULL)
   {
-    if (cert_extract(cert, &pkey))
+    if (cert_extract(cert))
     {
       pelz_log(LOG_ERR, "Public Certificate Key failure to extract.");
       return (1);
-    }
-    else
-    {
-      pelz_log(LOG_INFO, "Add function to pass key to Key Server.");
     }
   }
 
