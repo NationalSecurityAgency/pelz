@@ -292,7 +292,8 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 int cert_import(char *cert_file)
 {
   BIO *certbio = NULL;
-  X509 *cert = NULL;
+
+  cert = NULL;
 
   OpenSSL_add_all_algorithms();
   ERR_load_BIO_strings();
@@ -310,7 +311,6 @@ int cert_import(char *cert_file)
     return 1;
   }
 
-  X509_free(cert);
   BIO_free_all(certbio);
   return 0;
 }

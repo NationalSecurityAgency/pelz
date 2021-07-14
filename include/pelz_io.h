@@ -4,6 +4,9 @@
 #include "charbuf.h"
 #include "key_table.h"
 #include "pelz_request_handler.h"
+#include <openssl/x509.h>
+
+extern X509 *cert;
 
 #ifdef __cplusplus
 extern "C"

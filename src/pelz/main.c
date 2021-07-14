@@ -140,12 +140,12 @@ int main(int argc, char **argv)
     }
     if (feof(key_txt_f))
     {
-      pelz_log(LOG_INFO, "Key initialization file read and keys added to Key Table.");
+      pelz_log(LOG_INFO, "Key initialization file read and keys added to Key Table");
       fclose(key_txt_f);
     }
     else
     {
-      pelz_log(LOG_ERR, "Key initialization file read error.");
+      pelz_log(LOG_ERR, "Key initialization file read error");
       fclose(key_txt_f);
       return (1);
     }
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
   {
     if (cert_import(cert))
     {
-      pelz_log(LOG_ERR, "Public Certificate Key failure to extract.");
+      pelz_log(LOG_ERR, "Public Certificate Key failure to extract");
       return (1);
     }
   }
