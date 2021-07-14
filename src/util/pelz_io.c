@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <openssl/bio.h>
-#include <openssl/evp.h>
-#include <openssl/buffer.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/x509.h>
@@ -19,6 +16,8 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 #include "util.h"
+
+X509 *cert = NULL;
 
 #ifdef PELZ_SGX_UNTRUSTED
 void ocall_malloc(size_t size, char **buf)
@@ -292,8 +291,6 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 int cert_import(char *cert_file)
 {
   BIO *certbio = NULL;
-
-  cert = NULL;
 
   OpenSSL_add_all_algorithms();
   ERR_load_BIO_strings();
