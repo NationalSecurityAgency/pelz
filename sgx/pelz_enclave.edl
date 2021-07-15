@@ -1,12 +1,14 @@
 enclave {
 	from "sgx_tsgxssl.edl" import *;
 	from "sgx_pthread.edl" import *;
+	from "kmyth_enclave.edl" import *;
 	include "pelz_request_handler.h"
 	include "key_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
 	include "util.h"
-	trusted {
+	include "kmyth_enclave.h"
+trusted {
 	public int key_table_init(void);
 	public int key_table_destroy(void);
 	public RequestResponseStatus pelz_request_handler_impl(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);

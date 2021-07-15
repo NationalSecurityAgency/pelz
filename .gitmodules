@@ -1,3 +1,4 @@
 [submodule "kmyth"]
 	path = kmyth
-	url = https://github.com/NationalSecurityAgency/kmyth
+	url = https://github.com/b-carr/kmyth
+	branch = refactor/tpm-sgx-organization-no-tests
