@@ -1,0 +1,3 @@
+[submodule "kmyth"]
+	path = kmyth
+	url = https://github.com/NationalSecurityAgency/kmyth
