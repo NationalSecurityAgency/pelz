@@ -8,10 +8,8 @@
 #include "util.h"
 #include "pelz_log.h"
 
-#ifdef PELZ_SGX_TRUSTED
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
-#endif
 
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -42,15 +40,12 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // Key wrap always adds 8 bytes of data.
   *outData_len = inData_len + 8;
   *outData = NULL;
-#ifdef PELZ_SGX_TRUSTED
+
   ocall_malloc(*outData_len, (char **) outData);
   if (!sgx_is_outside_enclave(*outData, *outData_len))
   {
     return 1;
   }
-#else
-  *outData = (unsigned char *) malloc(*outData_len);
-#endif
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "Failed to allocate memory for output data.");
@@ -169,17 +164,13 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   }
 
   *outData_len = inData_len - 8;
-
   *outData = NULL;
-#ifdef PELZ_SGX_TRUSTED
+
   ocall_malloc(*outData_len, (char **) outData);
   if (!sgx_is_outside_enclave(*outData, *outData_len))
   {
     return 1;
   }
-#else
-  *outData = (unsigned char *) malloc(*outData_len);
-#endif
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "Failed to allocate memory for plaintext data.");
