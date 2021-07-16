@@ -64,7 +64,7 @@ void thread_process(void *arg)
     free_charbuf(&data_in);
 
     pthread_mutex_lock(&lock);
-    pelz_request_handler_impl(eid, &status, request_type, key_id, data, &output);
+    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
     pthread_mutex_unlock(&lock);
     free_charbuf(&data);
 

@@ -62,6 +62,7 @@ extern "C"
 {
 #endif
 
+#ifndef PELZ_SGX_UNTRUSTED
 /**
  * <pre>
  * Wrapper function that handles making the right function call to pass
@@ -78,6 +79,7 @@ extern "C"
  *                    error otherwise.
  */
   RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output);
+#endif
 
 #ifdef __cplusplus
 }
