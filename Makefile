@@ -83,7 +83,6 @@ App_Cpp_Files := src/pelz/main.c \
 		 src/util/pelz_socket.c \
 		 src/util/pelz_thread.c \
 		 src/util/util.c \
-		 src/util/pelz_request_handler.c \
 		 src/util/pelz_io.c
 
 App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 

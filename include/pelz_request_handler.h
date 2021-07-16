@@ -70,14 +70,14 @@ extern "C"
  *
  * @param[in] request_type the type of the request (encrypt or decrypt)
  * @param[in] key_id       the key_id of the key to be used for the request
- * @param[in] data_in      the input data
+ * @param[in] data         the input data
  * @param[out] output      a pointer to a charbuf to hold the output, will
  *                         be created inside the call
  *
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-  RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data_in, charbuf * output);
+  RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output);
 
 #ifdef __cplusplus
 }
