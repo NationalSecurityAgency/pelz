@@ -4,10 +4,8 @@
 #include "key_table.h"
 #include "aes_keywrap_3394nopad.h"
 
-#ifdef PELZ_SGX_TRUSTED
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
-#endif
 
 //Function to test socket code with working encryption code
 RequestResponseStatus pelz_request_handler_impl(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)

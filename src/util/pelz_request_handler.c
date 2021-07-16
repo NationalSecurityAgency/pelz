@@ -23,10 +23,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
 
   RequestResponseStatus status;
 
-#if defined(PELZ_SGX_TRUSTED) || defined(PELZ_SGX_UNTRUSTED)
   pelz_request_handler_impl(eid, &status, request_type, key_id, data_in, output);
-#else
-  status = pelz_request_handler_impl(request_type, key_id, data_in, output);
-#endif
+
   return status;
 }
