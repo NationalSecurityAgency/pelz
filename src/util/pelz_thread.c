@@ -8,7 +8,6 @@
 #include "pelz_io.h"
 #include "pelz_request_handler.h"
 #include "pelz_thread.h"
-#include "pelz_enclave.h"
 
 void thread_process(void *arg)
 {
@@ -61,7 +60,7 @@ void thread_process(void *arg)
     free_charbuf(&data_in);
 
     pthread_mutex_lock(&lock);
-    pelz_request_handler(eid, &status, request_type, key_id, data_in, output);
+    status = pelz_request_handler(request_type, key_id, data, &output);
     pthread_mutex_unlock(&lock);
     free_charbuf(&data);
 
