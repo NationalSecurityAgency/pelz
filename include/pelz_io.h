@@ -106,6 +106,17 @@ extern "C"
  */
   int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
 
+  /**
+   * <pre>
+   * Writes a message to the Pelz FIFO pipe
+   * </pre>
+   *
+   * @param[in] msg Message to be sent along the pipe
+   *
+   * @return 0 if success, 1 if error
+   */
+    int write_to_pipe(char *msg);
+
 #ifdef __cplusplus
 }
 #endif

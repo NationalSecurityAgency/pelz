@@ -33,6 +33,7 @@ int pelz_service(int max_requests)
   pthread_t tid[max_requests];
 
   int fd;
+  int ret;
   int mode = 0777;              //the file premissions to set rw for all users
   char buf[BUFSIZE];            //the buffer size is defined by BUFSIZE
 
@@ -40,6 +41,7 @@ int pelz_service(int max_requests)
     pelz_log(LOG_INFO, "Pipe created successfully");
   else
     pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+  fd = open(PELZFIFO, O_RDONLY);
 
   socket_id = 0;
 
@@ -62,16 +64,18 @@ int pelz_service(int max_requests)
       continue;
     }
 
-    fd = open(PELZFIFO, O_RDONLY);
-    read(fd, buf, sizeof(buf));
-    close(fd);
-    if (!memcmp(buf, "exit", 4))
+    ret = read(fd, buf, sizeof(buf));
+    if (ret > 0)
     {
-      if (unlink(PELZFIFO) == 0)
-        pelz_log(LOG_INFO, "Pipe deleted successfully");
-      else
-        pelz_log(LOG_INFO, "Failed to delete the pipe: %s", strerror(errno));
-      break;
+      if (!memcmp(buf, "pelz exit", 9))
+      {
+        close(fd);
+        if (unlink(PELZFIFO) == 0)
+          pelz_log(LOG_INFO, "Pipe deleted successfully");
+        else
+          pelz_log(LOG_INFO, "Failed to delete the pipe: %s", strerror(errno));
+        break;
+      }
     }
 
     if (socket_id == 0)         //This is to reset the while loop if select() times out

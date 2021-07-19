@@ -6,6 +6,7 @@
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 #include <uriparser/Uri.h>
+#include <fcntl.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -13,6 +14,8 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 #include "util.h"
+
+#define PELZFIFO "/tmp/pelzfifo"
 
 void ocall_malloc(size_t size, char **buf)
 {
@@ -260,7 +263,7 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 
   if ((bio_mem = BIO_new_mem_buf(base64_data, base64_data_size)) == NULL)
   {
-    pelz_log(LOG_ERR, "Create source BIO error.\n");
+    pelz_log(LOG_ERR, "Create source BIO error.");
     BIO_free_all(bio64);
     return 1;
   }
@@ -270,7 +273,7 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 
   if (bytes_read < 0)
   {
-    pelz_log(LOG_ERR, "Error reading bytes from BIO chain.\n");
+    pelz_log(LOG_ERR, "Error reading bytes from BIO chain.");
     BIO_free_all(bio64);
     return 1;
   }
@@ -279,4 +282,20 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
   *raw_data_size = bytes_read;
   BIO_free_all(bio64);
   return (0);
+}
+
+int write_to_pipe(char *msg)
+{
+  int fd;
+
+  if (file_check(PELZFIFO))
+  {
+    pelz_log(LOG_ERR, "Pipe not created.")
+    return 1;
+  }
+
+  fd = open(PELZFIFO, O_WRONLY);
+  fprintf(fd, "pelz %s", msg);
+  close(fd);
+  return 0;
 }
