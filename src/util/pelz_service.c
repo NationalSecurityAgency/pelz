@@ -17,6 +17,9 @@
 #include "pelz_io.h"
 #include "pelz_thread.h"
 
+#define PELZFIFO "/tmp/pelzfifo"
+#define BUFSIZE 300
+
 static void *thread_process_wrapper(void *arg)
 {
   thread_process(arg);
@@ -31,10 +34,9 @@ int pelz_service(int max_requests)
 
   int fd;
   int mode = 0777;              //the file premissions to set rw for all users
-  char buf[25];                 //25 is used because the input line most likely will not be more then 25 characters
-  char myfifo[14] = "/tmp/pelzfifo";  //FIFO file path
+  char buf[BUFSIZE];            //the buffer size is defined by BUFSIZE
 
-  if (mkfifo(myfifo, mode) == 0)
+  if (mkfifo(PELZFIFO, mode) == 0)
     pelz_log(LOG_INFO, "Pipe created successfully");
   else
     pelz_log(LOG_INFO, "Error: %s", strerror(errno));
@@ -60,12 +62,12 @@ int pelz_service(int max_requests)
       continue;
     }
 
-    fd = open(myfifo, O_RDONLY);
+    fd = open(PELZFIFO, O_RDONLY);
     read(fd, buf, sizeof(buf));
     close(fd);
     if (!memcmp(buf, "exit", 4))
     {
-      if (unlink(myfifo) == 0)
+      if (unlink(PELZFIFO) == 0)
         pelz_log(LOG_INFO, "Pipe deleted successfully");
       else
         pelz_log(LOG_INFO, "Failed to delete the pipe: %s", strerror(errno));
