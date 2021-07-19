@@ -287,15 +287,25 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 int write_to_pipe(char *msg)
 {
   int fd;
+  int ret;
+  charbuf tmp;
 
-  if (file_check(PELZFIFO))
+  if (file_check((char*) PELZFIFO))
   {
-    pelz_log(LOG_ERR, "Pipe not created.")
+    pelz_log(LOG_ERR, "Pipe not created.");
     return 1;
   }
 
+  tmp = new_charbuf(strlen(msg) + 5);
+  memcpy(tmp.chars, "pelz ", 5);
+  memcpy(&tmp.chars[5], msg, strlen(msg));
   fd = open(PELZFIFO, O_WRONLY);
-  fprintf(fd, "pelz %s", msg);
+  ret = write(fd, tmp.chars, tmp.len+1);
   close(fd);
+  if (ret == -1)
+  {
+    pelz_log(LOG_ERR, "Error writing to pipe");
+    return 1;
+  }
   return 0;
 }

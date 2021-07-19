@@ -41,7 +41,6 @@ int pelz_service(int max_requests)
     pelz_log(LOG_INFO, "Pipe created successfully");
   else
     pelz_log(LOG_INFO, "Error: %s", strerror(errno));
-  fd = open(PELZFIFO, O_RDONLY);
 
   socket_id = 0;
 
@@ -64,12 +63,13 @@ int pelz_service(int max_requests)
       continue;
     }
 
+    fd = open(PELZFIFO, O_RDONLY);
     ret = read(fd, buf, sizeof(buf));
+    close(fd);
     if (ret > 0)
     {
       if (!memcmp(buf, "pelz exit", 9))
       {
-        close(fd);
         if (unlink(PELZFIFO) == 0)
           pelz_log(LOG_INFO, "Pipe deleted successfully");
         else

@@ -20,16 +20,15 @@ static void usage(const char *prog)
   fprintf(stdout,
     "usage: %s [options] \n\n"
     "options are: \n\n"
-    " help          Help (displays this usage).\n"
-    " wipe          Execute the Key Table Destory function.\n"
-    " exit          Exit Pelz\n"
-
+    " -h or --help  Help (displays this usage).\n"
+    " -w or --wipe        Execute the Key Table Destory function.\n"
+    " -e or --exit        Exit Pelz\n", prog);
 }
 
 const struct option longopts[] = {
-  {"help", no_argument, 0, 0},
-  {"wipe", no_argument, 0, 0},
-  {"exit", no_argument, 0, 0},
+  {"help", no_argument, 0, 'h'},
+  {"wipe", no_argument, 0, 'w'},
+  {"exit", no_argument, 0, 'e'},
   {0, 0, 0, 0}
 };
 
@@ -44,23 +43,23 @@ int main(int argc, char **argv)
 
   int options;
   int option_index;
-  char *msg = NULL;
+  char msg[4];
 
-  while ((options = getopt_long(argc, argv, "h", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "hwe", longopts, &option_index)) != -1)
   {
     switch (options)
     {
     case 'h':
       usage(argv[0]);
       return 0;
-    case 'wipe':
-      msg = "wipe";
+    case 'w':
+      memcpy(msg, "wipe", 4);
       write_to_pipe(msg);
       break;
-    case 'exit':
-      msg = "exit";
+    case 'e':
+      memcpy(msg, "exit", 4);
       write_to_pipe(msg);
-      break;
+      return 0;
     default:
       return 1;
     }
