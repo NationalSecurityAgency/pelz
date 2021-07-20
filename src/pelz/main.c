@@ -55,18 +55,18 @@ int main(int argc, char **argv)
       usage(argv[0]);
       return 0;
     case 'w':
-      msg = calloc((5), sizeof(char));
+      msg = (char *) calloc(5, sizeof(char));
       memcpy(msg, "wipe", 4);
       write_to_pipe(msg);
       break;
     case 'd':
-      msg = calloc((7 + strlen(optarg)), sizeof(char));
-      memcpy(msg, "delete", 6);
-      memcpy(&msg[6], optarg, strlen(optarg));
+      msg = (char *) calloc((8 + strlen(optarg)), sizeof(char));
+      memcpy(msg, "delete ", 7);
+      memcpy(&msg[7], optarg, strlen(optarg));
       write_to_pipe(msg);
       break;
     case 'e':
-      msg = calloc((5), sizeof(char));
+      msg = (char *) calloc(5, sizeof(char));
       memcpy(msg, "exit", 4);
       write_to_pipe(msg);
       return 0;
