@@ -295,7 +295,7 @@ int write_to_pipe(char *msg)
 
   if (file_check((char*) PELZFIFO))
   {
-    pelz_log(LOG_ERR, "Pipe not created.");
+    pelz_log(LOG_ERR, "Pipe not found");
     return 1;
   }
 
@@ -320,11 +320,11 @@ int read_pipe(char *msg)
   if (memcmp(msg, "pelz -", 6) == 0)
   {
     opt = msg[6];
- 	pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(buf), opt,  buf);
+    pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(msg), opt,  msg);
     switch (opt)
     {
-    case 'w':
-   	  key_table_destroy(eid, &ret);
+    case 't':
+      key_table_destroy(eid, &ret);
       if (ret)
       {
         pelz_log(LOG_ERR, "Key Table Destroy Failure");
@@ -339,10 +339,10 @@ int read_pipe(char *msg)
       }
       pelz_log(LOG_INFO, "Key Table Re-Initialized");
       return 0;
-    case 'd':
-      len = strcspn(buf, "\n");
+    case 'w':
+      len = strcspn(msg, "\n");
       key_id = new_charbuf(len - 7);
-      memcpy(key_id.chars, &buf[8], (key_id.len - 1));
+      memcpy(key_id.chars, &msg[8], (key_id.len - 1));
       key_table_delete(eid, &ret, key_id);
       if(ret)
         pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
@@ -353,7 +353,7 @@ int read_pipe(char *msg)
       if (unlink(PELZFIFO) == 0)
         pelz_log(LOG_INFO, "Pipe deleted successfully");
       else
-        pelz_log(LOG_INFO, "Failed to delete the pipe: %s", strerror(errno));
+        pelz_log(LOG_INFO, "Failed to delete the pipe");
       return 1;
     default:
       pelz_log(LOG_ERR, "Pipe command invalid");

@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "pelz_socket.h"
 #include "pelz_log.h"
@@ -65,7 +68,7 @@ int pelz_service(int max_requests)
     close(fd);
     if (ret > 0)
     {
-      if (read_pipe)
+      if (read_pipe(buf) == 1)
         break;
     }
 
