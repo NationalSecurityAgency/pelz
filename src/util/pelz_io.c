@@ -15,6 +15,10 @@
 #include "pelz_request_handler.h"
 #include "util.h"
 
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+
 #define PELZFIFO "/tmp/pelzfifo"
 
 void ocall_malloc(size_t size, char **buf)
@@ -305,3 +309,59 @@ int write_to_pipe(char *msg)
   }
   return 0;
 }
+
+int read_pipe(char *msg)
+{
+  int ret;
+  int len;
+  char opt;
+  charbuf key_id;
+
+  if (memcmp(msg, "pelz -", 6) == 0)
+  {
+    opt = msg[6];
+ 	pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(buf), opt,  buf);
+    switch (opt)
+    {
+    case 'w':
+   	  key_table_destroy(eid, &ret);
+      if (ret)
+      {
+        pelz_log(LOG_ERR, "Key Table Destroy Failure");
+        return (1);
+      }
+      pelz_log(LOG_INFO, "Key Table Destroyed");
+      key_table_init(eid, &ret);
+      if (ret)
+      {
+        pelz_log(LOG_ERR, "Key Table Init Failure");
+        return (1);
+      }
+      pelz_log(LOG_INFO, "Key Table Re-Initialized");
+      return 0;
+    case 'd':
+      len = strcspn(buf, "\n");
+      key_id = new_charbuf(len - 7);
+      memcpy(key_id.chars, &buf[8], (key_id.len - 1));
+      key_table_delete(eid, &ret, key_id);
+      if(ret)
+        pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
+      else
+        pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
+      return 0;
+    case 'e':
+      if (unlink(PELZFIFO) == 0)
+        pelz_log(LOG_INFO, "Pipe deleted successfully");
+      else
+        pelz_log(LOG_INFO, "Failed to delete the pipe: %s", strerror(errno));
+      return 1;
+    default:
+      pelz_log(LOG_ERR, "Pipe command invalid");
+      return 0;
+    }
+  }
+  else
+    pelz_log(LOG_ERR, "Pipe command invalid");
+  return 0;
+}
+
