@@ -18,7 +18,7 @@
 #include "pelz_thread.h"
 
 #define PELZFIFO "/tmp/pelzfifo"
-#define BUFSIZE 300
+#define BUFSIZE 1024
 
 static void *thread_process_wrapper(void *arg)
 {
@@ -68,6 +68,9 @@ int pelz_service(int max_requests)
     close(fd);
     if (ret > 0)
     {
+      ret = memcmp(buf, "pelz", 4);
+      if (ret == 0)
+    	pelz_log(LOG_INFO, "Pipe message: %s", buf);
       if (!memcmp(buf, "pelz exit", 9))
       {
         if (unlink(PELZFIFO) == 0)

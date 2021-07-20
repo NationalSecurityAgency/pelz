@@ -22,12 +22,14 @@ static void usage(const char *prog)
     "options are: \n\n"
     " -h or --help  Help (displays this usage).\n"
     " -w or --wipe        Execute the Key Table Destory function.\n"
+    " -d or --delete      Delete the Key ID provided."
     " -e or --exit        Exit Pelz\n", prog);
 }
 
 const struct option longopts[] = {
   {"help", no_argument, 0, 'h'},
   {"wipe", no_argument, 0, 'w'},
+  {"delete", no_argument, 0, 'd'},
   {"exit", no_argument, 0, 'e'},
   {0, 0, 0, 0}
 };
@@ -43,9 +45,9 @@ int main(int argc, char **argv)
 
   int options;
   int option_index;
-  char msg[4];
+  char *msg;
 
-  while ((options = getopt_long(argc, argv, "hwe", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "hwd:e", longopts, &option_index)) != -1)
   {
     switch (options)
     {
@@ -53,10 +55,18 @@ int main(int argc, char **argv)
       usage(argv[0]);
       return 0;
     case 'w':
+      msg = calloc((5), sizeof(char));
       memcpy(msg, "wipe", 4);
       write_to_pipe(msg);
       break;
+    case 'd':
+      msg = calloc((7 + strlen(optarg)), sizeof(char));
+      memcpy(msg, "delete", 6);
+      memcpy(&msg[6], optarg, strlen(optarg));
+      write_to_pipe(msg);
+      break;
     case 'e':
+      msg = calloc((5), sizeof(char));
       memcpy(msg, "exit", 4);
       write_to_pipe(msg);
       return 0;
