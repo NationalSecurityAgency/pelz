@@ -65,8 +65,10 @@ extern "C"
 #ifndef PELZ_SGX_UNTRUSTED
 /**
  * <pre>
- * Wrapper function that handles making the right function call to pass
- * a request to either the SGX-enabled key table or the regular key table.
+ * This function implements the request handling by looking if Pelz already has
+ * the key and if not then adding the key to the key table. Along with the
+ * key lookup, this function checks the request type then based on the request
+ * type it calls the wrap or unwrap functions to return requested key value.
  * <pre>
  *
  * @param[in] request_type the type of the request (encrypt or decrypt)
