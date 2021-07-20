@@ -39,6 +39,7 @@ int pelz_service(int max_requests)
 
   int fd;
   int ret;
+  int len;
   int ex = 0;
   int mode = 0777;              //the file premissions to set rw for all users
   char buf[BUFSIZE];            //the buffer size is defined by BUFSIZE
@@ -79,7 +80,7 @@ int pelz_service(int max_requests)
       if (memcmp(buf, "pelz -", 6) == 0)
       {
         opt = buf[6];
-    	pelz_log(LOG_INFO, "Pipe message: %d, %c, %s", strlen(buf), opt,  buf);
+    	pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(buf), opt,  buf);
         switch (opt)
         {
         case 'w':
@@ -99,8 +100,9 @@ int pelz_service(int max_requests)
 	  pelz_log(LOG_INFO, "Key Table Re-Initialized");
 	  break;
         case 'd':
-          key_id = new_charbuf(strlen(buf) - 7);
-          memcpy(key_id.chars, &buf[8], key_id.len);
+          len = strcspn(buf, "\n"); 
+          key_id = new_charbuf(len - 7);
+          memcpy(key_id.chars, &buf[8], (key_id.len - 1));
 	  key_table_delete(eid, &ret, key_id);
           if(ret)
             pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
