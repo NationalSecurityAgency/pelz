@@ -58,20 +58,20 @@ int main(int argc, char **argv)
       msg = (char *) calloc(8, sizeof(char));
       memcpy(msg, "pelz -w", 7);
       write_to_pipe(msg);
-      free(&msg);
+      free(msg);
       break;
     case 'd':
       msg = (char *) calloc((9 + strlen(optarg)), sizeof(char));
       memcpy(msg, "pelz -d ", 8);
       memcpy(&msg[8], optarg, strlen(optarg));
       write_to_pipe(msg);
-      free(&msg);
+      free(msg);
       break;
     case 'e':
       msg = (char *) calloc(8, sizeof(char));
       memcpy(msg, "pelz -e", 7);
       write_to_pipe(msg);
-      free(&msg);
+      free(msg);
       return 0;
     default:
       return 1;
