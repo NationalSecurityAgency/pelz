@@ -76,14 +76,22 @@ else
 	Urts_Library_Name := sgx_urts
 endif
 
-App_Cpp_Files := src/pelz/main.c \
-		 src/util/charbuf.c \
+App_Name_File := src/pelz/main.c
+
+App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
 		 src/util/pelz_thread.c \
 		 src/util/util.c \
 		 src/util/pelz_io.c
+
+App_Cpp_Test_Files := test/src/pelz_test.c
+		      test/src/util/aes_keywrap_test.c
+		      test/src/util/key_table_test_suite.c
+		      test/src/util/pelz_json_parser_test_suite.c
+		      test/src/util/test_helper_functions.c
+		      test/src/util/util_test_suite.c
 
 App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 
 
@@ -112,7 +120,7 @@ endif
 
 App_Name := pelz-sgx
 
-
+App_Name_Test := pelz-test
 
 ######## Enclave Settings ########
 
@@ -189,10 +197,13 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-bin/$(App_Name): $(App_Cpp_Files) sgx/pelz_enclave_u.o
+bin/$(App_Name): $(App_Name_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
 	@echo "LINK =>  $@"
 
+test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
+	@echo "LINK =>  $@"
 
 ######## Enclave Objects ########
 
@@ -238,5 +249,5 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 .PHONY: clean
 
 clean:
-	@rm -f bin/pelz-sgx sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o
+	@rm -f bin/pelz-sgx test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o
 
