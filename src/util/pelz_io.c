@@ -288,7 +288,6 @@ int write_to_pipe(char *msg)
 {
   int fd;
   int ret;
-  charbuf tmp;
 
   if (file_check((char*) PELZFIFO))
   {
@@ -296,11 +295,8 @@ int write_to_pipe(char *msg)
     return 1;
   }
 
-  tmp = new_charbuf(strlen(msg) + 5);
-  memcpy(tmp.chars, "pelz ", 5);
-  memcpy(&tmp.chars[5], msg, strlen(msg));
   fd = open(PELZFIFO, O_WRONLY);
-  ret = write(fd, tmp.chars, tmp.len+1);
+  ret = write(fd, msg, strlen(msg)+1);
   close(fd);
   if (ret == -1)
   {
