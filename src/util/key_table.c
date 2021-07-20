@@ -13,10 +13,8 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 
-#ifdef PELZ_SGX_TRUSTED
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
-#endif
 
 KeyTable key_table;
 
@@ -121,8 +119,6 @@ int key_table_add(charbuf key_id, charbuf * key)
   memcpy(tmp_entry.key_id.chars, key_id.chars, tmp_entry.key_id.len);
 
   int ret;
-
-#ifdef PELZ_SGX_TRUSTED
   size_t ocall_key_len = 0;
   unsigned char *ocall_key_data = NULL;
 
@@ -143,9 +139,7 @@ int key_table_add(charbuf key_id, charbuf * key)
   {
     ocall_free(ocall_key_data, ocall_key_len);
   }
-#else
-  ret = key_load(tmp_entry.key_id.len, tmp_entry.key_id.chars, &(tmp_entry.key.len), &(tmp_entry.key.chars));
-#endif
+
   if (ret)
   {
     //If the code cannot retrieve the key from the URI provided by the Key ID, then we error out of the function before touching the Key Table.

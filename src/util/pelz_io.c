@@ -5,10 +5,7 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
-
-#if !defined(PELZ_SGX_TRUSTED)
 #include <uriparser/Uri.h>
-#endif
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -17,7 +14,6 @@
 #include "pelz_request_handler.h"
 #include "util.h"
 
-#ifdef PELZ_SGX_UNTRUSTED
 void ocall_malloc(size_t size, char **buf)
 {
   *buf = (char *) malloc(size);
@@ -28,7 +24,6 @@ void ocall_free(void *ptr, size_t len)
   secure_memset(ptr, 0, len);
   free(ptr);
 }
-#endif
 
 int get_file_ext(charbuf buf, int *ext)
 {
