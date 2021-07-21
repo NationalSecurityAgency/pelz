@@ -5,11 +5,13 @@ enclave {
 	include "key_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
-	include "util.h"
+        include "test_enclave_helper_functions.h"
 	trusted {
 	public int key_table_init(void);
 	public int key_table_destroy(void);
 	public int key_table_delete(charbuf key_id);
+        public int test_key_table_add(charbuf key_id);
+        public int test_key_table_lookup(charbuf key_id);
 	public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
 	};
 	untrusted {

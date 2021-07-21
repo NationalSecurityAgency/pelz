@@ -4,6 +4,7 @@
 
 #include "key_table_test_suite.h"
 #include "test_helper_functions.h"
+#include "test_enclave_helper_functions.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -88,7 +89,6 @@ void test_table_initAddDestroy(void)
   key_table_add_test(eid, &ret, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
-  free_charbuf(&key);
 
   key_table_destroy(eid, &ret);
   CU_ASSERT(ret == 0);

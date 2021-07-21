@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 //#include "aes_keywrap_test.h"
-#include "key_table_test_suite.h"
+//#include "key_table_test_suite.h"
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
 #include <pelz_log.h>
@@ -23,7 +23,7 @@
 #include "pelz_enclave_u.h"
 sgx_enclave_id_t eid = 0;
 
-#define ENCLAVE_PATH "sgx/pelz_test_enclave.signed.so"
+#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
 // Blank Suite's init and cleanup code
 int init_suite(void)
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
   {
     CU_cleanup_registry();
     return CU_get_error();
-  }*/
+  }*
 
   // Add key table suite ---- tests key table init/add/lookup/destroy functions
   CU_pSuite key_table_Suite = NULL;
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
   {
     CU_cleanup_registry();
     return CU_get_error();
-  }
+  }*/
 
   // Add utility suite --- tests util/util.h functions
   CU_pSuite utility_Suite = NULL;

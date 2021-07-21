@@ -87,14 +87,11 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_io.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
-		 test/src/util/key_table_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
-		 test/src/util/test_helper_functions.c \
-		 test/src/util/util_test_suite.c
+	 	 test/src/util/util_test_suite.c \
+		 test/src/util/test_helper_functions.c	 
 
-App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 
-
-App_Test_Include_Paths := -Itest/include
+App_Include_Paths := -Iinclude -Itest/include -Isgx -I$(SGX_SDK)/include 
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED
 
@@ -134,7 +131,7 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Include_Paths := -Iinclude -Isgx/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SSL_INCLUDE_PATH) -Isgx
+Enclave_Include_Paths := -Iinclude -Itest/include -Isgx/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SSL_INCLUDE_PATH) -Isgx
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths) -DPELZ_SGX_TRUSTED
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++03 -nostdinc++ --include "tsgxsslio.h"
@@ -148,10 +145,8 @@ Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefau
 	-Wl,--defsym,__ImageBase=0 \
 
 Enclave_Name := pelz_enclave.so
-Test_Enclave_Name := pelz_test_enclave.so
 Enclave_Signing_Key := pelz_enclave_private.pem
 Signed_Enclave_Name := pelz_enclave.signed.so
-Test_Signed_Enclave_Name := pelz_test_enclave.signed.so
 Enclave_Config_File := sgx/pelz_enclave.config.xml
 
 ifeq ($(SGX_MODE), HW)
@@ -205,7 +200,7 @@ bin/$(App_Name): $(App_Name_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
 	@echo "LINK =>  $@"
 
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Test_Include_Paths) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread -lcunit
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread -lcunit
 	@echo "LINK =>  $@"
 
 ######## Enclave Objects ########
@@ -214,15 +209,7 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
 	@echo "GEN => $@"
 
-sgx/pelz_test_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_test_enclave.edl
-	@cd sgx && $(SGX_EDGER8R) --trusted pelz_test_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
-	@echo "GEN => $@"
-
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
-	@echo "CC   <=  $<"
-
-sgx/pelz_test_enclave_t.o: sgx/pelz_test_enclave_t.c
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -245,16 +232,12 @@ sgx/charbuf.o: src/util/charbuf.c
 sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
-	
-sgx/test_helper.o: test/src/util/test_helper_functions.c
+
+sgx/test_helper.o: test/src/util/test_enclave_helper_functions.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o
-	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
-	@echo "LINK =>  $@"
-
-sgx/$(Test_Enclave_Name): sgx/pelz_test_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o sgx/test_helper.o
+sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o sgx/test_helper.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -264,13 +247,8 @@ sgx/$(Enclave_Signing_Key):
 sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
-
-sgx/$(Test_Signed_Enclave_Name): sgx/$(Test_Enclave_Name) sgx/$(Enclave_Signing_Key)
-	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Test_Enclave_Name) -out $@ -config $(Enclave_Config_File)
-	@echo "SIGN =>  $@"
 	
 .PHONY: clean
 
 clean:
-	@rm -f bin/pelz-sgx test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/pelz_test_enclave.signed.so sgx/pelz_test_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
-
+	@rm -f bin/pelz-sgx test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
