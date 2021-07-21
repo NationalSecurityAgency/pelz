@@ -46,11 +46,11 @@ void test_encrypt_parser(void)
   charbuf data;
 
   //Valid Test Values
-  char *json_key_id = "file:/test/key1.txt";
+  const char *json_key_id = "file:/test/key1.txt";
   int json_key_id_len = 19;
-  char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
+  const char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
   int enc_data_len = 45;
-  char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
+  const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
   int dec_data_len = 57;
 
   //Building of a standard valid JSON request
@@ -151,11 +151,11 @@ void test_decrypt_parser(void)
   charbuf data;
 
   //Valid Test Values
-  char *json_key_id = "file:/test/key1.txt";
+  const char *json_key_id = "file:/test/key1.txt";
   int json_key_id_len = 19;
-  char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
+  const char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
   int enc_data_len = 45;
-  char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
+  const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
   int dec_data_len = 57;
 
   //Building of a standard valid JSON request
@@ -259,17 +259,17 @@ void test_request_decoder(void)
   cJSON *json_enc;
   cJSON *json_dec;
 
-  char *invalid_request[4] = {
+  const char *invalid_request[4] = {
     "{\"key_id_len\": 28, \"key_id\": \"file:/test/testkeys/key2.txt\"}",
     "{\"request_type\": \"one\"}", "{\"request_type\": 0}", "{\"request_type\": 3}"
   };
-  char *json_key_id[6] = {
+  const char *json_key_id[6] = {
     "file:/test/key1.txt", "file:/test/key2.txt", "file:/test/key3.txt",
     "file:/test/key4.txt", "file:/test/key5.txt", "file:/test/key6.txt"
   };
   int json_key_id_len = 19;
 
-  char *enc_data[6] = {
+  const char *enc_data[6] = {
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=\n",
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldY\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n",
     "QUJDREVGR0hJSktMTU5PUA==\n", "YWJjZGVmZ2hpamtsbW5vcA==\n"
@@ -277,7 +277,7 @@ void test_request_decoder(void)
   int enc_data_len[6] = {
     45, 45, 33, 33, 25, 25
   };
-  char *dec_data[6] = {
+  const char *dec_data[6] = {
     "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n",
     "txQhouR/i5+lycST2QXuN39gQqVQYVy9mWf3RdSdXfZNUy4CsQqwBg==\n",
     "+n4yYCmMXyNbyEtsJuFlBtkCbVDXhjVRON/osW5dbz8=\n", "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n",
@@ -383,15 +383,15 @@ void test_message_encoder(void)
   charbuf key_id;
   charbuf data;
   charbuf message;
-  char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
-  char *valid_enc_message[5] =
+  const char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
+  const char *valid_enc_message[5] =
     { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
     "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
     "{\"key_id\":\"file\",\"key_id_len\":4,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
     "{\"key_id\":\"anything\",\"key_id_len\":8,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
     "{\"key_id\":\"\",\"key_id_len\":0,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}"
   };
-  char *valid_dec_message[5] =
+  const char *valid_dec_message[5] =
     { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
     "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
     "{\"key_id\":\"file\",\"key_id_len\":4,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
@@ -427,7 +427,7 @@ void test_message_encoder(void)
 void test_error_message_encoder(void)
 {
   pelz_log(LOG_DEBUG, "Test err msg");
-  char *err_msg[5] = {
+  const char *err_msg[5] = {
     "Missing Data", "missing data", "akdifid", "Error", "Any message"
   };
   charbuf message;

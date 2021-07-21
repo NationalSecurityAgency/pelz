@@ -33,6 +33,7 @@ int pelz_service(int max_requests)
   pthread_t tid[max_requests];
 
   int fd;
+  int ret;
   int mode = 0777;              //the file premissions to set rw for all users
   char buf[BUFSIZE];            //the buffer size is defined by BUFSIZE
 
@@ -63,7 +64,7 @@ int pelz_service(int max_requests)
     }
 
     fd = open(PELZFIFO, O_RDONLY);
-    read(fd, buf, sizeof(buf));
+    ret = read(fd, buf, sizeof(buf));
     close(fd);
     if (!memcmp(buf, "exit", 4))
     {

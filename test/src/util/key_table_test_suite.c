@@ -56,9 +56,9 @@ void test_table_initAddDestroy(void)
 {
   int ret;
   charbuf tmp;
-  char *prefix = "file:";
-  char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
-  char *tmp_id;
+  const char *prefix = "file:";
+  const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
+  const char *tmp_id;
 
   pelz_log(LOG_DEBUG, "Test Key Table Add Function");
   key_table_init(eid, &ret);
@@ -101,9 +101,9 @@ void test_table_initLookupAddDestroy(void)
 {
   int ret;
   charbuf tmp;
-  char *prefix = "file:";
-  char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
-  char *tmp_id;
+  const char *prefix = "file:";
+  const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
+  const char *tmp_id;
 
   pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
   key_table_init(eid, &ret);
@@ -149,12 +149,12 @@ void test_table_initLookupAddDeleteDestroy(void)
 {
   int ret;
   charbuf tmp;
-  char *prefix = "file:";
+  const char *prefix = "file:";
 
-  char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
+  const char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
     "/test/key4.txt", "/test/key5.txt", "/test/key6.txt"
   };
-  char *tmp_id;
+  const char *tmp_id;
 
   pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
   key_table_init(eid, &ret);

@@ -17,6 +17,6 @@
  *
  * @return charbuf copy of key_id with current working directory
  */
-charbuf copy_CWD_to_id(char *prefix, char *postfix);
+charbuf copy_CWD_to_id(const char *prefix, const char *postfix);
 
 #endif /* TEST_HELPER_FUNCTIONS_H_ */
