@@ -148,8 +148,10 @@ Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefau
 	-Wl,--defsym,__ImageBase=0 \
 
 Enclave_Name := pelz_enclave.so
+Test_Enclave_Name := pelz_test_enclave.so
 Enclave_Signing_Key := pelz_enclave_private.pem
 Signed_Enclave_Name := pelz_enclave.signed.so
+Test_Signed_Enclave_Name := pelz_test_enclave.signed.so
 Enclave_Config_File := sgx/pelz_enclave.config.xml
 
 ifeq ($(SGX_MODE), HW)
@@ -212,7 +214,15 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
 	@echo "GEN => $@"
 
+sgx/pelz_test_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_test_enclave.edl
+	@cd sgx && $(SGX_EDGER8R) --trusted pelz_test_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
+	@echo "GEN => $@"
+
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/pelz_test_enclave_t.o: sgx/pelz_test_enclave_t.c
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -235,8 +245,16 @@ sgx/charbuf.o: src/util/charbuf.c
 sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
+	
+sgx/test_helper.o: test/src/util/test_helper_functions.c
+	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <= $<"
 
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o
+	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
+	@echo "LINK =>  $@"
+
+sgx/$(Test_Enclave_Name): sgx/pelz_test_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o sgx/test_helper.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -247,8 +265,12 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
+sgx/$(Test_Signed_Enclave_Name): sgx/$(Test_Enclave_Name) sgx/$(Enclave_Signing_Key)
+	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Test_Enclave_Name) -out $@ -config $(Enclave_Config_File)
+	@echo "SIGN =>  $@"
+	
 .PHONY: clean
 
 clean:
-	@rm -f bin/pelz-sgx test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
+	@rm -f bin/pelz-sgx test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/pelz_test_enclave.signed.so sgx/pelz_test_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
 

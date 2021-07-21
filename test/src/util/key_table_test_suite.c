@@ -55,7 +55,6 @@ void test_table_initAddDestroy(void)
 {
   int ret;
   charbuf tmp;
-  charbuf key;
   char *prefix = "file:";
   char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
   char *tmp_id;
@@ -69,27 +68,25 @@ void test_table_initAddDestroy(void)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
     pelz_log(LOG_INFO, "Key ID: %.*s", (int) tmp.len, tmp.chars);
-    //key_table_add(eid, &ret, tmp, &key);
-    //CU_ASSERT(ret == 0);
+    key_table_add_test(eid, &ret, tmp);
+    CU_ASSERT(ret == 0);
     free_charbuf(&tmp);
-    free_charbuf(&key);
   }
 
   //Test that keys are added if valid without checking if already in table
   for (int i = 0; i < 3; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    //key_table_add(eid, &ret, tmp, &key);
-    //CU_ASSERT(ret == 0);
+    key_table_add_test(eid, &ret, tmp);
+    CU_ASSERT(ret == 0);
     free_charbuf(&tmp);
-    free_charbuf(&key);
   }
 
   //Test that non-valid keys are not added
   tmp_id = "/test/key7.txt";
   tmp = copy_CWD_to_id(prefix, tmp_id);
-  //key_table_add(eid, &ret, tmp, &key);
-  //CU_ASSERT(ret == 1);
+  key_table_add_test(eid, &ret, tmp);
+  CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
   free_charbuf(&key);
 
