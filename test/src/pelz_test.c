@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "aes_keywrap_test.h"
+//#include "aes_keywrap_test.h"
 #include "key_table_test_suite.h"
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
@@ -17,6 +17,13 @@
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
+
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+sgx_enclave_id_t eid = 0;
+
+#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
 // Blank Suite's init and cleanup code
 int init_suite(void)
@@ -33,17 +40,15 @@ int clean_suite(void)
 int main(int argc, char **argv)
 {
   char *key_file_id[6] = { "test/key1.txt", "test/key2.txt", "test/key3.txt", "test/key4.txt", "test/key5.txt",
-    "test/key6.txt"
-  };
+    "test/key6.txt"};
   char *key[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
-    "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
-  };
+    "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"};
 
   set_app_name("pelz");
   set_app_version("0.0.0");
   set_applog_max_msg_len(1024);
   set_applog_path("./test/log/pelz.log");
-  set_applog_severity_threshold(LOG_INFO);
+  set_applog_severity_threshold(LOG_DEBUG);
 
   for (int i = 0; i < 6; i++)
   {
@@ -60,7 +65,9 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
 
-  // Create and configure the AES Key Wrap cipher test suite
+  sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+
+  /*/ Create and configure the AES Key Wrap cipher test suite
   CU_pSuite aes_keywrap_test_suite = NULL;
 
   aes_keywrap_test_suite = CU_add_suite("AES Key Wrap Cipher Test Suite", init_suite, clean_suite);
@@ -73,7 +80,7 @@ int main(int argc, char **argv)
   {
     CU_cleanup_registry();
     return CU_get_error();
-  }
+  }*/
 
   // Add key table suite ---- tests key table init/add/lookup/destroy functions
   CU_pSuite key_table_Suite = NULL;
@@ -126,6 +133,7 @@ int main(int argc, char **argv)
   //CU_console_run_tests();
   //CU_automated_run_tests();
 
+  sgx_destroy_enclave(eid);
   for (int i = 0; i < 6; i++)
   {
     remove(key_file_id[i]);

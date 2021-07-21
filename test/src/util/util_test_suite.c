@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <CUnit/CUnit.h>
 
 #include <charbuf.h>
 #include <pelz_log.h>

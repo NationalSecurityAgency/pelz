@@ -11,6 +11,7 @@
 
 #include <charbuf.h>
 #include <pelz_log.h>
+#include <pelz_request_handler.h>
 
 // Adds all key table tests to main test runner.
 int pelz_json_parser_suite_add_tests(CU_pSuite suite)
@@ -294,7 +295,7 @@ void test_request_decoder(void)
     memcpy(request.chars, invalid_request[i], request.len);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 1);
     free_charbuf(&request);
-    request_type = 0;
+    request_type = REQ_UNK;
   }
 
   //Building of the json request and most combinations
@@ -309,7 +310,7 @@ void test_request_decoder(void)
   free(tmp);
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 1);
   free_charbuf(&request);
-  request_type = 0;
+  request_type = REQ_UNK;
 
   tmp = cJSON_PrintUnformatted(json_dec);
   request = new_charbuf(strlen(tmp));
@@ -317,7 +318,7 @@ void test_request_decoder(void)
   free(tmp);
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 1);
   free_charbuf(&request);
-  request_type = 0;
+  request_type = REQ_UNK;
 
   for (int i = 0; i < 6; i++)
   {
@@ -336,13 +337,13 @@ void test_request_decoder(void)
     memcpy(request.chars, tmp, request.len);
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
-    CU_ASSERT(request_type == 1);
+    CU_ASSERT(request_type == REQ_ENC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
     CU_ASSERT(data.len == enc_data_len[i]);
     CU_ASSERT(memcmp(data.chars, enc_data[i], data.len) == 0);
     free_charbuf(&request);
-    request_type = 0;
+    request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
 
@@ -352,13 +353,13 @@ void test_request_decoder(void)
     memcpy(request.chars, tmp, request.len);
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data) == 0);
-    CU_ASSERT(request_type == 2);
+    CU_ASSERT(request_type == REQ_DEC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
     CU_ASSERT(data.len == dec_data_len[i]);
     CU_ASSERT(memcmp(data.chars, dec_data[i], data.len) == 0);
     free_charbuf(&request);
-    request_type = 0;
+    request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
 
@@ -379,7 +380,6 @@ void test_request_decoder(void)
 
 void test_message_encoder(void)
 {
-  RequestType request_type[4] = { 0, 1, 2, 3 };
   charbuf key_id;
   charbuf data;
   charbuf message;
@@ -406,18 +406,17 @@ void test_message_encoder(void)
   memcpy(data.chars, "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", data.len);
   key_id = new_charbuf(strlen(test[0]));
   memcpy(key_id.chars, test[0], key_id.len);
-  CU_ASSERT(message_encoder(request_type[0], key_id, data, &message) == 1);
-  CU_ASSERT(message_encoder(request_type[3], key_id, data, &message) == 1);
+  CU_ASSERT(message_encoder(REQ_UNK, key_id, data, &message) == 1);
   free_charbuf(&key_id);
 
   for (int i = 0; i < 5; i++)
   {
     key_id = new_charbuf(strlen(test[i]));
     memcpy(key_id.chars, test[i], key_id.len);
-    CU_ASSERT(message_encoder(request_type[1], key_id, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_ENC, key_id, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_enc_message[i], message.len) == 0);
     free_charbuf(&message);
-    CU_ASSERT(message_encoder(request_type[2], key_id, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_DEC, key_id, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_dec_message[i], message.len) == 0);
     free_charbuf(&message);
     free_charbuf(&key_id);
