@@ -87,6 +87,7 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_io.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
+		 test/src/util/key_table_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c	 

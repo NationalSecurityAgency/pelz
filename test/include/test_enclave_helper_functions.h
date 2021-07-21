@@ -7,6 +7,11 @@
 
 #include "charbuf.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef PELZ_SGX_UNTRUSTED
 /**
  * <pre>
@@ -33,4 +38,7 @@
   int test_key_table_lookup(charbuf key_id);
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* TEST_ENCLAVE_HELPER_FUNCTIONS_H_ */

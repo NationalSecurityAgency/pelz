@@ -30,7 +30,7 @@ int key_table_suite_add_tests(CU_pSuite suite)
   if (NULL == CU_add_test(suite, "Test all combinations for adding keys to Key Table", test_table_initAddDestroy))
   {
     return (1);
-  }/*
+  }
   if (NULL == CU_add_test(suite, "Test all Key Table Lookup combinations", test_table_initLookupAddDestroy))
   {
     return (1);
@@ -38,7 +38,7 @@ int key_table_suite_add_tests(CU_pSuite suite)
   if (NULL == CU_add_test(suite, "Test Key Table Delete", test_table_initLookupAddDeleteDestroy))
   {
     return (1);
-  }*/
+  }
   return (0);
 }
 
@@ -68,8 +68,8 @@ void test_table_initAddDestroy(void)
   for (int i = 0; i < 3; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    pelz_log(LOG_INFO, "Key ID: %.*s", (int) tmp.len, tmp.chars);
-    key_table_add_test(eid, &ret, tmp);
+    pelz_log(LOG_DEBUG, "Key ID: %.*s", (int) tmp.len, tmp.chars);
+    test_key_table_add(eid, &ret, tmp);
     CU_ASSERT(ret == 0);
     free_charbuf(&tmp);
   }
@@ -78,7 +78,8 @@ void test_table_initAddDestroy(void)
   for (int i = 0; i < 3; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    key_table_add_test(eid, &ret, tmp);
+    pelz_log(LOG_DEBUG, "Key ID: %.*s", (int) tmp.len, tmp.chars);
+    test_key_table_add(eid, &ret, tmp);
     CU_ASSERT(ret == 0);
     free_charbuf(&tmp);
   }
@@ -86,7 +87,8 @@ void test_table_initAddDestroy(void)
   //Test that non-valid keys are not added
   tmp_id = "/test/key7.txt";
   tmp = copy_CWD_to_id(prefix, tmp_id);
-  key_table_add_test(eid, &ret, tmp);
+  pelz_log(LOG_DEBUG, "Key ID: %.*s", (int) tmp.len, tmp.chars);
+  test_key_table_add(eid, &ret, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
 
@@ -98,7 +100,6 @@ void test_table_initAddDestroy(void)
 void test_table_initLookupAddDestroy(void)
 {
   int ret;
-  charbuf key;
   charbuf tmp;
   char *prefix = "file:";
   char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
@@ -112,9 +113,8 @@ void test_table_initLookupAddDestroy(void)
   for (int i = 0; i < 3; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    //key_table_add(eid, &ret, tmp, &key);
+    test_key_table_add(eid, &ret, tmp);
     CU_ASSERT(ret == 0);
-    secure_free_charbuf(&key);
     free_charbuf(&tmp);
   }
 
@@ -122,25 +122,22 @@ void test_table_initLookupAddDestroy(void)
   for (int i = 0; i < 3; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    //key_table_lookup(eid, &ret, tmp, &key);
+    test_key_table_lookup(eid, &ret, tmp);
     CU_ASSERT(ret == 0);
-    secure_free_charbuf(&key);
     free_charbuf(&tmp);
   }
 
   //Check that non-valid file does not load key
   tmp_id = "/test/key7.txt";
   tmp = copy_CWD_to_id(prefix, tmp_id);
-  //key_table_lookup(eid, &ret, tmp, &key);
+  test_key_table_lookup(eid, &ret, tmp);
   CU_ASSERT(ret == 1);
-  secure_free_charbuf(&key);
   free_charbuf(&tmp);
 
   tmp_id = "/test/key1txt";
   tmp = copy_CWD_to_id(prefix, tmp_id);
-  //key_table_lookup(eid, &ret, tmp, &key);
+  test_key_table_lookup(eid, &ret, tmp);
   CU_ASSERT(ret == 1);
-  secure_free_charbuf(&key);
   free_charbuf(&tmp);
 
   key_table_destroy(eid, &ret);
@@ -151,7 +148,6 @@ void test_table_initLookupAddDestroy(void)
 void test_table_initLookupAddDeleteDestroy(void)
 {
   int ret;
-  charbuf key;
   charbuf tmp;
   char *prefix = "file:";
 
@@ -167,9 +163,8 @@ void test_table_initLookupAddDeleteDestroy(void)
   for (int i = 0; i < 6; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    //key_table_add(eid, &ret, tmp, &key);
+    test_key_table_add(eid, &ret, tmp);
     CU_ASSERT(ret == 0);
-    secure_free_charbuf(&key);
     free_charbuf(&tmp);
   }
 
