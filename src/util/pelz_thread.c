@@ -1,5 +1,8 @@
 #include <string.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -12,6 +15,58 @@
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
+
+#define PELZFIFO "/tmp/pelzfifo"
+#define BUFSIZE 1024
+#define MODE 0666
+
+void* fifo_thread_process(void *arg)
+{
+	int fd;
+	int ret;
+	char buf[BUFSIZE];
+
+	if (mkfifo(PELZFIFO, MODE) == 0)
+	{
+		pelz_log(LOG_INFO, "Pipe created successfully");
+	}
+	else
+	{
+		pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+	}
+
+	do
+	{
+		fd = open(PELZFIFO, O_RDONLY);
+		ret = read(fd, buf, sizeof(buf))
+		if(ret < 0)
+		{
+			pelz_log(LOG_ERR, "Pipe read failed");
+		}
+		close(fd);
+		if (ret > 0)
+		{
+		  if (read_pipe(buf) == 1)
+		    break;
+		}
+	}while(true);
+	global_pipe_reader_active = false;
+
+	<<<<<<< HEAD
+
+	    fd = open(PELZFIFO, O_RDONLY);
+	    ret = read(fd, buf, sizeof(buf));
+	    close(fd);
+	    if (ret > 0)
+	    {
+	      if (read_pipe(buf) == 1)
+	        break;
+	    }
+
+	=======
+	>>>>>>> main
+
+}
 
 void thread_process(void *arg)
 {
