@@ -41,9 +41,9 @@
 
 typedef struct cipher_vector_set
 {
-  char *desc;
-  char *func_to_test;
-  char *path;
+  const char *desc;
+  const char *func_to_test;
+  const char *path;
 } cipher_vector_set;
 
 typedef struct cipher_vector_compilation

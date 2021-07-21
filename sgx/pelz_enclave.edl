@@ -1,6 +1,7 @@
 enclave {
 	from "sgx_tsgxssl.edl" import *;
 	from "sgx_pthread.edl" import *;
+        include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "key_table.h"
 	include "pelz_io.h"
@@ -13,6 +14,8 @@ enclave {
         public int test_key_table_add(charbuf key_id);
         public int test_key_table_lookup(charbuf key_id);
 	public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
+        public int aes_keywrap_3394nopad_encrypt(unsigned char *key, size_t key_len, unsigned char *inData, size_t inData_len, [out] unsigned char **outData, [out] size_t * outData_len);
+        public int aes_keywrap_3394nopad_decrypt(unsigned char *aes_key, size_t key_len, unsigned char *inData, size_t inData_len, [out] unsigned char **outData, [out] size_t * outData_len);
 	};
 	untrusted {
 	int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,

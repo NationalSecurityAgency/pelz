@@ -11,6 +11,10 @@
 
 #include "aes_keywrap_test.h"
 
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+
 #define AES_KW_VECTOR_PATH "test/data/kwtestvectors"
 
 //---------------------- AES Key Wrap Cipher Test Configuration --------------
@@ -74,11 +78,11 @@ int get_aes_keywrap_vector_from_file(FILE * fid,
   char buffer[MAX_TEST_VECTOR_COMPONENT_LENGTH];
 
   // create variables to buffer the components in a single test vector
-  char *K_str = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
+  char *K_str = (char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
   int K_str_len = 0;
-  char *P_str = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
+  char *P_str = (char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
   int P_str_len = 0;
-  char *C_str = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
+  char *C_str = (char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
   int C_str_len = 0;
   bool pass_result = true;      // unless vector has a 'FAIL' line, should pass
 
@@ -226,6 +230,7 @@ int get_aes_keywrap_vector_from_file(FILE * fid,
 //----------------------------------------------------------------------------
 void test_aes_keywrap_parameters(void)
 {
+  int ret;
   unsigned char *key = NULL;
   int key_len = 0;
 
@@ -236,42 +241,52 @@ void test_aes_keywrap_parameters(void)
   size_t outData_len = 0;
 
   // Test failure on null key
-  inData = malloc(16);
+  inData = (unsigned char *) malloc(16);
   inData_len = 16;
   key_len = 16;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_encrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_decrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure on key of length 0
-  key = malloc(16);
+  key = (unsigned char *) malloc(16);
   key_len = 0;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_encrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_decrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure on input data of length 0
   key_len = 16;
   inData_len = 0;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_encrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_decrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure with input data too short
   inData_len = 8;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_encrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_decrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   // Test failure with input data that's not a multiple of 8 bytes long
   inData_len = 17;
-  CU_ASSERT(aes_keywrap_3394nopad_encrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_encrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
-  CU_ASSERT(aes_keywrap_3394nopad_decrypt(key, key_len, inData, inData_len, &outData, &outData_len) == 1);
+  aes_keywrap_3394nopad_decrypt(eid, &ret, key, key_len, inData, inData_len, &outData, &outData_len);
+  CU_ASSERT(ret == 1);
   CU_ASSERT((outData == NULL) && (outData_len == 0));
 
   free(key);
@@ -327,11 +342,11 @@ void test_aes_keywrap_vectors(void)
 
   // allocate memory to hold a single test vector - re-use these buffers
   // for all test vectors used during these tests
-  unsigned char *key_data = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
+  unsigned char *key_data = (unsigned char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
   size_t key_data_len = 0;
-  unsigned char *pt_data = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
+  unsigned char *pt_data = (unsigned char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
   size_t pt_data_len = 0;
-  unsigned char *ct_data = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
+  unsigned char *ct_data = (unsigned char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
   size_t ct_data_len = 0;
   bool result_bool = false;
 
@@ -357,7 +372,7 @@ void test_aes_keywrap_vectors(void)
             &key_data, &key_data_len, &pt_data, &pt_data_len, &ct_data, &ct_data_len, &result_bool) == 0)
         {
           // Create a new buffer to hold the result for each vector applied
-          unsigned char *out = calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
+          unsigned char *out = (unsigned char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
           size_t out_len = 0;
 
           // increment count of test vectors applied and test if limit reached
@@ -371,6 +386,7 @@ void test_aes_keywrap_vectors(void)
 
           // create variable to hold response code from function being tested
           int rc = -1;
+	  int ret;
 
           // create pointers to applicable result (i.e., ct_data and
           // ct_data_len for encrypt, pt_data and pt_data_len for decrypt)
@@ -379,14 +395,16 @@ void test_aes_keywrap_vectors(void)
 
           if (strncmp(aes_keywrap_vectors.sets[i].func_to_test, "aes_keywrap_3394nopad_encrypt", 29) == 0)
           {
-            rc = aes_keywrap_3394nopad_encrypt(key_data, key_data_len, pt_data, pt_data_len, &out, &out_len);
-            exp_result = ct_data;
+            aes_keywrap_3394nopad_encrypt(eid, &ret, key_data, key_data_len, pt_data, pt_data_len, &out, &out_len);
+            rc = ret;
+	    exp_result = ct_data;
             exp_result_len = ct_data_len;
           }
           else if (strncmp(aes_keywrap_vectors.sets[i].func_to_test, "aes_keywrap_3394nopad_decrypt", 29) == 0)
           {
-            rc = aes_keywrap_3394nopad_decrypt(key_data, key_data_len, ct_data, ct_data_len, &out, &out_len);
-            exp_result = pt_data;
+            aes_keywrap_3394nopad_decrypt(eid, &ret, key_data, key_data_len, ct_data, ct_data_len, &out, &out_len);
+            rc = ret;
+	    exp_result = pt_data;
             exp_result_len = pt_data_len;
           }
 
