@@ -51,21 +51,6 @@ void* fifo_thread_process(void *arg)
 		}
 	}while(true);
 	global_pipe_reader_active = false;
-
-	<<<<<<< HEAD
-
-	    fd = open(PELZFIFO, O_RDONLY);
-	    ret = read(fd, buf, sizeof(buf));
-	    close(fd);
-	    if (ret > 0)
-	    {
-	      if (read_pipe(buf) == 1)
-	        break;
-	    }
-
-	=======
-	>>>>>>> main
-
 }
 
 void thread_process(void *arg)
