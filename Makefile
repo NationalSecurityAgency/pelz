@@ -243,7 +243,12 @@ sgx/$(Enclave_Signing_Key):
 sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
-	
+
+.PHONY: test
+
+test: all
+	./test/bin/pelz-test 2> /dev/null
+
 .PHONY: clean
 
 clean:
