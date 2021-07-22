@@ -28,15 +28,11 @@ int enclave_suite_add_tests(CU_pSuite suite)
   {
     return (1);
   }
-  if (NULL == CU_add_test(suite, "Test all combinations for adding keys to Key Table", test_table_initAddDestroy))
+  if (NULL == CU_add_test(suite, "Test Pelz Request Handler", test_table_request))
   {
     return (1);
   }
-  if (NULL == CU_add_test(suite, "Test all Key Table Lookup combinations", test_table_initLookupAddDestroy))
-  {
-    return (1);
-  }
-  if (NULL == CU_add_test(suite, "Test Key Table Delete", test_table_initLookupAddDeleteDestroy))
+  if (NULL == CU_add_test(suite, "Test Pelz Request Handler and Key Table Delete", test_table_requestDelete))
   {
     return (1);
   }
@@ -47,126 +43,118 @@ void test_table_initDestroy(void)
 {
   int ret;
 
+  pelz_log(LOG_DEBUG, "Test Key Table Initialize and Destroy Functions Start");
   key_table_init(eid, &ret);
   CU_ASSERT(ret == 0);
   key_table_destroy(eid, &ret);
   CU_ASSERT(ret == 0);
+  pelz_log(LOG_DEBUG, "Test Key Table Initialize and Destroy Functions Finish");
 }
 
-void test_table_initAddDestroy(void)
+void test_table_request(void)
 {
+  RequestResponseStatus status;
+  RequestType request_type = REQ_UNK;
   int ret;
   charbuf tmp;
+  charbuf data_in;
+  charbuf data;
+  charbuf output;
   const char *prefix = "file:";
   const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
   const char *tmp_id;
 
-  pelz_log(LOG_DEBUG, "Test Key Table Add Function");
+  //Initial data_in values
+  data_in = new_charbuf(32);
+  memcpy(data_in.chars, "abcdefghijklmnopqrstuvwxyz012345", data_in.len);
+
+  pelz_log(LOG_DEBUG, "Test Request Function Start");
   key_table_init(eid, &ret);
   CU_ASSERT(ret == 0);
 
-  //Test that the keys are added to the key table
+  //Initial check if request encrypts and decrypts keys
   for (int i = 0; i < 3; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    pelz_log(LOG_DEBUG, "Key ID: %.*s", (int) tmp.len, tmp.chars);
-    test_key_table_add(eid, &ret, tmp);
-    CU_ASSERT(ret == 0);
+    request_type = REQ_ENC;
+    pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+    CU_ASSERT(status == 0);
+    request_type = REQ_DEC;
+    data = copy_chars_from_charbuf(output, 0);
+    secure_free_charbuf(&output);
+    pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+    CU_ASSERT(status == 0);
+    CU_ASSERT(cmp_charbuf(output, data_in) == 0);
     free_charbuf(&tmp);
-  }
-
-  //Test that keys are added if valid without checking if already in table
-  for (int i = 0; i < 3; i++)
-  {
-    tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    pelz_log(LOG_DEBUG, "Key ID: %.*s", (int) tmp.len, tmp.chars);
-    test_key_table_add(eid, &ret, tmp);
-    CU_ASSERT(ret == 0);
-    free_charbuf(&tmp);
-  }
-
-  //Test that non-valid keys are not added
-  tmp_id = "/test/key7.txt";
-  tmp = copy_CWD_to_id(prefix, tmp_id);
-  pelz_log(LOG_DEBUG, "Key ID: %.*s", (int) tmp.len, tmp.chars);
-  test_key_table_add(eid, &ret, tmp);
-  CU_ASSERT(ret == 1);
-  free_charbuf(&tmp);
-
-  key_table_destroy(eid, &ret);
-  CU_ASSERT(ret == 0);
-  pelz_log(LOG_DEBUG, "Test Key Table Add Function Complete");
-}
-
-void test_table_initLookupAddDestroy(void)
-{
-  int ret;
-  charbuf tmp;
-  const char *prefix = "file:";
-  const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
-  const char *tmp_id;
-
-  pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
-  key_table_init(eid, &ret);
-  CU_ASSERT(ret == 0);
-
-  //Initial check if the keys are added when the lookup does not find them
-  for (int i = 0; i < 3; i++)
-  {
-    tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    test_key_table_add(eid, &ret, tmp);
-    CU_ASSERT(ret == 0);
-    free_charbuf(&tmp);
-  }
-
-  //Check that the keys are found and not added twice
-  for (int i = 0; i < 3; i++)
-  {
-    tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    test_key_table_lookup(eid, &ret, tmp);
-    CU_ASSERT(ret == 0);
-    free_charbuf(&tmp);
+    secure_free_charbuf(&data);
+    secure_free_charbuf(&output);
   }
 
   //Check that non-valid file does not load key
   tmp_id = "/test/key7.txt";
   tmp = copy_CWD_to_id(prefix, tmp_id);
-  test_key_table_lookup(eid, &ret, tmp);
-  CU_ASSERT(ret == 1);
+  pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
+  CU_ASSERT(status == KEK_LOAD_ERROR);
   free_charbuf(&tmp);
 
   tmp_id = "/test/key1txt";
   tmp = copy_CWD_to_id(prefix, tmp_id);
-  test_key_table_lookup(eid, &ret, tmp);
-  CU_ASSERT(ret == 1);
+  pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
+  CU_ASSERT(status == KEK_LOAD_ERROR);
+  free_charbuf(&tmp);
+
+  //Check that non-valid request type returns correct error status
+  tmp = copy_CWD_to_id(prefix, valid_id[0]);
+  request_type = REQ_UNK;
+  pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+  CU_ASSERT(status == REQUEST_TYPE_ERROR);
   free_charbuf(&tmp);
 
   key_table_destroy(eid, &ret);
   CU_ASSERT(ret == 0);
-  pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
+  pelz_log(LOG_DEBUG, "Test Request Function Finish");
 }
 
-void test_table_initLookupAddDeleteDestroy(void)
+void test_table_requestDelete(void)
 {
+  RequestResponseStatus status;
+  RequestType request_type = REQ_UNK;
   int ret;
   charbuf tmp;
-  const char *prefix = "file:";
+  charbuf data_in;
+  charbuf data;
+  charbuf output;
 
+  const char *prefix = "file:";
   const char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
     "/test/key4.txt", "/test/key5.txt", "/test/key6.txt"
   };
   const char *tmp_id;
 
-  pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
+  //Initial data_in values
+  data_in = new_charbuf(32);
+  memcpy(data_in.chars, "abcdefghijklmnopqrstuvwxyz012345", data_in.len);  
+
+  pelz_log(LOG_DEBUG, "Test Request and Delet Functions Start");
   key_table_init(eid, &ret);
   CU_ASSERT(ret == 0);
+
   //Initial load of keys into the key table
   for (int i = 0; i < 6; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    test_key_table_add(eid, &ret, tmp);
-    CU_ASSERT(ret == 0);
+    request_type = REQ_ENC;
+    pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+    CU_ASSERT(status == 0);
+    request_type = REQ_DEC;
+    data = copy_chars_from_charbuf(output, 0);
+    secure_free_charbuf(&output);
+    pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+    CU_ASSERT(status == 0);
+    CU_ASSERT(cmp_charbuf(output, data_in) == 0);
     free_charbuf(&tmp);
+    secure_free_charbuf(&data);
+    secure_free_charbuf(&output);
   }
 
   //Testing the delete function
@@ -204,7 +192,30 @@ void test_table_initLookupAddDeleteDestroy(void)
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
 
+  tmp = copy_CWD_to_id(prefix, valid_id[5]);
+  key_table_delete(eid, &ret, tmp);
+  CU_ASSERT(ret == 1);
+  free_charbuf(&tmp);
+
+  //Request will reload keys into the key table
+  for (int i = 0; i < 6; i++)
+  {
+    tmp = copy_CWD_to_id(prefix, valid_id[i]);
+    request_type = REQ_ENC;
+    pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+    CU_ASSERT(status == 0);
+    request_type = REQ_DEC;
+    data = copy_chars_from_charbuf(output, 0);
+    secure_free_charbuf(&output);
+    pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+    CU_ASSERT(status == 0);
+    CU_ASSERT(cmp_charbuf(output, data_in) == 0);
+    free_charbuf(&tmp);
+    secure_free_charbuf(&data);
+    secure_free_charbuf(&output);
+  }
+
   key_table_destroy(eid, &ret);
   CU_ASSERT(ret == 0);
-  pelz_log(LOG_DEBUG, "Test Key Table Lookup Function");
+  pelz_log(LOG_DEBUG, "Test Request and Delete Functions Finish");
 }
