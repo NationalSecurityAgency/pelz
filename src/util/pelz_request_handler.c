@@ -36,6 +36,11 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
     }
     break;
   case REQ_DEC:
+    if ((key.len < 16 || key.len % 8 != 0) || (data.len < 24 || data.len % 8 != 0))
+    {
+      secure_free_charbuf(&key);
+      return KEY_OR_DATA_ERROR;
+    }
     if (aes_keywrap_3394nopad_decrypt(key.chars, key.len, data.chars, data.len, &output->chars, &output->len))
     {
       secure_free_charbuf(&key);

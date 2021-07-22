@@ -131,12 +131,12 @@ void test_table_request(void)
   data = new_charbuf(8);
   memcpy(data.chars, "abcdefgh", data.len);
   pelz_request_handler(eid, &status, request_type, tmp, data, &output);
-  CU_ASSERT(status == DECRYPT_ERROR);
+  CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   data = new_charbuf(30);
   memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
   pelz_request_handler(eid, &status, request_type, tmp, data, &output);
-  CU_ASSERT(status == DECRYPT_ERROR);
+  CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
 
