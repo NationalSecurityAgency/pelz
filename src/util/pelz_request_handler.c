@@ -24,7 +24,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
   switch (request_type)
   {
   case REQ_ENC:
-    if ((key.len < 16 || key.len % 8 != 0) && (data.len < 16 || data.len % 8 != 0))
+    if ((key.len < 16 || key.len % 8 != 0) || (data.len < 16 || data.len % 8 != 0))
     {
       secure_free_charbuf(&key);
       return KEY_OR_DATA_ERROR;

@@ -110,6 +110,36 @@ void test_table_request(void)
   CU_ASSERT(status == REQUEST_TYPE_ERROR);
   free_charbuf(&tmp);
 
+  //Check that non-valid encyption key returns correct error status
+  tmp = copy_CWD_to_id(prefix, valid_id[0]);
+  request_type = REQ_ENC;
+  data = new_charbuf(8);
+  memcpy(data.chars, "abcdefgh", data.len);
+  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  CU_ASSERT(status == KEY_OR_DATA_ERROR);
+  secure_free_charbuf(&data);
+  data = new_charbuf(30);
+  memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
+  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  CU_ASSERT(status == KEY_OR_DATA_ERROR);
+  secure_free_charbuf(&data);
+  free_charbuf(&tmp);
+ 
+  //Check that non-valid decryption key returns correct error status
+  tmp = copy_CWD_to_id(prefix, valid_id[0]);
+  request_type = REQ_DEC;
+  data = new_charbuf(8);
+  memcpy(data.chars, "abcdefgh", data.len);
+  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  CU_ASSERT(status == DECRYPT_ERROR);
+  secure_free_charbuf(&data);
+  data = new_charbuf(30);
+  memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
+  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  CU_ASSERT(status == DECRYPT_ERROR);
+  secure_free_charbuf(&data);
+  free_charbuf(&tmp);
+
   key_table_destroy(eid, &ret);
   CU_ASSERT(ret == 0);
   pelz_log(LOG_DEBUG, "Test Request Function Finish");
