@@ -9,8 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-//#include "aes_keywrap_test.h"
-#include "key_table_test_suite.h"
+//#include "enclave_test_suite.h"
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
 #include <pelz_log.h>
@@ -67,35 +66,20 @@ int main(int argc, char **argv)
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
 
-  /*/ Create and configure the AES Key Wrap cipher test suite
-  CU_pSuite aes_keywrap_test_suite = NULL;
+  /*/ Add enclave suite ---- tests key table init/destroy/delete and pelz_request_handler functions 
+  CU_pSuite enclave_Suite = NULL;
 
-  aes_keywrap_test_suite = CU_add_suite("AES Key Wrap Cipher Test Suite", init_suite, clean_suite);
-  if (NULL == aes_keywrap_test_suite)
+  enclave_Suite = CU_add_suite("Enclave Suite", init_suite, clean_suite);
+  if (NULL == enclave_Suite)
   {
     CU_cleanup_registry();
     return CU_get_error();
   }
-  if (aes_keywrap_add_tests(aes_keywrap_test_suite))
+  if (enclave_suite_add_tests(enclave_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();
   }*/
-
-  // Add key table suite ---- tests key table init/add/lookup/destroy functions
-  CU_pSuite key_table_Suite = NULL;
-
-  key_table_Suite = CU_add_suite("Key Table Suite", init_suite, clean_suite);
-  if (NULL == key_table_Suite)
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
-  if (key_table_suite_add_tests(key_table_Suite))
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
 
   // Add utility suite --- tests util/util.h functions
   CU_pSuite utility_Suite = NULL;

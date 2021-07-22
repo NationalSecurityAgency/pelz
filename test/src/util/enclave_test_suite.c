@@ -1,10 +1,9 @@
 /*
- * key_table_test_suite.c
+ * enclave_test_suite.c
  */
 
-#include "key_table_test_suite.h"
+#include "enclave_test_suite.h"
 #include "test_helper_functions.h"
-#include "test_enclave_helper_functions.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -14,13 +13,15 @@
 
 #include <charbuf.h>
 #include <pelz_log.h>
+#include <key_table.h>
+#include <pelz_request_handler.h>
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
 // Adds all key table tests to main test runner.
-int key_table_suite_add_tests(CU_pSuite suite)
+int enclave_suite_add_tests(CU_pSuite suite)
 {
 
   if (NULL == CU_add_test(suite, "Test Key Table Initialization/Destruction", test_table_initDestroy))
