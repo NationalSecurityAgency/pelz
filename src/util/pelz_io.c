@@ -295,7 +295,7 @@ int write_to_pipe(char *msg)
 
   if (file_check((char*) PELZFIFO))
   {
-    pelz_log(LOG_ERR, "Pipe not found");
+    pelz_log(LOG_ERR, "Cannot connect to Pelz-Service");
     return 1;
   }
 

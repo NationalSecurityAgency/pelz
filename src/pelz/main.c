@@ -16,7 +16,7 @@ static void usage(const char *prog)
   fprintf(stdout,
     "usage: %s [options] \n\n"
     "options are: \n\n"
-    " -h or --help  Help (displays this usage).\n"
+    " -h or --help        Help (displays this usage).\n"
     " -t or --table       Execute the Key Table Destory function.\n"
     " -w or --wipe        Delete the Key ID provided.\n"
     " -e or --exit        Exit Pelz\n", prog);
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
       memcpy(&msg[8], optarg, strlen(optarg));
       write_to_pipe(msg);
       free(msg);
-      break;
+      return 0;
     case 'e':
       msg = (char *) calloc(8, sizeof(char));
       memcpy(msg, "pelz -e", 7);
@@ -72,6 +72,12 @@ int main(int argc, char **argv)
     default:
       return 1;
     }
+  }
+
+  if (optind == 1 )
+  {
+    printf("No options were passed");
+    usage(argv[0]);
   }
   return (0);
 }
