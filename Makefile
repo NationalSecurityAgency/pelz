@@ -245,3 +245,4 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 
 clean:
 	@rm -f bin/pelz bin/pelz-service sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o
+

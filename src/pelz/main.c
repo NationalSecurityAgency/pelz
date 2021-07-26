@@ -8,12 +8,8 @@
 #include "pelz_log.h"
 #include "pelz_io.h"
 
-#include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
 sgx_enclave_id_t eid = 0;
-
-#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
 static void usage(const char *prog)
 {

@@ -324,7 +324,6 @@ int read_pipe(char *msg)
     switch (opt)
     {
     case 't':
-      pthread_mutex_lock(&lock);
       key_table_destroy(eid, &ret);
       if (ret)
       {
@@ -338,16 +337,13 @@ int read_pipe(char *msg)
         pelz_log(LOG_ERR, "Key Table Init Failure");
         return (1);
       }
-      pthread_mutex_unlock(&lock);
       pelz_log(LOG_INFO, "Key Table Re-Initialized");
       return 0;
     case 'w':
       len = strcspn(msg, "\n");
-      key_id = new_charbuf(len - 7);
-      memcpy(key_id.chars, &msg[8], (key_id.len - 1));
-      pthread_mutex_lock(&lock);
+      key_id = new_charbuf(len - 8);
+      memcpy(key_id.chars, &msg[8], (key_id.len));
       key_table_delete(eid, &ret, key_id);
-      pthread_mutex_unlock(&lock);
       if(ret)
         pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
       else
@@ -360,7 +356,7 @@ int read_pipe(char *msg)
         pelz_log(LOG_INFO, "Failed to delete the pipe");
       return 1;
     default:
-      pelz_log(LOG_ERR, "Pipe command invalid");
+      pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
       return 0;
     }
   }

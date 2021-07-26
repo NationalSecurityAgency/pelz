@@ -27,6 +27,7 @@ int pelz_service(int max_requests)
   int socket_id;
   int socket_listen_id;
   pthread_t tid[max_requests];
+  ThreadArgs threadArgs;
 
   socket_id = 0;
 
@@ -41,12 +42,14 @@ int pelz_service(int max_requests)
     return (1);
   }
 
-	pthread_t fifo_thread;
-	if(pthread_create(&fifo_thread, NULL, fifo_thread_process, NULL))
-	{
-		pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
-		return 1;
-	}
+  threadArgs.lock = lock;
+  threadArgs.socket_id = 1;
+  pthread_t fifo_thread;
+  if(pthread_create(&fifo_thread, NULL, fifo_thread_process, &threadArgs))
+  {
+    pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
+    return 1;
+  }
 
   do
   {
@@ -65,8 +68,6 @@ int pelz_service(int max_requests)
       pelz_key_socket_close(socket_id);
       continue;
     }
-
-    ThreadArgs threadArgs;
 
     threadArgs.lock = lock;
     threadArgs.socket_id = socket_id;

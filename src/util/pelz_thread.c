@@ -18,10 +18,14 @@
 
 #define PELZFIFO "/tmp/pelzfifo"
 #define BUFSIZE 1024
-#define MODE 0666
+#define MODE 0600
 
 void* fifo_thread_process(void *arg)
 {
+  ThreadArgs *threadArgs = (ThreadArgs *) arg;
+  int new_socket = threadArgs->socket_id;
+  pthread_mutex_t lock = threadArgs->lock;
+
   int fd;
   int ret;
   char buf[BUFSIZE];
@@ -44,10 +48,15 @@ void* fifo_thread_process(void *arg)
        pelz_log(LOG_ERR, "Pipe read failed");
     }
     close(fd);
-    if (ret > 0)
+    if (ret > 0) 
     {
+      pthread_mutex_lock(&lock);
       if (read_pipe(buf) == 1)
+      {
+        pthread_mutex_unlock(&lock);
         break;
+      }
+      pthread_mutex_unlock(&lock);
     }
   } while(true);
   global_pipe_reader_active = false;
