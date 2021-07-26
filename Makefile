@@ -177,7 +177,7 @@ all: $(App_Name) $(Enclave_Name)
 	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
 	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
 else
-all: bin/$(App_Name) test/bin/$(App_Name_Test) sgx/$(Signed_Enclave_Name)
+all: pre bin/$(App_Name) test/bin/$(App_Name_Test) sgx/$(Signed_Enclave_Name)
 endif
 
 run: all
@@ -245,10 +245,18 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
+.PHONY: pre
+
+pre:
+	@mkdir -p bin
+	@mkdir -p test/bin
+	@mkdir -p test/log
+
+
 .PHONY: test
 
 test: all
-	./test/bin/pelz-test 2> /dev/null
+	@./test/bin/pelz-test 2> /dev/null
 
 .PHONY: clean
 
