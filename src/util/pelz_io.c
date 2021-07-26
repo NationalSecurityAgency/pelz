@@ -296,7 +296,7 @@ int write_to_pipe(char *msg)
   if (file_check((char*) PELZFIFO))
   {
     pelz_log(LOG_DEBUG, "Pipe not found");
-    pelz_log(LOG_ERR, "Cannot connect to Pelz-Service");
+    printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
     return 1;
   }
 
@@ -308,7 +308,7 @@ int write_to_pipe(char *msg)
     pelz_log(LOG_ERR, "Error writing to pipe");
     return 1;
   }
-  printf("Pelz Command options sent to Pelz Service\n");
+  printf("Pelz command options sent to pelz-service\n");
   return 0;
 }
 
