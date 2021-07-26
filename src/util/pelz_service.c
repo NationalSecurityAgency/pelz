@@ -43,7 +43,6 @@ int pelz_service(int max_requests)
   }
 
   threadArgs.lock = lock;
-  threadArgs.socket_id = 1;
   pthread_t fifo_thread;
   if(pthread_create(&fifo_thread, NULL, fifo_thread_process, &threadArgs))
   {

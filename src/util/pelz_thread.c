@@ -23,7 +23,6 @@
 void* fifo_thread_process(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
-  int new_socket = threadArgs->socket_id;
   pthread_mutex_t lock = threadArgs->lock;
 
   int fd;
