@@ -341,7 +341,7 @@ int read_pipe(char *msg)
       return 0;
     case 'w':
       len = strcspn(msg, "\n");
-      key_id = new_charbuf(len - 8);
+      key_id = new_charbuf(len - 8); //the number 8 is used because it the number of chars in "pelz -& "
       memcpy(key_id.chars, &msg[8], (key_id.len));
       key_table_delete(eid, &ret, key_id);
       if(ret)
