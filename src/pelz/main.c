@@ -17,6 +17,7 @@ static void usage(const char *prog)
     "usage: %s [options] \n\n"
     "options are: \n\n"
     " -h or --help        Help (displays this usage).\n"
+    " -d or --debug       Enable debug logging.\n"
     " -t or --table       Execute the Key Table Destory function.\n"
     " -w or --wipe        Delete the Key ID provided.\n"
     " -e or --exit        Exit Pelz\n", prog);
@@ -24,6 +25,7 @@ static void usage(const char *prog)
 
 const struct option longopts[] = {
   {"help", no_argument, 0, 'h'},
+  {"debug", no_argument, 0, 'd'},
   {"table", no_argument, 0, 't'},
   {"wipe", no_argument, 0, 'w'},
   {"exit", no_argument, 0, 'e'},
@@ -50,6 +52,10 @@ int main(int argc, char **argv)
     case 'h':
       usage(argv[0]);
       return 0;
+    case 'd':
+      set_applog_severity_threshold(LOG_DEBUG);
+      set_applog_output_mode(0);
+      break;
     case 't':
       msg = (char *) calloc(8, sizeof(char));
       memcpy(msg, "pelz -t", 7);

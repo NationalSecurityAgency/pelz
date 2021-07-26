@@ -152,17 +152,17 @@ int file_check(char *file_path)
   pelz_log(LOG_DEBUG, "File Check Key ID: %s", file_path);
   if (file_path == NULL)
   {
-    pelz_log(LOG_ERR, "No file path provided.");
+    pelz_log(LOG_DEBUG, "No file path provided.");
     return (1);
   }
   else if (access(file_path, F_OK) == -1)
   {
-    pelz_log(LOG_ERR, "File cannot be found.");
+    pelz_log(LOG_DEBUG, "File cannot be found.");
     return (1);
   }
   else if (access(file_path, R_OK) == -1)
   {
-    pelz_log(LOG_ERR, "File cannot be read.");
+    pelz_log(LOG_DEBUG, "File cannot be read.");
     return (1);
   }
   return (0);
@@ -295,6 +295,7 @@ int write_to_pipe(char *msg)
 
   if (file_check((char*) PELZFIFO))
   {
+    pelz_log(LOG_DEBUG, "Pipe not found");
     pelz_log(LOG_ERR, "Cannot connect to Pelz-Service");
     return 1;
   }
@@ -307,6 +308,7 @@ int write_to_pipe(char *msg)
     pelz_log(LOG_ERR, "Error writing to pipe");
     return 1;
   }
+  printf("Pelz Command options sent to Pelz Service\n");
   return 0;
 }
 
