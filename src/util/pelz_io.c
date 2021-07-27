@@ -301,8 +301,14 @@ int write_to_pipe(char *msg)
   }
 
   fd = open(PELZFIFO, O_WRONLY);
+  if (fd == -1)
+  {
+    pelz_log(LOG_ERR, "Error opening pipe");
+    return 1;  
+  }
   ret = write(fd, msg, strlen(msg)+1);
-  close(fd);
+  if (close(fd) == -1)
+    pelz_log(LOG_ERR, "Error closing pipe");
   if (ret == -1)
   {
     pelz_log(LOG_ERR, "Error writing to pipe");
@@ -363,7 +369,12 @@ int read_pipe(char *msg)
     }
   }
   else
-    pelz_log(LOG_ERR, "Pipe command invalid");
+  {
+    if (strlen(msg) > 10)
+      pelz_log(LOG_ERR, "Pipe command invalid: %.*s", 10, msg);
+    else
+      pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+  }
   return 0;
 }
 
