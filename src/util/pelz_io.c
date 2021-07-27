@@ -370,7 +370,7 @@ int read_pipe(char *msg)
   }
   else
   {
-    if (strlen(msg) > 10)
+    if (strnlen(msg, 10) == 10)
       pelz_log(LOG_ERR, "Pipe command invalid: %.*s", 10, msg);
     else
       pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
