@@ -53,7 +53,6 @@ extern "C"
  * @return 0 on success, 1 on error
  */
   int key_table_destroy(void);
-#endif
 
 /**
  * <pre>
@@ -68,6 +67,7 @@ extern "C"
  * @return 0 on success, 1 on error
  */
   int key_table_delete(charbuf key_id);
+#endif
 
 /**
  * <pre>

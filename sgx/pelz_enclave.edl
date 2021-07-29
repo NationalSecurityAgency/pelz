@@ -9,6 +9,7 @@ enclave {
 	trusted {
 	public int key_table_init(void);
 	public int key_table_destroy(void);
+	public int key_table_delete(charbuf key_id);
 	public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
 	};
 	untrusted {
