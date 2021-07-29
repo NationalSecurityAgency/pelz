@@ -14,21 +14,43 @@ sgx_enclave_id_t eid = 0;
 static void usage(const char *prog)
 {
   fprintf(stdout,
-    "usage: %s [options] \n\n"
-    "options are: \n\n"
-    " -h or --help        Help (displays this usage).\n"
-    " -d or --debug       Enable debug logging.\n"
-    " -t or --table       Execute the Key Table Destory function.\n"
-    " -w or --wipe        Delete the Key ID provided.\n"
-    " -e or --exit        Exit Pelz\n", prog);
+    "usage: %s <keywords> [options] \n\n"
+    "keywords are: \n\n"
+    "-d or --debug                   Enable debug messaging and logging.\n"
+    "-h or --help                    Help (displays this usage).\n\n"
+    "exit                            Terminate running pelz-service\n\n"
+    "load <type> <path>              Loads a value of type <type> (currently either cert or private)\n"
+    "                                into the pelz-service enclave. These files must be formatted as\n"
+    "                                a .ski or .nkl file.\n"
+    "load cert <path/to/file>        Loads a server certificate into the pelz-service enclave\n"
+    "load private <path/to/file>     Loads a private key for connections to key servers into the\n"
+    "                                pelz-service enclave. This will fail if a key is already\n"
+    "                                loaded.\n\n"
+    "remove <target> <id> [options]  Removes a value of type <target> (currently either cert or key)\n"
+    "                                from memory within the pelz-service enclave. The -a option may\n"
+    "                                be used to drop all server certificates or all keys.\n"
+    "remove key <id> [options]       Removes a key with a specified id from the pelz-service enclave if it\n"
+    "                                exists. If -a is given, no id is required.\n"
+    "remove cert <path> [options]    Removes the server cert at the specified path from the pelz-service\n"
+    "                                loaded certificates. If -a is given, no path is required.\n"
+    "-a or --all                     Used only with remove to indicate removing all server certificates or\n"
+    "                                keys from the pelz-service key table.\n\n"
+    "seal <path> [options]           Seals the input file to the pelz-service enclave. This creates a .nkl\n"
+    "                                file. This can also be used in conjunction with the TPM to double\n"
+    "                                seal a file and create a .ski file as output.\n"
+    "-t or --tpm                     Use the TPM as well when sealing. This requires the TPM to be enabled.\n"
+    "-o or --output <output path>    By default, seal will output a new file with the same name but the\n"
+    "                                .nkl extension. Using -o allows the user to specify their output\n"
+    "                                file destination.\n", prog);
 }
 
 const struct option longopts[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
-  {"table", no_argument, 0, 't'},
-  {"wipe", no_argument, 0, 'w'},
-  {"exit", no_argument, 0, 'e'},
+  {"exit", no_argument, 0, 0},
+  {"load", no_argument, 0, 0},
+  {"remove", no_argument, 0, 0},
+  {"seal", no_argument, 0, 0},
   {0, 0, 0, 0}
 };
 
@@ -45,7 +67,7 @@ int main(int argc, char **argv)
   int option_index;
   char *msg;
 
-  while ((options = getopt_long_only(argc, argv, "htw:e", longopts, &option_index)) != -1)
+  while ((options = getopt_long_only(argc, argv, "h", longopts, &option_index)) != -1)
   {
     switch (options)
     {
