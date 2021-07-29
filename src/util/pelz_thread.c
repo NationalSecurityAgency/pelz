@@ -17,46 +17,48 @@
 #include "pelz_enclave_u.h"
 
 #define PELZFIFO "/tmp/pelzfifo"
-#define BUFSIZE 300
-#define MODE 0666
+#define BUFSIZE 1024
+#define MODE 0600
 
 void* fifo_thread_process(void *arg)
 {
-	int fd;
-	char buf[BUFSIZE];
+  ThreadArgs *threadArgs = (ThreadArgs *) arg;
+  pthread_mutex_t lock = threadArgs->lock;
 
-	if (mkfifo(PELZFIFO, MODE) == 0)
-	{
-		pelz_log(LOG_INFO, "Pipe created successfully");
-	}
-	else
-	{
-		pelz_log(LOG_INFO, "Error: %s", strerror(errno));
-	}
+  int fd;
+  int ret;
+  char buf[BUFSIZE];
 
-	do
-	{
-		fd = open(PELZFIFO, O_RDONLY);
-		if(read(fd, buf, sizeof(buf)) < 0)
-		{
-			pelz_log(LOG_ERR, "Pipe read failed");
-		}
-		close(fd);
-		if (!memcmp(buf, "exit", 4))
-		{
-			if (unlink(PELZFIFO) == 0)
-			{
-				pelz_log(LOG_INFO, "Pipe deleted successfully");
-			}
-			else
-			{
-				pelz_log(LOG_INFO, "Failed to delete the pipe: %s", strerror(errno));
-			}
-			break;
-		}
-	}	while(true);
-	global_pipe_reader_active = false;
+  if (mkfifo(PELZFIFO, MODE) == 0)
+  {
+    pelz_log(LOG_INFO, "Pipe created successfully");
+  }
+  else
+  {
+    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+  }
 
+  do
+  {
+    fd = open(PELZFIFO, O_RDONLY);
+    ret = read(fd, buf, sizeof(buf));
+    if(ret < 0)
+    {
+       pelz_log(LOG_ERR, "Pipe read failed");
+    }
+    close(fd);
+    if (ret > 0) 
+    {
+      pthread_mutex_lock(&lock);
+      if (read_pipe(buf) == 1)
+      {
+        pthread_mutex_unlock(&lock);
+        break;
+      }
+      pthread_mutex_unlock(&lock);
+    }
+  } while(true);
+  global_pipe_reader_active = false;
 }
 
 void thread_process(void *arg)

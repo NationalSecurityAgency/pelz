@@ -76,7 +76,9 @@ else
 	Urts_Library_Name := sgx_urts
 endif
 
-App_Name_File := src/pelz/main.c
+App_Service_File := src/pelz-service/main.c
+
+App_Pipe_File := src/pelz/main.c
 
 App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
@@ -117,9 +119,11 @@ else
 	App_Link_Flags += -lsgx_uae_service
 endif
 
-App_Name := pelz-sgx
+App_Name_Test    := pelz-test
 
-App_Name_Test := pelz-test
+App_Name_Service := pelz-service
+
+App_Name_Pipe    := pelz
 
 ######## Enclave Settings ########
 
@@ -177,13 +181,13 @@ all: $(App_Name) $(Enclave_Name)
 	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
 	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
 else
-all: pre bin/$(App_Name) test/bin/$(App_Name_Test) sgx/$(Signed_Enclave_Name)
+all: pre bin/$(App_Name_Service) bin/$(App_Name_Pipe) test/bin/$(App_Name_Test) sgx/$(Signed_Enclave_Name)
 endif
 
 run: all
 ifneq ($(Build_Mode), HW_RELEASE)
-	@$(CURDIR)/$(App_Name)
-	@echo "RUN  =>  $(App_Name) [$(SGX_MODE)|$(SGX_ARCH), OK]"
+	@$(CURDIR)/$(App_Name_Service)
+	@echo "RUN  =>  $(App_Name_Service) [$(SGX_MODE)|$(SGX_ARCH), OK]"
 endif
 
 ######## App Objects ########
@@ -196,12 +200,16 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-bin/$(App_Name): $(App_Name_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Itest/include -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread -lcunit
+	@echo "LINK =>  $@"
+
+bin/$(App_Name_Service): $(App_Service_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
 	@echo "LINK =>  $@"
 
-test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Itest/include -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread -lcunit
+bin/$(App_Name_Pipe): $(App_Pipe_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
 	@echo "LINK =>  $@"
 
 ######## Enclave Objects ########
@@ -261,4 +269,5 @@ test: all
 .PHONY: clean
 
 clean:
-	@rm -f bin/pelz-sgx test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
+	@rm -f bin/pelz bin/pelz-service test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
+
