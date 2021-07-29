@@ -62,7 +62,7 @@ void test_table_request(void)
   charbuf output;
   const char *prefix = "file:";
   const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
-  const char *tmp_id;
+  const char *tmp_id[2] = {"/test/key7.txt", "/test/key1txt"} ;
 
   //Initial data_in values
   data_in = new_charbuf(32);
@@ -91,14 +91,12 @@ void test_table_request(void)
   }
 
   //Check that non-valid file does not load key
-  tmp_id = "/test/key7.txt";
-  tmp = copy_CWD_to_id(prefix, tmp_id);
+  tmp = copy_CWD_to_id(prefix, tmp_id[0]);
   pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
   CU_ASSERT(status == KEK_LOAD_ERROR);
   free_charbuf(&tmp);
 
-  tmp_id = "/test/key1txt";
-  tmp = copy_CWD_to_id(prefix, tmp_id);
+  tmp = copy_CWD_to_id(prefix, tmp_id[1]);
   pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
   CU_ASSERT(status == KEK_LOAD_ERROR);
   free_charbuf(&tmp);
@@ -159,7 +157,7 @@ void test_table_requestDelete(void)
   const char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
     "/test/key4.txt", "/test/key5.txt", "/test/key6.txt"
   };
-  const char *tmp_id;
+  const char *tmp_id[2] = {"/test/key.txt", "/test/key1txt"};
 
   //Initial data_in values
   data_in = new_charbuf(32);
@@ -204,14 +202,12 @@ void test_table_requestDelete(void)
   free_charbuf(&tmp);
 
   //Testing that if the delete function does not find key_id then does not delete for valid files and non-valid files
-  tmp_id = "/test/key.txt";
-  tmp = copy_CWD_to_id(prefix, tmp_id);
+  tmp = copy_CWD_to_id(prefix, tmp_id[0]);
   key_table_delete(eid, &ret, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
 
-  tmp_id = "/test/key1txt";
-  tmp = copy_CWD_to_id(prefix, tmp_id);
+  tmp = copy_CWD_to_id(prefix, tmp_id[1]);
   key_table_delete(eid, &ret, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
