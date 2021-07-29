@@ -3,6 +3,7 @@
  */
 
 #include <getopt.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "pelz_log.h"
@@ -47,10 +48,9 @@ static void usage(const char *prog)
 const struct option longopts[] = {
   {"help", no_argument, 0, 'h'},
   {"debug", no_argument, 0, 'd'},
-  {"exit", no_argument, 0, 0},
-  {"load", no_argument, 0, 0},
-  {"remove", no_argument, 0, 0},
-  {"seal", no_argument, 0, 0},
+  {"tpm", no_argument, 0, 't'},
+  {"output", required_argument, 0, 'o'},
+  {"all", no_argument, 0, 'a'},
   {0, 0, 0, 0}
 };
 
@@ -65,9 +65,22 @@ int main(int argc, char **argv)
 
   int options;
   int option_index;
+  int arg_index = 0;
+  bool all = false;
+  bool tpm = false;
+  char *output = NULL;
+  size_t output_size = 0;
+  char *path_id = NULL;
+  size_t path_id_size = 0;
   char *msg;
 
-  while ((options = getopt_long_only(argc, argv, "h", longopts, &option_index)) != -1)
+  if (argc == 1)
+  {
+    usage(argv[0]);
+    return 0;
+  }
+
+  while ((options = getopt_long(argc, argv, "hdato:", longopts, &option_index)) != -1)
   {
     switch (options)
     {
@@ -77,33 +90,221 @@ int main(int argc, char **argv)
     case 'd':
       set_applog_severity_threshold(LOG_DEBUG);
       set_applog_output_mode(0);
+      arg_index = arg_index + 1;
       break;
     case 't':
-      msg = (char *) calloc(8, sizeof(char));
-      memcpy(msg, "pelz -t", 7);
-      write_to_pipe(msg);
-      free(msg);
+      tpm = true;
+      arg_index = arg_index + 1;
       break;
-    case 'w':
-      msg = (char *) calloc((9 + strlen(optarg)), sizeof(char));
-      memcpy(msg, "pelz -w ", 8);
-      memcpy(&msg[8], optarg, strlen(optarg));
-      write_to_pipe(msg);
-      free(msg);
-      return 0;
-    case 'e':
-      msg = (char *) calloc(8, sizeof(char));
-      memcpy(msg, "pelz -e", 7);
-      write_to_pipe(msg);
-      free(msg);
-      return 0;
+    case 'a':
+      all = true;
+      arg_index = arg_index + 1;
+      break;
+    case 'o':
+      output_size = strlen(optarg) + 1;
+      if (output_size > 1)
+      {
+        output = (char *) malloc(output_size * sizeof(char));
+        memcpy(output, optarg, output_size);
+      }
+      arg_index = arg_index + 2;
+      printf("Output option: %.*s\n", (int) output_size, output);
+      break;
     default:
       return 1;
     }
   }
 
-  if (optind == 1 )
+  if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "exit", 4) == 0))
+  {
+    msg = (char *) calloc(8, sizeof(char));
+    memcpy(msg, "pelz -e", 7);
+    printf("Message: %s\n", msg);
+    write_to_pipe(msg);
+    free(msg);
+  }
+  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "load", 4) == 0))
+  {
+    printf("Load option\n");
+    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0))
+    {
+      printf("Load cert option\n");
+      if (argv[arg_index + 3] != NULL)
+      {
+        printf("Load cert <path> option\n");
+        path_id_size = strlen(argv[arg_index + 3]) + 1;
+        if (path_id_size > 1)
+        {
+          path_id = (char *) malloc(path_id_size * sizeof(char));
+          memcpy(path_id, argv[arg_index + 3], path_id_size);
+        }
+        printf("<path> set: %.*s\n", (int) path_id_size, path_id);
+        msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -l -c ", 11);
+        memcpy(&msg[11], path_id, path_id_size);
+        printf("Message: %s\n", msg);
+        write_to_pipe(msg);
+        free(msg);
+        free(path_id);
+      }
+      else
+      {
+        usage(argv[0]);
+        return 1;
+      }
+    }
+    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "private", 3) == 0))
+    {
+      printf("Load private option\n");
+      if (argv[arg_index + 3] != NULL)
+      {
+        printf("Load private <path> option\n");
+        path_id_size = strlen(argv[arg_index + 3]) + 1;
+        if (path_id_size > 1)
+        {
+          path_id = (char *) malloc(path_id_size * sizeof(char));
+          memcpy(path_id, argv[arg_index + 3], path_id_size);
+        }
+        printf("<path> set: %.*s\n", (int) path_id_size, path_id);
+        msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -l -p ", 11);
+        memcpy(&msg[11], path_id, path_id_size);
+        printf("Message: %s\n", msg);
+        write_to_pipe(msg);
+        free(msg);
+        free(path_id);
+      }
+      else
+      {
+        usage(argv[0]);
+        return 1;
+      }
+    }
+    else
+    {
+      usage(argv[0]);
+      return 1;
+    }
+  }
+  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "remove", 6) == 0))
+  {
+    printf("Remove option\n");
+    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "key", 3) == 0))
+    {
+      printf("Remove key option\n");
+      if (all)
+      {
+        printf("Remove key --all option\n");
+        msg = (char *) calloc(14, sizeof(char));
+        memcpy(msg, "pelz -r -k -a", 13);
+        printf("Message: %s\n", msg);
+	write_to_pipe(msg);
+        free(msg);
+      }
+      else if (argv[arg_index + 3] != NULL)
+      {
+        printf("Remove key <id> option\n");
+        path_id_size = strlen(argv[arg_index + 3]) + 1;
+        if (path_id_size > 1)
+        {
+          path_id = (char *) malloc(path_id_size * sizeof(char));
+          memcpy(path_id, argv[arg_index + 3], path_id_size);
+        }
+	printf("<id> set: %.*s\n", (int) path_id_size, path_id);
+	msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -r -k ", 11);
+        memcpy(&msg[11], path_id, path_id_size);
+	printf("Message: %s\n", msg);
+        write_to_pipe(msg);
+        free(msg);
+	free(path_id);
+      }
+      else
+      {
+        usage(argv[0]);
+	return 1;
+      }
+    }
+    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0))
+    {
+      printf("Remove cert option\n");
+      if (all)
+      {
+        printf("Remove cert --all option\n");
+        msg = (char *) calloc(14, sizeof(char));
+        memcpy(msg, "pelz -r -c -a", 13);
+        printf("Message: %s\n", msg);
+	write_to_pipe(msg);
+        free(msg);
+      }
+      else if (argv[arg_index + 3] != NULL)
+      {
+        printf("Remove cert <path> option\n");
+        path_id_size = strlen(argv[arg_index + 3]) + 1;
+        if (path_id_size > 1)
+        {
+          path_id = (char *) malloc(path_id_size * sizeof(char));
+          memcpy(path_id, argv[arg_index + 3], path_id_size);
+        }
+	printf("<path> set: %.*s\n", (int) path_id_size, path_id);
+	msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -r -c ", 11);
+        memcpy(&msg[11], path_id, path_id_size);
+	printf("Message: %s\n", msg);
+        write_to_pipe(msg);
+        free(msg);
+        free(path_id);
+      }
+      else
+      {
+        usage(argv[0]);
+        return 1;
+      }
+    }
+    else
+    {
+      usage(argv[0]);
+      return 1;
+    }
+  }
+  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "seal", 4) == 0))
+  {
+    printf("Seal option\n");
+    if (argv[arg_index + 2] != NULL)
+    {
+      printf("Seal <path> option\n");
+      path_id_size = strlen(argv[arg_index + 2]) + 1;
+      if (path_id_size > 1)
+      {
+        path_id = (char *) malloc(path_id_size * sizeof(char));
+        memcpy(path_id, argv[arg_index + 2], path_id_size);
+      }
+      printf("<path> set: %.*s\n", (int) path_id_size, path_id);
+      free(path_id);
+      if ((output != NULL) && (output_size != 0))
+      {
+        printf("SGX seal to output call not added\n");
+      }
+      else
+      {
+        printf("SGX seal call not added\n");
+      }
+      if (tpm)
+      {
+        printf("Kmyth TPM call not added\n");
+      }
+    }
+    else 
+    {
+      usage(argv[0]);
+      return 1;
+    }
+  }
+  else
+  {
     usage(argv[0]);
-  
-  return (0);
+    return 1;
+  }
+
+  return 0;
 }
