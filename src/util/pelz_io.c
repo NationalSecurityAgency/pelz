@@ -324,6 +324,7 @@ int read_pipe(char *msg)
   int len;
   char opt;
   charbuf key_id;
+  charbuf path;
 
   if (memcmp(msg, "pelz -", 6) == 0)
   {
@@ -331,38 +332,101 @@ int read_pipe(char *msg)
     pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(msg), opt,  msg);
     switch (opt)
     {
-    case 't':
-      key_table_destroy(eid, &ret);
-      if (ret)
-      {
-        pelz_log(LOG_ERR, "Key Table Destroy Failure");
-        return (1);
-      }
-      pelz_log(LOG_INFO, "Key Table Destroyed");
-      key_table_init(eid, &ret);
-      if (ret)
-      {
-        pelz_log(LOG_ERR, "Key Table Init Failure");
-        return (1);
-      }
-      pelz_log(LOG_INFO, "Key Table Re-Initialized");
-      return 0;
-    case 'w':
-      len = strcspn(msg, "\n");
-      key_id = new_charbuf(len - 8); //the number 8 is used because it the number of chars in "pelz -& "
-      memcpy(key_id.chars, &msg[8], (key_id.len));
-      key_table_delete(eid, &ret, key_id);
-      if(ret)
-        pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
-      else
-        pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
-      return 0;
     case 'e':
       if (unlink(PELZFIFO) == 0)
         pelz_log(LOG_INFO, "Pipe deleted successfully");
       else
         pelz_log(LOG_INFO, "Failed to delete the pipe");
       return 1;
+    case 'l':
+      if (memcmp(&msg[8], "-", 1) == 0)
+        opt = msg[9];
+      else
+      {
+        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+        return 0;
+      }
+      switch (opt)
+      {
+        case 'c':
+	  len = strcspn(msg, "\n");
+          path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -l -c "
+          memcpy(path.chars, &msg[11], (path.len));
+          free_charbuf(&path);
+          pelz_log(LOG_INFO, "Load cert call not added");
+          return 0;
+	case 'p':
+	  len = strcspn(msg, "\n");
+          path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -l -p "
+          memcpy(path.chars, &msg[11], (path.len));
+          free_charbuf(&path);
+          pelz_log(LOG_INFO, "Load private call not added");
+          return 0;
+	default:
+	  pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+          return 0;
+      }
+    case 'r':
+      if (memcmp(&msg[8], "-", 1) == 0)
+        opt = msg[9];
+      else
+      {
+        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+        return 0;
+      }
+      switch (opt)
+      {
+        case 'k':
+          if (memcmp(&msg[10], " -a", 3) == 0)
+	  {
+	    key_table_destroy(eid, &ret);
+            if (ret)
+            {
+              pelz_log(LOG_ERR, "Key Table Destroy Failure");
+              return 1;
+            } 
+            pelz_log(LOG_INFO, "Key Table Destroyed");
+            key_table_init(eid, &ret);
+            if (ret)
+            {
+              pelz_log(LOG_ERR, "Key Table Init Failure");
+              return 1;
+            }
+            pelz_log(LOG_INFO, "Key Table Re-Initialized");
+            return 0;
+	  }
+	  else
+	  {
+	    len = strcspn(msg, "\n");
+            key_id = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -r -k "
+            memcpy(key_id.chars, &msg[11], (key_id.len));
+            key_table_delete(eid, &ret, key_id);	   
+            if(ret)
+              pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
+            else
+              pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
+	    free_charbuf(&key_id);
+            return 0;		  
+	  }
+	case 'c':
+	  if (memcmp(&msg[10], " -a", 3) == 0)
+          {
+            pelz_log(LOG_INFO, "Remove all certs call not added");
+	    return 0;
+	  }
+	  else
+	  {
+	    len = strcspn(msg, "\n");
+            path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -r -c "
+            memcpy(path.chars, &msg[11], (path.len));
+	    free_charbuf(&path);
+	    pelz_log(LOG_INFO, "Remove cert call not added");
+	    return 0;
+	  }
+        default:
+          pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+          return 0;
+      }	  
     default:
       pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
       return 0;

@@ -41,12 +41,18 @@ void* fifo_thread_process(void *arg)
   do
   {
     fd = open(PELZFIFO, O_RDONLY);
+    if (fd == -1)
+    {
+      pelz_log(LOG_ERR, "Error opening pipe");
+      break;
+    }
     ret = read(fd, buf, sizeof(buf));
-    if(ret < 0)
+    if (ret < 0)
     {
        pelz_log(LOG_ERR, "Pipe read failed");
     }
-    close(fd);
+    if (close(fd) == -1)
+      pelz_log(LOG_ERR, "Error closing pipe");
     if (ret > 0) 
     {
       pthread_mutex_lock(&lock);
