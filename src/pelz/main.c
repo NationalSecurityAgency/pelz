@@ -219,7 +219,7 @@ int main(int argc, char **argv)
         msg = (char *) calloc(14, sizeof(char));
         memcpy(msg, "pelz -r -k -a", 13);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe(msg);
+        write_to_pipe(msg);
         free(msg);
       }
       else if ((argv[arg_index + 3] != NULL) && !all)
@@ -231,19 +231,19 @@ int main(int argc, char **argv)
           path_id = (char *) malloc(path_id_size * sizeof(char));
           memcpy(path_id, argv[arg_index + 3], path_id_size);
         }
-	pelz_log(LOG_DEBUG, "<id> set: %.*s", (int) path_id_size, path_id);
-	msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        pelz_log(LOG_DEBUG, "<id> set: %.*s", (int) path_id_size, path_id);
+        msg = (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -r -k ", 11);
         memcpy(&msg[11], path_id, path_id_size);
-	pelz_log(LOG_DEBUG, "Message: %s", msg);
+        pelz_log(LOG_DEBUG, "Message: %s", msg);
         write_to_pipe(msg);
         free(msg);
-	free(path_id);
+        free(path_id);
       }
       else
       {
         remove_usage();
-	return 1;
+        return 1;
       }
     }
     else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0))
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
         msg = (char *) calloc(14, sizeof(char));
         memcpy(msg, "pelz -r -c -a", 13);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe(msg);
+        write_to_pipe(msg);
         free(msg);
       }
       else if (argv[arg_index + 3] != NULL && !all)
@@ -267,11 +267,11 @@ int main(int argc, char **argv)
           path_id = (char *) malloc(path_id_size * sizeof(char));
           memcpy(path_id, argv[arg_index + 3], path_id_size);
         }
-	pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
-	msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
+        msg = (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -r -c ", 11);
         memcpy(&msg[11], path_id, path_id_size);
-	pelz_log(LOG_DEBUG, "Message: %s", msg);
+        pelz_log(LOG_DEBUG, "Message: %s", msg);
         write_to_pipe(msg);
         free(msg);
         free(path_id);
