@@ -300,12 +300,13 @@ int write_to_pipe(char *msg)
     return 1;
   }
 
-  
-
   fd = open(PELZFIFO, O_WRONLY | O_NONBLOCK); 
   if (fd == -1)
   {
-    pelz_log(LOG_DEBUG, "Error opening pipe");
+    if (unlink(PELZFIFO) == 0)
+      pelz_log(LOG_INFO, "Pipe deleted successfully");
+    else
+      pelz_log(LOG_INFO, "Failed to delete the pipe");
     printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
     return 1;  
   }
