@@ -300,18 +300,21 @@ int write_to_pipe(char *msg)
     return 1;
   }
 
-  fd = open(PELZFIFO, O_WRONLY);
+  
+
+  fd = open(PELZFIFO, O_WRONLY | O_NONBLOCK); 
   if (fd == -1)
   {
-    pelz_log(LOG_ERR, "Error opening pipe");
+    pelz_log(LOG_DEBUG, "Error opening pipe");
+    printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
     return 1;  
   }
   ret = write(fd, msg, strlen(msg)+1);
   if (close(fd) == -1)
-    pelz_log(LOG_ERR, "Error closing pipe");
+    pelz_log(LOG_DEBUG, "Error closing pipe");
   if (ret == -1)
   {
-    pelz_log(LOG_ERR, "Error writing to pipe");
+    pelz_log(LOG_DEBUG, "Error writing to pipe");
     return 1;
   }
   printf("Pelz command options sent to pelz-service\n");
