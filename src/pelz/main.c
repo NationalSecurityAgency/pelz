@@ -171,6 +171,8 @@ int main(int argc, char **argv)
       else
       {
         load_usage();
+	if (output_size > 1)
+          free(output);
         return 1;
       }
     }
@@ -198,12 +200,16 @@ int main(int argc, char **argv)
       else
       {
         load_usage();
+	if (output_size > 1)
+          free(output);
         return 1;
       }
     }
     else
     {
       load_usage();
+      if (output_size > 1)
+        free(output);
       return 1;
     }
   }
@@ -243,6 +249,8 @@ int main(int argc, char **argv)
       else
       {
         remove_usage();
+	if (output_size > 1)
+          free(output);
         return 1;
       }
     }
@@ -279,12 +287,16 @@ int main(int argc, char **argv)
       else
       {
         remove_usage();
+	if (output_size > 1)
+          free(output);
         return 1;
       }
     }
     else
     {
       remove_usage();
+      if (output_size > 1)
+        free(output);
       return 1;
     }
   }
@@ -318,14 +330,20 @@ int main(int argc, char **argv)
     else 
     {
       seal_usage();
+      if (output_size > 1)
+        free(output);
       return 1;
     }
   }
   else
   {
     usage(argv[0]);
+    if (output_size > 1)
+      free(output);
     return 1;
   }
 
+  if (output_size > 1)
+    free(output);
   return 0;
 }
