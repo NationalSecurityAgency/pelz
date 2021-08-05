@@ -166,8 +166,8 @@ int main(int argc, char **argv)
           free(path_id);
           free(output);
           return 1;
-	}
-	msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        }
+        msg = (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -l -c ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
@@ -196,13 +196,13 @@ int main(int argc, char **argv)
         }
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
         if (file_check(path_id))
-	{
+        {
           printf("File %s is invalid.\n", path_id);
           free(path_id);
           free(output);
           return 1;
         }
-	msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        msg = (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -l -p ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
