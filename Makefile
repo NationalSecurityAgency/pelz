@@ -88,6 +88,12 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/util.c \
 		 src/util/pelz_io.c
 
+App_Cpp_Test_Files := test/src/pelz_test.c \
+		 test/src/util/enclave_test_suite.c \
+		 test/src/util/pelz_json_parser_test_suite.c \
+	 	 test/src/util/util_test_suite.c \
+		 test/src/util/test_helper_functions.c	 
+
 App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED
@@ -112,6 +118,8 @@ ifneq ($(SGX_MODE), HW)
 else
 	App_Link_Flags += -lsgx_uae_service
 endif
+
+App_Name_Test    := pelz-test
 
 App_Name_Service := pelz-service
 
@@ -173,7 +181,7 @@ all: $(App_Name) $(Enclave_Name)
 	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
 	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
 else
-all: bin/$(App_Name_Service) bin/$(App_Name_Pipe) sgx/$(Signed_Enclave_Name)
+all: pre bin/$(App_Name_Service) bin/$(App_Name_Pipe) test/bin/$(App_Name_Test) sgx/$(Signed_Enclave_Name)
 endif
 
 run: all
@@ -191,6 +199,10 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
+
+test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Itest/include -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread -lcunit
+	@echo "LINK =>  $@"
 
 bin/$(App_Name_Service): $(App_Service_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
@@ -241,8 +253,21 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
+.PHONY: pre
+
+pre:
+	@mkdir -p bin
+	@mkdir -p test/bin
+	@mkdir -p test/log
+
+
+.PHONY: test
+
+test: all
+	@./test/bin/pelz-test 2> /dev/null
+
 .PHONY: clean
 
 clean:
-	@rm -f bin/pelz bin/pelz-service sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o
+	@rm -f bin/pelz bin/pelz-service test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
 

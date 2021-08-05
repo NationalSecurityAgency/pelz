@@ -1,11 +1,12 @@
 enclave {
 	from "sgx_tsgxssl.edl" import *;
 	from "sgx_pthread.edl" import *;
+        include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "key_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
-	include "util.h"
+        include "util.h"
 	trusted {
 	public int key_table_init(void);
 	public int key_table_destroy(void);
