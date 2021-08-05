@@ -160,7 +160,14 @@ int main(int argc, char **argv)
           memcpy(path_id, argv[arg_index + 3], path_id_size);
         }
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
-        msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        if (file_check(path_id))
+        {
+          printf("Invalid <path> provided (file inassesible)\n");
+	  free(path_id);
+	  free(output);
+	  return 1;
+	}
+	msg = (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -l -c ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
@@ -188,7 +195,14 @@ int main(int argc, char **argv)
           memcpy(path_id, argv[arg_index + 3], path_id_size);
         }
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
-        msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        if (file_check(path_id))
+	{
+          printf("Invalid <path> provided (file inassesible)\n");
+          free(path_id);
+          free(output);
+          return 1;
+        }
+	msg = (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -l -p ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
@@ -272,7 +286,14 @@ int main(int argc, char **argv)
           memcpy(path_id, argv[arg_index + 3], path_id_size);
         }
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
-        msg = (char *) calloc((12 + path_id_size), sizeof(char));
+        if (file_check(path_id))
+        {
+          printf("Invalid <path> provided (file inassesible)\n");
+          free(path_id);
+          free(output);
+          return 1;
+        }
+        msg= (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -r -c ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
@@ -307,6 +328,13 @@ int main(int argc, char **argv)
         memcpy(path_id, argv[arg_index + 2], path_id_size);
       }
       pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
+      if (file_check(path_id))
+      {
+        printf("Invalid <path> provided (file inassesible)\n");
+        free(path_id);
+        free(output);
+        return 1;
+      }
       free(path_id);
       if ((output != NULL) && (output_size != 0))
       {
