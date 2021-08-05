@@ -96,12 +96,12 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   {
     char *filename = NULL;
 
-    // The magic 5 here is derived from the uriparser documentation. It says 
+    // The magic 4 here is derived from the uriparser documentation. It says 
     // the length of the filename returned by uriUriStringToUnixFilenameA
-    // will be 6 bytes less than the length of the length of the input
+    // will be 5 bytes less than the length of the length of the input
     // uri string including its null terminator. Since key_id_len doesn't include
-    // space for a null terminator that means we offset by 5.
-    filename = (char *) malloc(key_id_len - 5);
+    // space for a null terminator that means we offset by 4.
+    filename = (char *) malloc(key_id_len - 4);
     if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
     {
       pelz_log(LOG_ERR, "Failed to parce key file name");
