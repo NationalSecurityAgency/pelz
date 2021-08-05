@@ -1,5 +1,8 @@
 #include <string.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -8,6 +11,55 @@
 #include "pelz_io.h"
 #include "pelz_request_handler.h"
 #include "pelz_thread.h"
+
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+
+#define PELZFIFO "/tmp/pelzfifo"
+#define BUFSIZE 1024
+#define MODE 0600
+
+void* fifo_thread_process(void *arg)
+{
+  ThreadArgs *threadArgs = (ThreadArgs *) arg;
+  pthread_mutex_t lock = threadArgs->lock;
+
+  int fd;
+  int ret;
+  char buf[BUFSIZE];
+
+  if (mkfifo(PELZFIFO, MODE) == 0)
+  {
+    pelz_log(LOG_INFO, "Pipe created successfully");
+  }
+  else
+  {
+    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+  }
+
+  do
+  {
+    fd = open(PELZFIFO, O_RDONLY);
+    ret = read(fd, buf, sizeof(buf));
+    if(ret < 0)
+    {
+       pelz_log(LOG_ERR, "Pipe read failed");
+    }
+    close(fd);
+    if (ret > 0) 
+    {
+      pthread_mutex_lock(&lock);
+      if (read_pipe(buf) == 1)
+      {
+        pthread_mutex_unlock(&lock);
+        break;
+      }
+      pthread_mutex_unlock(&lock);
+    }
+  } while(true);
+  global_pipe_reader_active = false;
+}
 
 void thread_process(void *arg)
 {
@@ -60,7 +112,7 @@ void thread_process(void *arg)
     free_charbuf(&data_in);
 
     pthread_mutex_lock(&lock);
-    status = pelz_request_handler(request_type, key_id, data, &output);
+    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
     pthread_mutex_unlock(&lock);
     free_charbuf(&data);
 

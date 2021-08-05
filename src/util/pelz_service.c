@@ -14,6 +14,8 @@
 #include "pelz_io.h"
 #include "pelz_thread.h"
 
+bool global_pipe_reader_active = true;
+
 static void *thread_process_wrapper(void *arg)
 {
   thread_process(arg);
@@ -25,6 +27,7 @@ int pelz_service(int max_requests)
   int socket_id;
   int socket_listen_id;
   pthread_t tid[max_requests];
+  ThreadArgs threadArgs;
 
   socket_id = 0;
 
@@ -37,6 +40,14 @@ int pelz_service(int max_requests)
   {
     pelz_log(LOG_ERR, "Socket Initialization Error");
     return (1);
+  }
+
+  threadArgs.lock = lock;
+  pthread_t fifo_thread;
+  if(pthread_create(&fifo_thread, NULL, fifo_thread_process, &threadArgs))
+  {
+    pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
+    return 1;
   }
 
   do
@@ -57,8 +68,6 @@ int pelz_service(int max_requests)
       continue;
     }
 
-    ThreadArgs threadArgs;
-
     threadArgs.lock = lock;
     threadArgs.socket_id = socket_id;
     if (pthread_create(&tid[socket_id], NULL, thread_process_wrapper, &threadArgs) != 0)
@@ -70,7 +79,9 @@ int pelz_service(int max_requests)
 
     pelz_log(LOG_INFO, "Thread %d, %d", (int) tid[socket_id], socket_id);
   }
-  while (socket_listen_id >= 0 && socket_id <= (max_requests + 1));
+  while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
+
+  pelz_log(LOG_INFO, "Exit Pelz Program");
 
   //Close and Teardown Socket before ending program
   pelz_key_socket_teardown(&socket_listen_id);

@@ -11,6 +11,12 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#ifndef PELZ_SGX_UNTRUSTED
 /**
  * <pre>
  *
@@ -48,5 +54,9 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
  */
 int aes_keywrap_3394nopad_decrypt(unsigned char *aes_key,
   size_t key_len, unsigned char *inData, size_t inData_len, unsigned char **outData, size_t * outData_len);
+#endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif

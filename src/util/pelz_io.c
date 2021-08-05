@@ -5,10 +5,8 @@
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
-
-#if !defined(PELZ_SGX_TRUSTED)
 #include <uriparser/Uri.h>
-#endif
+#include <fcntl.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -17,7 +15,12 @@
 #include "pelz_request_handler.h"
 #include "util.h"
 
-#ifdef PELZ_SGX_UNTRUSTED
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+
+#define PELZFIFO "/tmp/pelzfifo"
+
 void ocall_malloc(size_t size, char **buf)
 {
   *buf = (char *) malloc(size);
@@ -28,7 +31,6 @@ void ocall_free(void *ptr, size_t len)
   secure_memset(ptr, 0, len);
   free(ptr);
 }
-#endif
 
 int get_file_ext(charbuf buf, int *ext)
 {
@@ -85,6 +87,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   if (uriParseSingleUriA(&key_id_data, (const char *) key_uri_to_parse, &error_pos) != URI_SUCCESS
     || key_id_data.scheme.first == NULL || key_id_data.scheme.afterLast == NULL || error_pos != NULL)
   {
+    pelz_log(LOG_ERR, "Key ID URI Parse Error");
     free(key_uri_to_parse);
     return (1);
   }
@@ -93,14 +96,15 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   {
     char *filename = NULL;
 
-    // The magic 5 here is derived from the uriparser documentation. It says 
+    // The magic 4 here is derived from the uriparser documentation. It says 
     // the length of the filename returned by uriUriStringToUnixFilenameA
-    // will be 6 bytes less than the length of the length of the input
+    // will be 5 bytes less than the length of the length of the input
     // uri string including its null terminator. Since key_id_len doesn't include
-    // space for a null terminator that means we offset by 5.
-    filename = (char *) malloc(key_id_len - 5);
+    // space for a null terminator that means we offset by 4.
+    filename = (char *) malloc(key_id_len - 4);
     if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
     {
+      pelz_log(LOG_ERR, "Failed to parce key file name");
       uriFreeUriMembersA(&key_id_data);
       free(filename);
       free(key_uri_to_parse);
@@ -111,7 +115,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
 
     if (key_key_f == NULL)
     {
-      pelz_log(LOG_ERR, "Failed to read key file %s\n", filename);
+      pelz_log(LOG_ERR, "Failed to read key file %s", filename);
       uriFreeUriMembersA(&key_id_data);
       free(filename);
       return (1);
@@ -123,7 +127,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     // been a problem.
     if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
     {
-      pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
+      pelz_log(LOG_ERR, "Error: Failed to fully read key file");
       secure_memset(tmp_key, 0, *key_len);
       uriFreeUriMembersA(&key_id_data);
       fclose(key_key_f);
@@ -136,6 +140,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   }
   else
   {
+    pelz_log(LOG_ERR, "Scheme not supported");
     uriFreeUriMembersA(&key_id_data);
     free(key_uri_to_parse);
     return (1);
@@ -150,17 +155,17 @@ int file_check(char *file_path)
   pelz_log(LOG_DEBUG, "File Check Key ID: %s", file_path);
   if (file_path == NULL)
   {
-    pelz_log(LOG_ERR, "No file path provided.");
+    pelz_log(LOG_DEBUG, "No file path provided.");
     return (1);
   }
   else if (access(file_path, F_OK) == -1)
   {
-    pelz_log(LOG_ERR, "File cannot be found.");
+    pelz_log(LOG_DEBUG, "File cannot be found.");
     return (1);
   }
   else if (access(file_path, R_OK) == -1)
   {
-    pelz_log(LOG_ERR, "File cannot be read.");
+    pelz_log(LOG_DEBUG, "File cannot be read.");
     return (1);
   }
   return (0);
@@ -265,7 +270,7 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 
   if ((bio_mem = BIO_new_mem_buf(base64_data, base64_data_size)) == NULL)
   {
-    pelz_log(LOG_ERR, "Create source BIO error.\n");
+    pelz_log(LOG_ERR, "Create source BIO error.");
     BIO_free_all(bio64);
     return 1;
   }
@@ -275,7 +280,7 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
 
   if (bytes_read < 0)
   {
-    pelz_log(LOG_ERR, "Error reading bytes from BIO chain.\n");
+    pelz_log(LOG_ERR, "Error reading bytes from BIO chain.");
     BIO_free_all(bio64);
     return 1;
   }
@@ -285,3 +290,94 @@ int decodeBase64Data(unsigned char *base64_data, size_t base64_data_size, unsign
   BIO_free_all(bio64);
   return (0);
 }
+
+int write_to_pipe(char *msg)
+{
+  int fd;
+  int ret;
+
+  if (file_check((char*) PELZFIFO))
+  {
+    pelz_log(LOG_DEBUG, "Pipe not found");
+    printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
+    return 1;
+  }
+
+  fd = open(PELZFIFO, O_WRONLY);
+  if (fd == -1)
+  {
+    pelz_log(LOG_ERR, "Error opening pipe");
+    return 1;  
+  }
+  ret = write(fd, msg, strlen(msg)+1);
+  if (close(fd) == -1)
+    pelz_log(LOG_ERR, "Error closing pipe");
+  if (ret == -1)
+  {
+    pelz_log(LOG_ERR, "Error writing to pipe");
+    return 1;
+  }
+  printf("Pelz command options sent to pelz-service\n");
+  return 0;
+}
+
+int read_pipe(char *msg)
+{
+  int ret;
+  int len;
+  char opt;
+  charbuf key_id;
+
+  if (memcmp(msg, "pelz -", 6) == 0)
+  {
+    opt = msg[6];
+    pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(msg), opt,  msg);
+    switch (opt)
+    {
+    case 't':
+      key_table_destroy(eid, &ret);
+      if (ret)
+      {
+        pelz_log(LOG_ERR, "Key Table Destroy Failure");
+        return (1);
+      }
+      pelz_log(LOG_INFO, "Key Table Destroyed");
+      key_table_init(eid, &ret);
+      if (ret)
+      {
+        pelz_log(LOG_ERR, "Key Table Init Failure");
+        return (1);
+      }
+      pelz_log(LOG_INFO, "Key Table Re-Initialized");
+      return 0;
+    case 'w':
+      len = strcspn(msg, "\n");
+      key_id = new_charbuf(len - 8); //the number 8 is used because it the number of chars in "pelz -& "
+      memcpy(key_id.chars, &msg[8], (key_id.len));
+      key_table_delete(eid, &ret, key_id);
+      if(ret)
+        pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
+      else
+        pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
+      return 0;
+    case 'e':
+      if (unlink(PELZFIFO) == 0)
+        pelz_log(LOG_INFO, "Pipe deleted successfully");
+      else
+        pelz_log(LOG_INFO, "Failed to delete the pipe");
+      return 1;
+    default:
+      pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+      return 0;
+    }
+  }
+  else
+  {
+    if (strnlen(msg, 10) == 10)
+      pelz_log(LOG_ERR, "Pipe command invalid: %.*s", 10, msg);
+    else
+      pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+  }
+  return 0;
+}
+
