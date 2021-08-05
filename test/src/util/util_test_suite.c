@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <CUnit/CUnit.h>
 
 #include <charbuf.h>
 #include <pelz_log.h>
@@ -49,15 +50,15 @@ void test_file_check(void)
 
   // real file input path without read permission should error
   chmod("testfile", 0333);
-  CU_ASSERT(file_check("testfile") == 1);
+  CU_ASSERT(file_check((char*) "testfile") == 1);
 
   // real file input path with read permission should verify successfully
   chmod("testfile", 0444);
-  CU_ASSERT(file_check("testfile") == 0);
+  CU_ASSERT(file_check((char*) "testfile") == 0);
 
   // non-existing input file path should error
   remove("testfile");
-  CU_ASSERT(file_check("testfile") == 1);
+  CU_ASSERT(file_check((char*) "testfile") == 1);
 }
 
 /*
