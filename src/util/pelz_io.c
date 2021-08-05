@@ -333,6 +333,16 @@ int read_pipe(char *msg)
   charbuf key_id;
   charbuf path;
 
+/*
+ *  -e    exit     Terminate running pelz-service
+ *  -l    load     Loads a value of type <type> (currently either cert or private)
+ *  -c    cert     Server certificate
+ *  -p    private  Private key for connections to key servers
+ *  -r    remove   Removes a value of type <target> (currently either cert or key)
+ *  -k    key      Key with a specified id
+ *  -a    all      Indicate all key or cert
+ */
+
   if (memcmp(msg, "pelz -", 6) == 0)
   {
     opt = msg[6];
