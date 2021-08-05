@@ -193,7 +193,7 @@ endif
 ######## App Objects ########
 
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
-	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl --search-path . --search-path include --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
+	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl --search-path . --search-path include --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include --search-path ../kmyth/sgx/kmyth_enclave
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -215,10 +215,14 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
 ######## Enclave Objects ########
 
 sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
-	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
+	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include --search-path ../kmyth/sgx/kmyth_enclave
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/kmyth_enclave_trusted.o: kmyth/sgx/kmyth_enclave/kmyth_enclave_trusted.cpp
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -242,7 +246,7 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o
+sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o sgx/kmyth_enclave_trusted.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 

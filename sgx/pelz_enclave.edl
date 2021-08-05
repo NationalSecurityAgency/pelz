@@ -8,7 +8,6 @@ enclave {
 	include "pelz_io.h"
 	include "charbuf.h"
 	include "util.h"
-	include "kmyth_enclave.h"
 trusted {
 	public int key_table_init(void);
 	public int key_table_destroy(void);
