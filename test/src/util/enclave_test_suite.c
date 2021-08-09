@@ -62,7 +62,7 @@ void test_table_request(void)
   charbuf output;
   const char *prefix = "file:";
   const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
-  const char *tmp_id[2] = {"/test/key7.txt", "/test/key1txt"} ;
+  const char *tmp_id[2] = { "/test/key7.txt", "/test/key1txt" };
 
   //Initial data_in values
   data_in = new_charbuf(32);
@@ -122,7 +122,7 @@ void test_table_request(void)
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
- 
+
   //Check that non-valid decryption key returns correct error status
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
   request_type = REQ_DEC;
@@ -154,14 +154,15 @@ void test_table_requestDelete(void)
   charbuf output;
 
   const char *prefix = "file:";
+
   const char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
     "/test/key4.txt", "/test/key5.txt", "/test/key6.txt"
   };
-  const char *tmp_id[2] = {"/test/key.txt", "/test/key1txt"};
+  const char *tmp_id[2] = { "/test/key.txt", "/test/key1txt" };
 
   //Initial data_in values
   data_in = new_charbuf(32);
-  memcpy(data_in.chars, "abcdefghijklmnopqrstuvwxyz012345", data_in.len);  
+  memcpy(data_in.chars, "abcdefghijklmnopqrstuvwxyz012345", data_in.len);
 
   pelz_log(LOG_DEBUG, "Test Request and Delet Functions Start");
   key_table_init(eid, &ret);

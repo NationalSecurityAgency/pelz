@@ -20,7 +20,7 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
-void* fifo_thread_process(void *arg)
+void *fifo_thread_process(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
   pthread_mutex_t lock = threadArgs->lock;
@@ -49,11 +49,11 @@ void* fifo_thread_process(void *arg)
     ret = read(fd, buf, sizeof(buf));
     if (ret < 0)
     {
-       pelz_log(LOG_ERR, "Pipe read failed");
+      pelz_log(LOG_ERR, "Pipe read failed");
     }
     if (close(fd) == -1)
       pelz_log(LOG_ERR, "Error closing pipe");
-    if (ret > 0) 
+    if (ret > 0)
     {
       pthread_mutex_lock(&lock);
       if (read_pipe(buf) == 1)
@@ -63,7 +63,8 @@ void* fifo_thread_process(void *arg)
       }
       pthread_mutex_unlock(&lock);
     }
-  } while(true);
+  }
+  while (true);
   global_pipe_reader_active = false;
 }
 

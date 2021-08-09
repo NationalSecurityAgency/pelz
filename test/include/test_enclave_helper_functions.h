@@ -41,4 +41,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-#endif /* TEST_ENCLAVE_HELPER_FUNCTIONS_H_ */
+#endif                          /* TEST_ENCLAVE_HELPER_FUNCTIONS_H_ */
