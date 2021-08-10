@@ -44,7 +44,8 @@ int pelz_service(int max_requests)
 
   threadArgs.lock = lock;
   pthread_t fifo_thread;
-  if(pthread_create(&fifo_thread, NULL, fifo_thread_process, &threadArgs))
+
+  if (pthread_create(&fifo_thread, NULL, fifo_thread_process, &threadArgs))
   {
     pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
     return 1;

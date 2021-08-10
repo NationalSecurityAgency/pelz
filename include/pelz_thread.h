@@ -35,7 +35,6 @@ void thread_process(void *arg);
  *
  * @return none
  */
-void* fifo_thread_process(void *arg);
-
+void *fifo_thread_process(void *arg);
 
 #endif

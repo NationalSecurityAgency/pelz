@@ -14,7 +14,7 @@ sgx_enclave_id_t eid = 0;
 
 static void load_usage()
 {
-  fprintf(stdout,    
+  fprintf(stdout,
     "load <type> <path>              Loads a value of type <type> (currently either cert or private)\n"
     "                                into the pelz-service enclave. These files must be formatted as\n"
     "                                a .ski or .nkl file.\n"
@@ -26,7 +26,7 @@ static void load_usage()
 
 static void remove_usage()
 {
-  fprintf(stdout,    
+  fprintf(stdout,
     "remove <target> <id> [options]  Removes a value of type <target> (currently either cert or key)\n"
     "                                from memory within the pelz-service enclave. The -a option may\n"
     "                                be used to drop all server certificates or all keys.\n"
@@ -40,7 +40,7 @@ static void remove_usage()
 
 static void seal_usage()
 {
-  fprintf(stdout,    
+  fprintf(stdout,
     "seal <path> [options]           Seals the input file to the pelz-service enclave. This creates a .nkl\n"
     "                                file. This can also be used in conjunction with the TPM to double\n"
     "                                seal a file and create a .ski file as output.\n"
@@ -293,7 +293,7 @@ int main(int argc, char **argv)
           free(output);
           return 1;
         }
-        msg= (char *) calloc((12 + path_id_size), sizeof(char));
+        msg = (char *) calloc((12 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -r -c ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
@@ -349,7 +349,7 @@ int main(int argc, char **argv)
         printf("Kmyth TPM call not added\n");
       }
     }
-    else 
+    else
     {
       seal_usage();
       free(output);
