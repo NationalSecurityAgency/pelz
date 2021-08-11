@@ -7,6 +7,8 @@
 #include <openssl/buffer.h>
 #include <uriparser/Uri.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <kmyth/kmyth.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -328,10 +330,17 @@ int write_to_pipe(char *msg)
 int read_pipe(char *msg)
 {
   int ret;
-  int len;
+  int len = 0;
   char opt;
+  char *path = NULL;
   charbuf key_id;
-  charbuf path;
+
+  uint8_t *nkl_data = NULL;
+  size_t nkl_data_len = 0;
+  char *authString = NULL;
+  size_t auth_string_len = 0;
+  const char *ownerAuthPasswd = "";
+  size_t oa_passwd_len = 0;
 
 /*
  *  -e    exit     Terminate running pelz-service
@@ -367,16 +376,32 @@ int read_pipe(char *msg)
       {
       case 'c':
         len = strcspn(msg, "\n");
-        path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -l -c "
-        memcpy(path.chars, &msg[11], (path.len));
-        free_charbuf(&path);
+        path = (char *) malloc((len - 10) * sizeof(char));  //the number 11 is used because it the number of chars in "pelz -l -c "
+        memcpy(path, &msg[11], len);
+        if (tpm2_kmyth_unseal_file(path, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+        {
+          pelz_log(LOG_ERR, "TPM unseal failed");
+          free(path);
+          return 0;
+        }
+        free(nkl_data);
+        free(path);
         pelz_log(LOG_INFO, "Load cert call not added");
         return 0;
       case 'p':
         len = strcspn(msg, "\n");
-        path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -l -p "
-        memcpy(path.chars, &msg[11], (path.len));
-        free_charbuf(&path);
+        path = (char *) malloc((len - 10) * sizeof(char));  //the number 10 is used because it the number of chars in "pelz -l -p " - 1
+        memcpy(path, &msg[11], len);
+        if (tpm2_kmyth_unseal_file(path, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+        {
+          pelz_log(LOG_ERR, "TPM unseal failed");
+          free(path);
+          return 0;
+        }
+        free(nkl_data);
+        free(path);
         pelz_log(LOG_INFO, "Load private call not added");
         return 0;
       default:
@@ -434,9 +459,18 @@ int read_pipe(char *msg)
         else
         {
           len = strcspn(msg, "\n");
-          path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -r -c "
-          memcpy(path.chars, &msg[11], (path.len));
-          free_charbuf(&path);
+          path = (char *) malloc((len - 10) * sizeof(char));  //the number 10 is used because it the number of chars in "pelz -r -c " - 1 
+          memcpy(path, &msg[11], len);
+          if (tpm2_kmyth_unseal_file(path, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+              (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+          {
+            pelz_log(LOG_ERR, "TPM unseal failed");
+            free(path);
+            return 0;
+          }
+	  
+          free(nkl_data);
+          free(path);
           pelz_log(LOG_INFO, "Remove cert call not added");
           return 0;
         }
