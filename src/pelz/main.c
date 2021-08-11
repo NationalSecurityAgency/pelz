@@ -82,7 +82,8 @@ int main(int argc, char **argv)
   set_app_version("0.0.0");
   set_applog_max_msg_len(1024);
   set_applog_path("/var/log/pelz.log");
-  set_applog_severity_threshold(LOG_WARNING);
+  set_applog_severity_threshold(LOG_INFO);
+  set_applog_output_mode(0);
 
   int options;
   int option_index;
@@ -110,7 +111,6 @@ int main(int argc, char **argv)
       return 0;
     case 'd':
       set_applog_severity_threshold(LOG_DEBUG);
-      set_applog_output_mode(0);
       arg_index = arg_index + 1;
       break;
     case 't':
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
         if (file_check(path_id))
         {
-          printf("File %s is invalid.\n", path_id);
+          pelz_log(LOG_INFO, "File %s is invalid.", path_id);
           free(path_id);
           free(output);
           return 1;
@@ -197,7 +197,7 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
         if (file_check(path_id))
         {
-          printf("File %s is invalid.\n", path_id);
+          pelz_log(LOG_INFO, "File %s is invalid.", path_id);
           free(path_id);
           free(output);
           return 1;
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
         if (file_check(path_id))
         {
-          printf("File %s is invalid.\n", path_id);
+          pelz_log(LOG_INFO, "File %s is invalid.", path_id);
           free(path_id);
           free(output);
           return 1;
@@ -330,7 +330,7 @@ int main(int argc, char **argv)
       pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
       if (file_check(path_id))
       {
-        printf("File %s is invalid.\n", path_id);
+        pelz_log(LOG_INFO, "File %s is invalid.", path_id);
         free(path_id);
         free(output);
         return 1;
@@ -338,15 +338,15 @@ int main(int argc, char **argv)
       free(path_id);
       if ((output != NULL) && (output_size != 0))
       {
-        printf("SGX seal to output call not added\n");
+        pelz_log(LOG_INFO, "SGX seal to output call not added");
       }
       else
       {
-        printf("SGX seal call not added\n");
+        pelz_log(LOG_INFO, "SGX seal call not added");
       }
       if (tpm)
       {
-        printf("Kmyth TPM call not added\n");
+        pelz_log(LOG_INFO, "Kmyth TPM call not added");
       }
     }
     else

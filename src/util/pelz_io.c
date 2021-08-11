@@ -299,7 +299,7 @@ int write_to_pipe(char *msg)
   if (file_check((char *) PELZFIFO))
   {
     pelz_log(LOG_DEBUG, "Pipe not found");
-    printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
+    pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
     return 1;
   }
 
@@ -310,7 +310,7 @@ int write_to_pipe(char *msg)
       pelz_log(LOG_INFO, "Pipe deleted successfully");
     else
       pelz_log(LOG_INFO, "Failed to delete the pipe");
-    printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
+    pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
     return 1;
   }
   ret = write(fd, msg, strlen(msg) + 1);
@@ -321,7 +321,7 @@ int write_to_pipe(char *msg)
     pelz_log(LOG_DEBUG, "Error writing to pipe");
     return 1;
   }
-  printf("Pelz command options sent to pelz-service\n");
+  pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
   return 0;
 }
 
