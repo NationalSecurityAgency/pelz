@@ -22,10 +22,10 @@ int utility_suite_add_tests(CU_pSuite suite)
   {
     return 1;
   }
-  if (NULL == CU_add_test(suite, "Verify Key Load with differing inputs", test_key_load))
-  {
-    return 1;
-  }
+  /* if (NULL == CU_add_test(suite, "Verify Key Load with differing inputs", test_key_load)) */
+  /* { */
+  /*   return 1; */
+  /* } */
   if (NULL == CU_add_test(suite, "Test decode and encode Base64Data", test_decodeEncodeBase64Data))
   {
     return 1;
@@ -64,16 +64,16 @@ void test_file_check(void)
 /*
  * Tests accuracy of function file_check
  */
-void test_key_load(void)
-{
-  KeyEntry key_values;
+/* void test_key_load(void) */
+/* { */
+/*   KeyEntry key_values; */
 
-  pelz_log(LOG_DEBUG, "Start Key Load Test");
-  key_values.key_id = copy_CWD_to_id("file:", "/test/key1.txt");
-  CU_ASSERT(key_load(key_values.key_id.len, key_values.key_id.chars, &key_values.key.len, &key_values.key.chars) == 0);
-  free_charbuf(&key_values.key_id);
-  free_charbuf(&key_values.key);
-}
+/*   pelz_log(LOG_DEBUG, "Start Key Load Test"); */
+/*   key_values.key_id = copy_CWD_to_id("file:", "/test/key1.txt"); */
+/*   CU_ASSERT(key_load(key_values.key_id.len, key_values.key_id.chars, &key_values.key.len, &key_values.key.chars) == 0); */
+/*   free_charbuf(&key_values.key_id); */
+/*   free_charbuf(&key_values.key); */
+/* } */
 
 void test_decodeEncodeBase64Data(void)
 {

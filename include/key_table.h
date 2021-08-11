@@ -30,45 +30,6 @@ extern "C"
 {
 #endif
 
-#ifndef PELZ_SGX_UNTRUSTED
-/**
- * <pre>
- * This function initializes a key table for lookup.
- * </pre>
- *
- * @param[in] key_table The pointer for key table to be initialized
- * @param[out] key_table The initialized key table
- *
- * @return 0 on success, 1 on error
- */
-  int key_table_init(void);
-
-/**
- * <pre>
- * This function destroys the key table.
- * </pre>
- *
- * @param[in] key_table The key table to be destroyed
- *
- * @return 0 on success, 1 on error
- */
-  int key_table_destroy(void);
-
-/**
- * <pre>
- * This function to delete values in hash table based on location in key_id.
- * </pre>
- *
- * @param[in] key_id.chars Key identifier assumed to be null terminated
- * @param[in] key_id.len The length of the key identifier
- * @param[in] key_table The key table that the key needs to be deleted from
- * @param[out] key_table The key table without the deleted key
- *
- * @return 0 on success, 1 on error
- */
-  int key_table_delete(charbuf key_id);
-#endif
-
 /**
  * <pre>
  * This function to add values in hash table based on location in key_id.
