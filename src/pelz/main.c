@@ -5,6 +5,11 @@
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <ctype.h>
+#include <sys/stat.h>
+#include <kmyth/kmyth.h>
 
 #include "pelz_log.h"
 #include "pelz_io.h"
@@ -90,8 +95,8 @@ int main(int argc, char **argv)
   int arg_index = 0;
   bool all = false;
   bool tpm = false;
-  char *output = NULL;
-  size_t output_size = 0;
+  char *outPath = NULL;
+  size_t outPath_size = 0;
   char *path_id = NULL;
   size_t path_id_size = 0;
   char *msg;
@@ -122,14 +127,14 @@ int main(int argc, char **argv)
       arg_index = arg_index + 1;
       break;
     case 'o':
-      output_size = strlen(optarg) + 1;
-      if (output_size > 1)
+      outPath_size = strlen(optarg) + 1;
+      if (outPath_size > 1)
       {
-        output = (char *) malloc(output_size * sizeof(char));
-        memcpy(output, optarg, output_size);
+        outPath = (char *) malloc(outPath_size * sizeof(char));
+        memcpy(outPath, optarg, outPath_size);
       }
       arg_index = arg_index + 2;
-      pelz_log(LOG_DEBUG, "Output option: %.*s", (int) output_size, output);
+      pelz_log(LOG_DEBUG, "OutPath option: %.*s", (int) outPath_size, outPath);
       break;
     default:
       return 1;
@@ -164,7 +169,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_INFO, "File %s is invalid.", path_id);
           free(path_id);
-          free(output);
+          free(outPath);
           return 1;
         }
         msg = (char *) calloc((12 + path_id_size), sizeof(char));
@@ -178,7 +183,7 @@ int main(int argc, char **argv)
       else
       {
         load_usage();
-        free(output);
+        free(outPath);
         return 1;
       }
     }
@@ -199,7 +204,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_INFO, "File %s is invalid.", path_id);
           free(path_id);
-          free(output);
+          free(outPath);
           return 1;
         }
         msg = (char *) calloc((12 + path_id_size), sizeof(char));
@@ -213,14 +218,14 @@ int main(int argc, char **argv)
       else
       {
         load_usage();
-        free(output);
+        free(outPath);
         return 1;
       }
     }
     else
     {
       load_usage();
-      free(output);
+      free(outPath);
       return 1;
     }
   }
@@ -260,7 +265,7 @@ int main(int argc, char **argv)
       else
       {
         remove_usage();
-        free(output);
+        free(outPath);
         return 1;
       }
     }
@@ -290,7 +295,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_INFO, "File %s is invalid.", path_id);
           free(path_id);
-          free(output);
+          free(outPath);
           return 1;
         }
         msg = (char *) calloc((12 + path_id_size), sizeof(char));
@@ -304,14 +309,14 @@ int main(int argc, char **argv)
       else
       {
         remove_usage();
-        free(output);
+        free(outPath);
         return 1;
       }
     }
     else
     {
       remove_usage();
-      free(output);
+      free(outPath);
       return 1;
     }
   }
@@ -332,37 +337,176 @@ int main(int argc, char **argv)
       {
         pelz_log(LOG_INFO, "File %s is invalid.", path_id);
         free(path_id);
-        free(output);
+        free(outPath);
         return 1;
       }
-      free(path_id);
-      if ((output != NULL) && (output_size != 0))
+
+      /*
+       * uint8_t* sgx_seal = NULL;
+       * size_t sgx_seal_len = 0;
+       *
+       * if (sgx_seal_file(path_id, &sgx_seal, &sgx_seal_len)
+       * {
+       *   pelz_log(LOG_ERROR, "SGX seal failed");
+       *   free(path_id);
+       *   free(outPath);
+       *   return 1;
+       * }
+       */
+
+      uint8_t *tpm_seal = NULL;
+      size_t tpm_seal_len = 0;
+
+      if (tpm)
       {
-        pelz_log(LOG_INFO, "SGX seal to output call not added");
+        //pelz_log(LOG_INFO, "Kmyth TPM call not added");
+        char *authString = NULL;
+        size_t auth_string_len = 0;
+        const char *ownerAuthPasswd = "";
+        size_t oa_passwd_len = 0;
+        char *pcrsString = NULL;
+        char *cipherString = NULL;
+        int *pcrs = NULL;
+        int pcrs_len = 0;
+
+        //if (tpm2_kmyth_seal(sgx_seal, sgx_seal_len, &tpm_seal, &tpm_seal_len,
+        if (tpm2_kmyth_seal_file(path_id, &tpm_seal, &tpm_seal_len, (uint8_t *) authString, auth_string_len,
+            (uint8_t *) ownerAuthPasswd, oa_passwd_len, pcrs, pcrs_len, cipherString))
+        {
+          pelz_log(LOG_ERR, "Kmyth TPM seal failed");
+          free(pcrs);
+          free(path_id);
+          free(outPath);
+          free(tpm_seal);
+          return 1;
+        }
+        free(pcrs);
+      }
+
+      if ((outPath != NULL) && (outPath_size != 0))
+      {
+        pelz_log(LOG_INFO, "SGX seal to outPath call not added");
+
+        if (tpm)
+        {
+          if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
+          {
+            pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
+            free(outPath);
+            free(tpm_seal);
+            return 1;
+          }
+          free(tpm_seal);
+        }
+        else
+        {
+          /*
+             if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
+             {
+             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
+             free(outPath);
+             free(sgx_seal);
+             return 1;
+             }
+             free(sgx_seal);
+           */
+          pelz_log(LOG_INFO, "SGX seal call not added");
+        }
       }
       else
       {
-        pelz_log(LOG_INFO, "SGX seal call not added");
+        char ext[4];            // 4 is the length of a file extension with the period
+
+        if (tpm)
+          memcpy(ext, ".ski", 4);
+        else
+          memcpy(ext, ".nkl", 4);
+
+        // If output file not specified, set output path to basename(inPath) with
+        // a .nkl extension in the directory that the application is being run from.
+        char *original_fn = basename(path_id);
+        char *temp_str = (char *) malloc((strlen(original_fn) + 5) * sizeof(char));
+
+        strncpy(temp_str, original_fn, strlen(original_fn));
+
+        // Remove any leading '.'s
+        while (*temp_str == '.')
+        {
+          memmove(temp_str, temp_str + 1, strlen(temp_str) - 1);
+        }
+        char *scratch;
+
+        // Everything beyond first '.' in original filename, with any leading
+        // '.'(s) removed, is treated as extension
+        temp_str = strtok_r(temp_str, ".", &scratch);
+
+        // Append file extension
+        strncat(temp_str, ext, 5);
+
+        outPath_size = strlen(temp_str) + 1;
+        // Make sure resultant default file name does not have empty basename
+        if (outPath_size < 6)
+        {
+          pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
+          free(temp_str);
+          return 1;
+        }
+        // Make sure default filename we constructed doesn't already exist
+        struct stat st = { 0 };
+        if (!stat(temp_str, &st))
+        {
+          pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", temp_str);
+          free(temp_str);
+          return 1;
+        }
+        // Go ahead and make the default value the output path
+        outPath = (char *) malloc(outPath_size * sizeof(char));
+        memcpy(outPath, temp_str, outPath_size);
+        free(temp_str);
+        pelz_log(LOG_WARNING, "output file not specified, default = %s", outPath);
+
+        if (tpm)
+        {
+          if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
+          {
+            pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
+            free(outPath);
+            free(tpm_seal);
+            return 1;
+          }
+          free(tpm_seal);
+        }
+        else
+        {
+          /*
+             if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
+             {
+             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
+             free(outPath);
+             free(sgx_seal);
+             return 1;
+             }
+             free(sgx_seal);
+           */
+          pelz_log(LOG_INFO, "SGX seal call not added");
+        }
       }
-      if (tpm)
-      {
-        pelz_log(LOG_INFO, "Kmyth TPM call not added");
-      }
+      free(path_id);
     }
     else
     {
       seal_usage();
-      free(output);
+      free(outPath);
       return 1;
     }
   }
   else
   {
     usage(argv[0]);
-    free(output);
+    free(outPath);
     return 1;
   }
 
-  free(output);
+  free(outPath);
   return 0;
 }
