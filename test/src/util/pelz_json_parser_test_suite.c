@@ -47,11 +47,11 @@ void test_encrypt_parser(void)
 
   //Valid Test Values
   const char *json_key_id = "file:/test/key1.txt";
-  int json_key_id_len = 19;
+  unsigned int json_key_id_len = 19;
   const char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
-  int enc_data_len = 45;
+  unsigned int enc_data_len = 45;
   const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
-  int dec_data_len = 57;
+  unsigned int dec_data_len = 57;
 
   //Building of a standard valid JSON request
   json = cJSON_CreateObject();
@@ -152,11 +152,11 @@ void test_decrypt_parser(void)
 
   //Valid Test Values
   const char *json_key_id = "file:/test/key1.txt";
-  int json_key_id_len = 19;
+  unsigned int json_key_id_len = 19;
   const char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
-  int enc_data_len = 45;
+  unsigned int enc_data_len = 45;
   const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
-  int dec_data_len = 57;
+  unsigned int dec_data_len = 57;
 
   //Building of a standard valid JSON request
   json = cJSON_CreateObject();
@@ -267,14 +267,14 @@ void test_request_decoder(void)
     "file:/test/key1.txt", "file:/test/key2.txt", "file:/test/key3.txt",
     "file:/test/key4.txt", "file:/test/key5.txt", "file:/test/key6.txt"
   };
-  int json_key_id_len = 19;
+  unsigned int json_key_id_len = 19;
 
   const char *enc_data[6] = {
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=\n",
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldY\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n",
     "QUJDREVGR0hJSktMTU5PUA==\n", "YWJjZGVmZ2hpamtsbW5vcA==\n"
   };
-  int enc_data_len[6] = {
+  unsigned int enc_data_len[6] = {
     45, 45, 33, 33, 25, 25
   };
   const char *dec_data[6] = {
@@ -283,7 +283,7 @@ void test_request_decoder(void)
     "+n4yYCmMXyNbyEtsJuFlBtkCbVDXhjVRON/osW5dbz8=\n", "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n",
     "K2YZ6dTyLpmXRseKg+wwlPUZCnFmYBEn\n", "K6iS75+hIrCNuo9LWeEhjDQ2L9miNR07\n"
   };
-  int dec_data_len[6] = {
+  unsigned int dec_data_len[6] = {
     57, 57, 45, 45, 33, 33
   };
 

@@ -52,13 +52,13 @@ void secure_free_charbuf(charbuf * buf)
   free_charbuf(buf);
 }
 
-int get_index_for_char(charbuf buf, char c, int index, int direction)
+int get_index_for_char(charbuf buf, char c, unsigned int index, int direction)
 {
   if (0 <= index && index < buf.len)
   {
     if (direction == 0)
     {
-      for (int i = index; i < buf.len; i++)
+      for (unsigned int i = index; i < buf.len; i++)
       {
         if (c == buf.chars[i])
           return (i);

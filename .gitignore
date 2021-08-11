@@ -1,2 +1,7 @@
 *.pem
-
+*.o
+*.so
+sgx/pelz_enclave_t.c
+sgx/pelz_enclave_t.h
+sgx/pelz_enclave_u.c
+sgx/pelz_enclave_u.h
