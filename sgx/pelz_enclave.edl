@@ -71,7 +71,7 @@ enclave {
  * Load key from location stated by Key ID
  * <pre>
  *
- * @param[in] key_id_len   the length of the key identifierr
+ * @param[in] key_id_len   the length of the key identifier
  * @param[in] key_id       a pointer to the key identifier
  * @param[out] key_len     the length of the loaded key
  * @param[out] key         a pointer to a pointer to the key, will be
