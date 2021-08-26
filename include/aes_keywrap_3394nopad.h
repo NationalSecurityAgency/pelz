@@ -16,7 +16,6 @@ extern "C"
 {
 #endif
 
-#ifndef PELZ_SGX_UNTRUSTED
 /**
  * <pre>
  *
@@ -33,8 +32,8 @@ extern "C"
  * @return 0 on success, 1 on error
  *
  */
-int aes_keywrap_3394nopad_encrypt(unsigned char *key,
-  size_t key_len, unsigned char *inData, size_t inData_len, unsigned char **outData, size_t * outData_len);
+  int aes_keywrap_3394nopad_encrypt(unsigned char *key,
+    size_t key_len, unsigned char *inData, size_t inData_len, unsigned char **outData, size_t * outData_len);
 
 /**
  * <pre>
@@ -52,9 +51,8 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
  * @return 0 on success, 1 on error
  *
  */
-int aes_keywrap_3394nopad_decrypt(unsigned char *aes_key,
-  size_t key_len, unsigned char *inData, size_t inData_len, unsigned char **outData, size_t * outData_len);
-#endif
+  int aes_keywrap_3394nopad_decrypt(unsigned char *aes_key,
+    size_t key_len, unsigned char *inData, size_t inData_len, unsigned char **outData, size_t * outData_len);
 
 #ifdef __cplusplus
 }

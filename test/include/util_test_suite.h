@@ -13,7 +13,6 @@
 int utility_suite_add_tests(CU_pSuite suite);
 
 //TESTS
-void test_key_load(void);
 void test_file_check(void);
 void test_decodeEncodeBase64Data(void);
 

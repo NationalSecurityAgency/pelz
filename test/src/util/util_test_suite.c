@@ -4,6 +4,7 @@
 
 #include "util_test_suite.h"
 #include "test_helper_functions.h"
+#include "pelz_enclave_u.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,10 +20,6 @@
 int utility_suite_add_tests(CU_pSuite suite)
 {
   if (NULL == CU_add_test(suite, "Verify File Exists With Access test", test_file_check))
-  {
-    return 1;
-  }
-  if (NULL == CU_add_test(suite, "Verify Key Load with differing inputs", test_key_load))
   {
     return 1;
   }
@@ -50,29 +47,15 @@ void test_file_check(void)
 
   // real file input path without read permission should error
   chmod("testfile", 0333);
-  CU_ASSERT(file_check((char*) "testfile") == 1);
+  CU_ASSERT(file_check((char *) "testfile") == 1);
 
   // real file input path with read permission should verify successfully
   chmod("testfile", 0444);
-  CU_ASSERT(file_check((char*) "testfile") == 0);
+  CU_ASSERT(file_check((char *) "testfile") == 0);
 
   // non-existing input file path should error
   remove("testfile");
-  CU_ASSERT(file_check((char*) "testfile") == 1);
-}
-
-/*
- * Tests accuracy of function file_check
- */
-void test_key_load(void)
-{
-  KeyEntry key_values;
-
-  pelz_log(LOG_DEBUG, "Start Key Load Test");
-  key_values.key_id = copy_CWD_to_id("file:", "/test/key1.txt");
-  CU_ASSERT(key_load(key_values.key_id.len, key_values.key_id.chars, &key_values.key.len, &key_values.key.chars) == 0);
-  free_charbuf(&key_values.key_id);
-  free_charbuf(&key_values.key);
+  CU_ASSERT(file_check((char *) "testfile") == 1);
 }
 
 void test_decodeEncodeBase64Data(void)

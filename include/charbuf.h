@@ -92,7 +92,7 @@ int printcharbuf(charbuf buf, int format);
  * @return index if char is contained in buf
  *         -1 if char is not found or invalid inputs
  */
-int get_index_for_char(charbuf buf, char c, int index, int direction);
+int get_index_for_char(charbuf buf, char c, unsigned int index, int direction);
 
 /**
  * <pre>
