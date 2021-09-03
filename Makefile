@@ -38,6 +38,9 @@ SGX_SSL_UNTRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_TRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_INCLUDE_PATH ?= /opt/intel/sgxssl/include/
 
+ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
+ENCLAVE_HEADER_UNTRUSTED ?= '""'
+
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
 else ifeq ($(findstring -m32, $(CXXFLAGS)), -m32)
@@ -96,7 +99,7 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 
 App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 
 
-App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED -Wall
+App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED -Wall -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -138,7 +141,7 @@ Crypto_Library_Name := sgx_tcrypto
 
 Enclave_Include_Paths := -Iinclude -Isgx/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SSL_INCLUDE_PATH) -Isgx
 
-Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths) -DPELZ_SGX_TRUSTED -Wall
+Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths) -DPELZ_SGX_TRUSTED -Wall -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED)
 Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++03 -nostdinc++ --include "tsgxsslio.h" -Wall
 Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_SSL_TRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) \
 	-Wl,--whole-archive -lsgx_tsgxssl \
@@ -193,7 +196,7 @@ endif
 ######## App Objects ########
 
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
-	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl --search-path . --search-path include --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
+	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl --search-path . --search-path include --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include --search-path ../kmyth/sgx/kmyth_enclave
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -215,10 +218,18 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
 ######## Enclave Objects ########
 
 sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
-	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include
+	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include --search-path ../kmyth/sgx/kmyth_enclave
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/kmyth_enclave_seal.o: kmyth/sgx/kmyth_enclave/kmyth_enclave_seal.cpp
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/kmyth_enclave_unseal.o: kmyth/sgx/kmyth_enclave/kmyth_enclave_unseal.cpp
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -242,7 +253,7 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o
+sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o sgx/kmyth_enclave_seal.o sgx/kmyth_enclave_unseal.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
