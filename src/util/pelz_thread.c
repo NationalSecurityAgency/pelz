@@ -66,7 +66,7 @@ void *fifo_thread_process(void *arg)
   }
   while (true);
   global_pipe_reader_active = false;
-  return NULL;
+	return NULL;
 }
 
 void thread_process(void *arg)
