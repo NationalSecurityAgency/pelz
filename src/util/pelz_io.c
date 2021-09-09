@@ -37,7 +37,7 @@ void ocall_free(void *ptr, size_t len)
 int get_file_ext(charbuf buf, int *ext)
 {
   int period_index = 0;
-  int ext_len = 0;
+  unsigned int ext_len = 0;
   int ext_type_size = 3;
   const char *ext_type[3] = { ".txt", ".pem", ".key" };
 
@@ -199,12 +199,19 @@ int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned cha
   }
 
   bio64 = BIO_push(bio64, bio_mem);
-  if (BIO_write(bio64, raw_data, raw_data_size) != raw_data_size)
+	int ret = BIO_write(bio64, raw_data, raw_data_size);
+	if(ret < 0)
   {
     pelz_log(LOG_ERR, "Bio_write failed.");
     BIO_free_all(bio64);
     return (1);
   }
+	else if((unsigned int)ret != raw_data_size)
+	{
+		pelz_log(LOG_ERR, "BIO_write incomplete.");
+		BIO_free_all(bio64);
+		return (1);
+	}
 
   if (BIO_flush(bio64) != 1)
   {

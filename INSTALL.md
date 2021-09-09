@@ -3,7 +3,7 @@
 ## Dependencies
 
 ### For Ubuntu:
-apt install make cmake indent gcc openssl libssl-dev libffi-dev libcunit1 libcunit1-dev libcunit1-doc
+    apt install make cmake indent gcc openssl libssl-dev libffi-dev libcunit1 libcunit1-dev libcunit1-doc
 
 #### cJSON:
 cJSON is required to build pelz.  
@@ -21,6 +21,15 @@ For more information on building cJSON, please see their [build instructions](ht
 #### uriparser
 [uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser#compilation). You may find it convenient to use the ```-DURIPARSER_BUILD_TESTS=OFF``` and ```-DURIPARSER_BUILD_DOCS=OFF``` flags.
 
+#### Intel SGX SDK and SGX SSL
+Pelz maintains its key table inside an SGX enclave. To support this functionality it requires the Intel Linux SGX SDK and Intel SGX SSL library. Instructions for installing these can be found here:
+ * Install the [Intel Linux SGX SDK](https://github.com/intel/linux-sgx)
+ * Install the [Intel SGX SSL library](https://github.com/intel/intel-sgx-ssl)
+
+You must also create an enclave signing key, for example by running ```openssl genrsa -out sgx/pelz_enclave_private.pem -3 3072``` before building pelz.
+
+The SGX SDK environment must be sourced before pelz can be run.
+
 #### kmyth logger:
 The kmyth logger is used by pelz. It requires building the logger, but not all of kmyth.  
 
@@ -30,41 +39,28 @@ The kmyth logger is used by pelz. It requires building the logger, but not all o
     make install
 
 For more information, please see their [build instructions](https://github.com/NationalSecurityAgency/kmyth/blob/main/tpm2/INSTALL.md).
+
+#### kmyth submodule
+Pelz uses portions of the kmyth SGX enclave which it acquires by including kmyth as a git submodule and including the right files as part of its build process as described in the [kmyth SGX documentation](https://github.com/NationalSecurityAgency/kmyth/tree/main/sgx). Before attempting to build pelz you must initialize and update the kmyth submodule by:
+
+    git submodule init
+    git submodule update
+    
 ## Building pelz
 Once the dependencies are in place, building pelz is done by:
 
     make
-    make install
+    
+ which places the executible in the ```bin/``` directory.
+    
+The unit test suite can be run via:
 
-#### Building pelz-sgx
-Pelz can now be built to keep its key table inside an SGX enclave. This functionality is currently extremely experimental, and installation is not supported. To test the pelz-sgx functionality:
- * Install the [Intel Linux SGX SDK](https://github.com/intel/linux-sgx)
- * Install the [Intel SGX SSL library](https://github.com/intel/intel-sgx-ssl)
- * Generate or install the enclave signing key. For example, use ```openssl genrsa -out sgx/pelz_enclave_private.pem -3 3072```
- * Source the SGX SDK environment
+    make test
+    
+All build artifacts and binaries can be removed by running:
 
-With all the setup complete, pelz-sgx can be built by:
+    make clean
 
-     make -f sgx.mk
-
-and executed by running
-
-	./bin/pelz-sgx
-
-All pelz-sgx related files can be cleaned up with
-
-    make -f sgx.mk clean
-
-## Pelz as a service
-The service_setup.sh script can be used to initialize pelz as a Linux service. It must be run with root privileges.
-
-To install:
-
-	sh service-setup.sh -i
-
-To uninstall:
-
-	sh service-setup.sh -u
 
 ## Pelz plugin for Accumulo
 Pelz comes with a plugin for Apache Accumulo. This allows the key encryption key(s) to be stored outside of Accumulo. Accumulo must be built after the plugin is installed. The script can be found in the accumulo_plugin directory. The script is used as follows:

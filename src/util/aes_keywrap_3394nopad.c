@@ -100,7 +100,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // We're tracking the ciphertext length separate from *outData_len because
   // we know in advance what *outData_len should be, and can check that the
   // ciphertext_len we end up with is as expected.
-  int ciphertext_len = 0;
+  unsigned int ciphertext_len = 0;
   int tmp_len = 0;
 
   if (!EVP_EncryptUpdate(ctx, *outData, &tmp_len, inData, inData_len))
@@ -178,7 +178,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
     return 1;
   }
 
-  int plaintext_len = 0;
+  unsigned int plaintext_len = 0;
   int tmp_len = 0;
   EVP_CIPHER_CTX *ctx;
 

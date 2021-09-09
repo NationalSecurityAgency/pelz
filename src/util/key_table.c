@@ -38,7 +38,7 @@ int key_table_destroy(void)
   pelz_log(LOG_DEBUG, "Key Table Destroy Function Starting");
   if (key_table.num_entries >= 0)
   {
-    for (int i = 0; i < key_table.num_entries; i++)
+    for (unsigned int i = 0; i < key_table.num_entries; i++)
     {
       if (key_table.entries[i].key_id.len != 0)
       {
@@ -67,7 +67,7 @@ int key_table_delete(charbuf key_id)
   int index;
 
   index = 0;
-  for (int i = 0; i < key_table.num_entries; i++)
+  for (unsigned int i = 0; i < key_table.num_entries; i++)
   {
     if (cmp_charbuf(key_id, key_table.entries[i].key_id) == 0)
     {
@@ -87,7 +87,7 @@ int key_table_delete(charbuf key_id)
   }
   else
   {
-    for (int i = index; i < key_table.num_entries; i++)
+    for (unsigned int i = index; i < key_table.num_entries; i++)
     {
       key_table.entries[i - 1] = key_table.entries[i];
     }
@@ -186,7 +186,7 @@ int key_table_add(charbuf key_id, charbuf * key)
 
 int key_table_lookup(charbuf key_id, charbuf * key)
 {
-  for (int i = 0; i < key_table.num_entries; i++)
+  for (unsigned int i = 0; i < key_table.num_entries; i++)
   {
     if (cmp_charbuf(key_id, key_table.entries[i].key_id) == 0)
     {
