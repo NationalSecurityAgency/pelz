@@ -199,19 +199,20 @@ int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned cha
   }
 
   bio64 = BIO_push(bio64, bio_mem);
-	int ret = BIO_write(bio64, raw_data, raw_data_size);
-	if(ret < 0)
+  int ret = BIO_write(bio64, raw_data, raw_data_size);
+
+  if (ret < 0)
   {
     pelz_log(LOG_ERR, "Bio_write failed.");
     BIO_free_all(bio64);
     return (1);
   }
-	else if((unsigned int)ret != raw_data_size)
-	{
-		pelz_log(LOG_ERR, "BIO_write incomplete.");
-		BIO_free_all(bio64);
-		return (1);
-	}
+  else if ((unsigned int) ret != raw_data_size)
+  {
+    pelz_log(LOG_ERR, "BIO_write incomplete.");
+    BIO_free_all(bio64);
+    return (1);
+  }
 
   if (BIO_flush(bio64) != 1)
   {
@@ -475,7 +476,7 @@ int read_pipe(char *msg)
             free(path);
             return 0;
           }
-	  
+
           free(nkl_data);
           free(path);
           pelz_log(LOG_INFO, "Remove cert call not added");
