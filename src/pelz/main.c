@@ -15,7 +15,11 @@
 #include "pelz_io.h"
 
 #include "pelz_enclave.h"
+#include "kmyth_enclave.h"
+
 sgx_enclave_id_t eid = 0;
+
+#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
 static void load_usage()
 {
@@ -341,36 +345,35 @@ int main(int argc, char **argv)
         return 1;
       }
 
-      /*
-       * uint8_t* sgx_seal = NULL;
-       * size_t sgx_seal_len = 0;
-       *
-       * if (sgx_seal_file(path_id, &sgx_seal, &sgx_seal_len)
-       * {
-       *   pelz_log(LOG_ERROR, "SGX seal failed");
-       *   free(path_id);
-       *   free(outPath);
-       *   return 1;
-       * }
-       */
+      sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+
+      uint8_t *sgx_seal = NULL;
+      size_t sgx_seal_len = 0;
+
+      if (sgx_seal_file(eid, path_id, &sgx_seal, &sgx_seal_len))
+      {
+        pelz_log(LOG_ERR, "SGX seal failed");
+        free(path_id);
+        free(outPath);
+        return 1;
+      }
+
+      sgx_destroy_enclave(eid);
 
       uint8_t *tpm_seal = NULL;
       size_t tpm_seal_len = 0;
 
       if (tpm)
       {
-        //pelz_log(LOG_INFO, "Kmyth TPM call not added");
         char *authString = NULL;
         size_t auth_string_len = 0;
         const char *ownerAuthPasswd = "";
         size_t oa_passwd_len = 0;
-        char *pcrsString = NULL;
         char *cipherString = NULL;
         int *pcrs = NULL;
         int pcrs_len = 0;
 
-        //if (tpm2_kmyth_seal(sgx_seal, sgx_seal_len, &tpm_seal, &tpm_seal_len,
-        if (tpm2_kmyth_seal_file(path_id, &tpm_seal, &tpm_seal_len, (uint8_t *) authString, auth_string_len,
+        if (tpm2_kmyth_seal(sgx_seal, sgx_seal_len, &tpm_seal, &tpm_seal_len, (uint8_t *) authString, auth_string_len,
             (uint8_t *) ownerAuthPasswd, oa_passwd_len, pcrs, pcrs_len, cipherString))
         {
           pelz_log(LOG_ERR, "Kmyth TPM seal failed");
@@ -386,7 +389,6 @@ int main(int argc, char **argv)
       if ((outPath != NULL) && (outPath_size != 0))
       {
         pelz_log(LOG_INFO, "SGX seal to outPath call not added");
-
         if (tpm)
         {
           if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
@@ -400,17 +402,14 @@ int main(int argc, char **argv)
         }
         else
         {
-          /*
-             if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
-             {
-             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
-             free(outPath);
-             free(sgx_seal);
-             return 1;
-             }
-             free(sgx_seal);
-           */
-          pelz_log(LOG_INFO, "SGX seal call not added");
+          if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
+          {
+            pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
+            free(outPath);
+            free(sgx_seal);
+            return 1;
+          }
+          free(sgx_seal);
         }
       }
       else
@@ -421,14 +420,12 @@ int main(int argc, char **argv)
           memcpy(ext, ".ski", 4);
         else
           memcpy(ext, ".nkl", 4);
-
         // If output file not specified, set output path to basename(inPath) with
         // a .nkl extension in the directory that the application is being run from.
         char *original_fn = basename(path_id);
         char *temp_str = (char *) malloc((strlen(original_fn) + 5) * sizeof(char));
 
         strncpy(temp_str, original_fn, strlen(original_fn));
-
         // Remove any leading '.'s
         while (*temp_str == '.')
         {
@@ -439,10 +436,8 @@ int main(int argc, char **argv)
         // Everything beyond first '.' in original filename, with any leading
         // '.'(s) removed, is treated as extension
         temp_str = strtok_r(temp_str, ".", &scratch);
-
         // Append file extension
         strncat(temp_str, ext, 5);
-
         outPath_size = strlen(temp_str) + 1;
         // Make sure resultant default file name does not have empty basename
         if (outPath_size < 6)
@@ -452,7 +447,9 @@ int main(int argc, char **argv)
           return 1;
         }
         // Make sure default filename we constructed doesn't already exist
-        struct stat st = { 0 };
+        struct stat st = {
+          0
+        };
         if (!stat(temp_str, &st))
         {
           pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", temp_str);
@@ -464,7 +461,6 @@ int main(int argc, char **argv)
         memcpy(outPath, temp_str, outPath_size);
         free(temp_str);
         pelz_log(LOG_WARNING, "output file not specified, default = %s", outPath);
-
         if (tpm)
         {
           if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
@@ -478,17 +474,14 @@ int main(int argc, char **argv)
         }
         else
         {
-          /*
-             if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
-             {
-             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
-             free(outPath);
-             free(sgx_seal);
-             return 1;
-             }
-             free(sgx_seal);
-           */
-          pelz_log(LOG_INFO, "SGX seal call not added");
+          if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
+          {
+            pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
+            free(outPath);
+            free(sgx_seal);
+            return 1;
+          }
+          free(sgx_seal);
         }
       }
       free(path_id);
