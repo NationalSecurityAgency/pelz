@@ -89,7 +89,8 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_socket.c \
 		 src/util/pelz_thread.c \
 		 src/util/util.c \
-		 src/util/pelz_io.c
+		 src/util/pelz_io.c \
+		 src/util/pelz_uri_helpers.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/enclave_test_suite.c \

@@ -13,6 +13,7 @@
 #include "pelz_io.h"
 #include "key_table.h"
 #include "pelz_request_handler.h"
+#include "pelz_uri_helpers.h"
 #include "util.h"
 
 #include "sgx_urts.h"
@@ -92,7 +93,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     return (1);
   }
 
-  if (strncmp(key_id_data.scheme.first, "file:", 5) == 0)
+  if (get_uri_scheme(key_id_data) == FILE_URI)
   {
     char *filename = NULL;
 
@@ -197,19 +198,20 @@ int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned cha
   }
 
   bio64 = BIO_push(bio64, bio_mem);
-	int ret = BIO_write(bio64, raw_data, raw_data_size);
-	if(ret < 0)
+  int ret = BIO_write(bio64, raw_data, raw_data_size);
+
+  if (ret < 0)
   {
     pelz_log(LOG_ERR, "Bio_write failed.");
     BIO_free_all(bio64);
     return (1);
   }
-	else if((unsigned int)ret != raw_data_size)
-	{
-		pelz_log(LOG_ERR, "BIO_write incomplete.");
-		BIO_free_all(bio64);
-		return (1);
-	}
+  else if ((unsigned int) ret != raw_data_size)
+  {
+    pelz_log(LOG_ERR, "BIO_write incomplete.");
+    BIO_free_all(bio64);
+    return (1);
+  }
 
   if (BIO_flush(bio64) != 1)
   {
