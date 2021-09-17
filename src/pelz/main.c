@@ -13,6 +13,7 @@
 
 #include "pelz_log.h"
 #include "pelz_io.h"
+#include "file_io.h"
 
 #include "pelz_enclave.h"
 #include "kmyth_enclave.h"
@@ -345,20 +346,59 @@ int main(int argc, char **argv)
         return 1;
       }
 
+      // Verify input path exists with read permissions
+      if (verifyInputFilePath(path_id))
+      {
+        pelz_log(LOG_ERR, "input path (%s) is not valid ... exiting", path_id);
+        free(path_id);
+        free(outPath);
+        return 1;
+      }
+
+      uint8_t *data = NULL;
+      size_t data_len = 0;
+
+      if (read_bytes_from_file(path_id, &data, &data_len))
+      {
+        pelz_log(LOG_ERR, "seal input data file read error ... exiting");
+        free(data);
+        free(path_id);
+        free(outPath);
+        return 1;
+      }
+      pelz_log(LOG_DEBUG, "read in %d bytes of data to be wrapped", data_len);
+
+      // validate non-empty plaintext buffer specified
+      if (data_len == 0 || data == NULL)
+      {
+        pelz_log(LOG_ERR, "no input data ... exiting");
+        free(data);
+        free(path_id);
+        free(outPath);
+        return 1;
+      }
+
       sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
 
       uint8_t *sgx_seal = NULL;
       size_t sgx_seal_len = 0;
+      uint16_t key_policy = SGX_KEYPOLICY_MRSIGNER;
+      sgx_attributes_t attribute_mask;
 
-      if (sgx_seal_file(eid, path_id, &sgx_seal, &sgx_seal_len))
+      attribute_mask.flags = 0;
+      attribute_mask.xfrm = 0;
+
+      if (kmyth_sgx_seal_nkl(eid, data, data_len, &sgx_seal, &sgx_seal_len, key_policy, attribute_mask))
       {
         pelz_log(LOG_ERR, "SGX seal failed");
+        free(data);
         free(path_id);
         free(outPath);
         return 1;
       }
 
       sgx_destroy_enclave(eid);
+      free(data);
 
       uint8_t *tpm_seal = NULL;
       size_t tpm_seal_len = 0;
@@ -388,13 +428,13 @@ int main(int argc, char **argv)
 
       if ((outPath != NULL) && (outPath_size != 0))
       {
-        pelz_log(LOG_INFO, "SGX seal to outPath call not added");
         if (tpm)
         {
           if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
           {
             pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
             free(outPath);
+            free(path_id);
             free(tpm_seal);
             return 1;
           }
@@ -406,6 +446,7 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
             free(outPath);
+            free(path_id);
             free(sgx_seal);
             return 1;
           }
@@ -444,6 +485,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
           free(temp_str);
+          free(path_id);
           return 1;
         }
         // Make sure default filename we constructed doesn't already exist
@@ -454,6 +496,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", temp_str);
           free(temp_str);
+          free(path_id);
           return 1;
         }
         // Go ahead and make the default value the output path
@@ -467,6 +510,7 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
             free(outPath);
+            free(path_id);
             free(tpm_seal);
             return 1;
           }
@@ -478,6 +522,7 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
             free(outPath);
+            free(path_id);
             free(sgx_seal);
             return 1;
           }

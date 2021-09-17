@@ -89,7 +89,8 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_socket.c \
 		 src/util/pelz_thread.c \
 		 src/util/util.c \
-		 src/util/pelz_io.c
+		 src/util/pelz_io.c \
+		 src/util/file_io.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/enclave_test_suite.c \
@@ -98,10 +99,9 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/test_helper_functions.c	 
 
 App_Cpp_Kmyth_Files := kmyth/sgx/kmyth_enclave/sgx_seal_unseal_impl.c \
-                 kmyth/sgx/kmyth_enclave/kmyth_functions.c \
-                 kmyth/src/util/file_io.c
+                 kmyth/sgx/kmyth_enclave/kmyth_functions.c
 
-App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -Ikmyth/sgx/kmyth_enclave -Ikmyth/include -Ikmyth/include/util  -Ikmyth/logger/include
+App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -Ikmyth/sgx/kmyth_enclave -Ikmyth/include  -Ikmyth/logger/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED -Wall -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
 

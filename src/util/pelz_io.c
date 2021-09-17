@@ -16,6 +16,7 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 #include "util.h"
+#include "file_io.h"
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
@@ -386,6 +387,7 @@ int read_pipe(char *msg)
         len = strcspn(msg, "\n");
         path = (char *) malloc((len - 10) * sizeof(char));  //the number 11 is used because it the number of chars in "pelz -l -c "
         memcpy(path, &msg[11], len);
+
         if (tpm2_kmyth_unseal_file(path, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
             (uint8_t *) ownerAuthPasswd, oa_passwd_len))
         {
@@ -500,3 +502,32 @@ int read_pipe(char *msg)
   }
   return 0;
 }
+
+//############################################################################
+// sgx_unseal_file()
+//############################################################################
+/*
+ * sgx_unseal_file(sgx_enclave_id_t eid, char *input_path, uint64_t * handle)
+{
+
+  uint8_t *data = NULL;
+  size_t data_length = 0;
+
+  if (read_bytes_from_file(input_path, &data, &data_length))
+  {
+    pelz_log(LOG_ERR, "Unable to read file %s ... exiting", input_path);
+    return (1);
+  }
+
+  pelz_log(LOG_DEBUG, "Read bytes from file %s", input_path);
+  if (kmyth_sgx_unseal_nkl(eid, data, data_length, handle))
+  {
+    pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+    free(data);
+    return (1);
+  }
+
+  free(data);
+  return 0;
+}
+*/
