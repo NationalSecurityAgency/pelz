@@ -15,6 +15,7 @@ extern "C"
 #endif
 
   URI_SCHEME get_uri_scheme(UriUriA uri);
+  char *get_filename_from_key_id(char *null_terminated_key_id);
 #ifdef __cplusplus
 }
 #endif

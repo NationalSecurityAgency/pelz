@@ -74,13 +74,16 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   FILE *key_key_f = 0;
 
   const char *error_pos = NULL;
-
   char *key_uri_to_parse = NULL;
 
   // URI parser expects a null-terminated string to parse,
   // so we embed the key_id in a 1-longer array and
   // ensure it is null terminated.
   key_uri_to_parse = (char *) calloc(key_id_len + 1, 1);
+  if (key_uri_to_parse == NULL)
+  {
+    return 1;
+  }
   memcpy(key_uri_to_parse, key_id, key_id_len);
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
@@ -95,29 +98,23 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
 
   if (get_uri_scheme(key_id_data) == FILE_URI)
   {
-    char *filename = NULL;
+    char *filename = get_filename_from_key_id(key_uri_to_parse);
 
-    // The magic 4 here is derived from the uriparser documentation. It says 
-    // the length of the filename returned by uriUriStringToUnixFilenameA
-    // will be 5 bytes less than the length of the length of the input
-    // uri string including its null terminator. Since key_id_len doesn't include
-    // space for a null terminator that means we offset by 4.
-    filename = (char *) malloc(key_id_len - 4);
-    if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
+    if (filename == NULL)
     {
-      pelz_log(LOG_ERR, "Failed to parce key file name");
-      uriFreeUriMembersA(&key_id_data);
-      free(filename);
+      pelz_log(LOG_ERR, "Failed to parse filename from URI %s\n", key_uri_to_parse);
       free(key_uri_to_parse);
-      return (1);
+      uriFreeUriMembersA(&key_id_data);
+      return 1;
     }
     free(key_uri_to_parse);
+    uriFreeUriMembersA(&key_id_data);
+
     key_key_f = fopen(filename, "r");
 
     if (key_key_f == NULL)
     {
       pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-      uriFreeUriMembersA(&key_id_data);
       free(filename);
       return (1);
     }
@@ -130,7 +127,6 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     {
       pelz_log(LOG_ERR, "Error: Failed to fully read key file");
       secure_memset(tmp_key, 0, *key_len);
-      uriFreeUriMembersA(&key_id_data);
       fclose(key_key_f);
       return (1);
     }
@@ -142,12 +138,10 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   else
   {
     pelz_log(LOG_ERR, "Scheme not supported");
-    uriFreeUriMembersA(&key_id_data);
     free(key_uri_to_parse);
+    uriFreeUriMembersA(&key_id_data);
     return (1);
   }
-
-  uriFreeUriMembersA(&key_id_data);
   return (0);
 }
 
