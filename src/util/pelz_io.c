@@ -40,8 +40,8 @@ int get_file_ext(charbuf buf, int *ext)
 {
   int period_index = 0;
   unsigned int ext_len = 0;
-  int ext_type_size = 5;
-  const char *ext_type[5] = { ".txt", ".pem", ".key", ".nkl", ".ski" };
+  int ext_type_size = 3;
+  const char *ext_type[3] = { ".txt", ".pem", ".key" };
 
   period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
   ext_len = (buf.len - period_index);

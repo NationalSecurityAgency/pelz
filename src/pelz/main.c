@@ -56,7 +56,7 @@ static void seal_usage()
     "                                seal a file and create a .ski file as output.\n"
     "-t or --tpm                     Use the TPM as well when sealing. This requires the TPM to be enabled.\n"
     "-o or --output <output path>    By default, seal will output a new file with the same name but the\n"
-    "                                .nklor .ski extension. Using -o allows the user to specify their\n"
+    "                                .nkl or .ski extension. Using -o allows the user to specify their\n"
     "                                output file destination.\n");
 }
 
