@@ -19,6 +19,7 @@
 #include "file_io.h"
 
 #include "sgx_urts.h"
+#include "kmyth_enclave.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
@@ -39,8 +40,8 @@ int get_file_ext(charbuf buf, int *ext)
 {
   int period_index = 0;
   unsigned int ext_len = 0;
-  int ext_type_size = 3;
-  const char *ext_type[3] = { ".txt", ".pem", ".key" };
+  int ext_type_size = 5;
+  const char *ext_type[5] = { ".txt", ".pem", ".key", ".nkl", ".ski" };
 
   period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
   ext_len = (buf.len - period_index);
@@ -342,6 +343,7 @@ int read_pipe(char *msg)
   int len = 0;
   char opt;
   char *path = NULL;
+  char path_ext[4];
   charbuf key_id;
 
   uint8_t *nkl_data = NULL;
@@ -350,6 +352,10 @@ int read_pipe(char *msg)
   size_t auth_string_len = 0;
   const char *ownerAuthPasswd = "";
   size_t oa_passwd_len = 0;
+
+  uint8_t *data = NULL;
+  size_t data_length = 0;
+  uint64_t handle;
 
 /*
  *  -e    exit     Terminate running pelz-service
@@ -388,31 +394,104 @@ int read_pipe(char *msg)
         path = (char *) malloc((len - 10) * sizeof(char));  //the number 11 is used because it the number of chars in "pelz -l -c "
         memcpy(path, &msg[11], len);
 
-        if (tpm2_kmyth_unseal_file(path, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
-            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+        if (read_bytes_from_file(path, &data, &data_length))
         {
-          pelz_log(LOG_ERR, "TPM unseal failed");
+          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
           free(path);
-          return 0;
+          return 1;
         }
-        free(nkl_data);
+
+        pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
+        memcpy(path_ext, &path[len - 15], 4); //4 is the set length of .nkl and .ski and 15 is the 11 deducted along with the 4 from the ext
+        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
         free(path);
-        pelz_log(LOG_INFO, "Load cert call not added");
+
+        if (memcmp(path_ext, ".ski", 4) == 0)
+        {
+          if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+              (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+          {
+            pelz_log(LOG_ERR, "TPM unseal failed");
+            free(data);
+            return 1;
+          }
+
+          free(data);
+          if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+            free(nkl_data);
+            return 1;
+          }
+
+          free(nkl_data);
+        }
+        else if (memcmp(path_ext, ".nkl", 4) == 0)
+        {
+          if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+            free(data);
+            free(path);
+            return 1;
+          }
+
+          free(data);
+        }
+
+        pelz_log(LOG_INFO, "Load cert call not finished");
         return 0;
       case 'p':
         len = strcspn(msg, "\n");
         path = (char *) malloc((len - 10) * sizeof(char));  //the number 10 is used because it the number of chars in "pelz -l -p " - 1
         memcpy(path, &msg[11], len);
-        if (tpm2_kmyth_unseal_file(path, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
-            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+
+        if (read_bytes_from_file(path, &data, &data_length))
         {
-          pelz_log(LOG_ERR, "TPM unseal failed");
+          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
           free(path);
-          return 0;
+          return 1;
         }
-        free(nkl_data);
+
+        pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
+        memcpy(path_ext, &path[len - 15], 4); //4 is the set length of .nkl and .ski and 15 is the 11 deducted along with the 4 from the ext
+        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
         free(path);
-        pelz_log(LOG_INFO, "Load private call not added");
+
+        if (memcmp(path_ext, ".ski", 4) == 0)
+        {
+          if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+              (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+          {
+            pelz_log(LOG_ERR, "TPM unseal failed");
+            free(data);
+            return 1;
+          }
+
+          free(data);
+          if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+            free(nkl_data);
+            return 1;
+          }
+
+          free(nkl_data);
+        }
+        else if (memcmp(path_ext, ".nkl", 4) == 0)
+        {
+          if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+            free(data);
+            free(path);
+            return 1;
+          }
+
+          free(data);
+        }
+
+        pelz_log(LOG_INFO, "Load private call not finished");
         return 0;
       default:
         pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
@@ -502,32 +581,3 @@ int read_pipe(char *msg)
   }
   return 0;
 }
-
-//############################################################################
-// sgx_unseal_file()
-//############################################################################
-/*
- * sgx_unseal_file(sgx_enclave_id_t eid, char *input_path, uint64_t * handle)
-{
-
-  uint8_t *data = NULL;
-  size_t data_length = 0;
-
-  if (read_bytes_from_file(input_path, &data, &data_length))
-  {
-    pelz_log(LOG_ERR, "Unable to read file %s ... exiting", input_path);
-    return (1);
-  }
-
-  pelz_log(LOG_DEBUG, "Read bytes from file %s", input_path);
-  if (kmyth_sgx_unseal_nkl(eid, data, data_length, handle))
-  {
-    pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-    free(data);
-    return (1);
-  }
-
-  free(data);
-  return 0;
-}
-*/
