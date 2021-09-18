@@ -14,6 +14,7 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
+#include "pelz_key_loaders.h"
 #include "util.h"
 
 #include "sgx_urts.h"
@@ -69,9 +70,8 @@ int get_file_ext(charbuf buf, int *ext)
 
 int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
 {
+  int return_value = 1;
   UriUriA key_id_data;
-  unsigned char tmp_key[MAX_KEY_LEN + 1];
-  FILE *key_key_f = 0;
 
   const char *error_pos = NULL;
   char *key_uri_to_parse = NULL;
@@ -96,53 +96,42 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     return (1);
   }
 
-  if (get_uri_scheme(key_id_data) == FILE_URI)
-  {
+  URI_SCHEME scheme = get_uri_scheme(key_id_data);
+  switch (scheme) {
+  case FILE_URI:
+    {
     char *filename = get_filename_from_key_id(key_uri_to_parse);
 
     if (filename == NULL)
-    {
-      pelz_log(LOG_ERR, "Failed to parse filename from URI %s\n", key_uri_to_parse);
-      free(key_uri_to_parse);
-      uriFreeUriMembersA(&key_id_data);
-      return 1;
-    }
+      {
+	pelz_log(LOG_ERR, "Failed to parse filename from URI %s\n", key_uri_to_parse);
+	free(key_uri_to_parse);
+	uriFreeUriMembersA(&key_id_data);
+	break;
+      }
     free(key_uri_to_parse);
     uriFreeUriMembersA(&key_id_data);
-
-    key_key_f = fopen(filename, "r");
-
-    if (key_key_f == NULL)
-    {
-      pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-      free(filename);
-      return (1);
-    }
+    
+    if (pelz_load_key_from_file(filename, key_len, key))
+      {
+	pelz_log(LOG_ERR, "Failed to read key file %s", filename);
+	free(filename);
+	break;
+      }
     free(filename);
-
-    *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
-    // If we've read MAX_KEY_LEN but not reached EOF there's probably
-    // been a problem.
-    if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
-    {
-      pelz_log(LOG_ERR, "Error: Failed to fully read key file");
-      secure_memset(tmp_key, 0, *key_len);
-      fclose(key_key_f);
-      return (1);
+    return_value = 0;
+    break;
     }
-    *key = (unsigned char *) malloc(*key_len);
-    memcpy(*key, tmp_key, *key_len);
-    secure_memset(tmp_key, 0, *key_len);
-    fclose(key_key_f);
-  }
-  else
-  {
+  case URI_SCHEME_UNKNOWN:
+    // Intentional fallthrough
+  default:
+    {
     pelz_log(LOG_ERR, "Scheme not supported");
     free(key_uri_to_parse);
     uriFreeUriMembersA(&key_id_data);
-    return (1);
+    }
   }
-  return (0);
+  return return_value;
 }
 
 int file_check(char *file_path)
