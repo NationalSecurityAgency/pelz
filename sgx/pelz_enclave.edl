@@ -13,30 +13,30 @@ enclave {
 /**
  * <pre>
  * This function initializes a key table for lookup.
- * </pre>
+ * <pre>
  *
  * @param[in] key_table The pointer for key table to be initialized
  * @param[out] key_table The initialized key table
  *
  * @return 0 on success, 1 on error
  */
-	public int key_table_init(void);
+public int key_table_init(void);
 
 /**
  * <pre>
  * This function destroys the key table.
- * </pre>
+ * <pre>
  *
  * @param[in] key_table The key table to be destroyed
  *
  * @return 0 on success, 1 on error
  */
-	public int key_table_destroy(void);
+public int key_table_destroy(void);
 
 /**
  * <pre>
  * This function to delete values in hash table based on location in key_id.
- * </pre>
+ * <pre>
  *
  * @param[in] key_id.chars Key identifier assumed to be null terminated
  * @param[in] key_id.len The length of the key identifier
@@ -45,34 +45,34 @@ enclave {
  *
  * @return 0 on success, 1 on error
  */
-	public int key_table_delete(charbuf key_id);
+public int key_table_delete(charbuf key_id);
 
  * <pre>
  * This function initializes a server table for lookup.
- * </pre>
+ * <pre>
  *
  * @param[in] server_table The pointer for server table to be initialized
  * @param[out] server_table The initialized server table
  *
  * @return 0 on success, 1 on error
  */
-        public int server_table_init(void);
+public int server_table_init(void);
 
 /**
  * <pre>
  * This function destroys the server table.
- * </pre>
+ * <pre>
  *
  * @param[in] server_table The server table to be destroyed
  *
  * @return 0 on success, 1 on error
  */
-        public int server_table_destroy(void);
+public int server_table_destroy(void);
 
 /**
  * <pre>
  * This function to delete values in hash table based on location in key_id.
- * </pre>
+ * <pre>
  *
  * @param[in] server_id.chars Server identifier assumed to be null terminated
  * @param[in] server_id.len The length of the server identifier
@@ -81,7 +81,7 @@ enclave {
  *
  * @return 0 on success, 1 on error
  */
-        public int server_table_delete(charbuf server_id);
+public int server_table_delete(charbuf server_id);
 
 /**
  * <pre>
@@ -100,10 +100,10 @@ enclave {
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-	public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
+public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
 	};
 	untrusted {
-	/**
+/**
  * <pre>
  * Load key from location stated by Key ID
  * <pre>
@@ -116,8 +116,8 @@ enclave {
  *
  * @return 0 on success, 1 on error
  */
-	int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
-	             [out] size_t* key_len, [user_check] unsigned char** key);
+int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
+             [out] size_t* key_len, [user_check] unsigned char** key);
 
 /**
  * <pre>
@@ -141,7 +141,7 @@ void ocall_malloc(size_t size, [user_check] char** buf);
  * enclave memory by calling
  * sgx_is_outside_enclave(ptr, len);
  * <pre>
-
+ *
  * @param[in] ptr the pointer to be freed
  * @param[in] len the length of the buffer pointed to by ptr
  *
