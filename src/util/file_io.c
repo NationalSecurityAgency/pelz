@@ -63,7 +63,7 @@ int verifyOutputFilePath(char *path)
   }
 
   // check that specified output path directory exists
-  char *path_copy = "\0";
+  char *path_copy = NULL;
 
   if (asprintf(&path_copy, "%s", path) < 0)
   {
@@ -148,7 +148,7 @@ int read_bytes_from_file(char *input_path, uint8_t ** data, size_t * data_length
     }
     return 1;
   }
-  int input_size = st.st_size;
+  size_t input_size = st.st_size;
 
   // Create data buffer and read file into it
   *data = (uint8_t *) malloc(input_size);
@@ -239,7 +239,7 @@ int print_to_stdout(unsigned char *data, size_t data_size)
   }
 
   // Write out data
-  if (BIO_write(bdata, data, data_size) != data_size)
+  if ((size_t) BIO_write(bdata, data, data_size) != data_size)
   {
     pelz_log(LOG_ERR, "error writing data to file BIO ... exiting");
     BIO_free_all(bdata);
