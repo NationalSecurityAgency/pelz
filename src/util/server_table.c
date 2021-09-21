@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pelz_io.h"
+#include <pelz_io.h>
 #include <server_table.h>
 #include <util.h>
 #include <pelz_request_handler.h>
@@ -15,6 +15,7 @@
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
+#include "kmyth_enclave.h"
 
 ServerTable server_table;
 
@@ -102,7 +103,7 @@ int server_table_delete(charbuf server_id)
   return (0);
 }
 
-int server_table_add(charbuf server_id, charbuf * cert)
+int server_table_add(charbuf server_id, uint64_t handle)
 {
   CertEntry tmp_entry;
   size_t max_mem_size;
@@ -118,42 +119,13 @@ int server_table_add(charbuf server_id, charbuf * cert)
 
   tmp_entry.server_id = new_charbuf(server_id.len);
   memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
-
-  int ret;
-  size_t ocall_cert_len = 0;
-  unsigned char *ocall_cert_data = NULL;
-
-  key_load(&ret, tmp_entry.server_id.len, tmp_entry.server_id.chars, &ocall_cert_len, &ocall_cert_data);
-  if (!sgx_is_outside_enclave(ocall_cert_data, ocall_cert_len))
-  {
-    free_charbuf(&tmp_entry.server_id);
-    return (1);
-  }
-  tmp_entry.cert.len = ocall_cert_len;
-  tmp_entry.cert.chars = (unsigned char *) malloc(ocall_cert_len);
-  memcpy(tmp_entry.cert.chars, ocall_cert_data, ocall_cert_len);
-  if (!sgx_is_outside_enclave(ocall_cert_data, ocall_cert_len))
-  {
-    ret = 1;
-  }
-  else
-  {
-    ocall_free(ocall_cert_data, ocall_cert_len);
-  }
-
-  if (ret)
-  {
-    //If the code cannot retrieve the cert from the URI provided by the Server ID, then we error out of the function before touching the Server Table.
-    free_charbuf(&tmp_entry.server_id);
-    return (1);
-  }
+  tmp_entry.cert.len = retrieve_from_unseal_table(handle, &tmp_entry.cert.chars);
 
   if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
   {
     if (cmp_charbuf(tmpcert, tmp_entry.cert) == 0)
     {
       pelz_log(LOG_DEBUG, "Cert already added.");
-      *cert = copy_chars_from_charbuf(tmpcert, 0);
       free_charbuf(&tmp_entry.server_id);
       secure_free_charbuf(&tmp_entry.cert);
       secure_free_charbuf(&tmpcert);
@@ -183,7 +155,6 @@ int server_table_add(charbuf server_id, charbuf * cert)
     server_table.mem_size + ((tmp_entry.cert.len * sizeof(char)) + (tmp_entry.server_id.len * sizeof(char)) +
     (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Cert Added");
-  *cert = copy_chars_from_charbuf(tmp_entry.cert, 0);
   return (0);
 }
 

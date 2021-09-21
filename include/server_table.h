@@ -7,6 +7,7 @@
 #define INCLUDE_SERVER_TABLE_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "charbuf.h"
 
@@ -37,14 +38,13 @@ extern "C"
  *
  * @param[in] server_id.chars Server identifier assumed to be null terminated
  * @param[in] server_id.len The length of the server identifier
- * @param[out] cert.chars The cert value
- * @param[out] cert.len The length of the cert
+ * @param[in] handle The handle value for the cert data location in the kmyth unseal data table
  * @param[in] server_table The server table that the new cert needs to be added to
  * @param[out] server_table The server table with the new added cert
  *
  * @return 0 on success, 1 on error
  */
-  int server_table_add(charbuf server_id, charbuf * cert);
+  int server_table_add(charbuf server_id, uint64_t handle);
 
 /**
  * <pre>
