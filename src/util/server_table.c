@@ -183,7 +183,7 @@ int server_table_add(charbuf server_id, charbuf * cert)
     server_table.mem_size + ((tmp_entry.cert.len * sizeof(char)) + (tmp_entry.server_id.len * sizeof(char)) +
     (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Cert Added");
-  *key = copy_chars_from_charbuf(tmp_entry.cert, 0);
+  *cert = copy_chars_from_charbuf(tmp_entry.cert, 0);
   return (0);
 }
 

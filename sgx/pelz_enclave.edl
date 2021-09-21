@@ -47,6 +47,7 @@ public int key_table_destroy(void);
  */
 public int key_table_delete(charbuf key_id);
 
+/**
  * <pre>
  * This function initializes a server table for lookup.
  * <pre>
