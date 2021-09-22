@@ -391,6 +391,7 @@ int main(int argc, char **argv)
       if (kmyth_sgx_seal_nkl(eid, data, data_len, &sgx_seal, &sgx_seal_len, key_policy, attribute_mask))
       {
         pelz_log(LOG_ERR, "SGX seal failed");
+	sgx_destroy_enclave(eid);
         free(data);
         free(path_id);
         free(outPath);
@@ -418,12 +419,14 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_ERR, "Kmyth TPM seal failed");
           free(pcrs);
+	  free(sgx_seal);
           free(path_id);
           free(outPath);
           free(tpm_seal);
           return 1;
         }
         free(pcrs);
+	free(sgx_seal);
       }
 
       if ((outPath != NULL) && (outPath_size != 0))
@@ -457,10 +460,10 @@ int main(int argc, char **argv)
       {
         char ext[4];            // 4 is the length of a file extension with the period
 
-        if (tpm)
-          memcpy(ext, ".ski", 4);
-        else
-          memcpy(ext, ".nkl", 4);
+	if (tpm)
+￼         memcpy(ext, ".ski", 4);
+￼       else
+￼         memcpy(ext, ".nkl", 4);
         // If output file not specified, set output path to basename(inPath) with
         // a .nkl extension in the directory that the application is being run from.
         char *original_fn = basename(path_id);
