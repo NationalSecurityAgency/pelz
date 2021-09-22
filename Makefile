@@ -294,5 +294,4 @@ test: all
 .PHONY: clean
 
 clean:
-	@rm -f bin/pelz bin/pelz-service test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/* kmyth/sgx/*.h kmyth/sgx/*.c kmyth/sgx/*.o kmyth/sgx/*.so
-
+	@rm -f bin/pelz bin/pelz-service test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
