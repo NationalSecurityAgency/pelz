@@ -391,8 +391,8 @@ int read_pipe(char *msg)
       {
       case 'c':
         len = strcspn(msg, "\n");
-        path = (char *) malloc((len - 10) * sizeof(char));  //the number 11 is used because it the number of chars in "pelz -l -c "
-        memcpy(path, &msg[11], len);
+        path = (char *) malloc((len - 10) * sizeof(char));  //the number 10 is used because it the number of chars in "pelz -l -c " minus 1 for the null terminator
+        memcpy(path, &msg[11], len);  //the number 11 is used because it the number of chars in "pelz -l -c "
 
         if (read_bytes_from_file(path, &data, &data_length))
         {
