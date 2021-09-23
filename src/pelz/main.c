@@ -458,7 +458,7 @@ int main(int argc, char **argv)
       }
       else
       {
-        char *ext;              // 4 is the length of a file extension with the period
+        char *ext;
         const char *tpm_ext = ".ski";
         const char *nkl_ext = ".nkl";
 
