@@ -13,6 +13,8 @@
 #include <limits.h>
 #include <CUnit/CUnit.h>
 
+#include <kmyth/formatting_tools.h>
+
 #include <charbuf.h>
 #include <pelz_log.h>
 

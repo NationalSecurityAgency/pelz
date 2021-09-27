@@ -97,7 +97,7 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c	 
 
-App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include 
+App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED -Wall -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
 
