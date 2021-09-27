@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <kmyth/kmyth.h>
+#include <kmyth/file_io.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -16,7 +17,6 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 #include "util.h"
-#include "file_io.h"
 
 #include "sgx_urts.h"
 #include "kmyth_enclave.h"
