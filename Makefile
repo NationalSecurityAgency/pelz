@@ -116,7 +116,7 @@ else
 endif
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DPELZ_SGX_UNTRUSTED
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lkmyth-utils -lpthread -luriparser
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lkmyth-utils -lkmyth-tpm -lpthread -luriparser
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim

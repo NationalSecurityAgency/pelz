@@ -10,10 +10,10 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <kmyth/kmyth.h>
+#include <kmyth/file_io.h>
 
 #include "pelz_log.h"
 #include "pelz_io.h"
-#include "file_io.h"
 
 #include "pelz_enclave.h"
 #include "kmyth_enclave.h"
