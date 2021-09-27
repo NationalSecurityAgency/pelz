@@ -98,10 +98,9 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c	 
 
-App_Cpp_Kmyth_Files := kmyth/sgx/kmyth_enclave/sgx_seal_unseal_impl.c \
-                 kmyth/src/util/formatting_tools.c
+App_Cpp_Kmyth_Files := kmyth/sgx/kmyth_enclave/sgx_seal_unseal_impl.c
 
-App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -Ikmyth/sgx/kmyth_enclave -Ikmyth/include -Ikmyth/include/util  -Ikmyth/logger/include
+App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -Ikmyth/sgx/kmyth_enclave -Ikmyth/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED -Wall -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
 
@@ -118,7 +117,7 @@ else
 endif
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DPELZ_SGX_UNTRUSTED
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lkmyth-tpm -lpthread -luriparser
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lkmyth-utils -lpthread -luriparser
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim
