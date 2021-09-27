@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <kmyth/formatting_tools.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -66,7 +67,7 @@ void *fifo_thread_process(void *arg)
   }
   while (true);
   global_pipe_reader_active = false;
-	return NULL;
+  return NULL;
 }
 
 void thread_process(void *arg)
