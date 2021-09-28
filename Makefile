@@ -97,7 +97,6 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c	 
 
-
 App_Cpp_Kmyth_Files := kmyth/sgx/kmyth_enclave/sgx_seal_unseal_impl.c
 
 App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -Ikmyth/sgx/kmyth_enclave
@@ -295,3 +294,4 @@ test: all
 
 clean:
 	@rm -f bin/pelz bin/pelz-service test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
+
