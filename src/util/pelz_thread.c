@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <kmyth/formatting_tools.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"

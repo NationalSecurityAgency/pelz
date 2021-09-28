@@ -34,32 +34,6 @@ extern "C"
 
 /**
  * <pre>
- * Check if the file path provided is valid.
- * </pre>
- *
- * @param[in] file_path The file path provided to be checked
- *
- * @return 0 if success, 1 if error
- */
-
-  int encodeBase64Data(unsigned char *raw_data, size_t raw_data_size, unsigned char **base64_data, size_t * base64_data_size);
-
-/**
- * <pre>
- * Reads an unsigned string encoded in base64 encoding and produces a string of raw bytes
- * </pre>
- *
- * @param[in] base64_data The data to be decoded
- * @param[in] base64data The size of the data to be decoded
- * @param[out] raw_data The raw bytes retrieved from base64_data
- * @param[out] raw_data_size The number of raw bytes
- *
- * @return 0 if success, 1 if error
- */
-  int decodeBase64Data(unsigned char *base64_data, size_t b64_data_size, unsigned char **raw_data, size_t * raw_data_size);
-
-/**
- * <pre>
  * Writes a message to the Pelz FIFO pipe
  * </pre>
  *
