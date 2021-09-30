@@ -109,7 +109,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
   size_t max_mem_size;
   charbuf tmpcert;
   size_t data_size;
-  uint8_t* data;
+  uint8_t *data;
 
   max_mem_size = 1000000;
 
@@ -122,8 +122,8 @@ int server_table_add(charbuf server_id, uint64_t handle)
   tmp_entry.server_id = new_charbuf(server_id.len);
   memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
   data_size = retrieve_from_unseal_table(handle, &data);
-  tmp_entry = new_charbuf(data_size);
-  memcpy(tmp_entry->chars, data, tmp_entry->len);
+  tmp_entry.cert = new_charbuf(data_size);
+  memcpy(tmp_entry.cert.chars, data, tmp_entry.cert.len);
 
   if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
   {
