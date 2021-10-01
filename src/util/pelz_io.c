@@ -279,15 +279,14 @@ int read_pipe(char *msg)
               free(path);
               return 0;
             }
-
             pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
-            free(path);
 
             if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
                 (uint8_t *) ownerAuthPasswd, oa_passwd_len))
             {
               pelz_log(LOG_ERR, "TPM unseal failed");
               free(data);
+              free(path);
               return 0;
             }
 
@@ -296,10 +295,13 @@ int read_pipe(char *msg)
             {
               pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
               free(nkl_data);
+              free(path);
               return 0;
             }
 
             free(nkl_data);
+            pelz_log(LOG_INFO, "Load cert call not finished");
+            return 0;
           }
           else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
           {
@@ -309,18 +311,19 @@ int read_pipe(char *msg)
               free(path);
               return 0;
             }
-
             pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
-            free(path);
 
             if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
             {
               pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
               free(data);
+              free(path);
               return 0;
             }
 
             free(data);
+            pelz_log(LOG_INFO, "Load cert call not finished");
+            return 0;
           }
         }
 
@@ -348,15 +351,14 @@ int read_pipe(char *msg)
               free(path);
               return 0;
             }
-
             pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
-            free(path);
 
             if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
                 (uint8_t *) ownerAuthPasswd, oa_passwd_len))
             {
               pelz_log(LOG_ERR, "TPM unseal failed");
               free(data);
+              free(path);
               return 0;
             }
 
@@ -365,10 +367,13 @@ int read_pipe(char *msg)
             {
               pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
               free(nkl_data);
+              free(path);
               return 0;
             }
 
             free(nkl_data);
+            pelz_log(LOG_INFO, "Load private call not finished");
+            return 0;
           }
           else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
           {
@@ -378,18 +383,19 @@ int read_pipe(char *msg)
               free(path);
               return 0;
             }
-
             pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
-            free(path);
 
             if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
             {
               pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
               free(data);
+              free(path);
               return 0;
             }
 
             free(data);
+            pelz_log(LOG_INFO, "Load private call not finished");
+            return 0;
           }
         }
 
