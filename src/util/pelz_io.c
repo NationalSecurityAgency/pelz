@@ -270,7 +270,7 @@ int read_pipe(char *msg)
         {
           pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
           free(path);
-          return 1;
+          return 0;
         }
 
         pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
@@ -284,7 +284,7 @@ int read_pipe(char *msg)
           {
             pelz_log(LOG_ERR, "TPM unseal failed");
             free(data);
-            return 1;
+            return 0;
           }
 
           free(data);
@@ -292,7 +292,7 @@ int read_pipe(char *msg)
           {
             pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
             free(nkl_data);
-            return 1;
+            return 0;
           }
 
           free(nkl_data);
@@ -304,7 +304,7 @@ int read_pipe(char *msg)
             pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
             free(data);
             free(path);
-            return 1;
+            return 0;
           }
 
           free(data);
@@ -313,7 +313,7 @@ int read_pipe(char *msg)
         {
           pelz_log(LOG_INFO, "Invaild extention for load cert call");
           pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-          return 1;
+          return 0;
         }
 
         pelz_log(LOG_INFO, "Load cert call not finished");
@@ -327,7 +327,7 @@ int read_pipe(char *msg)
         {
           pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
           free(path);
-          return 1;
+          return 0;
         }
 
         pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
@@ -341,7 +341,7 @@ int read_pipe(char *msg)
           {
             pelz_log(LOG_ERR, "TPM unseal failed");
             free(data);
-            return 1;
+            return 0;
           }
 
           free(data);
@@ -349,7 +349,7 @@ int read_pipe(char *msg)
           {
             pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
             free(nkl_data);
-            return 1;
+            return 0;
           }
 
           free(nkl_data);
@@ -361,7 +361,7 @@ int read_pipe(char *msg)
             pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
             free(data);
             free(path);
-            return 1;
+            return 0;
           }
 
           free(data);
@@ -370,7 +370,7 @@ int read_pipe(char *msg)
         {
           pelz_log(LOG_INFO, "Invaild extention for load private call");
           pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-          return 1;
+          return 0;
         }
 
         pelz_log(LOG_INFO, "Load private call not finished");
