@@ -275,7 +275,6 @@ int read_pipe(char *msg)
 
         pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
         memcpy(path_ext, &path[len - 15], 4); //4 is the set length of .nkl and .ski and 15 is the 11 deducted along with the 4 from the ext
-        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
         free(path);
 
         if (memcmp(path_ext, ".ski", 4) == 0)
@@ -309,6 +308,12 @@ int read_pipe(char *msg)
           }
 
           free(data);
+        }
+        else
+        {
+          pelz_log(LOG_INFO, "Invaild extention for load cert call");
+          pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+          return 1;
         }
 
         pelz_log(LOG_INFO, "Load cert call not finished");
@@ -327,7 +332,6 @@ int read_pipe(char *msg)
 
         pelz_log(LOG_DEBUG, "Read bytes from file %s", path);
         memcpy(path_ext, &path[len - 15], 4); //4 is the set length of .nkl and .ski and 15 is the 11 deducted along with the 4 from the ext
-        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
         free(path);
 
         if (memcmp(path_ext, ".ski", 4) == 0)
@@ -361,6 +365,12 @@ int read_pipe(char *msg)
           }
 
           free(data);
+        }
+        else
+        {
+          pelz_log(LOG_INFO, "Invaild extention for load private call");
+          pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+          return 1;
         }
 
         pelz_log(LOG_INFO, "Load private call not finished");
