@@ -9,6 +9,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 
@@ -21,6 +23,7 @@
 sgx_enclave_id_t eid = 0;
 
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
+#define PELZFIFO2 "/tmp/pelzfifo2"
 
 static void load_usage()
 {
@@ -153,6 +156,10 @@ int main(int argc, char **argv)
     pelz_log(LOG_DEBUG, "Message: %s", msg);
     write_to_pipe(msg);
     free(msg);
+    if (unlink(PELZFIFO2) == 0)
+      pelz_log(LOG_INFO, "Second pipe deleted successfully");
+    else
+      pelz_log(LOG_INFO, "Failed to delete the second pipe");
   }
   else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "load", 4) == 0))
   {

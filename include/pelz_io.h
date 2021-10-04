@@ -50,10 +50,11 @@ extern "C"
  * </pre>
  *
  * @param[in] msg Message from the pipe to be parsed and executed
+ * @param[out] response Response to be sent to the second pipe 
  *
  * @return 0 if success, 1 if error or exit service
  */
-  int read_pipe(char *msg);
+  int read_pipe(char *msg, char **response);
 #ifdef __cplusplus
 }
 #endif

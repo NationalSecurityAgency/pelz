@@ -18,6 +18,7 @@
 #include "pelz_enclave_u.h"
 
 #define PELZFIFO "/tmp/pelzfifo"
+#define PELZFIFO2 "/tmp/pelzfifo2"
 #define BUFSIZE 1024
 #define MODE 0600
 
@@ -28,11 +29,21 @@ void *fifo_thread_process(void *arg)
 
   int fd;
   int ret;
+  char *msg;
   char buf[BUFSIZE];
 
   if (mkfifo(PELZFIFO, MODE) == 0)
   {
     pelz_log(LOG_INFO, "Pipe created successfully");
+  }
+  else
+  {
+    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+  }
+
+  if (mkfifo(PELZFIFO2, MODE) == 0)
+  {
+    pelz_log(LOG_INFO, "Second pipe created successfully");
   }
   else
   {
@@ -57,11 +68,32 @@ void *fifo_thread_process(void *arg)
     if (ret > 0)
     {
       pthread_mutex_lock(&lock);
-      if (read_pipe(buf) == 1)
+      if (read_pipe(buf, &msg) == 1)
       {
         pthread_mutex_unlock(&lock);
         break;
       }
+
+      fd = open(PELZFIFO2, O_WRONLY | O_NONBLOCK);
+      if (fd == -1)
+      {
+        pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+        free(msg);
+        pthread_mutex_unlock(&lock);
+        continue;
+      }
+
+      ret = write(fd, msg, strlen(msg) + 1);
+      free(msg);
+      if (close(fd) == -1)
+        pelz_log(LOG_DEBUG, "Error closing pipe");
+      if (ret == -1)
+      {
+        pelz_log(LOG_DEBUG, "Error writing to pipe");
+        pthread_mutex_unlock(&lock);
+        continue;
+      }
+      pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
       pthread_mutex_unlock(&lock);
     }
   }
