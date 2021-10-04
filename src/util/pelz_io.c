@@ -297,8 +297,8 @@ int parse_pipe_message(char *msg, char **response)
       {
       case 'c':
         len = strcspn(msg, "\n");
-        path = (char *) malloc((len - 10) * sizeof(char));  //the number 10 is used because it the number of chars in "pelz -l -c " minus 1 for the null terminator
-        memcpy(path, &msg[11], len);  //the number 11 is used because it the number of chars in "pelz -l -c "
+        path = (char *) calloc((len - 10), sizeof(char)); //the number 10 is used because it the number of chars in "pelz -l -c " minus 1 for the null terminator
+        memcpy(path, &msg[11], len - 11); //the number 11 is used because it the number of chars in "pelz -l -c "
         pelz_log(LOG_DEBUG, "File Path: %s", path);
         path_ext = strrchr(path, '.');
         pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);

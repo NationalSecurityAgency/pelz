@@ -50,10 +50,10 @@ void *fifo_thread_process(void *arg)
 
   do
   {
+    pthread_mutex_lock(&lock);
     if (read_from_pipe((char *) PELZFIFO, &msg))
       break;
 
-    pthread_mutex_lock(&lock);
     if (parse_pipe_message(msg, &resp) == 1)
     {
       if (write_to_pipe((char *) PELZFIFO2, resp))
