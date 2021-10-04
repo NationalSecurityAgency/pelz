@@ -34,14 +34,27 @@ extern "C"
 
 /**
  * <pre>
- * Writes a message to the Pelz FIFO pipe
+ * Writes a message to the FIFO pipe
  * </pre>
  *
+ * @param[in] pipe The FIFO pipe name
  * @param[in] msg Message to be sent along the pipe
  *
  * @return 0 if success, 1 if error
  */
-  int write_to_pipe(char *msg);
+  int write_to_pipe(char *pipe, char *msg);
+
+/**
+ * <pre>
+ * Reads a message from the FIFO pipe
+ * </pre>
+ *
+ * @param[in] pipe The FIFO pipe name
+ * @param[out] msg Message sent along the pipe
+ *
+ * @return 0 if success, 1 if error
+ */
+  int read_from_pipe(char *pipe, char **msg);
 
 /**
  * <pre>
@@ -54,7 +67,7 @@ extern "C"
  *
  * @return 0 if success, 1 if error or exit service
  */
-  int read_pipe(char *msg, char **response);
+  int parse_pipe_message(char *msg, char **response);
 #ifdef __cplusplus
 }
 #endif

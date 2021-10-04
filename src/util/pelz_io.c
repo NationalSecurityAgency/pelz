@@ -177,23 +177,21 @@ int file_check(char *file_path)
   return (0);
 }
 
-int write_to_pipe(char *msg)
+int write_to_pipe(char *pipe, char *msg)
 {
   int fd;
   int ret;
-  char buf[BUFSIZE];
 
-  if (file_check((char *) PELZFIFO))
+  if (file_check(pipe))
   {
     pelz_log(LOG_DEBUG, "Pipe not found");
-    pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
     return 1;
   }
 
-  fd = open(PELZFIFO, O_WRONLY | O_NONBLOCK);
+  fd = open(pipe, O_WRONLY | O_NONBLOCK);
   if (fd == -1)
   {
-    pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+    pelz_log(LOG_INFO, "Error opening pipe");
     return 1;
   }
 
@@ -205,16 +203,23 @@ int write_to_pipe(char *msg)
     pelz_log(LOG_DEBUG, "Error writing to pipe");
     return 1;
   }
-  pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+  return 0;
+}
 
-  if (file_check((char *) PELZFIFO2))
+int read_from_pipe(char *pipe, char **msg)
+{
+  int fd;
+  int ret;
+  char buf[BUFSIZE];
+
+  if (file_check(pipe))
   {
     pelz_log(LOG_DEBUG, "Pipe not found");
-    pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+    pelz_log(LOG_INFO, "Unable to read from pipe.");
     return 1;
   }
 
-  fd = open(PELZFIFO2, O_RDONLY);
+  fd = open(pipe, O_RDONLY);
   if (fd == -1)
   {
     pelz_log(LOG_ERR, "Error opening pipe");
@@ -229,16 +234,15 @@ int write_to_pipe(char *msg)
 
   if (close(fd) == -1)
     pelz_log(LOG_ERR, "Error closing pipe");
-
   if (ret > 0)
   {
-    pelz_log(LOG_INFO, "%s", buf);
+    *msg = (char *) calloc(strlen(buf), sizeof(char));
+    memcpy(*msg, buf, strlen(buf));
   }
-
   return 0;
 }
 
-int read_pipe(char *msg, char **response)
+int parse_pipe_message(char *msg, char **response)
 {
   int ret;
   int len = 0;
@@ -246,14 +250,12 @@ int read_pipe(char *msg, char **response)
   char *path = NULL;
   char *path_ext;
   charbuf key_id;
-
   uint8_t *nkl_data = NULL;
   size_t nkl_data_len = 0;
   char *authString = NULL;
   size_t auth_string_len = 0;
   const char *ownerAuthPasswd = "";
   size_t oa_passwd_len = 0;
-
   uint8_t *data = NULL;
   size_t data_length = 0;
   uint64_t handle;
@@ -267,7 +269,6 @@ int read_pipe(char *msg, char **response)
  *  -k    key      Key with a specified id
  *  -a    all      Indicate all key or cert
  */
-
   if (memcmp(msg, "pelz -", 6) == 0)
   {
     opt = msg[6];
@@ -301,7 +302,6 @@ int read_pipe(char *msg, char **response)
         pelz_log(LOG_DEBUG, "File Path: %s", path);
         path_ext = strrchr(path, '.');
         pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-
         if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
         {
           if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
@@ -315,7 +315,6 @@ int read_pipe(char *msg, char **response)
               return 0;
             }
             pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-
             if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
                 (uint8_t *) ownerAuthPasswd, oa_passwd_len))
             {
@@ -356,7 +355,6 @@ int read_pipe(char *msg, char **response)
               return 0;
             }
             pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-
             if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
             {
               pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
@@ -389,7 +387,6 @@ int read_pipe(char *msg, char **response)
         pelz_log(LOG_DEBUG, "File Path: %s", path);
         path_ext = strrchr(path, '.');
         pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-
         if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
         {
           if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
@@ -403,7 +400,6 @@ int read_pipe(char *msg, char **response)
               return 0;
             }
             pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-
             if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
                 (uint8_t *) ownerAuthPasswd, oa_passwd_len))
             {
@@ -444,7 +440,6 @@ int read_pipe(char *msg, char **response)
               return 0;
             }
             pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-
             if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
             {
               pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");

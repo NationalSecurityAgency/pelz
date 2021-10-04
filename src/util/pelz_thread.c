@@ -27,10 +27,8 @@ void *fifo_thread_process(void *arg)
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
   pthread_mutex_t lock = threadArgs->lock;
 
-  int fd;
-  int ret;
-  char *msg;
-  char buf[BUFSIZE];
+  char *msg = NULL;
+  char *resp = NULL;
 
   if (mkfifo(PELZFIFO, MODE) == 0)
   {
@@ -52,50 +50,29 @@ void *fifo_thread_process(void *arg)
 
   do
   {
-    fd = open(PELZFIFO, O_RDONLY);
-    if (fd == -1)
+    if (read_from_pipe((char *) PELZFIFO, &msg))
+      break;
+
+    pthread_mutex_lock(&lock);
+    if (parse_pipe_message(msg, &resp) == 1)
     {
-      pelz_log(LOG_ERR, "Error opening pipe");
+      if (write_to_pipe((char *) PELZFIFO2, resp))
+        pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+      else
+        pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
+      free(msg);
+      free(resp);
+      pthread_mutex_unlock(&lock);
       break;
     }
-    ret = read(fd, buf, sizeof(buf));
-    if (ret < 0)
-    {
-      pelz_log(LOG_ERR, "Pipe read failed");
-    }
-    if (close(fd) == -1)
-      pelz_log(LOG_ERR, "Error closing pipe");
-    if (ret > 0)
-    {
-      pthread_mutex_lock(&lock);
-      if (read_pipe(buf, &msg) == 1)
-      {
-        pthread_mutex_unlock(&lock);
-        break;
-      }
 
-      fd = open(PELZFIFO2, O_WRONLY | O_NONBLOCK);
-      if (fd == -1)
-      {
-        pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
-        free(msg);
-        pthread_mutex_unlock(&lock);
-        continue;
-      }
-
-      ret = write(fd, msg, strlen(msg) + 1);
-      free(msg);
-      if (close(fd) == -1)
-        pelz_log(LOG_DEBUG, "Error closing pipe");
-      if (ret == -1)
-      {
-        pelz_log(LOG_DEBUG, "Error writing to pipe");
-        pthread_mutex_unlock(&lock);
-        continue;
-      }
+    free(msg);
+    if (write_to_pipe((char *) PELZFIFO2, resp))
+      pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+    else
       pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
-      pthread_mutex_unlock(&lock);
-    }
+    free(resp);
+    pthread_mutex_unlock(&lock);
   }
   while (true);
   global_pipe_reader_active = false;
