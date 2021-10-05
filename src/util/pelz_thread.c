@@ -17,8 +17,8 @@
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZFIFO "/tmp/pelzfifo"
-#define PELZFIFO2 "/tmp/pelzfifo2"
+#define PELZSERVICEIN "/tmp/pelzServiceIn"
+#define PELZSERVICEOUT "/tmp/pelzServiceOut"
 #define BUFSIZE 1024
 #define MODE 0600
 
@@ -30,7 +30,7 @@ void *fifo_thread_process(void *arg)
   char *msg = NULL;
   char *resp = NULL;
 
-  if (mkfifo(PELZFIFO, MODE) == 0)
+  if (mkfifo(PELZSERVICEIN, MODE) == 0)
   {
     pelz_log(LOG_INFO, "Pipe created successfully");
   }
@@ -39,7 +39,7 @@ void *fifo_thread_process(void *arg)
     pelz_log(LOG_INFO, "Error: %s", strerror(errno));
   }
 
-  if (mkfifo(PELZFIFO2, MODE) == 0)
+  if (mkfifo(PELZSERVICEOUT, MODE) == 0)
   {
     pelz_log(LOG_INFO, "Second pipe created successfully");
   }
@@ -51,12 +51,12 @@ void *fifo_thread_process(void *arg)
   do
   {
     pthread_mutex_lock(&lock);
-    if (read_from_pipe((char *) PELZFIFO, &msg))
+    if (read_from_pipe((char *) PELZSERVICEIN, &msg))
       break;
 
     if (parse_pipe_message(msg, &resp) == 1)
     {
-      if (write_to_pipe((char *) PELZFIFO2, resp))
+      if (write_to_pipe((char *) PELZSERVICEOUT, resp))
         pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
       else
         pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
@@ -67,7 +67,7 @@ void *fifo_thread_process(void *arg)
     }
 
     free(msg);
-    if (write_to_pipe((char *) PELZFIFO2, resp))
+    if (write_to_pipe((char *) PELZSERVICEOUT, resp))
       pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
     else
       pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");

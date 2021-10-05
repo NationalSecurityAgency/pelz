@@ -23,8 +23,7 @@
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZFIFO "/tmp/pelzfifo"
-#define PELZFIFO2 "/tmp/pelzfifo2"
+#define PELZSERVICEIN "/tmp/pelzServiceIn"
 #define BUFSIZE 1024
 
 void ocall_malloc(size_t size, char **buf)
@@ -276,7 +275,7 @@ int parse_pipe_message(char *msg, char **response)
     switch (opt)
     {
     case 'e':
-      if (unlink(PELZFIFO) == 0)
+      if (unlink(PELZSERVICEIN) == 0)
         pelz_log(LOG_INFO, "Pipe deleted successfully");
       else
         pelz_log(LOG_INFO, "Failed to delete the pipe");

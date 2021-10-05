@@ -23,8 +23,8 @@
 sgx_enclave_id_t eid = 0;
 
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
-#define PELZFIFO "/tmp/pelzfifo"
-#define PELZFIFO2 "/tmp/pelzfifo2"
+#define PELZSERVICEIN "/tmp/pelzServiceIn"
+#define PELZSERVICEOUT "/tmp/pelzServiceOut"
 
 static void load_usage()
 {
@@ -155,17 +155,17 @@ int main(int argc, char **argv)
     msg = (char *) calloc(8, sizeof(char));
     memcpy(msg, "pelz -e", 7);
     pelz_log(LOG_DEBUG, "Message: %s", msg);
-    if (write_to_pipe((char *) PELZFIFO, msg))
+    if (write_to_pipe((char *) PELZSERVICEIN, msg))
       pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
     else
       pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
     free(msg);
-    if (read_from_pipe((char *) PELZFIFO2, &msg))
+    if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
       pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
     else
       pelz_log(LOG_INFO, "%s", msg);
     free(msg);
-    if (unlink(PELZFIFO2) == 0)
+    if (unlink(PELZSERVICEOUT) == 0)
       pelz_log(LOG_INFO, "Second pipe deleted successfully");
     else
       pelz_log(LOG_INFO, "Failed to delete the second pipe");
@@ -197,12 +197,12 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz -l -c ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZFIFO, msg))
+        if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
         else
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
         free(msg);
-        if (read_from_pipe((char *) PELZFIFO2, &msg))
+        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
         else
           pelz_log(LOG_INFO, "%s", msg);
@@ -240,12 +240,12 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz -l -p ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZFIFO, msg))
+        if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
         else
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
         free(msg);
-        if (read_from_pipe((char *) PELZFIFO2, &msg))
+        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
         else
           pelz_log(LOG_INFO, "%s", msg);
@@ -278,12 +278,12 @@ int main(int argc, char **argv)
         msg = (char *) calloc(14, sizeof(char));
         memcpy(msg, "pelz -r -k -a", 13);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZFIFO, msg))
+        if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
         else
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
         free(msg);
-        if (read_from_pipe((char *) PELZFIFO2, &msg))
+        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
         else
           pelz_log(LOG_INFO, "%s", msg);
@@ -303,12 +303,12 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz -r -k ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZFIFO, msg))
+        if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
         else
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
         free(msg);
-        if (read_from_pipe((char *) PELZFIFO2, &msg))
+        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
         else
           pelz_log(LOG_INFO, "%s", msg);
@@ -331,12 +331,12 @@ int main(int argc, char **argv)
         msg = (char *) calloc(14, sizeof(char));
         memcpy(msg, "pelz -r -c -a", 13);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZFIFO, msg))
+        if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
         else
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
         free(msg);
-        if (read_from_pipe((char *) PELZFIFO2, &msg))
+        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
         else
           pelz_log(LOG_INFO, "%s", msg);
@@ -363,12 +363,12 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz -r -c ", 11);
         memcpy(&msg[11], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZFIFO, msg))
+        if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
         else
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
         free(msg);
-        if (read_from_pipe((char *) PELZFIFO2, &msg))
+        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
         else
           pelz_log(LOG_INFO, "%s", msg);
