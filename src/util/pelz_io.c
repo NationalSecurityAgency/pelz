@@ -97,38 +97,40 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   }
 
   URI_SCHEME scheme = get_uri_scheme(key_id_data);
-  switch (scheme) {
+
+  switch (scheme)
+  {
   case FILE_URI:
     {
-    char *filename = get_filename_from_key_id(key_uri_to_parse);
+      char *filename = get_filename_from_key_id(key_uri_to_parse);
 
-    if (filename == NULL)
+      if (filename == NULL)
       {
-	pelz_log(LOG_ERR, "Failed to parse filename from URI %s\n", key_uri_to_parse);
-	free(key_uri_to_parse);
-	uriFreeUriMembersA(&key_id_data);
-	break;
+        pelz_log(LOG_ERR, "Failed to parse filename from URI %s\n", key_uri_to_parse);
+        free(key_uri_to_parse);
+        uriFreeUriMembersA(&key_id_data);
+        break;
       }
-    free(key_uri_to_parse);
-    uriFreeUriMembersA(&key_id_data);
-    
-    if (pelz_load_key_from_file(filename, key_len, key))
+      free(key_uri_to_parse);
+      uriFreeUriMembersA(&key_id_data);
+
+      if (pelz_load_key_from_file(filename, key_len, key))
       {
-	pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-	free(filename);
-	break;
+        pelz_log(LOG_ERR, "Failed to read key file %s", filename);
+        free(filename);
+        break;
       }
-    free(filename);
-    return_value = 0;
-    break;
+      free(filename);
+      return_value = 0;
+      break;
     }
   case URI_SCHEME_UNKNOWN:
     // Intentional fallthrough
   default:
     {
-    pelz_log(LOG_ERR, "Scheme not supported");
-    free(key_uri_to_parse);
-    uriFreeUriMembersA(&key_id_data);
+      pelz_log(LOG_ERR, "Scheme not supported");
+      free(key_uri_to_parse);
+      uriFreeUriMembersA(&key_id_data);
     }
   }
   return return_value;
