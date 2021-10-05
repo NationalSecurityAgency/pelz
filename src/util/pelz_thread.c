@@ -69,10 +69,15 @@ void *fifo_thread_process(void *arg)
      * token[3] = path/to/output
      *
      */
-    tokenize_pipe_message(&tokens, &num_tokens, msg, strlen(msg));
+    if (tokenize_pipe_message(&tokens, &num_tokens, msg, strlen(msg)))
+    {
+      free(msg);
+      pthread_mutex_unlock(&lock);
+      continue;
+    }
     free(msg);
 
-    if (parse_pipe_message(tokens, &resp) == 1)
+    if (parse_pipe_message(tokens, num_tokens, &resp) == 1)
     {
       if (write_to_pipe((char *) PELZSERVICEOUT, resp))
         pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");

@@ -77,11 +77,12 @@ extern "C"
  * </pre>
  *
  * @param[in] tokens Tokenized message from the pipe to be parsed and executed
+ * @param[in] num_tokens The number of tokens output
  * @param[out] response Response to be sent to the second pipe 
  *
  * @return 0 if success, 1 if error or exit service
  */
-  int parse_pipe_message(char **tokens, char **response);
+  int parse_pipe_message(char **tokens, size_t num_tokens, char **response);
 #ifdef __cplusplus
 }
 #endif
