@@ -76,12 +76,12 @@ extern "C"
  * from message
  * </pre>
  *
- * @param[in] msg Message from the pipe to be parsed and executed
+ * @param[in] tokens Tokenized message from the pipe to be parsed and executed
  * @param[out] response Response to be sent to the second pipe 
  *
  * @return 0 if success, 1 if error or exit service
  */
-  int parse_pipe_message(char *msg, char **response);
+  int parse_pipe_message(char **tokens, char **response);
 #ifdef __cplusplus
 }
 #endif

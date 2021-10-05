@@ -29,6 +29,8 @@ void *fifo_thread_process(void *arg)
 
   char *msg = NULL;
   char *resp = NULL;
+  char **tokens;
+  size_t num_tokens = 0;
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
   {
@@ -54,19 +56,44 @@ void *fifo_thread_process(void *arg)
     if (read_from_pipe((char *) PELZSERVICEIN, &msg))
       break;
 
-    if (parse_pipe_message(msg, &resp) == 1)
+    /*
+     * Tokens come out in the following format:
+     *
+     * token[0] is the program that called it (e.g., pelz)
+     * token[1] is the command parsed below
+     * token[2-n] are the command inputs. An example for load cert would be:
+     *
+     * token[0] = pelz
+     * token[1] = 2
+     * token[2] = path/to/input
+     * token[3] = path/to/output
+     *
+     */
+    tokenize_pipe_message(&tokens, &num_tokens, msg, strlen(msg));
+    free(msg);
+
+    if (parse_pipe_message(tokens, &resp) == 1)
     {
       if (write_to_pipe((char *) PELZSERVICEOUT, resp))
         pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
       else
         pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
-      free(msg);
+
       free(resp);
+      for (size_t i = 0; i < num_tokens; i++)
+      {
+        free(tokens[i]);
+      }
+      free(tokens);
       pthread_mutex_unlock(&lock);
       break;
     }
 
-    free(msg);
+    for (size_t i = 0; i < num_tokens; i++)
+    {
+      free(tokens[i]);
+    }
+    free(tokens);
     if (write_to_pipe((char *) PELZSERVICEOUT, resp))
       pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
     else
