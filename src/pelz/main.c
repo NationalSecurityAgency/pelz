@@ -150,7 +150,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "exit", 4) == 0))
+  if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "exit", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
   {
     msg = (char *) calloc(7, sizeof(char));
     memcpy(msg, "pelz 1", 6);
@@ -170,10 +170,10 @@ int main(int argc, char **argv)
     else
       pelz_log(LOG_INFO, "Failed to delete the second pipe");
   }
-  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "load", 4) == 0))
+  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "load", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
   {
     pelz_log(LOG_DEBUG, "Load option");
-    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0))
+    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0) && (strlen(argv[arg_index + 2]) == 4))
     {
       pelz_log(LOG_DEBUG, "Load cert option");
       if (argv[arg_index + 3] != NULL)
@@ -216,7 +216,8 @@ int main(int argc, char **argv)
         return 1;
       }
     }
-    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "private", 3) == 0))
+    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "private", 7) == 0)
+      && (strlen(argv[arg_index + 2]) == 7))
     {
       pelz_log(LOG_DEBUG, "Load private option");
       if (argv[arg_index + 3] != NULL)
@@ -266,10 +267,11 @@ int main(int argc, char **argv)
       return 1;
     }
   }
-  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "remove", 6) == 0))
+  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "remove", 6) == 0)
+    && (strlen(argv[arg_index + 1]) == 6))
   {
     pelz_log(LOG_DEBUG, "Remove option");
-    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "key", 3) == 0))
+    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "key", 3) == 0) && (strlen(argv[arg_index + 2]) == 3))
     {
       pelz_log(LOG_DEBUG, "Remove key option");
       if (all && (argv[arg_index + 3] == NULL))
@@ -322,7 +324,8 @@ int main(int argc, char **argv)
         return 1;
       }
     }
-    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0))
+    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0)
+      && (strlen(argv[arg_index + 2]) == 4))
     {
       pelz_log(LOG_DEBUG, "Remove cert option");
       if (all && (argv[arg_index + 3] == NULL))
@@ -389,7 +392,7 @@ int main(int argc, char **argv)
       return 1;
     }
   }
-  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "seal", 4) == 0))
+  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "seal", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
   {
     pelz_log(LOG_DEBUG, "Seal option");
     if (argv[arg_index + 2] != NULL)
