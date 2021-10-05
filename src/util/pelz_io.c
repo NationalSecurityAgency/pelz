@@ -260,13 +260,13 @@ int parse_pipe_message(char *msg, char **response)
   uint64_t handle;
 
 /*
- *  -e    exit     Terminate running pelz-service
- *  -l    load     Loads a value of type <type> (currently either cert or private)
- *  -c    cert     Server certificate
- *  -p    private  Private key for connections to key servers
- *  -r    remove   Removes a value of type <target> (currently either cert or key)
- *  -k    key      Key with a specified id
- *  -a    all      Indicate all key or cert
+ *  -1    exit              Terminate running pelz-service
+ *  -2    load cert         Loads a server certificate
+ *  -3    load private      Loads a private key for connections to key servers
+ *  -4    remove cert       Removes a server certificate    
+ *  -5    remove all certs  Removes all server certificates
+ *  -6    remove key        Removes a key with a specified id
+ *  -7    remove all keys   Removes all keys
  */
   if (memcmp(msg, "pelz -", 6) == 0)
   {
@@ -274,7 +274,7 @@ int parse_pipe_message(char *msg, char **response)
     pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(msg), opt, msg);
     switch (opt)
     {
-    case 'e':
+    case '1':
       if (unlink(PELZSERVICEIN) == 0)
         pelz_log(LOG_INFO, "Pipe deleted successfully");
       else
@@ -282,277 +282,235 @@ int parse_pipe_message(char *msg, char **response)
       *response = (char *) calloc(18, sizeof(char));
       memcpy(*response, "Exit pelz-service", 17);
       return 1;
-    case 'l':
-      if (memcmp(&msg[8], "-", 1) == 0)
-        opt = msg[9];
-      else
+    case '2':
+      len = strcspn(msg, "\n");
+      path = (char *) calloc((len - 7), sizeof(char)); //the number 7 is used because it the number of chars in "pelz -2 " minus 1 for the null terminator
+      memcpy(path, &msg[8], len - 8); //the number 8 is used because it the number of chars in "pelz -2 "
+      pelz_log(LOG_DEBUG, "File Path: %s", path);
+      path_ext = strrchr(path, '.');
+      pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+      if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
       {
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        *response = (char *) calloc(21, sizeof(char));
-        memcpy(*response, "Pipe command invalid", 20);
-        return 0;
-      }
-      switch (opt)
-      {
-      case 'c':
-        len = strcspn(msg, "\n");
-        path = (char *) calloc((len - 10), sizeof(char)); //the number 10 is used because it the number of chars in "pelz -l -c " minus 1 for the null terminator
-        memcpy(path, &msg[11], len - 11); //the number 11 is used because it the number of chars in "pelz -l -c "
-        pelz_log(LOG_DEBUG, "File Path: %s", path);
-        path_ext = strrchr(path, '.');
-        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-        if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
+        if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
         {
-          if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
+          if (read_bytes_from_file(path, &data, &data_length))
           {
-            if (read_bytes_from_file(path, &data, &data_length))
-            {
-              pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
-              free(path);
-              *response = (char *) calloc(20, sizeof(char));
-              memcpy(*response, "Unable to read file", 19);
-              return 0;
-            }
-            pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-            if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
-                (uint8_t *) ownerAuthPasswd, oa_passwd_len))
-            {
-              pelz_log(LOG_ERR, "TPM unseal failed");
-              free(data);
-              free(path);
-              *response = (char *) calloc(18, sizeof(char));
-              memcpy(*response, "TPM unseal failed", 17);
-              return 0;
-            }
-
+            pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
+            free(path);
+            *response = (char *) calloc(20, sizeof(char));
+            memcpy(*response, "Unable to read file", 19);
+            return 0;
+          }
+          pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
+          if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+              (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+          {
+            pelz_log(LOG_ERR, "TPM unseal failed");
             free(data);
-            if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
-            {
-              pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-              free(nkl_data);
-              free(path);
-              *response = (char *) calloc(18, sizeof(char));
-              memcpy(*response, "SGX unseal failed", 17);
-              return 0;
-            }
+            free(path);
+            *response = (char *) calloc(18, sizeof(char));
+            memcpy(*response, "TPM unseal failed", 17);
+            return 0;
+          }
 
+          free(data);
+          if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
             free(nkl_data);
             free(path);
-            pelz_log(LOG_INFO, "Load cert call not finished");
-            *response = (char *) calloc(28, sizeof(char));
-            memcpy(*response, "Load cert call not finished", 27);
+            *response = (char *) calloc(18, sizeof(char));
+            memcpy(*response, "SGX unseal failed", 17);
             return 0;
           }
-          else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
-          {
-            if (read_bytes_from_file(path, &data, &data_length))
-            {
-              pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
-              free(path);
-              *response = (char *) calloc(20, sizeof(char));
-              memcpy(*response, "Unable to read file", 19);
-              return 0;
-            }
-            pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-            if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
-            {
-              pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-              free(data);
-              free(path);
-              *response = (char *) calloc(18, sizeof(char));
-              memcpy(*response, "SGX unseal failed", 17);
-              return 0;
-            }
 
-            free(data);
-            free(path);
-            pelz_log(LOG_INFO, "Load cert call not finished");
-            *response = (char *) calloc(28, sizeof(char));
-            memcpy(*response, "Load cert call not finished", 27);
-            return 0;
-          }
-        }
-
-        pelz_log(LOG_INFO, "Invaild extention for load cert call");
-        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-        free(path);
-        *response = (char *) calloc(36, sizeof(char));
-        memcpy(*response, "Invaild extention for load cert call", 36);
-        return 0;
-      case 'p':
-        len = strcspn(msg, "\n");
-        path = (char *) malloc((len - 10) * sizeof(char));  //the number 10 is used because it the number of chars in "pelz -l -p " - 1
-        memcpy(path, &msg[11], len);
-        pelz_log(LOG_DEBUG, "File Path: %s", path);
-        path_ext = strrchr(path, '.');
-        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-        if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
-        {
-          if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
-          {
-            if (read_bytes_from_file(path, &data, &data_length))
-            {
-              pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
-              free(path);
-              *response = (char *) calloc(20, sizeof(char));
-              memcpy(*response, "Unable to read file", 19);
-              return 0;
-            }
-            pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-            if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
-                (uint8_t *) ownerAuthPasswd, oa_passwd_len))
-            {
-              pelz_log(LOG_ERR, "TPM unseal failed");
-              free(data);
-              free(path);
-              *response = (char *) calloc(18, sizeof(char));
-              memcpy(*response, "TPM unseal failed", 17);
-              return 0;
-            }
-
-            free(data);
-            if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
-            {
-              pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-              free(nkl_data);
-              free(path);
-              *response = (char *) calloc(18, sizeof(char));
-              memcpy(*response, "SGX unseal failed", 17);
-              return 0;
-            }
-
-            free(nkl_data);
-            free(path);
-            pelz_log(LOG_INFO, "Load private call not finished");
-            *response = (char *) calloc(31, sizeof(char));
-            memcpy(*response, "Load private call not finished", 30);
-            return 0;
-          }
-          else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
-          {
-            if (read_bytes_from_file(path, &data, &data_length))
-            {
-              pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
-              free(path);
-              *response = (char *) calloc(20, sizeof(char));
-              memcpy(*response, "Unable to read file", 19);
-              return 0;
-            }
-            pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
-            if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
-            {
-              pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-              free(data);
-              free(path);
-              *response = (char *) calloc(18, sizeof(char));
-              memcpy(*response, "SGX unseal failed", 17);
-              return 0;
-            }
-
-            free(data);
-            free(path);
-            pelz_log(LOG_INFO, "Load private call not finished");
-            *response = (char *) calloc(31, sizeof(char));
-            memcpy(*response, "Load private call not finished", 30);
-            return 0;
-          }
-        }
-
-        pelz_log(LOG_INFO, "Invaild extention for load private call");
-        pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-        free(path);
-        *response = (char *) calloc(40, sizeof(char));
-        memcpy(*response, "Invaild extention for load private call", 39);
-        return 0;
-      default:
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        *response = (char *) calloc(21, sizeof(char));
-        memcpy(*response, "Pipe command invalid", 20);
-        return 0;
-      }
-    case 'r':
-      if (memcmp(&msg[8], "-", 1) == 0)
-        opt = msg[9];
-      else
-      {
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        *response = (char *) calloc(21, sizeof(char));
-        memcpy(*response, "Pipe command invalid", 20);
-        return 0;
-      }
-      switch (opt)
-      {
-      case 'k':
-        if (memcmp(&msg[10], " -a", 3) == 0)
-        {
-          key_table_destroy(eid, &ret);
-          if (ret)
-          {
-            pelz_log(LOG_ERR, "Key Table Destroy Failure");
-            *response = (char *) calloc(26, sizeof(char));
-            memcpy(*response, "Key Table Destroy Failure", 25);
-            return 1;
-          }
-          pelz_log(LOG_INFO, "Key Table Destroyed");
-          key_table_init(eid, &ret);
-          if (ret)
-          {
-            pelz_log(LOG_ERR, "Key Table Init Failure");
-            *response = (char *) calloc(23, sizeof(char));
-            memcpy(*response, "Key Table Init Failure", 22);
-            return 1;
-          }
-          pelz_log(LOG_INFO, "Key Table Re-Initialized");
-          *response = (char *) calloc(17, sizeof(char));
-          memcpy(*response, "All keys removed", 16);
-          return 0;
-        }
-        else
-        {
-          len = strcspn(msg, "\n");
-          key_id = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -r -k "
-          memcpy(key_id.chars, &msg[11], (key_id.len));
-          key_table_delete(eid, &ret, key_id);
-          if (ret)
-          {
-            pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
-            *response = (char *) calloc(22, sizeof(char));
-            memcpy(*response, "Failure to remove key", 21);
-          }
-          else
-          {
-            pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
-            *response = (char *) calloc(12, sizeof(char));
-            memcpy(*response, "Removed key", 11);
-          }
-          free_charbuf(&key_id);
-          return 0;
-        }
-      case 'c':
-        if (memcmp(&msg[10], " -a", 3) == 0)
-        {
-          pelz_log(LOG_INFO, "Remove all certs call not added");
-          *response = (char *) calloc(32, sizeof(char));
-          memcpy(*response, "Remove all certs call not added", 31);
-          return 0;
-        }
-        else
-        {
-          len = strcspn(msg, "\n");
-          path = (char *) malloc((len - 10) * sizeof(char));  //the number 10 is used because it the number of chars in "pelz -r -c " - 1 
-          memcpy(path, &msg[11], len);
+          free(nkl_data);
           free(path);
-          pelz_log(LOG_INFO, "Remove cert call not added");
-          *response = (char *) calloc(27, sizeof(char));
-          memcpy(*response, "Remove cert call not added", 26);
+          pelz_log(LOG_INFO, "Load cert call not finished");
+          *response = (char *) calloc(28, sizeof(char));
+          memcpy(*response, "Load cert call not finished", 27);
           return 0;
         }
-      default:
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        *response = (char *) calloc(21, sizeof(char));
-        memcpy(*response, "Pipe command invalid", 20);
-        return 0;
+        else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
+        {
+          if (read_bytes_from_file(path, &data, &data_length))
+          {
+            pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
+            free(path);
+            *response = (char *) calloc(20, sizeof(char));
+            memcpy(*response, "Unable to read file", 19);
+            return 0;
+          }
+	  pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
+
+	  if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+            free(data);
+            free(path);
+            *response = (char *) calloc(18, sizeof(char));
+            memcpy(*response, "SGX unseal failed", 17);
+            return 0;
+          }
+
+          free(data);
+          free(path);
+          pelz_log(LOG_INFO, "Load cert call not finished");
+          *response = (char *) calloc(28, sizeof(char));
+          memcpy(*response, "Load cert call not finished", 27);
+          return 0;
+        }
       }
+
+      pelz_log(LOG_INFO, "Invaild extention for load cert call");
+      pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+      free(path);
+      *response = (char *) calloc(36, sizeof(char));
+      memcpy(*response, "Invaild extention for load cert call", 36);
+      return 0;
+    case '3':
+      len = strcspn(msg, "\n");
+      path = (char *) calloc((len - 7) * sizeof(char));  //the number 7 is used because it the number of chars in "pelz -3 " - 1
+      memcpy(path, &msg[8], len - 8);  //the number 8 is used because it the number of chars in "pelz -3 "
+      pelz_log(LOG_DEBUG, "File Path: %s", path);
+      path_ext = strrchr(path, '.');
+      pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+      if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
+      {
+        if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
+        {
+          if (read_bytes_from_file(path, &data, &data_length))
+          {
+            pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
+            free(path);
+            *response = (char *) calloc(20, sizeof(char));
+            memcpy(*response, "Unable to read file", 19);
+            return 0;
+          }
+          pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
+
+	  if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+              (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+          {
+            pelz_log(LOG_ERR, "TPM unseal failed");
+            free(data);
+            free(path);
+            *response = (char *) calloc(18, sizeof(char));
+            memcpy(*response, "TPM unseal failed", 17);
+            return 0;
+          }
+
+          free(data);
+          if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+            free(nkl_data);
+            free(path);
+            *response = (char *) calloc(18, sizeof(char));
+            memcpy(*response, "SGX unseal failed", 17);
+            return 0;
+          }
+
+          free(nkl_data);
+          free(path);
+          pelz_log(LOG_INFO, "Load private call not finished");
+          *response = (char *) calloc(31, sizeof(char));
+          memcpy(*response, "Load private call not finished", 30);
+          return 0;
+        }
+        else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
+        {
+          if (read_bytes_from_file(path, &data, &data_length))
+          {
+            pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
+            free(path);
+            *response = (char *) calloc(20, sizeof(char));
+            memcpy(*response, "Unable to read file", 19);
+            return 0;
+          }
+          pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
+          if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+          {
+            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+            free(data);
+            free(path);
+            *response = (char *) calloc(18, sizeof(char));
+            memcpy(*response, "SGX unseal failed", 17);
+            return 0;
+          }
+
+          free(data);
+          free(path);
+          pelz_log(LOG_INFO, "Load private call not finished");
+          *response = (char *) calloc(31, sizeof(char));
+          memcpy(*response, "Load private call not finished", 30);
+          return 0;
+        }
+      }
+
+      pelz_log(LOG_INFO, "Invaild extention for load private call");
+      pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+      free(path);
+      *response = (char *) calloc(40, sizeof(char));
+      memcpy(*response, "Invaild extention for load private call", 39);
+      return 0;
+    case '4':
+      len = strcspn(msg, "\n");
+      path = (char *) calloc((len - 7) * sizeof(char));  //the number 7 is used because it the number of chars in "pelz -4 " - 1
+      memcpy(path, &msg[8], len - 8);  //the number 8 is used because it the number of chars in "pelz -4 "
+      free(path);
+      pelz_log(LOG_INFO, "Remove cert call not added");
+      *response = (char *) calloc(27, sizeof(char));
+      memcpy(*response, "Remove cert call not added", 26);
+      return 0;
+    case '5':
+       pelz_log(LOG_INFO, "Remove all certs call not added");
+       *response = (char *) calloc(32, sizeof(char));
+       memcpy(*response, "Remove all certs call not added", 31);
+       return 0;
+    case '6':
+      len = strcspn(msg, "\n");
+      key_id = new_charbuf(len - 8); //the number 8 is used because it the number of chars in "pelz -6 "
+      memcpy(key_id.chars, &msg[8], (key_id.len));
+      key_table_delete(eid, &ret, key_id);
+      if (ret)
+      {
+        pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
+        *response = (char *) calloc(22, sizeof(char));
+        memcpy(*response, "Failure to remove key", 21);
+      }
+      else
+      {
+        pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
+        *response = (char *) calloc(12, sizeof(char));
+        memcpy(*response, "Removed key", 11);
+      }
+      free_charbuf(&key_id);
+      return 0;
+    case '7':
+      key_table_destroy(eid, &ret);
+      if (ret)
+      {
+        pelz_log(LOG_ERR, "Key Table Destroy Failure");
+        *response = (char *) calloc(26, sizeof(char));
+        memcpy(*response, "Key Table Destroy Failure", 25);
+        return 1;
+      }
+      pelz_log(LOG_INFO, "Key Table Destroyed");
+
+      key_table_init(eid, &ret);
+      if (ret)
+      {
+        pelz_log(LOG_ERR, "Key Table Init Failure");
+        *response = (char *) calloc(23, sizeof(char));
+        memcpy(*response, "Key Table Init Failure", 22);
+        return 1;
+      }
+      pelz_log(LOG_INFO, "Key Table Re-Initialized");
+
+      response = (char *) calloc(17, sizeof(char));
+      memcpy(*response, "All keys removed", 16);
+      return 0;
     default:
       pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
       *response = (char *) calloc(21, sizeof(char));

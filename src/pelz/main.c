@@ -153,7 +153,7 @@ int main(int argc, char **argv)
   if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "exit", 4) == 0))
   {
     msg = (char *) calloc(8, sizeof(char));
-    memcpy(msg, "pelz -e", 7);
+    memcpy(msg, "pelz -1", 7);
     pelz_log(LOG_DEBUG, "Message: %s", msg);
     if (write_to_pipe((char *) PELZSERVICEIN, msg))
       pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
@@ -193,9 +193,9 @@ int main(int argc, char **argv)
           free(outPath);
           return 1;
         }
-        msg = (char *) calloc((12 + path_id_size), sizeof(char));
-        memcpy(msg, "pelz -l -c ", 11);
-        memcpy(&msg[11], path_id, path_id_size);
+        msg = (char *) calloc((p + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -2 ", 8);
+        memcpy(&msg[8], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
@@ -236,9 +236,9 @@ int main(int argc, char **argv)
           free(outPath);
           return 1;
         }
-        msg = (char *) calloc((12 + path_id_size), sizeof(char));
-        memcpy(msg, "pelz -l -p ", 11);
-        memcpy(&msg[11], path_id, path_id_size);
+        msg = (char *) calloc((9 + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -3 ", 8);
+        memcpy(&msg[8], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
@@ -275,8 +275,8 @@ int main(int argc, char **argv)
       if (all && (argv[arg_index + 3] == NULL))
       {
         pelz_log(LOG_DEBUG, "Remove key --all option");
-        msg = (char *) calloc(14, sizeof(char));
-        memcpy(msg, "pelz -r -k -a", 13);
+        msg = (char *) calloc(8, sizeof(char));
+        memcpy(msg, "pelz -7", 7);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
@@ -299,9 +299,9 @@ int main(int argc, char **argv)
           memcpy(path_id, argv[arg_index + 3], path_id_size);
         }
         pelz_log(LOG_DEBUG, "<id> set: %.*s", (int) path_id_size, path_id);
-        msg = (char *) calloc((12 + path_id_size), sizeof(char));
-        memcpy(msg, "pelz -r -k ", 11);
-        memcpy(&msg[11], path_id, path_id_size);
+        msg = (char *) calloc((9 + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -6 ", 8);
+        memcpy(&msg[8], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
@@ -328,8 +328,8 @@ int main(int argc, char **argv)
       if (all && (argv[arg_index + 3] == NULL))
       {
         pelz_log(LOG_DEBUG, "Remove cert --all option");
-        msg = (char *) calloc(14, sizeof(char));
-        memcpy(msg, "pelz -r -c -a", 13);
+        msg = (char *) calloc(8, sizeof(char));
+        memcpy(msg, "pelz -5", 7);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
@@ -359,9 +359,9 @@ int main(int argc, char **argv)
           free(outPath);
           return 1;
         }
-        msg = (char *) calloc((12 + path_id_size), sizeof(char));
-        memcpy(msg, "pelz -r -c ", 11);
-        memcpy(&msg[11], path_id, path_id_size);
+        msg = (char *) calloc((9 + path_id_size), sizeof(char));
+        memcpy(msg, "pelz -4 ", 8);
+        memcpy(&msg[8], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
