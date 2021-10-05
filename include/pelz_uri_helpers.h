@@ -21,7 +21,7 @@ extern "C"
  * @return The URI_SCHEME enum, for URI_SCHEME_UNKNOWN if the
  *         URI does not have a recognized scheme.
  */
-URI_SCHEME get_uri_scheme(UriUriA uri);
+  URI_SCHEME get_uri_scheme(UriUriA uri);
 
 /**
  * @brief Returns the filename from a null-terminated key_id.
@@ -31,7 +31,7 @@ URI_SCHEME get_uri_scheme(UriUriA uri);
  *
  * @return The filename, or NULL on error.
  */
-char *get_filename_from_key_id(char *null_terminated_key_id);
+  char *get_filename_from_key_id(char *null_terminated_key_id);
 #ifdef __cplusplus
 }
 #endif

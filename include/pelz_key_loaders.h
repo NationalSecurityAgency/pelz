@@ -15,7 +15,7 @@ extern "C"
  *
  * @returns 0 on success, 1 on error
  */
-int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **key);
+  int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **key);
 
 #ifdef __cplusplus
 }
