@@ -193,7 +193,7 @@ int main(int argc, char **argv)
           free(outPath);
           return 1;
         }
-        msg = (char *) calloc((p + path_id_size), sizeof(char));
+        msg = (char *) calloc((9 + path_id_size), sizeof(char));
         memcpy(msg, "pelz -2 ", 8);
         memcpy(&msg[8], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);

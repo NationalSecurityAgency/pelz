@@ -284,7 +284,7 @@ int parse_pipe_message(char *msg, char **response)
       return 1;
     case '2':
       len = strcspn(msg, "\n");
-      path = (char *) calloc((len - 7), sizeof(char)); //the number 7 is used because it the number of chars in "pelz -2 " minus 1 for the null terminator
+      path = (char *) calloc((len - 7), sizeof(char));  //the number 7 is used because it the number of chars in "pelz -2 " minus 1 for the null terminator
       memcpy(path, &msg[8], len - 8); //the number 8 is used because it the number of chars in "pelz -2 "
       pelz_log(LOG_DEBUG, "File Path: %s", path);
       path_ext = strrchr(path, '.');
@@ -341,9 +341,9 @@ int parse_pipe_message(char *msg, char **response)
             memcpy(*response, "Unable to read file", 19);
             return 0;
           }
-	  pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
+          pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
 
-	  if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+          if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
           {
             pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
             free(data);
@@ -370,8 +370,8 @@ int parse_pipe_message(char *msg, char **response)
       return 0;
     case '3':
       len = strcspn(msg, "\n");
-      path = (char *) calloc((len - 7) * sizeof(char));  //the number 7 is used because it the number of chars in "pelz -3 " - 1
-      memcpy(path, &msg[8], len - 8);  //the number 8 is used because it the number of chars in "pelz -3 "
+      path = (char *) calloc((len - 7), sizeof(char));  //the number 7 is used because it the number of chars in "pelz -3 " - 1
+      memcpy(path, &msg[8], len - 8); //the number 8 is used because it the number of chars in "pelz -3 "
       pelz_log(LOG_DEBUG, "File Path: %s", path);
       path_ext = strrchr(path, '.');
       pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
@@ -389,7 +389,7 @@ int parse_pipe_message(char *msg, char **response)
           }
           pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, path);
 
-	  if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+          if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
               (uint8_t *) ownerAuthPasswd, oa_passwd_len))
           {
             pelz_log(LOG_ERR, "TPM unseal failed");
@@ -456,21 +456,21 @@ int parse_pipe_message(char *msg, char **response)
       return 0;
     case '4':
       len = strcspn(msg, "\n");
-      path = (char *) calloc((len - 7) * sizeof(char));  //the number 7 is used because it the number of chars in "pelz -4 " - 1
-      memcpy(path, &msg[8], len - 8);  //the number 8 is used because it the number of chars in "pelz -4 "
+      path = (char *) calloc((len - 7), sizeof(char));  //the number 7 is used because it the number of chars in "pelz -4 " - 1
+      memcpy(path, &msg[8], len - 8); //the number 8 is used because it the number of chars in "pelz -4 "
       free(path);
       pelz_log(LOG_INFO, "Remove cert call not added");
       *response = (char *) calloc(27, sizeof(char));
       memcpy(*response, "Remove cert call not added", 26);
       return 0;
     case '5':
-       pelz_log(LOG_INFO, "Remove all certs call not added");
-       *response = (char *) calloc(32, sizeof(char));
-       memcpy(*response, "Remove all certs call not added", 31);
-       return 0;
+      pelz_log(LOG_INFO, "Remove all certs call not added");
+      *response = (char *) calloc(32, sizeof(char));
+      memcpy(*response, "Remove all certs call not added", 31);
+      return 0;
     case '6':
       len = strcspn(msg, "\n");
-      key_id = new_charbuf(len - 8); //the number 8 is used because it the number of chars in "pelz -6 "
+      key_id = new_charbuf(len - 8);  //the number 8 is used because it the number of chars in "pelz -6 "
       memcpy(key_id.chars, &msg[8], (key_id.len));
       key_table_delete(eid, &ret, key_id);
       if (ret)
@@ -508,7 +508,7 @@ int parse_pipe_message(char *msg, char **response)
       }
       pelz_log(LOG_INFO, "Key Table Re-Initialized");
 
-      response = (char *) calloc(17, sizeof(char));
+      *response = (char *) calloc(17, sizeof(char));
       memcpy(*response, "All keys removed", 16);
       return 0;
     default:
