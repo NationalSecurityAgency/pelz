@@ -241,6 +241,88 @@ int read_from_pipe(char *pipe, char **msg)
   return 0;
 }
 
+int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, size_t message_length)
+{
+  //Copy the string because strtok is destructive
+  size_t msg_len = message_length;
+
+  if (message[message_length - 1] != '\n')
+  {
+    msg_len += 1;
+  }
+  char *msg = (char *) malloc(msg_len * sizeof(char));
+
+  if (!msg)
+  {
+    pelz_log(LOG_ERR, "Unable to allocate memory.");
+    return (1);
+  }
+  memcpy(msg, message, message_length);
+  msg[msg_len - 1] = '\0';
+
+  size_t token_count = 1;
+
+  for (size_t i = 0; i < msg_len; i++)
+  {
+    if (msg[i] == ' ')
+    {
+      token_count++;
+    }
+  }
+  *num_tokens = token_count;
+  char **ret_tokens = (char **) malloc(token_count * sizeof(char *));
+
+  if (!ret_tokens)
+  {
+    pelz_log(LOG_ERR, "Unable to allocate memory.");
+    free(msg);
+    return (1);
+  }
+  char *save = msg;
+  char *token = strtok(msg, " ");
+
+  ret_tokens[0] = (char *) malloc(strlen(token) * sizeof(char) + 1);
+  if (!ret_tokens[0])
+  {
+    pelz_log(LOG_ERR, "Unable to allocate memory.");
+    free(save);
+    return (1);
+  }
+  memcpy(ret_tokens[0], token, strlen(token) + 1);  //copy the '\0'
+  for (size_t i = 1; i < token_count; i++)
+  {
+    char *token = strtok(NULL, " ");
+
+    ret_tokens[i] = (char *) malloc(strlen(token) * sizeof(char) + 1);
+    if (!ret_tokens[i])
+    {
+      pelz_log(LOG_ERR, "Unable to allocate memory.");
+      for (size_t j = 0; j < i; j++)
+      {
+        free(ret_tokens[j]);
+      }
+      free(ret_tokens);
+      free(save);
+      return (1);
+    }
+    memcpy(ret_tokens[i], token, strlen(token) + 1);  //copy the '\0'
+  }
+  if (strtok(NULL, " ") != NULL)
+  {
+    pelz_log(LOG_ERR, "Unable to tokenize pipe message: %s", msg);
+    for (size_t i = 0; i < token_count; i++)
+    {
+      free(ret_tokens[i]);
+    }
+    free(ret_tokens);
+    free(save);
+    return (1);
+  }
+  free(save);
+  *tokens = ret_tokens;
+  return (0);
+}
+
 int parse_pipe_message(char *msg, char **response)
 {
   int ret;
@@ -258,6 +340,36 @@ int parse_pipe_message(char *msg, char **response)
   uint8_t *data = NULL;
   size_t data_length = 0;
   uint64_t handle;
+
+  char **tokens;
+  size_t num_tokens = 0;
+
+/*
+ * Tokens come out in the following format:
+ *
+ * token[0] is the program that called it (e.g., pelz)
+ * token[1] is the command parsed below
+ * token[2-n] are the command inputs. An example for load cert would be:
+ *
+ * token[0] = pelz
+ * token[1] = 2
+ * token[2] = path/to/input
+ * token[3] = path/to/output
+ *
+ */
+  tokenize_pipe_message(&tokens, &num_tokens, msg, strlen(msg));
+
+  //This print is not necessary and is for demonstration purposes. It should be removed
+  for (size_t i = 0; i < num_tokens; i++)
+  {
+    pelz_log(LOG_DEBUG, "tokens[%lu]: %s", i, tokens[i]);
+  }
+
+  for (size_t i = 0; i < num_tokens; i++)
+  {
+    free(tokens[i]);
+  }
+  free(tokens);
 
 /*
  *  -1    exit              Terminate running pelz-service

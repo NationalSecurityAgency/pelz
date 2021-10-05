@@ -58,6 +58,20 @@ extern "C"
 
 /**
  * <pre>
+ * Splites a message on the pelz pipe into tokens. Assumes a delimiter of ' '
+ * </pre>
+ *
+ * @param[out] Reference to a double pointer intended to hold tokens
+ * @param[out] The number of tokens output
+ * @param[in]  The message to be tokenized
+ * @param[in]  The length of the message being tokenized
+ *
+ * @return 0 if success, 1 if error
+ */
+  int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, size_t message_length);
+
+/**
+ * <pre>
  * Takes a message from the Pelz FIFO pipe then parses and executes the command
  * from message
  * </pre>
