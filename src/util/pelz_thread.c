@@ -32,13 +32,12 @@ void *fifo_thread_process(void *arg)
   size_t num_tokens = 0;
   int ret = 0;
 
-  const char **resp_str = ["Pipe command invalid", "Exit pelz-service", "Unable to read file", \
-			  "TPM unseal failed", "SGX unseal failed", "Load cert call not finished", \ 
-			  "Invalid extention for load cert call", "Load private call not finished", \ 
-			  "Invalid extention for load private call", "Remove cert call not added", \ 
-			  "Remove all certs call not added", "Failure to remove key", "Removed key", \
-			  "Key Table Destroy Failure", "Key Table Init Failure", "All keys removed"];
-
+  const char *resp_str[16] = { "Pipe command invalid", "Exit pelz-service", "Unable to read file",
+    "TPM unseal failed", "SGX unseal failed", "Load cert call not finished", "Invalid extention for load cert call",
+    "Load private call not finished", "Invalid extention for load private call", "Remove cert call not added",
+    "Remove all certs call not added", "Failure to remove key", "Removed key",
+    "Key Table Destroy Failure", "Key Table Init Failure", "All keys removed"
+  };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
   {
@@ -86,7 +85,7 @@ void *fifo_thread_process(void *arg)
     free(msg);
 
     ret = parse_pipe_message(tokens, num_tokens);
-    if (write_to_pipe((char *) PELZSERVICEOUT, resp_str[ret]))
+    if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
       pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
     else
       pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");

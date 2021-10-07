@@ -209,6 +209,7 @@ int read_from_pipe(char *pipe, char **msg)
 {
   int fd;
   int ret;
+  int len;
   char buf[BUFSIZE];
 
   if (file_check(pipe))
@@ -235,8 +236,9 @@ int read_from_pipe(char *pipe, char **msg)
     pelz_log(LOG_ERR, "Error closing pipe");
   if (ret > 0)
   {
-    *msg = (char *) calloc(strlen(buf), sizeof(char));
-    memcpy(*msg, buf, strlen(buf));
+    len = strcspn(buf, "\n");
+    *msg = (char *) malloc(len * sizeof(char));
+    memcpy(*msg, buf, len);
   }
   return 0;
 }
@@ -255,7 +257,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   if (!msg)
   {
     pelz_log(LOG_ERR, "Unable to allocate memory.");
-    return (1);
+    return 1;
   }
   memcpy(msg, message, message_length);
   msg[msg_len - 1] = '\0';
@@ -264,21 +266,27 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   size_t start = 0;
 
   // Skip over leading spaces
-  while(msg[start] == ' ' && start < msg_len-1)
+  while (msg[start] == ' ' && start < (msg_len - 1))
   {
     start++;
   }
 
-  if(start < msg_len - 1)
+  if (start < (msg_len - 1))
   {
     token_count = 1;
 
     // The -2 is because we know msg[msg_len-1] == 0.
-    for(size_t i=start+1; i < msg_len-2; i++)
+    for (size_t i = start + 1; i < (msg_len - 2); i++)
     {
-      if(msg[i] == ' ' && msg[i+1] != ' ')
+      if (msg[i] == ' ' && msg[i + 1] != ' ')
         token_count++;
     }
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "Unable to tokenize pipe message: %s", msg);
+    free(msg);
+    return 1;
   }
 
   *num_tokens = token_count;
@@ -288,7 +296,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   {
     pelz_log(LOG_ERR, "Unable to allocate memory.");
     free(msg);
-    return (1);
+    return 1;
   }
   char *save = msg;
   char *token = strtok(msg, " ");
@@ -298,7 +306,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   {
     pelz_log(LOG_ERR, "Unable to allocate memory.");
     free(save);
-    return (1);
+    return 1;
   }
   memcpy(ret_tokens[0], token, strlen(token) + 1);  //copy the '\0'
   for (size_t i = 1; i < token_count; i++)
@@ -314,7 +322,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
       }
       free(ret_tokens);
       free(save);
-      return (1);
+      return 1;
     }
     ret_tokens[i] = (char *) malloc(strlen(token) * sizeof(char) + 1);
     if (!ret_tokens[i])
@@ -326,7 +334,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
       }
       free(ret_tokens);
       free(save);
-      return (1);
+      return 1;
     }
     memcpy(ret_tokens[i], token, strlen(token) + 1);  //copy the '\0'
   }
@@ -339,11 +347,11 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
     }
     free(ret_tokens);
     free(save);
-    return (1);
+    return 1;
   }
   free(save);
   *tokens = ret_tokens;
-  return (0);
+  return 0;
 }
 
 ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
@@ -539,7 +547,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     if (ret)
     {
       pelz_log(LOG_ERR, "Key Table Init Failure");
-      return KEK_TAB_INIT_FAIL
+      return KEK_TAB_INIT_FAIL;
     }
     pelz_log(LOG_INFO, "Key Table Re-Initialized");
     return RM_KEK_ALL;
@@ -547,6 +555,5 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);
     return INVALID;
   }
-
   return INVALID;
 }
