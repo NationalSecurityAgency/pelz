@@ -260,15 +260,27 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   memcpy(msg, message, message_length);
   msg[msg_len - 1] = '\0';
 
-  size_t token_count = 1;
+  size_t token_count = 0;
+  size_t start = 0;
 
-  for (size_t i = 0; i < msg_len; i++)
+  // Skip over leading spaces
+  while(msg[start] == ' ' && start < msg_len-1)
   {
-    if (msg[i] == ' ')
+    start++;
+  }
+
+  if(start < msg_len - 1)
+  {
+    token_count = 1;
+
+    // The -2 is because we know msg[msg_len-1] == 0.
+    for(size_t i=start+1; i < msg_len-2; i++)
     {
-      token_count++;
+      if(msg[i] == ' ' && msg[i+1] != ' ')
+        token_count++;
     }
   }
+
   *num_tokens = token_count;
   char **ret_tokens = (char **) malloc(token_count * sizeof(char *));
 
