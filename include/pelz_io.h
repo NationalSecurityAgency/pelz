@@ -5,6 +5,11 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 
+typedef enum
+{ INVALID, EXIT, UNABLE_RD_F, TPM_UNSEAL_FAIL, SGX_UNSEAL_FAIL, LOAD_CERT_NOT_FIN, INVALID_EXT_CERT, \
+ LOAD_PRIV_NOT_FIN, INVALID_EXT_PRIV, RM_CERT_NOT_FIN, RM_ALL_CERT_NOT_FIN, RM_KEK_FAIL, RM_KEK, \
+ KEK_TAB_DEST_FAIL, KEK_TAB_INIT_FAIL, RM_KEK_ALL } ParseResponseStatus;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -80,9 +85,9 @@ extern "C"
  * @param[in] num_tokens The number of tokens output
  * @param[out] response Response to be sent to the second pipe 
  *
- * @return 0 if success, 1 if error or exit service
+ * @return ParseResponseStatus status message indicating the outcome of parse
  */
-  int parse_pipe_message(char **tokens, size_t num_tokens, char **response);
+  ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
 #ifdef __cplusplus
 }
 #endif

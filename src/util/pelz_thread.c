@@ -28,9 +28,17 @@ void *fifo_thread_process(void *arg)
   pthread_mutex_t lock = threadArgs->lock;
 
   char *msg = NULL;
-  char *resp = NULL;
   char **tokens;
   size_t num_tokens = 0;
+  int ret = 0;
+
+  const char **resp_str = ["Pipe command invalid", "Exit pelz-service", "Unable to read file", \
+			  "TPM unseal failed", "SGX unseal failed", "Load cert call not finished", \ 
+			  "Invalid extention for load cert call", "Load private call not finished", \ 
+			  "Invalid extention for load private call", "Remove cert call not added", \ 
+			  "Remove all certs call not added", "Failure to remove key", "Removed key", \
+			  "Key Table Destroy Failure", "Key Table Init Failure", "All keys removed"];
+
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
   {
@@ -77,34 +85,20 @@ void *fifo_thread_process(void *arg)
     }
     free(msg);
 
-    if (parse_pipe_message(tokens, num_tokens, &resp) == 1)
-    {
-      if (write_to_pipe((char *) PELZSERVICEOUT, resp))
-        pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
-      else
-        pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
-
-      free(resp);
-      for (size_t i = 0; i < num_tokens; i++)
-      {
-        free(tokens[i]);
-      }
-      free(tokens);
-      pthread_mutex_unlock(&lock);
-      break;
-    }
+    ret = parse_pipe_message(tokens, num_tokens);
+    if (write_to_pipe((char *) PELZSERVICEOUT, resp_str[ret]))
+      pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+    else
+      pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
 
     for (size_t i = 0; i < num_tokens; i++)
     {
       free(tokens[i]);
     }
     free(tokens);
-    if (write_to_pipe((char *) PELZSERVICEOUT, resp))
-      pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
-    else
-      pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
-    free(resp);
     pthread_mutex_unlock(&lock);
+    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == KEK_TAB_INIT_FAIL)
+      break;
   }
   while (true);
   global_pipe_reader_active = false;
