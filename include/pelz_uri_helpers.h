@@ -3,10 +3,13 @@
 
 #include <uriparser/Uri.h>
 
+#include "charbuf.h"
+
 typedef enum
 {
   URI_SCHEME_UNKNOWN,
   FILE_URI,
+  PELZ_URI,
 } URI_SCHEME;
 
 #ifdef __cplusplus
@@ -31,7 +34,26 @@ extern "C"
  *
  * @return The filename, or NULL on error.
  */
-  char *get_filename_from_key_id(char *null_terminated_key_id);
+  char *get_filename_from_key_id(const char *null_terminated_key_id);
+
+/**
+ * @brief Extracts the necessary parts from a parsed pelz uri.
+ * 
+ * @param[in] uri   The (already parsed) URI)
+ *
+ * @param[in,out] comon_name Pointer to charbuf to hold the common name
+ *
+ * @param[in,out] port       Pointer to int to hold the port
+ *
+ * @param[in,out] key_id     Pointer to charbuf to hold the key_id
+ *
+ * @param[in,out] additional_data Pointer to charbuf to hold additional data
+ *                                May be NULL.
+ *
+ * @return 0 on success, 1 on error
+ */
+  int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * key_id, charbuf * additional_data);
+
 #ifdef __cplusplus
 }
 #endif

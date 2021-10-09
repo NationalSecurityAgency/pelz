@@ -97,7 +97,8 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/enclave_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
 	 	 test/src/util/util_test_suite.c \
-		 test/src/util/test_helper_functions.c	 
+		 test/src/util/test_helper_functions.c \
+		 test/src/util/test_pelz_uri_helpers.c
 
 App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include
 

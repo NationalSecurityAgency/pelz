@@ -107,12 +107,8 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
       if (filename == NULL)
       {
         pelz_log(LOG_ERR, "Failed to parse filename from URI %s\n", key_uri_to_parse);
-        free(key_uri_to_parse);
-        uriFreeUriMembersA(&key_id_data);
         break;
       }
-      free(key_uri_to_parse);
-      uriFreeUriMembersA(&key_id_data);
 
       if (pelz_load_key_from_file(filename, key_len, key))
       {
@@ -124,15 +120,40 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
       return_value = 0;
       break;
     }
+  case PELZ_URI:
+    {
+      charbuf *common_name = NULL;
+      int port;
+      charbuf *key_id = NULL;
+
+      if (get_pelz_uri_parts(key_id_data, common_name, &port, key_id, NULL) != 0)
+      {
+        pelz_log(LOG_ERR, "Failed to extract data from pelz uri");
+        if (common_name != NULL)
+        {
+          free_charbuf(common_name);
+        }
+        if (key_id != NULL)
+        {
+          free_charbuf(key_id);
+        }
+        break;
+      }
+
+      free_charbuf(common_name);
+      free_charbuf(key_id);
+      break;
+    }
   case URI_SCHEME_UNKNOWN:
     // Intentional fallthrough
   default:
-    {
+    {                           //pelz://common_name/port/key_uuid/<anything else KMIP will need>
+
       pelz_log(LOG_ERR, "Scheme not supported");
-      free(key_uri_to_parse);
-      uriFreeUriMembersA(&key_id_data);
     }
   }
+  free(key_uri_to_parse);
+  uriFreeUriMembersA(&key_id_data);
   return return_value;
 }
 
