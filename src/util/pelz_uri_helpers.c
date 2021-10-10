@@ -48,6 +48,11 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
 
   // Extract the hostname
   field_length = uri.hostText.afterLast - uri.hostText.first;
+  if (field_length <= 0)
+  {
+    pelz_log(LOG_ERR, "Invalid URI field length.");
+    return 1;
+  }
   *common_name = new_charbuf((size_t) field_length);
   if (common_name->chars == NULL)
   {
@@ -58,6 +63,12 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
 
   // Extract the port
   field_length = uri.pathHead->text.afterLast - uri.pathHead->text.first;
+  if (field_length <= 0)
+  {
+    pelz_log(LOG_ERR, "Invalid URI field length.");
+    free_charbuf(common_name);
+    return 1;
+  }
   char *port_text = (char *) calloc((1 + field_length), sizeof(char));
 
   if (port_text == NULL)
@@ -80,6 +91,12 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
 
   // Extract the key UID
   field_length = uri.pathHead->next->text.afterLast - uri.pathHead->next->text.first;
+  if (field_length <= 0)
+  {
+    pelz_log(LOG_ERR, "Invalid URI field length.");
+    free_charbuf(common_name);
+    return 1;
+  }
   *key_id = new_charbuf((size_t) field_length);
   if (key_id->chars == NULL)
   {
@@ -93,6 +110,13 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
   if (additional_data != NULL)
   {
     field_length = uri.pathTail->text.afterLast - uri.pathHead->next->next->text.first;
+    if (field_length <= 0)
+    {
+      pelz_log(LOG_ERR, "Invalid URI field length.");
+      free_charbuf(key_id);
+      free_charbuf(common_name);
+      return 1;
+    }
     *additional_data = new_charbuf((size_t) field_length);
     if (additional_data->chars == NULL)
     {
