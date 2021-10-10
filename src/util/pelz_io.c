@@ -139,7 +139,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
         }
         break;
       }
-
+      pelz_log(LOG_INFO, "Key load from PELZ URI not implemented.");
       free_charbuf(common_name);
       free_charbuf(key_id);
       break;
@@ -147,8 +147,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   case URI_SCHEME_UNKNOWN:
     // Intentional fallthrough
   default:
-    {                           //pelz://common_name/port/key_uuid/<anything else KMIP will need>
-
+    {         
       pelz_log(LOG_ERR, "Scheme not supported");
     }
   }
