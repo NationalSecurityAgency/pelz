@@ -129,14 +129,6 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
       if (get_pelz_uri_parts(key_id_data, common_name, &port, key_id, NULL) != 0)
       {
         pelz_log(LOG_ERR, "Failed to extract data from pelz uri");
-        if (common_name != NULL)
-        {
-          free_charbuf(common_name);
-        }
-        if (key_id != NULL)
-        {
-          free_charbuf(key_id);
-        }
         break;
       }
       pelz_log(LOG_INFO, "Key load from PELZ URI not implemented.");
@@ -147,7 +139,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   case URI_SCHEME_UNKNOWN:
     // Intentional fallthrough
   default:
-    {         
+    {
       pelz_log(LOG_ERR, "Scheme not supported");
     }
   }
