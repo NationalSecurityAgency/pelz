@@ -602,14 +602,31 @@ int main(int argc, char **argv)
         // a .nkl extension in the directory that the application is being run from.
         char *original_fn = basename(path_id);
         char *temp_str = (char *) malloc((strlen(original_fn) + 5) * sizeof(char));
+        char *scratch = temp_str;
 
         strncpy(temp_str, original_fn, strlen(original_fn));
         // Remove any leading '.'s
-        while (*temp_str == '.')
+        while (*scratch == '.')
         {
-          temp_str++;
+          scratch++;
         }
-        char *scratch;
+
+        if (*scratch == '\0')
+        {
+          pelz_log(LOG_ERR, "invalid default filename ... exiting");
+          free(temp_str);
+          free(path_id);
+          return 1;
+        }
+
+        scratch = strtok(scratch, ".");
+        if (scratch == NULL)
+        {
+          pelz_log(LOG_ERR, "default filename has no extention ... exiting");
+          free(temp_str);
+          free(path_id);
+          return 1;
+        }
 
         // Everything beyond first '.' in original filename, with any leading
         // '.'(s) removed, is treated as extension
