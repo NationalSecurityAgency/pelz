@@ -586,22 +586,22 @@ int main(int argc, char **argv)
       else
       {
         char *ext;
-        const char *tpm_ext = ".ski";
-        const char *nkl_ext = ".nkl";
+        const char *TPM_EXT = ".ski";
+        const char *NKL_EXT = ".nkl";
 
         if (tpm)
         {
-          ext = (char *) tpm_ext;
+          ext = (char *) TPM_EXT;
         }
         else
         {
-          ext = (char *) nkl_ext;
+          ext = (char *) NKL_EXT;
         }
 
         // If output file not specified, set output path to basename(inPath) with
         // a .nkl extension in the directory that the application is being run from.
         char *original_fn = basename(path_id);
-        char *temp_str = (char *) malloc((strlen(original_fn) + 5) * sizeof(char));
+        char *temp_str = (char *) malloc((strlen(original_fn) + strlen(ext)) * sizeof(char));
         char *scratch = temp_str;
 
         strncpy(temp_str, original_fn, strlen(original_fn));
@@ -632,7 +632,7 @@ int main(int argc, char **argv)
         // '.'(s) removed, is treated as extension
         temp_str = strtok_r(temp_str, ".", &scratch);
         // Append file extension
-        strncat(temp_str, ext, 5);
+        memcpy(&temp_str[strlen(temp_str)], ext, strlen(ext));
         outPath_size = strlen(temp_str) + 1;
         // Make sure resultant default file name does not have empty basename
         if (outPath_size < 6)
