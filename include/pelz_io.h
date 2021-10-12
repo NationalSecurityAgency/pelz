@@ -64,7 +64,7 @@ extern "C"
 
 /**
  * <pre>
- * Splites a message on the pelz pipe into tokens. Assumes a delimiter of ' '
+ * Splits a message on the pelz pipe into tokens. Assumes a delimiter of ' '
  * </pre>
  *
  * @param[out] Reference to a double pointer intended to hold tokens

@@ -156,19 +156,31 @@ int main(int argc, char **argv)
     memcpy(msg, "pelz 1", 6);
     pelz_log(LOG_DEBUG, "Message: %s", msg);
     if (write_to_pipe((char *) PELZSERVICEIN, msg))
+    {
       pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+    }
     else
+    {
       pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+    }
     free(msg);
     if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
+    {
       pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+    }
     else
+    {
       pelz_log(LOG_INFO, "%s", msg);
+    }
     free(msg);
     if (unlink(PELZSERVICEOUT) == 0)
+    {
       pelz_log(LOG_INFO, "Second pipe deleted successfully");
+    }
     else
+    {
       pelz_log(LOG_INFO, "Failed to delete the second pipe");
+    }
   }
   else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "load", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
   {
@@ -198,14 +210,22 @@ int main(int argc, char **argv)
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
+        {
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+        }
         free(msg);
         if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
+        {
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "%s", msg);
+        }
         free(msg);
         free(path_id);
       }
@@ -242,14 +262,22 @@ int main(int argc, char **argv)
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
+        {
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+        }
         free(msg);
         if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
+        {
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "%s", msg);
+        }
         free(msg);
         free(path_id);
       }
@@ -281,14 +309,22 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 7", 6);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
+        {
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+        }
         free(msg);
         if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
+        {
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "%s", msg);
+        }
         free(msg);
       }
       else if ((argv[arg_index + 3] != NULL) && !all)
@@ -306,14 +342,22 @@ int main(int argc, char **argv)
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
+        {
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+        }
         free(msg);
         if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
+        {
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "%s", msg);
+        }
         free(msg);
         free(path_id);
       }
@@ -335,14 +379,22 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 5", 6);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
+        {
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+        }
         free(msg);
         if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
+        {
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "%s", msg);
+        }
         free(msg);
       }
       else if (argv[arg_index + 3] != NULL && !all)
@@ -367,14 +419,22 @@ int main(int argc, char **argv)
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         if (write_to_pipe((char *) PELZSERVICEIN, msg))
+        {
           pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+        }
         free(msg);
         if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
+        {
           pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
+        }
         else
+        {
           pelz_log(LOG_INFO, "%s", msg);
+        }
         free(msg);
         free(path_id);
       }
@@ -530,9 +590,13 @@ int main(int argc, char **argv)
         const char *nkl_ext = ".nkl";
 
         if (tpm)
+        {
           ext = (char *) tpm_ext;
+        }
         else
+        {
           ext = (char *) nkl_ext;
+        }
 
         // If output file not specified, set output path to basename(inPath) with
         // a .nkl extension in the directory that the application is being run from.
