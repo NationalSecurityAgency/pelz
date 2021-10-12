@@ -196,7 +196,9 @@ int write_to_pipe(char *pipe, char *msg)
 
   ret = write(fd, msg, strlen(msg) + 1);
   if (close(fd) == -1)
+  {
     pelz_log(LOG_DEBUG, "Error closing pipe");
+  }
   if (ret == -1)
   {
     pelz_log(LOG_DEBUG, "Error writing to pipe");
@@ -233,7 +235,9 @@ int read_from_pipe(char *pipe, char **msg)
   }
 
   if (close(fd) == -1)
+  {
     pelz_log(LOG_ERR, "Error closing pipe");
+  }
   if (ret > 0)
   {
     len = strcspn(buf, "\n");
@@ -279,7 +283,9 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
     for (size_t i = start + 1; i < (msg_len - 2); i++)
     {
       if (msg[i] == ' ' && msg[i + 1] != ' ')
+      {
         token_count++;
+      }
     }
   }
   else
@@ -371,7 +377,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 
   pelz_log(LOG_DEBUG, "Token num: %d", num_tokens);
   if (num_tokens < 2)
+  {
     return INVALID;
+  }
 
 /*
  *  -1    exit              Terminate running pelz-service
@@ -386,13 +394,19 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   {
   case 1:
     if (unlink(PELZSERVICEIN) == 0)
+    {
       pelz_log(LOG_INFO, "Pipe deleted successfully");
+    }
     else
+    {
       pelz_log(LOG_INFO, "Failed to delete the pipe");
+    }
     return EXIT;
   case 2:
     if (num_tokens != 3)
+    {
       return INVALID;
+    }
     path_ext = strrchr(tokens[2], '.');
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
     if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
@@ -452,7 +466,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     return INVALID_EXT_CERT;
   case 3:
     if (num_tokens != 3)
+    {
       return INVALID;
+    }
     path_ext = strrchr(tokens[2], '.');
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
     if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
@@ -518,7 +534,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     return RM_ALL_CERT_NOT_FIN;
   case 6:
     if (num_tokens != 3)
+    {
       return INVALID;
+    }
     key_id = new_charbuf(strlen(tokens[2]));  //the number 8 is used because it the number of chars in "pelz -6 "
     memcpy(key_id.chars, tokens[2], key_id.len);
     key_table_delete(eid, &ret, key_id);

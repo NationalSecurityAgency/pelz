@@ -60,7 +60,9 @@ int pelz_service(int max_requests)
     }
 
     if (socket_id == 0)         //This is to reset the while loop if select() times out
+    {
       continue;
+    }
 
     if (socket_id > max_requests)
     {

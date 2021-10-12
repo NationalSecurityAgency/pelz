@@ -61,7 +61,9 @@ void *fifo_thread_process(void *arg)
   {
     pthread_mutex_lock(&lock);
     if (read_from_pipe((char *) PELZSERVICEIN, &msg))
+    {
       break;
+    }
 
     /*
      * Tokens come out in the following format:
@@ -86,9 +88,13 @@ void *fifo_thread_process(void *arg)
 
     ret = parse_pipe_message(tokens, num_tokens);
     if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
+    {
       pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+    }
     else
+    {
       pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
+    }
 
     for (size_t i = 0; i < num_tokens; i++)
     {
@@ -97,7 +103,9 @@ void *fifo_thread_process(void *arg)
     free(tokens);
     pthread_mutex_unlock(&lock);
     if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == KEK_TAB_INIT_FAIL)
+    {
       break;
+    }
   }
   while (true);
   global_pipe_reader_active = false;
@@ -122,7 +130,9 @@ void thread_process(void *arg)
     {
       pelz_log(LOG_ERR, "%d::Error Receiving Request", new_socket);
       while (!pelz_key_socket_check(new_socket))
+      {
         continue;
+      }
       pelz_key_socket_close(new_socket);
       return;
     }
@@ -206,7 +216,9 @@ void thread_process(void *arg)
       pelz_log(LOG_ERR, "%d::Socket Send Error", new_socket);
       free_charbuf(&message);
       while (!pelz_key_socket_check(new_socket))
+      {
         continue;
+      }
       pelz_key_socket_close(new_socket);
       return;
     }
