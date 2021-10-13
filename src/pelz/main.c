@@ -628,11 +628,8 @@ int main(int argc, char **argv)
           return 1;
         }
 
-        // Everything beyond first '.' in original filename, with any leading
-        // '.'(s) removed, is treated as extension
-        temp_str = strtok_r(temp_str, ".", &scratch);
         // Append file extension
-        memcpy(&temp_str[strlen(temp_str)], ext, strlen(ext) + 1);
+        memcpy(&scratch[strlen(scratch)], ext, strlen(ext) + 1);
         outPath_size = strlen(temp_str) + 1;
         // Make sure resultant default file name does not have empty basename
         if (outPath_size < 6)
