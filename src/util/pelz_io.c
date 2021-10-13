@@ -7,6 +7,9 @@
 #include <openssl/buffer.h>
 #include <uriparser/Uri.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <kmyth/kmyth.h>
+#include <kmyth/file_io.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -16,10 +19,12 @@
 #include "util.h"
 
 #include "sgx_urts.h"
+#include "kmyth_enclave.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZFIFO "/tmp/pelzfifo"
+#define PELZSERVICEIN "/tmp/pelzServiceIn"
+#define BUFSIZE 1024
 
 void ocall_malloc(size_t size, char **buf)
 {
@@ -171,170 +176,402 @@ int file_check(char *file_path)
   return (0);
 }
 
-int write_to_pipe(char *msg)
+int write_to_pipe(char *pipe, char *msg)
 {
   int fd;
   int ret;
 
-  if (file_check((char *) PELZFIFO))
+  if (file_check(pipe))
   {
     pelz_log(LOG_DEBUG, "Pipe not found");
-    printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
     return 1;
   }
 
-  fd = open(PELZFIFO, O_WRONLY | O_NONBLOCK);
+  fd = open(pipe, O_WRONLY | O_NONBLOCK);
   if (fd == -1)
   {
-    if (unlink(PELZFIFO) == 0)
-      pelz_log(LOG_INFO, "Pipe deleted successfully");
-    else
-      pelz_log(LOG_INFO, "Failed to delete the pipe");
-    printf("Unable to connect to the pelz-service. Please make sure service is running.\n");
+    pelz_log(LOG_INFO, "Error opening pipe");
     return 1;
   }
+
   ret = write(fd, msg, strlen(msg) + 1);
   if (close(fd) == -1)
+  {
     pelz_log(LOG_DEBUG, "Error closing pipe");
+  }
   if (ret == -1)
   {
     pelz_log(LOG_DEBUG, "Error writing to pipe");
     return 1;
   }
-  printf("Pelz command options sent to pelz-service\n");
   return 0;
 }
 
-int read_pipe(char *msg)
+int read_from_pipe(char *pipe, char **msg)
 {
+  int fd;
   int ret;
   int len;
-  char opt;
-  charbuf key_id;
-  charbuf path;
+  char buf[BUFSIZE];
 
-/*
- *  -e    exit     Terminate running pelz-service
- *  -l    load     Loads a value of type <type> (currently either cert or private)
- *  -c    cert     Server certificate
- *  -p    private  Private key for connections to key servers
- *  -r    remove   Removes a value of type <target> (currently either cert or key)
- *  -k    key      Key with a specified id
- *  -a    all      Indicate all key or cert
- */
-
-  if (memcmp(msg, "pelz -", 6) == 0)
+  if (file_check(pipe))
   {
-    opt = msg[6];
-    pelz_log(LOG_DEBUG, "Pipe message: %d, %c, %s", strlen(msg), opt, msg);
-    switch (opt)
+    pelz_log(LOG_DEBUG, "Pipe not found");
+    pelz_log(LOG_INFO, "Unable to read from pipe.");
+    return 1;
+  }
+
+  fd = open(pipe, O_RDONLY);
+  if (fd == -1)
+  {
+    pelz_log(LOG_ERR, "Error opening pipe");
+    return 1;
+  }
+
+  ret = read(fd, buf, sizeof(buf));
+  if (ret < 0)
+  {
+    pelz_log(LOG_ERR, "Pipe read failed");
+  }
+
+  if (close(fd) == -1)
+  {
+    pelz_log(LOG_ERR, "Error closing pipe");
+  }
+  if (ret > 0)
+  {
+    len = strcspn(buf, "\n");
+    *msg = (char *) malloc(len * sizeof(char));
+    memcpy(*msg, buf, len);
+  }
+  return 0;
+}
+
+int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, size_t message_length)
+{
+  //Copy the string because strtok is destructive
+  size_t msg_len = message_length;
+
+  if (message[message_length - 1] != '\n')
+  {
+    msg_len += 1;
+  }
+  char *msg = (char *) malloc(msg_len * sizeof(char));
+
+  if (!msg)
+  {
+    pelz_log(LOG_ERR, "Unable to allocate memory.");
+    return 1;
+  }
+  memcpy(msg, message, message_length);
+  msg[msg_len - 1] = '\0';
+
+  size_t token_count = 0;
+  size_t start = 0;
+
+  // Skip over leading spaces
+  while (msg[start] == ' ' && start < (msg_len - 1))
+  {
+    start++;
+  }
+
+  if (start < (msg_len - 1))
+  {
+    token_count = 1;
+
+    // The -2 is because we know msg[msg_len-1] == 0.
+    for (size_t i = start + 1; i < (msg_len - 2); i++)
     {
-    case 'e':
-      if (unlink(PELZFIFO) == 0)
-        pelz_log(LOG_INFO, "Pipe deleted successfully");
-      else
-        pelz_log(LOG_INFO, "Failed to delete the pipe");
-      return 1;
-    case 'l':
-      if (memcmp(&msg[8], "-", 1) == 0)
-        opt = msg[9];
-      else
+      if (msg[i] == ' ' && msg[i + 1] != ' ')
       {
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        return 0;
+        token_count++;
       }
-      switch (opt)
-      {
-      case 'c':
-        len = strcspn(msg, "\n");
-        path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -l -c "
-        memcpy(path.chars, &msg[11], (path.len));
-        free_charbuf(&path);
-        pelz_log(LOG_INFO, "Load cert call not added");
-        return 0;
-      case 'p':
-        len = strcspn(msg, "\n");
-        path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -l -p "
-        memcpy(path.chars, &msg[11], (path.len));
-        free_charbuf(&path);
-        pelz_log(LOG_INFO, "Load private call not added");
-        return 0;
-      default:
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        return 0;
-      }
-    case 'r':
-      if (memcmp(&msg[8], "-", 1) == 0)
-        opt = msg[9];
-      else
-      {
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        return 0;
-      }
-      switch (opt)
-      {
-      case 'k':
-        if (memcmp(&msg[10], " -a", 3) == 0)
-        {
-          key_table_destroy(eid, &ret);
-          if (ret)
-          {
-            pelz_log(LOG_ERR, "Key Table Destroy Failure");
-            return 1;
-          }
-          pelz_log(LOG_INFO, "Key Table Destroyed");
-          key_table_init(eid, &ret);
-          if (ret)
-          {
-            pelz_log(LOG_ERR, "Key Table Init Failure");
-            return 1;
-          }
-          pelz_log(LOG_INFO, "Key Table Re-Initialized");
-          return 0;
-        }
-        else
-        {
-          len = strcspn(msg, "\n");
-          key_id = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -r -k "
-          memcpy(key_id.chars, &msg[11], (key_id.len));
-          key_table_delete(eid, &ret, key_id);
-          if (ret)
-            pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
-          else
-            pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
-          free_charbuf(&key_id);
-          return 0;
-        }
-      case 'c':
-        if (memcmp(&msg[10], " -a", 3) == 0)
-        {
-          pelz_log(LOG_INFO, "Remove all certs call not added");
-          return 0;
-        }
-        else
-        {
-          len = strcspn(msg, "\n");
-          path = new_charbuf(len - 11); //the number 11 is used because it the number of chars in "pelz -r -c "
-          memcpy(path.chars, &msg[11], (path.len));
-          free_charbuf(&path);
-          pelz_log(LOG_INFO, "Remove cert call not added");
-          return 0;
-        }
-      default:
-        pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-        return 0;
-      }
-    default:
-      pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
-      return 0;
     }
   }
   else
   {
-    if (strnlen(msg, 10) == 10)
-      pelz_log(LOG_ERR, "Pipe command invalid: %.*s", 10, msg);
-    else
-      pelz_log(LOG_ERR, "Pipe command invalid: %s", msg);
+    pelz_log(LOG_ERR, "Unable to tokenize pipe message: %s", msg);
+    free(msg);
+    return 1;
   }
+
+  *num_tokens = token_count;
+  char **ret_tokens = (char **) malloc(token_count * sizeof(char *));
+
+  if (!ret_tokens)
+  {
+    pelz_log(LOG_ERR, "Unable to allocate memory.");
+    free(msg);
+    return 1;
+  }
+  char *save = msg;
+  char *token = strtok(msg, " ");
+
+  ret_tokens[0] = (char *) malloc(strlen(token) * sizeof(char) + 1);
+  if (!ret_tokens[0])
+  {
+    pelz_log(LOG_ERR, "Unable to allocate memory.");
+    free(save);
+    return 1;
+  }
+  memcpy(ret_tokens[0], token, strlen(token) + 1);  //copy the '\0'
+  for (size_t i = 1; i < token_count; i++)
+  {
+    char *token = strtok(NULL, " ");
+
+    if (token == NULL)
+    {
+      pelz_log(LOG_ERR, "Unable to tokenize pipe message: %s", msg);
+      for (size_t j = 0; j < i; j++)
+      {
+        free(ret_tokens[j]);
+      }
+      free(ret_tokens);
+      free(save);
+      return 1;
+    }
+    ret_tokens[i] = (char *) malloc(strlen(token) * sizeof(char) + 1);
+    if (!ret_tokens[i])
+    {
+      pelz_log(LOG_ERR, "Unable to allocate memory.");
+      for (size_t j = 0; j < i; j++)
+      {
+        free(ret_tokens[j]);
+      }
+      free(ret_tokens);
+      free(save);
+      return 1;
+    }
+    memcpy(ret_tokens[i], token, strlen(token) + 1);  //copy the '\0'
+  }
+  if (strtok(NULL, " ") != NULL)
+  {
+    pelz_log(LOG_ERR, "Unable to tokenize pipe message: %s", msg);
+    for (size_t i = 0; i < token_count; i++)
+    {
+      free(ret_tokens[i]);
+    }
+    free(ret_tokens);
+    free(save);
+    return 1;
+  }
+  free(save);
+  *tokens = ret_tokens;
   return 0;
+}
+
+ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
+{
+  int ret;
+  char *path_ext = NULL;
+  charbuf key_id;
+  uint8_t *nkl_data = NULL;
+  size_t nkl_data_len = 0;
+  char *authString = NULL;
+  size_t auth_string_len = 0;
+  const char *ownerAuthPasswd = "";
+  size_t oa_passwd_len = 0;
+  uint8_t *data = NULL;
+  size_t data_length = 0;
+  uint64_t handle;
+
+  pelz_log(LOG_DEBUG, "Token num: %d", num_tokens);
+  if (num_tokens < 2)
+  {
+    return INVALID;
+  }
+
+/*
+ *  -1    exit              Terminate running pelz-service
+ *  -2    load cert         Loads a server certificate
+ *  -3    load private      Loads a private key for connections to key servers
+ *  -4    remove cert       Removes a server certificate    
+ *  -5    remove all certs  Removes all server certificates
+ *  -6    remove key        Removes a key with a specified id
+ *  -7    remove all keys   Removes all keys
+ */
+  switch (atoi(tokens[1]))
+  {
+  case 1:
+    if (unlink(PELZSERVICEIN) == 0)
+    {
+      pelz_log(LOG_INFO, "Pipe deleted successfully");
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Failed to delete the pipe");
+    }
+    return EXIT;
+  case 2:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+    path_ext = strrchr(tokens[2], '.');
+    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+    if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
+    {
+      if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
+      {
+        if (read_bytes_from_file(tokens[2], &data, &data_length))
+        {
+          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
+          return UNABLE_RD_F;
+        }
+        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
+        if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+        {
+          pelz_log(LOG_ERR, "TPM unseal failed");
+          free(data);
+          return TPM_UNSEAL_FAIL;
+        }
+
+        free(data);
+        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+        {
+          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+          free(nkl_data);
+          return SGX_UNSEAL_FAIL;
+        }
+
+        free(nkl_data);
+        pelz_log(LOG_INFO, "Load cert call not finished");
+        return LOAD_CERT_NOT_FIN;
+      }
+      else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
+      {
+        if (read_bytes_from_file(tokens[2], &data, &data_length))
+        {
+          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
+          return UNABLE_RD_F;
+        }
+        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
+
+        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+        {
+          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+          free(data);
+          return SGX_UNSEAL_FAIL;
+        }
+
+        free(data);
+        pelz_log(LOG_INFO, "Load cert call not finished");
+        return LOAD_CERT_NOT_FIN;
+      }
+    }
+
+    pelz_log(LOG_INFO, "Invaild extention for load cert call");
+    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+    return INVALID_EXT_CERT;
+  case 3:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+    path_ext = strrchr(tokens[2], '.');
+    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+    if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
+    {
+      if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
+      {
+        if (read_bytes_from_file(tokens[2], &data, &data_length))
+        {
+          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
+          return UNABLE_RD_F;
+        }
+        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
+
+        if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
+            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+        {
+          pelz_log(LOG_ERR, "TPM unseal failed");
+          free(data);
+          return TPM_UNSEAL_FAIL;
+        }
+
+        free(data);
+        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+        {
+          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+          free(nkl_data);
+          return SGX_UNSEAL_FAIL;
+        }
+
+        free(nkl_data);
+        pelz_log(LOG_INFO, "Load private call not finished");
+        return LOAD_PRIV_NOT_FIN;
+      }
+      else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
+      {
+        if (read_bytes_from_file(tokens[2], &data, &data_length))
+        {
+          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
+          return UNABLE_RD_F;
+        }
+        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
+        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+        {
+          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+          free(data);
+          return SGX_UNSEAL_FAIL;
+        }
+
+        free(data);
+        pelz_log(LOG_INFO, "Load private call not finished");
+        return LOAD_PRIV_NOT_FIN;
+      }
+    }
+
+    pelz_log(LOG_INFO, "Invaild extention for load private call");
+    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+    return INVALID_EXT_PRIV;
+  case 4:
+    pelz_log(LOG_INFO, "Remove cert call not added");
+    return RM_CERT_NOT_FIN;
+  case 5:
+    pelz_log(LOG_INFO, "Remove all certs call not added");
+    return RM_ALL_CERT_NOT_FIN;
+  case 6:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+    key_id = new_charbuf(strlen(tokens[2]));  //the number 8 is used because it the number of chars in "pelz -6 "
+    memcpy(key_id.chars, tokens[2], key_id.len);
+    key_table_delete(eid, &ret, key_id);
+    if (ret)
+    {
+      pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
+      free_charbuf(&key_id);
+      return RM_KEK_FAIL;
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
+      free_charbuf(&key_id);
+      return RM_KEK;
+    }
+  case 7:
+    key_table_destroy(eid, &ret);
+    if (ret)
+    {
+      pelz_log(LOG_ERR, "Key Table Destroy Failure");
+      return KEK_TAB_DEST_FAIL;
+    }
+    pelz_log(LOG_INFO, "Key Table Destroyed");
+
+    key_table_init(eid, &ret);
+    if (ret)
+    {
+      pelz_log(LOG_ERR, "Key Table Init Failure");
+      return KEK_TAB_INIT_FAIL;
+    }
+    pelz_log(LOG_INFO, "Key Table Re-Initialized");
+    return RM_KEK_ALL;
+  default:
+    pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);
+    return INVALID;
+  }
+  return INVALID;
 }

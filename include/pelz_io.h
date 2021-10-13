@@ -5,6 +5,12 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 
+typedef enum
+{ INVALID, EXIT, UNABLE_RD_F, TPM_UNSEAL_FAIL, SGX_UNSEAL_FAIL, LOAD_CERT_NOT_FIN, INVALID_EXT_CERT,
+  LOAD_PRIV_NOT_FIN, INVALID_EXT_PRIV, RM_CERT_NOT_FIN, RM_ALL_CERT_NOT_FIN, RM_KEK_FAIL, RM_KEK,
+  KEK_TAB_DEST_FAIL, KEK_TAB_INIT_FAIL, RM_KEK_ALL
+} ParseResponseStatus;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -34,14 +40,41 @@ extern "C"
 
 /**
  * <pre>
- * Writes a message to the Pelz FIFO pipe
+ * Writes a message to the FIFO pipe
  * </pre>
  *
+ * @param[in] pipe The FIFO pipe name
  * @param[in] msg Message to be sent along the pipe
  *
  * @return 0 if success, 1 if error
  */
-  int write_to_pipe(char *msg);
+  int write_to_pipe(char *pipe, char *msg);
+
+/**
+ * <pre>
+ * Reads a message from the FIFO pipe
+ * </pre>
+ *
+ * @param[in] pipe The FIFO pipe name
+ * @param[out] msg Message sent along the pipe
+ *
+ * @return 0 if success, 1 if error
+ */
+  int read_from_pipe(char *pipe, char **msg);
+
+/**
+ * <pre>
+ * Splits a message on the pelz pipe into tokens. Assumes a delimiter of ' '
+ * </pre>
+ *
+ * @param[out] Reference to a double pointer intended to hold tokens
+ * @param[out] The number of tokens output
+ * @param[in]  The message to be tokenized
+ * @param[in]  The length of the message being tokenized
+ *
+ * @return 0 if success, 1 if error
+ */
+  int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, size_t message_length);
 
 /**
  * <pre>
@@ -49,11 +82,13 @@ extern "C"
  * from message
  * </pre>
  *
- * @param[in] msg Message from the pipe to be parsed and executed
+ * @param[in] tokens Tokenized message from the pipe to be parsed and executed
+ * @param[in] num_tokens The number of tokens output
+ * @param[out] response Response to be sent to the second pipe 
  *
- * @return 0 if success, 1 if error or exit service
+ * @return ParseResponseStatus status message indicating the outcome of parse
  */
-  int read_pipe(char *msg);
+  ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
 #ifdef __cplusplus
 }
 #endif

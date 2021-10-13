@@ -17,7 +17,8 @@
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZFIFO "/tmp/pelzfifo"
+#define PELZSERVICEIN "/tmp/pelzServiceIn"
+#define PELZSERVICEOUT "/tmp/pelzServiceOut"
 #define BUFSIZE 1024
 #define MODE 0600
 
@@ -26,11 +27,19 @@ void *fifo_thread_process(void *arg)
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
   pthread_mutex_t lock = threadArgs->lock;
 
-  int fd;
-  int ret;
-  char buf[BUFSIZE];
+  char *msg = NULL;
+  char **tokens;
+  size_t num_tokens = 0;
+  int ret = 0;
 
-  if (mkfifo(PELZFIFO, MODE) == 0)
+  const char *resp_str[16] = { "Pipe command invalid", "Exit pelz-service", "Unable to read file",
+    "TPM unseal failed", "SGX unseal failed", "Load cert call not finished", "Invalid extention for load cert call",
+    "Load private call not finished", "Invalid extention for load private call", "Remove cert call not added",
+    "Remove all certs call not added", "Failure to remove key", "Removed key",
+    "Key Table Destroy Failure", "Key Table Init Failure", "All keys removed"
+  };
+
+  if (mkfifo(PELZSERVICEIN, MODE) == 0)
   {
     pelz_log(LOG_INFO, "Pipe created successfully");
   }
@@ -39,30 +48,63 @@ void *fifo_thread_process(void *arg)
     pelz_log(LOG_INFO, "Error: %s", strerror(errno));
   }
 
+  if (mkfifo(PELZSERVICEOUT, MODE) == 0)
+  {
+    pelz_log(LOG_INFO, "Second pipe created successfully");
+  }
+  else
+  {
+    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+  }
+
   do
   {
-    fd = open(PELZFIFO, O_RDONLY);
-    if (fd == -1)
+    pthread_mutex_lock(&lock);
+    if (read_from_pipe((char *) PELZSERVICEIN, &msg))
     {
-      pelz_log(LOG_ERR, "Error opening pipe");
       break;
     }
-    ret = read(fd, buf, sizeof(buf));
-    if (ret < 0)
+
+    /*
+     * Tokens come out in the following format:
+     *
+     * token[0] is the program that called it (e.g., pelz)
+     * token[1] is the command parsed below
+     * token[2-n] are the command inputs. An example for load cert would be:
+     *
+     * token[0] = pelz
+     * token[1] = 2
+     * token[2] = path/to/input
+     * token[3] = path/to/output
+     *
+     */
+    if (tokenize_pipe_message(&tokens, &num_tokens, msg, strlen(msg)))
     {
-      pelz_log(LOG_ERR, "Pipe read failed");
-    }
-    if (close(fd) == -1)
-      pelz_log(LOG_ERR, "Error closing pipe");
-    if (ret > 0)
-    {
-      pthread_mutex_lock(&lock);
-      if (read_pipe(buf) == 1)
-      {
-        pthread_mutex_unlock(&lock);
-        break;
-      }
+      free(msg);
       pthread_mutex_unlock(&lock);
+      continue;
+    }
+    free(msg);
+
+    ret = parse_pipe_message(tokens, num_tokens);
+    if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
+    {
+      pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
+    }
+
+    for (size_t i = 0; i < num_tokens; i++)
+    {
+      free(tokens[i]);
+    }
+    free(tokens);
+    pthread_mutex_unlock(&lock);
+    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == KEK_TAB_INIT_FAIL)
+    {
+      break;
     }
   }
   while (true);
@@ -88,7 +130,9 @@ void thread_process(void *arg)
     {
       pelz_log(LOG_ERR, "%d::Error Receiving Request", new_socket);
       while (!pelz_key_socket_check(new_socket))
+      {
         continue;
+      }
       pelz_key_socket_close(new_socket);
       return;
     }
@@ -172,7 +216,9 @@ void thread_process(void *arg)
       pelz_log(LOG_ERR, "%d::Socket Send Error", new_socket);
       free_charbuf(&message);
       while (!pelz_key_socket_check(new_socket))
+      {
         continue;
+      }
       pelz_key_socket_close(new_socket);
       return;
     }

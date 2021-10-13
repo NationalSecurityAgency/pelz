@@ -32,16 +32,26 @@ int cmp_charbuf(charbuf buf1, charbuf buf2)
     int ret = memcmp(buf1.chars, buf2.chars, buf1.len);
 
     if (ret == 0)
+    {
       return (0);
+    }
     else if (ret > 0)
+    {
       return (1);
+    }
     else if (ret < 0)
+    {
       return (-1);
+    }
   }
   else if (buf1.len < buf2.len)
+  {
     return (-2);
+  }
   else if (buf1.len > buf2.len)
+  {
     return (2);
+  }
 
   return (-3);
 }
@@ -61,7 +71,9 @@ int get_index_for_char(charbuf buf, char c, unsigned int index, int direction)
       for (unsigned int i = index; i < buf.len; i++)
       {
         if (c == buf.chars[i])
+        {
           return (i);
+        }
       }
     }
     else if (direction == 1)
