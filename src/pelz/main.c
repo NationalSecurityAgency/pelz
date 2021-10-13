@@ -601,59 +601,31 @@ int main(int argc, char **argv)
         // If output file not specified, set output path to basename(inPath) with
         // a .nkl extension in the directory that the application is being run from.
         char *original_fn = basename(path_id);
-        char *temp_str = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
-        char *scratch = temp_str;
 
-        strncpy(temp_str, original_fn, strlen(original_fn) + 1);
-        // Remove any leading '.'s
-        while (*scratch == '.' && *scratch != '\0')
-        {
-          scratch++;
-        }
+        outPath = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
+        memcpy(outPath, original_fn, strlen(original_fn));
+        memcpy(&outPath[strlen(original_fn)], ext, (strlen(ext) + 1));
+        free(path_id);
 
-        if (*scratch == '\0')
-        {
-          pelz_log(LOG_ERR, "invalid default filename ... exiting");
-          free(temp_str);
-          free(path_id);
-          return 1;
-        }
-
-        scratch = strtok(scratch, ".");
-        if (scratch == NULL)
-        {
-          pelz_log(LOG_ERR, "default filename has no extention ... exiting");
-          free(temp_str);
-          free(path_id);
-          return 1;
-        }
-
-        // Append file extension
-        memcpy(&scratch[strlen(scratch)], ext, strlen(ext) + 1);
-        outPath_size = strlen(temp_str) + 1;
         // Make sure resultant default file name does not have empty basename
-        if (outPath_size < 6)
+        if (outPath == NULL)
         {
           pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
-          free(temp_str);
-          free(path_id);
+          free(outPath);
           return 1;
         }
+
         // Make sure default filename we constructed doesn't already exist
         struct stat st = {
           0
         };
-        if (!stat(temp_str, &st))
+        if (!stat(outPath, &st))
         {
-          pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", temp_str);
-          free(temp_str);
-          free(path_id);
+          pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", outPath);
+          free(outPath);
           return 1;
         }
-        // Go ahead and make the default value the output path
-        outPath = (char *) malloc(outPath_size * sizeof(char));
-        memcpy(outPath, temp_str, outPath_size);
-        free(temp_str);
+
         pelz_log(LOG_WARNING, "output file not specified, default = %s", outPath);
         if (tpm)
         {
@@ -661,7 +633,6 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
             free(outPath);
-            free(path_id);
             free(tpm_seal);
             return 1;
           }
@@ -673,14 +644,12 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
             free(outPath);
-            free(path_id);
             free(sgx_seal);
             return 1;
           }
           free(sgx_seal);
         }
       }
-      free(path_id);
     }
     else
     {
