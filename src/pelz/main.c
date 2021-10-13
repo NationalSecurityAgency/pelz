@@ -601,12 +601,12 @@ int main(int argc, char **argv)
         // If output file not specified, set output path to basename(inPath) with
         // a .nkl extension in the directory that the application is being run from.
         char *original_fn = basename(path_id);
-        char *temp_str = (char *) malloc((strlen(original_fn) + strlen(ext)) * sizeof(char));
+        char *temp_str = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
         char *scratch = temp_str;
 
-        strncpy(temp_str, original_fn, strlen(original_fn));
+        strncpy(temp_str, original_fn, strlen(original_fn) + 1);
         // Remove any leading '.'s
-        while (*scratch == '.')
+        while (*scratch == '.' && *scratch != '\0')
         {
           scratch++;
         }
@@ -632,7 +632,7 @@ int main(int argc, char **argv)
         // '.'(s) removed, is treated as extension
         temp_str = strtok_r(temp_str, ".", &scratch);
         // Append file extension
-        memcpy(&temp_str[strlen(temp_str)], ext, strlen(ext));
+        memcpy(&temp_str[strlen(temp_str)], ext, strlen(ext) + 1);
         outPath_size = strlen(temp_str) + 1;
         // Make sure resultant default file name does not have empty basename
         if (outPath_size < 6)
