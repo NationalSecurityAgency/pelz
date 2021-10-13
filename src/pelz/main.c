@@ -603,9 +603,6 @@ int main(int argc, char **argv)
         char *original_fn = basename(path_id);
 
         outPath = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
-        memcpy(outPath, original_fn, strlen(original_fn));
-        memcpy(&outPath[strlen(original_fn)], ext, (strlen(ext) + 1));
-        free(path_id);
 
         // Make sure resultant default file name does not have empty basename
         if (outPath == NULL)
@@ -614,6 +611,10 @@ int main(int argc, char **argv)
           free(outPath);
           return 1;
         }
+
+        memcpy(outPath, original_fn, strlen(original_fn));
+        memcpy(&outPath[strlen(original_fn)], ext, (strlen(ext) + 1));
+        free(path_id);
 
         // Make sure default filename we constructed doesn't already exist
         struct stat st = {
