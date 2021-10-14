@@ -30,21 +30,29 @@ You must also create an enclave signing key, for example by running ```openssl g
 
 The SGX SDK environment must be sourced before pelz can be run.
 
-#### kmyth logger:
-The kmyth logger is used by pelz. It requires building the logger, but not all of kmyth.  
-
-    git clone https://github.com/NationalSecurityAgency/kmyth.git
-    cd kmyth/tpm2
-    make logger-lib
-    make install
-
-For more information, please see their [build instructions](https://github.com/NationalSecurityAgency/kmyth/blob/main/tpm2/INSTALL.md).
-
 #### kmyth submodule
 Pelz uses portions of the kmyth SGX enclave which it acquires by including kmyth as a git submodule and including the right files as part of its build process as described in the [kmyth SGX documentation](https://github.com/NationalSecurityAgency/kmyth/tree/main/sgx). Before attempting to build pelz you must initialize and update the kmyth submodule by:
 
     git submodule init
     git submodule update
+
+#### kmyth logger:
+The kmyth logger is used by pelz. It requires building the logger, but not all of kmyth. Follow below instuctions after initialize and update the kmyth submodule:
+
+    cd kmyth
+    make logger-lib
+    make install
+
+For more information, please see their [build instructions](https://github.com/NationalSecurityAgency/kmyth/blob/main/INSTALL.md).
+
+#### kmyth utils :
+The kmyth utils is used by pelz. It requires building the utils-lib, but not all of kmyth. Follow below instuctions after initialize and update the kmyth submodule:
+
+    cd kmyth
+    make utils-lib
+    make install
+
+For more information, please see their [build instructions](https://github.com/NationalSecurityAgency/kmyth/blob/main/INSTALL.md).
     
 ## Building pelz
 Once the dependencies are in place, building pelz is done by:
