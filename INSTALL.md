@@ -45,6 +45,16 @@ Pelz uses portions of the kmyth SGX enclave which it acquires by including kmyth
 
     git submodule init
     git submodule update
+
+#### kmyth utils library:
+The kmyth utils library is used by pelz. It requires building and installing kmyth.
+
+    git clone https://github.com/NationalSecurityAgency/kmyth.git
+    cd kmyth
+    make 
+    make install
+
+For more information, please see their [build instructions](https://github.com/NationalSecurityAgency/kmyth/blob/main/INSTALL.md).
     
 ## Building pelz
 Once the dependencies are in place, building pelz is done by:
