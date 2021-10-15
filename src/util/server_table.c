@@ -108,8 +108,8 @@ int server_table_add(charbuf server_id, uint64_t handle)
   CertEntry tmp_entry;
   size_t max_mem_size;
   charbuf tmpcert;
-  size_t data_size;
   uint8_t *data;
+  size_t data_size = 0;
 
   max_mem_size = 1000000;
 
@@ -120,9 +120,27 @@ int server_table_add(charbuf server_id, uint64_t handle)
   }
 
   tmp_entry.server_id = new_charbuf(server_id.len);
+  if (server_id.len != tmp_entry.server_id.len)
+  {
+    pelz_log(LOG_ERR, "Charbuf creation error.");
+    return (1);
+  }
+
   memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
   data_size = retrieve_from_unseal_table(handle, &data);
+  if (data_size == 0)
+  {
+    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    return (1);
+  }
+
   tmp_entry.cert = new_charbuf(data_size);
+  if (data_size != tmp_entry.cert.len)
+  {
+    pelz_log(LOG_ERR, "Charbuf creation error.");
+    return (1);
+  }
+
   memcpy(tmp_entry.cert.chars, data, tmp_entry.cert.len);
 
   if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
@@ -169,6 +187,11 @@ int server_table_lookup(charbuf server_id, charbuf * cert)
     if (cmp_charbuf(server_id, server_table.entries[i].server_id) == 0)
     {
       *cert = new_charbuf(server_table.entries[i].cert.len);
+      if (server_table.entries[i].cert.len != cert->len)
+      {
+        pelz_log(LOG_ERR, "Charbuf creation error.");
+        return (1);
+      }
       memcpy(cert->chars, server_table.entries[i].cert.chars, cert->len);
       return (0);
     }
