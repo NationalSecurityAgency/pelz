@@ -82,7 +82,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   key_uri_to_parse = (char *) calloc(key_id_len + 1, 1);
   if (key_uri_to_parse == NULL)
   {
-    return 1;
+    return return_value;
   }
   memcpy(key_uri_to_parse, key_id, key_id_len);
 
