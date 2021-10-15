@@ -30,11 +30,11 @@ int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **ke
     return 1;
   }
 
-  *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_file_handle);
+  *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN+1, key_file_handle);
 
-  // If we've read either max key len or not reached the end
+  // If we've read more than max key len or not reached the end
   // of the key file it's likely something went wrong.
-  if ((*key_len == MAX_KEY_LEN) || !feof(key_file_handle))
+  if ((*key_len == MAX_KEY_LEN+1) || !feof(key_file_handle))
   {
     pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
     secure_memset(tmp_key, 0, *key_len);
@@ -44,6 +44,10 @@ int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **ke
   fclose(key_file_handle);
 
   *key = (unsigned char *) malloc(*key_len);
+  if(*key == NULL){
+    pelz_log(LOG_ERR, "Error: Failed to allocate memory for key.");
+    return 1;
+  }
   memcpy(*key, tmp_key, *key_len);
   secure_memset(tmp_key, 0, *key_len);
   return 0;
