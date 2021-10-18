@@ -93,11 +93,17 @@ int server_table_delete(charbuf server_id)
       server_table.entries[i - 1] = server_table.entries[i];
     }
     server_table.num_entries -= 1;
-    if ((server_table.entries =
-        (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
+
+    CertEntry *temp;
+
+    if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
     {
       pelz_log(LOG_ERR, "Server List Space Reallocation Error");
       return (1);
+    }
+    else
+    {
+      server_table.entries = temp;
     }
   }
   return (0);
@@ -163,13 +169,18 @@ int server_table_add(charbuf server_id, uint64_t handle)
     }
   }
 
-  if ((server_table.entries =
-      (CertEntry *) realloc(server_table.entries, (server_table.num_entries + 1) * sizeof(CertEntry))) == NULL)
+  CertEntry *temp;
+
+  if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries + 1) * sizeof(CertEntry))) == NULL)
   {
     pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
     free_charbuf(&tmp_entry.server_id);
     secure_free_charbuf(&tmp_entry.cert);
     return (1);
+  }
+  else
+  {
+    server_table.entries = temp;
   }
   server_table.entries[server_table.num_entries] = tmp_entry;
   server_table.num_entries++;
