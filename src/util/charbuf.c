@@ -13,20 +13,31 @@ charbuf new_charbuf(size_t len)
 {
   charbuf newBuf;
 
+  newBuf.len = 0;
   newBuf.chars = (unsigned char *) malloc(len);
-  newBuf.len = len;
+  if (newBuf.chars != NULL)
+  {
+    newBuf.len = len;
+  }
   return (newBuf);
 }
 
 void free_charbuf(charbuf * buf)
 {
-  free((*buf).chars);
-  (*buf).chars = NULL;
-  (*buf).len = 0;
+  if (buf->chars != NULL && buf->len != 0)
+  {
+    free((*buf).chars);
+    (*buf).chars = NULL;
+    (*buf).len = 0;
+  }
 }
 
 int cmp_charbuf(charbuf buf1, charbuf buf2)
 {
+  if (buf1.chars == NULL || buf1.len == 0 || buf2.chars == NULL || buf2.len == 0)
+  {
+    return -3;
+  }
   if (buf1.len == buf2.len)
   {
     int ret = memcmp(buf1.chars, buf2.chars, buf1.len);
@@ -58,12 +69,19 @@ int cmp_charbuf(charbuf buf1, charbuf buf2)
 
 void secure_free_charbuf(charbuf * buf)
 {
-  secure_memset(buf->chars, 0, buf->len);
-  free_charbuf(buf);
+  if (buf != NULL && buf->chars != NULL && buf->len != 0)
+  {
+    secure_memset(buf->chars, 0, buf->len);
+    free_charbuf(buf);
+  }
 }
 
 int get_index_for_char(charbuf buf, char c, unsigned int index, int direction)
 {
+  if (buf.chars == NULL || buf.len == 0)
+  {
+    return -1;
+  }
   if (0 <= index && index < buf.len)
   {
     if (direction == 0)
@@ -95,6 +113,10 @@ charbuf copy_chars_from_charbuf(charbuf buf, int index)
   charbuf newBuf;
 
   newBuf = new_charbuf((buf.len - index));
+  if (newBuf.chars == NULL || newBuf.len == 0)
+  {
+    return newBuf;
+  }
   memcpy(newBuf.chars, &buf.chars[index], newBuf.len);
-  return (newBuf);
+  return newBuf;
 }
