@@ -39,7 +39,7 @@ SGX_SSL_TRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_INCLUDE_PATH ?= /opt/intel/sgxssl/include/
 
 ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
-ENCLAVE_HEADER_UNTRUSTED ?= '""'
+ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
@@ -97,7 +97,9 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c	 
 
-App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include
+App_Cpp_Kmyth_Files := kmyth/sgx/kmyth_enclave/sgx_seal_unseal_impl.c
+
+App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -Ikmyth/sgx/kmyth_enclave
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED -Wall -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
 
@@ -114,7 +116,8 @@ else
 endif
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DPELZ_SGX_UNTRUSTED
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lkmyth-utils -lpthread -luriparser
+
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lkmyth-utils -lkmyth-tpm -lpthread -luriparser
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim
@@ -203,15 +206,15 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) $(App_Cpp_Kmyth_Files) sgx/pelz_enclave_u.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Itest/include -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread -lcunit
 	@echo "LINK =>  $@"
 
-bin/$(App_Name_Service): $(App_Service_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+bin/$(App_Name_Service): $(App_Service_File) $(App_Cpp_Files) $(App_Cpp_Kmyth_Files) sgx/pelz_enclave_u.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
 	@echo "LINK =>  $@"
 
-bin/$(App_Name_Pipe): $(App_Pipe_File) $(App_Cpp_Files) sgx/pelz_enclave_u.o
+bin/$(App_Name_Pipe): $(App_Pipe_File) $(App_Cpp_Files) $(App_Cpp_Kmyth_Files) sgx/pelz_enclave_u.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
 	@echo "LINK =>  $@"
 

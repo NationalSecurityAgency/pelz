@@ -37,24 +37,16 @@ int server_table_init(void)
 int server_table_destroy(void)
 {
   pelz_log(LOG_DEBUG, "Server Table Destroy Function Starting");
-  if (server_table.num_entries >= 0)
+  for (unsigned int i = 0; i < server_table.num_entries; i++)
   {
-    for (unsigned int i = 0; i < server_table.num_entries; i++)
+    if (server_table.entries[i].server_id.len != 0)
     {
-      if (server_table.entries[i].server_id.len != 0)
-      {
-        free_charbuf(&server_table.entries[i].server_id);
-      }
-      if (server_table.entries[i].cert.len != 0)
-      {
-        secure_free_charbuf(&server_table.entries[i].cert);
-      }
+      free_charbuf(&server_table.entries[i].server_id);
     }
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "Destroy Table Error");
-    return (1);
+    if (server_table.entries[i].cert.len != 0)
+    {
+      secure_free_charbuf(&server_table.entries[i].cert);
+    }
   }
 
   //Free the storage allocated for the hash table
@@ -93,11 +85,17 @@ int server_table_delete(charbuf server_id)
       server_table.entries[i - 1] = server_table.entries[i];
     }
     server_table.num_entries -= 1;
-    if ((server_table.entries =
-        (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
+
+    CertEntry *temp;
+
+    if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
     {
       pelz_log(LOG_ERR, "Server List Space Reallocation Error");
       return (1);
+    }
+    else
+    {
+      server_table.entries = temp;
     }
   }
   return (0);
@@ -108,8 +106,8 @@ int server_table_add(charbuf server_id, uint64_t handle)
   CertEntry tmp_entry;
   size_t max_mem_size;
   charbuf tmpcert;
-  size_t data_size;
   uint8_t *data;
+  size_t data_size = 0;
 
   max_mem_size = 1000000;
 
@@ -120,9 +118,27 @@ int server_table_add(charbuf server_id, uint64_t handle)
   }
 
   tmp_entry.server_id = new_charbuf(server_id.len);
+  if (server_id.len != tmp_entry.server_id.len)
+  {
+    pelz_log(LOG_ERR, "Charbuf creation error.");
+    return (1);
+  }
+
   memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
   data_size = retrieve_from_unseal_table(handle, &data);
+  if (data_size == 0)
+  {
+    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    return (1);
+  }
+
   tmp_entry.cert = new_charbuf(data_size);
+  if (data_size != tmp_entry.cert.len)
+  {
+    pelz_log(LOG_ERR, "Charbuf creation error.");
+    return (1);
+  }
+
   memcpy(tmp_entry.cert.chars, data, tmp_entry.cert.len);
 
   if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
@@ -145,13 +161,18 @@ int server_table_add(charbuf server_id, uint64_t handle)
     }
   }
 
-  if ((server_table.entries =
-      (CertEntry *) realloc(server_table.entries, (server_table.num_entries + 1) * sizeof(CertEntry))) == NULL)
+  CertEntry *temp;
+
+  if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries + 1) * sizeof(CertEntry))) == NULL)
   {
     pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
     free_charbuf(&tmp_entry.server_id);
     secure_free_charbuf(&tmp_entry.cert);
     return (1);
+  }
+  else
+  {
+    server_table.entries = temp;
   }
   server_table.entries[server_table.num_entries] = tmp_entry;
   server_table.num_entries++;
@@ -169,6 +190,11 @@ int server_table_lookup(charbuf server_id, charbuf * cert)
     if (cmp_charbuf(server_id, server_table.entries[i].server_id) == 0)
     {
       *cert = new_charbuf(server_table.entries[i].cert.len);
+      if (server_table.entries[i].cert.len != cert->len)
+      {
+        pelz_log(LOG_ERR, "Charbuf creation error.");
+        return (1);
+      }
       memcpy(cert->chars, server_table.entries[i].cert.chars, cert->len);
       return (0);
     }
