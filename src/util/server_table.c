@@ -37,24 +37,16 @@ int server_table_init(void)
 int server_table_destroy(void)
 {
   pelz_log(LOG_DEBUG, "Server Table Destroy Function Starting");
-  if (server_table.num_entries >= 0)
+  for (unsigned int i = 0; i < server_table.num_entries; i++)
   {
-    for (unsigned int i = 0; i < server_table.num_entries; i++)
+    if (server_table.entries[i].server_id.len != 0)
     {
-      if (server_table.entries[i].server_id.len != 0)
-      {
-        free_charbuf(&server_table.entries[i].server_id);
-      }
-      if (server_table.entries[i].cert.len != 0)
-      {
-        secure_free_charbuf(&server_table.entries[i].cert);
-      }
+      free_charbuf(&server_table.entries[i].server_id);
     }
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "Destroy Table Error");
-    return (1);
+    if (server_table.entries[i].cert.len != 0)
+    {
+      secure_free_charbuf(&server_table.entries[i].cert);
+    }
   }
 
   //Free the storage allocated for the hash table
