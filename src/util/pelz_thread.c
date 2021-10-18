@@ -32,11 +32,12 @@ void *fifo_thread_process(void *arg)
   size_t num_tokens = 0;
   int ret = 0;
 
-  const char *resp_str[16] = { "Pipe command invalid", "Exit pelz-service", "Unable to read file",
-    "TPM unseal failed", "SGX unseal failed", "Load cert call not finished", "Invalid extention for load cert call",
-    "Load private call not finished", "Invalid extention for load private call", "Remove cert call not added",
-    "Remove all certs call not added", "Failure to remove key", "Removed key",
-    "Key Table Destroy Failure", "Key Table Init Failure", "All keys removed"
+  const char *resp_str[20] =
+    { "Pipe command invalid", "Exit pelz-service", "Unable to read file", "TPM unseal failed", "SGX unseal failed",
+    "Load cert call not finished", "Invalid extention for load cert call", "Load private call not finished",
+    "Invalid extention for load private call", "Failure to remove cert", "Remove cert", "Server Table Destroy Failure",
+    "Server Table Init Failure", "All certs removed", "Failure to remove key", "Removed key", "Key Table Destroy Failure",
+    "Key Table Init Failure", "All keys removed", "Charbuf creation error."
   };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)

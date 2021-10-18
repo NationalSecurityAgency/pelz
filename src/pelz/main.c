@@ -407,13 +407,6 @@ int main(int argc, char **argv)
           memcpy(path_id, argv[arg_index + 3], path_id_size);
         }
         pelz_log(LOG_DEBUG, "<path> set: %.*s", (int) path_id_size, path_id);
-        if (file_check(path_id))
-        {
-          pelz_log(LOG_INFO, "File %s is invalid.", path_id);
-          free(path_id);
-          free(outPath);
-          return 1;
-        }
         msg = (char *) calloc((8 + path_id_size), sizeof(char));
         memcpy(msg, "pelz 4 ", 7);
         memcpy(&msg[7], path_id, path_id_size);
