@@ -14,10 +14,17 @@ charbuf new_charbuf(size_t len)
   charbuf newBuf;
 
   newBuf.len = 0;
-  newBuf.chars = (unsigned char *) malloc(len);
-  if (newBuf.chars != NULL)
+  if (len > 0)
   {
-    newBuf.len = len;
+    newBuf.chars = (unsigned char *) malloc(len);
+    if (newBuf.chars != NULL)
+    {
+      newBuf.len = len;
+    }
+  }
+  else
+  {
+    newBuf.chars = NULL;
   }
   return (newBuf);
 }
@@ -112,11 +119,15 @@ charbuf copy_chars_from_charbuf(charbuf buf, int index)
 {
   charbuf newBuf;
 
-  newBuf = new_charbuf((buf.len - index));
-  if (newBuf.chars == NULL || newBuf.len == 0)
+  if ((index < 0) || ((size_t) index < buf.len))
   {
+    newBuf = new_charbuf((buf.len - index));
+    if (newBuf.chars == NULL || newBuf.len == 0)
+    {
+      return newBuf;
+    }
+    memcpy(newBuf.chars, &buf.chars[index], newBuf.len);
     return newBuf;
   }
-  memcpy(newBuf.chars, &buf.chars[index], newBuf.len);
-  return newBuf;
+  return new_charbuf(0);
 }
