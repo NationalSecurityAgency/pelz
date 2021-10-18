@@ -86,6 +86,21 @@ public int server_table_delete(charbuf server_id);
 
 /**
  * <pre>
+ * This function to add values in hash table based on location in server_id.
+ * </pre>
+ *
+ * @param[in] server_id.chars Server identifier assumed to be null terminated
+ * @param[in] server_id.len The length of the server identifier
+ * @param[in] handle The handle value for the cert data location in the kmyth unseal data table
+ * @param[in] server_table The server table that the new cert needs to be added to
+ * @param[out] server_table The server table with the new added cert
+ *
+ * @return 0 on success, 1 on error
+ */
+public int server_table_add(charbuf server_id, uint64_t handle);
+
+/**
+ * <pre>
  * This function implements the request handling by looking if Pelz already has
  * the key and if not then adding the key to the key table. Along with the
  * key lookup, this function checks the request type then based on the request

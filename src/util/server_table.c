@@ -114,14 +114,14 @@ int server_table_add(charbuf server_id, uint64_t handle)
   if (server_table.mem_size >= max_mem_size)
   {
     pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
-    return (1);
+    return MEM_ALLOC_FAIL;
   }
 
   tmp_entry.server_id = new_charbuf(server_id.len);
   if (server_id.len != tmp_entry.server_id.len)
   {
     pelz_log(LOG_ERR, "Charbuf creation error.");
-    return (1);
+    return ERR_BUF;
   }
 
   memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
@@ -129,14 +129,14 @@ int server_table_add(charbuf server_id, uint64_t handle)
   if (data_size == 0)
   {
     pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-    return (1);
+    return RET_FAIL;
   }
 
   tmp_entry.cert = new_charbuf(data_size);
   if (data_size != tmp_entry.cert.len)
   {
     pelz_log(LOG_ERR, "Charbuf creation error.");
-    return (1);
+    return ERR_BUF;
   }
 
   memcpy(tmp_entry.cert.chars, data, tmp_entry.cert.len);
@@ -157,7 +157,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
       free_charbuf(&tmp_entry.server_id);
       secure_free_charbuf(&tmp_entry.cert);
       secure_free_charbuf(&tmpcert);
-      return (1);
+      return NO_MATCH;
     }
   }
 
@@ -168,7 +168,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
     pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
     free_charbuf(&tmp_entry.server_id);
     secure_free_charbuf(&tmp_entry.cert);
-    return (1);
+    return ERR_REALLOC;
   }
   else
   {

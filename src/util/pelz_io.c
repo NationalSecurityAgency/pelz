@@ -410,6 +410,13 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     path_ext = strrchr(tokens[2], '.');
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+    server_id = new_charbuf(strlen(tokens[2]));
+    if (server_id.len != strlen(tokens[2]))
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return ERR_CHARBUF;
+    }
+    memcpy(server_id.chars, tokens[2], server_id.len);
     if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
     {
       if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
@@ -437,8 +444,33 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(nkl_data);
-        pelz_log(LOG_INFO, "Load cert call not finished");
-        return LOAD_CERT_NOT_FIN;
+        server_table_add(eid, &ret, server_id, handle);
+        if (ret != 0)
+        {
+          pelz_log(LOG_ERR, "Add cert call failed");
+          switch (ret)
+          {
+          case ERR_REALLOC:
+            pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
+            break;
+          case ERR_BUF:
+            pelz_log(LOG_ERR, "Charbuf creation error.");
+            break;
+          case RET_FAIL:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+            break;
+          case NO_MATCH:
+            pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
+            break;
+          case MEM_ALLOC_FAIL:
+            pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+            break;
+          default:
+            pelz_log(LOG_ERR, "Server return not defined");
+          }
+          return ADD_CERT_FAIL;
+        }
+        return LOAD_CERT;
       }
       else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
       {
@@ -457,8 +489,33 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        pelz_log(LOG_INFO, "Load cert call not finished");
-        return LOAD_CERT_NOT_FIN;
+        server_table_add(eid, &ret, server_id, handle);
+        if (ret != 0)
+        {
+          pelz_log(LOG_ERR, "Add cert call failed");
+          switch (ret)
+          {
+          case ERR_REALLOC:
+            pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
+            break;
+          case ERR_BUF:
+            pelz_log(LOG_ERR, "Charbuf creation error.");
+            break;
+          case RET_FAIL:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+            break;
+          case NO_MATCH:
+            pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
+            break;
+          case MEM_ALLOC_FAIL:
+            pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+            break;
+          default:
+            pelz_log(LOG_ERR, "Server return not defined");
+          }
+          return ADD_CERT_FAIL;
+        }
+        return LOAD_CERT;
       }
     }
 
