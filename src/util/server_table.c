@@ -91,7 +91,7 @@ int server_table_delete(charbuf server_id)
     if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
     {
       pelz_log(LOG_ERR, "Server List Space Reallocation Error");
-      return (1);
+      return (2);
     }
     else
     {
