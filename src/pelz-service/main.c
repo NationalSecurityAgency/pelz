@@ -78,15 +78,22 @@ int main(int argc, char **argv)
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
   key_table_init(eid, &ret);
-
   if (ret)
   {
     pelz_log(LOG_ERR, "Key Table Init Failure");
     return (1);
   }
 
+  server_table_init(eid, &ret);
+  if (ret)
+  {
+    pelz_log(LOG_ERR, "Server Table Init Failure");
+    return (1);
+  }
+
   pelz_service((const int) max_requests);
 
+  server_table_destroy(eid, &ret);
   key_table_destroy(eid, &ret);
   sgx_destroy_enclave(eid);
   return (0);

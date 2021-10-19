@@ -417,6 +417,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ERR_CHARBUF;
     }
     memcpy(server_id.chars, tokens[2], server_id.len);
+
     if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
     {
       if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
@@ -436,12 +437,21 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+        kmyth_unsealed_data_table_initialize(eid, &ret);
+        if (ret)
+        {
+          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
+          return SGX_UNSEAL_FAIL;
+        }
+
+        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(nkl_data);
+          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return SGX_UNSEAL_FAIL;
         }
+        pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(nkl_data);
         server_table_add(eid, &ret, server_id, handle);
@@ -456,8 +466,11 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
             break;
-          case RET_FAIL:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+          case RET_FAIL_INIT:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of table initialization.");
+            break;
+          case RET_FAIL_SLOT:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of slot.");
             break;
           case NO_MATCH:
             pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
@@ -468,8 +481,10 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           default:
             pelz_log(LOG_ERR, "Server return not defined");
           }
+          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return ADD_CERT_FAIL;
         }
+        kmyth_unsealed_data_table_cleanup(eid, &ret);
         return LOAD_CERT;
       }
       else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
@@ -481,12 +496,21 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
         pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
 
-        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+        kmyth_unsealed_data_table_initialize(eid, &ret);
+        if (ret)
         {
-          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-          free(data);
+          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
           return SGX_UNSEAL_FAIL;
         }
+
+        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+        {
+          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting ");
+          free(data);
+          kmyth_unsealed_data_table_cleanup(eid, &ret);
+          return SGX_UNSEAL_FAIL;
+        }
+        pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(data);
         server_table_add(eid, &ret, server_id, handle);
@@ -501,8 +525,11 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
             break;
-          case RET_FAIL:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+          case RET_FAIL_INIT:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of table initialization.");
+            break;
+          case RET_FAIL_SLOT:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of slot.");
             break;
           case NO_MATCH:
             pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
@@ -513,8 +540,10 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           default:
             pelz_log(LOG_ERR, "Server return not defined");
           }
+          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return ADD_CERT_FAIL;
         }
+        kmyth_unsealed_data_table_cleanup(eid, &ret);
         return LOAD_CERT;
       }
     }
@@ -549,14 +578,22 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
+        kmyth_unsealed_data_table_initialize(eid, &ret);
+        if (ret)
+        {
+          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
+          return SGX_UNSEAL_FAIL;
+        }
         if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(nkl_data);
+          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return SGX_UNSEAL_FAIL;
         }
 
         free(nkl_data);
+        kmyth_unsealed_data_table_cleanup(eid, &ret);
         pelz_log(LOG_INFO, "Load private call not finished");
         return LOAD_PRIV_NOT_FIN;
       }
@@ -568,14 +605,23 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           return UNABLE_RD_F;
         }
         pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
+
+        kmyth_unsealed_data_table_initialize(eid, &ret);
+        if (ret)
+        {
+          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
+          return SGX_UNSEAL_FAIL;
+        }
         if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(data);
+          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return SGX_UNSEAL_FAIL;
         }
 
         free(data);
+        kmyth_unsealed_data_table_cleanup(eid, &ret);
         pelz_log(LOG_INFO, "Load private call not finished");
         return LOAD_PRIV_NOT_FIN;
       }
@@ -600,13 +646,13 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     if (ret)
     {
       pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
-      free_charbuf(&key_id);
+      free_charbuf(&server_id);
       return RM_CERT_FAIL;
     }
     else
     {
       pelz_log(LOG_INFO, "Delete Server ID form Server Table: %.*s", (int) server_id.len, server_id.chars);
-      free_charbuf(&key_id);
+      free_charbuf(&server_id);
       return RM_CERT;
     }
   case 5:
