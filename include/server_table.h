@@ -26,6 +26,8 @@ typedef struct Certs
 
 extern ServerTable server_table;
 
+extern EVP_PKEY *private_pkey;
+
 #ifdef __cplusplus
 extern "C"
 {
