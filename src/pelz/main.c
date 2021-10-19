@@ -18,7 +18,7 @@
 #include "pelz_io.h"
 
 #include "pelz_enclave.h"
-#include "kmyth_enclave.h"
+#include "sgx_seal_unseal_impl.h"
 
 sgx_enclave_id_t eid = 0;
 
