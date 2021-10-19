@@ -25,7 +25,7 @@ typedef struct Certs
 } ServerTable;
 
 typedef enum
-{ ERR_REALLOC, ERR_BUF, RET_FAIL_INIT, RET_FAIL_SLOT, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+{ ERR_REALLOC, ERR_BUF, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
 
 extern ServerTable server_table;
 

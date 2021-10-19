@@ -126,15 +126,10 @@ int server_table_add(charbuf server_id, uint64_t handle)
 
   memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
   data_size = retrieve_from_unseal_table(handle, &data);
-  if (data_size == 1)
+  if (data_size == 0)
   {
     pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-    return RET_FAIL_INIT;
-  }
-  else if (data_size == 2)
-  {
-    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-    return RET_FAIL_SLOT;
+    return RET_FAIL;
   }
 
   tmp_entry.cert = new_charbuf(data_size);

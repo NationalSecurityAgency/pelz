@@ -466,11 +466,8 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
             break;
-          case RET_FAIL_INIT:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of table initialization.");
-            break;
-          case RET_FAIL_SLOT:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of slot.");
+          case RET_FAIL:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
             break;
           case NO_MATCH:
             pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
@@ -525,11 +522,8 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
             break;
-          case RET_FAIL_INIT:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of table initialization.");
-            break;
-          case RET_FAIL_SLOT:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table because of slot.");
+          case RET_FAIL:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
             break;
           case NO_MATCH:
             pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
