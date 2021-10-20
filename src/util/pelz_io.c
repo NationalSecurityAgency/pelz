@@ -491,7 +491,14 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+        kmyth_unsealed_data_table_initialize(eid, &ret);
+        if (ret == -1)
+        {
+          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
+          return SGX_UNSEAL_FAIL;
+        }
+
+        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle) == 1)
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(nkl_data);
@@ -499,8 +506,19 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(nkl_data);
-        pelz_log(LOG_INFO, "Load private call not finished");
-        return LOAD_PRIV_NOT_FIN;
+        private_pkey_add(eid, &ret, handle);
+        if (ret == 1)
+        {
+          pelz_log(LOG_ERR, "Add private pkey failure");
+          return ADD_PRIV_FAIL;
+        }
+
+        kmyth_unsealed_data_table_cleanup(eid, &ret);
+        if (ret != 0)
+        {
+          pelz_log(LOG_ERR, "Unsealed Data Table Cleanup Failure");
+        }
+        return LOAD_PRIV;
       }
       else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
       {
@@ -510,6 +528,14 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           return UNABLE_RD_F;
         }
         pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
+
+        kmyth_unsealed_data_table_initialize(eid, &ret);
+        if (ret == -1)
+        {
+          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
+          return SGX_UNSEAL_FAIL;
+        }
+
         if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
@@ -518,8 +544,19 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        pelz_log(LOG_INFO, "Load private call not finished");
-        return LOAD_PRIV_NOT_FIN;
+        private_pkey_add(eid, &ret, handle);
+        if (ret == 1)
+        {
+          pelz_log(LOG_ERR, "Add private pkey failure");
+          return ADD_PRIV_FAIL;
+        }
+
+        kmyth_unsealed_data_table_cleanup(eid, &ret);
+        if (ret != 0)
+        {
+          pelz_log(LOG_ERR, "Unsealed Data Table Cleanup Failure");
+        }
+        return LOAD_PRIV;
       }
     }
 

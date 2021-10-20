@@ -9,6 +9,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/bn.h>
+#include <openssl/err.h>
+
 #include "charbuf.h"
 
 typedef struct ServerEntry

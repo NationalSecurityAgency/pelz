@@ -22,7 +22,7 @@
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #include "kmyth_enclave.h"
-#include "ec_key_cert_unmarshal.h"
+//#include "ec_key_cert_unmarshal.h"
 
 ServerTable server_table;
 EVP_PKEY *private_pkey;
@@ -38,7 +38,6 @@ int server_table_init(void)
 
   server_table.num_entries = 0;
   server_table.mem_size = 0;
-  private_pkey = openssl_pkey_new();
   return (0);
 }
 
@@ -60,7 +59,6 @@ int server_table_destroy(void)
 
   //Free the storage allocated for the hash table
   free(server_table.entries);
-  openssl_pkey_free(&private_pkey);
   pelz_log(LOG_DEBUG, "Server Table Destroy Function Complete");
   return (0);
 }
@@ -212,6 +210,18 @@ int server_table_lookup(charbuf server_id, charbuf * cert)
   return (1);
 }
 
+int private_pkey_init(void)
+{
+  private_pkey = EVP_PKEY_new();
+  return (0);
+}
+
+int private_pkey_free(void)
+{
+  EVP_PKEY_free(private_pkey);
+  return (0);
+}
+
 int private_pkey_add(uint64_t handle)
 {
   uint8_t *data;
@@ -224,15 +234,15 @@ int private_pkey_add(uint64_t handle)
     return (1);
   }
 
-  openssl_pkey_free(&private_pkey);
+  /*
+     if (unmarshal_ec_der_to_pkey(data, data_size, &private_pkey) == 1)
+     {
+     pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
+     free(data);
+     return (1);
+     }
+   */
 
-  if (unmarshal_ec_der_to_pkey(data, data_size, &private_pkey) == 1)
-  {
-    pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
-    free(data);
-    return (1);
-  }
-  
   free(data);
   return (0);
 }
