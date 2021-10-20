@@ -38,37 +38,35 @@ void free_charbuf(charbuf * buf)
 
 int cmp_charbuf(charbuf buf1, charbuf buf2)
 {
-  if (buf1.chars == NULL || buf1.len == 0 || buf2.chars == NULL || buf2.len == 0)
+  if (buf1.chars == NULL && buf2.chars == NULL)
   {
-    return -3;
-  }
-  if (buf1.len == buf2.len)
-  {
-    int ret = memcmp(buf1.chars, buf2.chars, buf1.len);
-
-    if (ret == 0)
-    {
-      return (0);
-    }
-    else if (ret > 0)
-    {
-      return (1);
-    }
-    else if (ret < 0)
-    {
-      return (-1);
-    }
-  }
-  else if (buf1.len < buf2.len)
-  {
-    return (-2);
-  }
-  else if (buf1.len > buf2.len)
-  {
-    return (2);
+    return 0;
   }
 
-  return (-3);
+  if (buf1.chars == NULL && buf2.chars != NULL)
+  {
+    return -1;
+  }
+
+  if (buf1.chars != NULL && buf2.chars == NULL)
+  {
+    return 1;
+  }
+
+  size_t shorter_len = buf1.len < buf2.len ? buf1.len : buf2.len;
+  int ret = memcmp(buf1.chars, buf2.chars, shorter_len);
+
+  // If the buffers are the same length, or have different values
+  // in their initial segments the result of the memcmp call gives
+  // the comparison.
+  if ((buf1.len == buf2.len) || (ret != 0))
+  {
+    return ret;
+  }
+
+  // Otherwise they are the same up to shorter_len and it depends on
+  // which buffer is longer.
+  return buf1.len < buf2.len ? -1 : 1;
 }
 
 void secure_free_charbuf(charbuf * buf)
