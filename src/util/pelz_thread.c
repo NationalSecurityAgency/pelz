@@ -103,7 +103,8 @@ void *fifo_thread_process(void *arg)
     }
     free(tokens);
     pthread_mutex_unlock(&lock);
-    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == KEK_TAB_INIT_FAIL)
+    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == KEK_TAB_INIT_FAIL || ret == CERT_TAB_DEST_FAIL
+      || ret == CERT_TAB_INIT_FAIL)
     {
       break;
     }

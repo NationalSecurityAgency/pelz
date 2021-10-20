@@ -307,14 +307,14 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   char *save = msg;
   char *token = strtok(msg, " ");
 
-  ret_tokens[0] = (char *) malloc(strlen(token) * sizeof(char) + 1);
+  ret_tokens[0] = (char *) calloc(strlen(token) + 1, sizeof(char));
   if (!ret_tokens[0])
   {
     pelz_log(LOG_ERR, "Unable to allocate memory.");
     free(save);
     return 1;
   }
-  memcpy(ret_tokens[0], token, strlen(token) + 1);  //copy the '\0'
+  memcpy(ret_tokens[0], token, strlen(token));
   for (size_t i = 1; i < token_count; i++)
   {
     char *token = strtok(NULL, " ");
@@ -330,7 +330,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
       free(save);
       return 1;
     }
-    ret_tokens[i] = (char *) malloc(strlen(token) * sizeof(char) + 1);
+    ret_tokens[i] = (char *) calloc(strlen(token) + 1, sizeof(char));
     if (!ret_tokens[i])
     {
       pelz_log(LOG_ERR, "Unable to allocate memory.");
@@ -342,7 +342,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
       free(save);
       return 1;
     }
-    memcpy(ret_tokens[i], token, strlen(token) + 1);  //copy the '\0'
+    memcpy(ret_tokens[i], token, strlen(token));
   }
   if (strtok(NULL, " ") != NULL)
   {
