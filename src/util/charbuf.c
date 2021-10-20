@@ -73,7 +73,7 @@ int cmp_charbuf(charbuf buf1, charbuf buf2)
 
 void secure_free_charbuf(charbuf * buf)
 {
-  if (buf != NULL && buf->chars != NULL && buf->len != 0)
+  if (buf != NULL)
   {
     secure_memset(buf->chars, 0, buf->len);
     free_charbuf(buf);
