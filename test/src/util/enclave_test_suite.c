@@ -14,6 +14,7 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 #include <key_table.h>
+#include <server_table.h>
 #include <pelz_request_handler.h>
 
 #include "sgx_urts.h"
@@ -33,6 +34,10 @@ int enclave_suite_add_tests(CU_pSuite suite)
     return (1);
   }
   if (NULL == CU_add_test(suite, "Test Pelz Request Handler and Key Table Delete", test_table_requestDelete))
+  {
+    return (1);
+  }
+  if (NULL == CU_add_test(suite, "Test Server Table Initialization/Destruction", test_server_table_initDestroy))
   {
     return (1);
   }
@@ -245,4 +250,16 @@ void test_table_requestDelete(void)
   key_table_destroy(eid, &ret);
   CU_ASSERT(ret == 0);
   pelz_log(LOG_DEBUG, "Test Request and Delete Functions Finish");
+}
+
+void test_server_table_initDestroy(void)
+{
+  int ret;
+
+  pelz_log(LOG_DEBUG, "Test Server Table Initialize and Destroy Functions Start");
+  server_table_init(eid, &ret);
+  CU_ASSERT(ret == 0);
+  server_table_destroy(eid, &ret);
+  CU_ASSERT(ret == 0);
+  pelz_log(LOG_DEBUG, "Test Server Table Initialize and Destroy Functions Finish");
 }
