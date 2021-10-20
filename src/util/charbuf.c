@@ -78,17 +78,17 @@ void secure_free_charbuf(charbuf * buf)
   }
 }
 
-int get_index_for_char(charbuf buf, char c, unsigned int index, int direction)
+int get_index_for_char(charbuf buf, char c, size_t index, int direction)
 {
-  if (buf.chars == NULL || buf.len == 0)
+  if (buf.chars == NULL)
   {
     return -1;
   }
-  if (0 <= index && index < buf.len)
+  if (index < buf.len)
   {
     if (direction == 0)
     {
-      for (unsigned int i = index; i < buf.len; i++)
+      for (size_t i = index; i < buf.len; i++)
       {
         if (c == buf.chars[i])
         {
@@ -98,7 +98,13 @@ int get_index_for_char(charbuf buf, char c, unsigned int index, int direction)
     }
     else if (direction == 1)
     {
-      for (int i = index; i >= 0; i--)
+      // Notice that buf.len is of type size_t, so satisifies buf.len <= SIZE_MAX.
+      // Decrementing i, eventually we hit i == 0 (corresponding to checking the
+      // first element of the charbuf, so this is valid). One more decrement gives
+      // i == SIZE_MAX, which means we've wrapped around. The loop condition detects
+      // exactly this circumstance, as i == SIZE_MAX >= buf.len, and so i < buf.len is
+      // false.
+      for (size_t i = index; i < buf.len; i--)
       {
         if (c == buf.chars[i])
         {
@@ -110,14 +116,14 @@ int get_index_for_char(charbuf buf, char c, unsigned int index, int direction)
   return (-1);
 }
 
-charbuf copy_chars_from_charbuf(charbuf buf, int index)
+charbuf copy_chars_from_charbuf(charbuf buf, size_t index)
 {
   charbuf newBuf;
 
-  if ((index < 0) || ((size_t) index < buf.len))
+  if (index < buf.len)
   {
     newBuf = new_charbuf((buf.len - index));
-    if (newBuf.chars == NULL || newBuf.len == 0)
+    if (newBuf.chars == NULL)
     {
       return newBuf;
     }

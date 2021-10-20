@@ -99,7 +99,7 @@ int printcharbuf(charbuf buf, int format);
  * @return index if char is contained in buf
  *         -1 if char is not found or invalid inputs
  */
-int get_index_for_char(charbuf buf, char c, unsigned int index, int direction);
+int get_index_for_char(charbuf buf, char c, size_t index, int direction);
 
 /**
  * <pre>
@@ -112,6 +112,6 @@ int get_index_for_char(charbuf buf, char c, unsigned int index, int direction);
  *
  * @return charbuf copy of tail of buf starting at index
  */
-charbuf copy_chars_from_charbuf(charbuf buf, int index);
+charbuf copy_chars_from_charbuf(charbuf buf, size_t index);
 
 #endif /* INCLUDE_CHARBUF_H_ */
