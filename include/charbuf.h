@@ -18,7 +18,7 @@ typedef struct charbuffer
  * Takes a struct charbuf and allocates memory of len then sets charbuf len to @pram[in] len.
  * </pre>
  *
- * @param[in] len Length of new char array
+ * @param[in] len Length of new char array, must be smaller than SIZE_MAX.
  *
  * @return the initialized charbuf
  */
@@ -97,9 +97,9 @@ int printcharbuf(charbuf buf, int format);
  *                      1 to search left of index
  *
  * @return index if char is contained in buf
- *         -1 if char is not found or invalid inputs
+ *         SIZE_MAX if char is not found or invalid inputs
  */
-int get_index_for_char(charbuf buf, char c, size_t index, int direction);
+size_t get_index_for_char(charbuf buf, char c, size_t index, int direction);
 
 /**
  * <pre>

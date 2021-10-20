@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <stdint.h>
 
 #include "charbuf.h"
 #include "util.h"
@@ -15,7 +16,8 @@ charbuf new_charbuf(size_t len)
 
   newBuf.len = 0;
   newBuf.chars = NULL;
-  if (len > 0)
+
+  if (len > 0 && len < SIZE_MAX)
   {
     newBuf.chars = (unsigned char *) malloc(len);
     if (newBuf.chars != NULL)
@@ -78,11 +80,11 @@ void secure_free_charbuf(charbuf * buf)
   }
 }
 
-int get_index_for_char(charbuf buf, char c, size_t index, int direction)
+size_t get_index_for_char(charbuf buf, char c, size_t index, int direction)
 {
   if (buf.chars == NULL)
   {
-    return -1;
+    return SIZE_MAX;
   }
   if (index < buf.len)
   {
@@ -113,7 +115,7 @@ int get_index_for_char(charbuf buf, char c, size_t index, int direction)
       }
     }
   }
-  return (-1);
+  return SIZE_MAX;
 }
 
 charbuf copy_chars_from_charbuf(charbuf buf, size_t index)

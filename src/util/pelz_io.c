@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
@@ -39,13 +40,29 @@ void ocall_free(void *ptr, size_t len)
 
 int get_file_ext(charbuf buf, int *ext)
 {
-  int period_index = 0;
-  unsigned int ext_len = 0;
+  size_t period_index = 0;
+  size_t ext_len = 0;
   int ext_type_size = 3;
   const char *ext_type[3] = { ".txt", ".pem", ".key" };
 
+  if (buf.chars == NULL)
+  {
+    return 1;
+  }
+
+  // We know that if buf.chars != NULL then buf.len > 0, so there's
+  // no wrap-around concern with buf.len-1.
   period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
+  if (period_index == SIZE_MAX)
+  {
+    return 1;
+  }
+
   ext_len = (buf.len - period_index);
+  if (ext_len == 0)
+  {
+    return 1;
+  }
 
   // If buf.chars is null terminated we don't want to include
   // the null terminator in the extension, since we're going
@@ -68,7 +85,7 @@ int get_file_ext(charbuf buf, int *ext)
       }
     }
   }
-  return (0);
+  return 0;
 }
 
 int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
