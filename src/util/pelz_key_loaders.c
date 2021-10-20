@@ -33,7 +33,7 @@ int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **ke
   *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_file_handle);
 
   // If we've not reached EOF something has probably gone wrong.
-  if (!feof(key_file_handle))
+  if ((*key_len == 0) || (!feof(key_file_handle)))
   {
     pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
     secure_memset(tmp_key, 0, *key_len);
