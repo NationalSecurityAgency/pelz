@@ -1753,7 +1753,7 @@ public class RFilePelzTest {
         new CachableBuilder().input(in2, "cache-1").length(data.length).conf(hadoopConf)
             .cryptoService(CryptoServiceFactory.newInstance(aconf, ClassloaderType.JAVA))
             .cacheProvider(new BasicCacheProvider(manager.getBlockCache(CacheType.INDEX),
-                manager.getBlockCache(CacheType.DATA)))
+                manager.getBlockCache(CacheType.DATA)));
     Reader reader = new RFile.Reader(cb);
     checkIndex(reader);
 
