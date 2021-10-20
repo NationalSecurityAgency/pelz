@@ -14,6 +14,7 @@ charbuf new_charbuf(size_t len)
   charbuf newBuf;
 
   newBuf.len = 0;
+  newBuf.chars = NULL;
   if (len > 0)
   {
     newBuf.chars = (unsigned char *) malloc(len);
@@ -22,16 +23,12 @@ charbuf new_charbuf(size_t len)
       newBuf.len = len;
     }
   }
-  else
-  {
-    newBuf.chars = NULL;
-  }
-  return (newBuf);
+  return newBuf;
 }
 
 void free_charbuf(charbuf * buf)
 {
-  if (buf->chars != NULL && buf->len != 0)
+  if (buf != NULL)
   {
     free(buf->chars);
     buf->chars = NULL;
