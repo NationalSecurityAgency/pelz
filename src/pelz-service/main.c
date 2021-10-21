@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "key_table.h"
+#include "server_table.h"
 #include "pelz_service.h"
 #include "pelz_log.h"
 

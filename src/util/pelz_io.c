@@ -15,6 +15,7 @@
 #include "pelz_log.h"
 #include "pelz_io.h"
 #include "key_table.h"
+#include "server_table.h"
 #include "pelz_request_handler.h"
 #include "util.h"
 
