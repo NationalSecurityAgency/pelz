@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include <pelz_io.h>
-#include <common_table.h>
 #include <server_table.h>
 #include <util.h>
 #include <pelz_request_handler.h>
@@ -18,6 +17,71 @@
 #include "pelz_enclave_t.h"
 #include "kmyth_enclave.h"
 
+KeyTable key_table = {
+  .entries = NULL,
+  .num_entries = 0,
+  .mem_size = 0
+};
+
+ServerTable server_table = {
+  .entries = NULL,
+  .num_entries = 0,
+  .mem_size = 0
+};
+
+//Destroy server table
+int table_destroy(int type)
+{
+  pelz_log(LOG_DEBUG, "Table Destroy Function Starting");
+  switch (type)
+  {
+  case KEY:
+    for (unsigned int i = 0; i < key_table.num_entries; i++)
+    {
+      if (key_table.entries[i].key_id.len != 0)
+      {
+        free_charbuf(&key_table.entries[i].key_id);
+      }
+      if (key_table.entries[i].key.len != 0)
+      {
+        secure_free_charbuf(&key_table.entries[i].key);
+      }
+    }
+
+    //Free the storage allocated for the hash table
+    free(key_table.entries);
+    key_table.entries = NULL;
+    key_table.num_entries = 0;
+    key_table.mem_size = 0;
+    break;
+  case SERVER:
+    for (unsigned int i = 0; i < server_table.num_entries; i++)
+    {
+      if (server_table.entries[i].server_id.len != 0)
+      {
+        free_charbuf(&server_table.entries[i].server_id);
+      }
+      if (server_table.entries[i].cert.len != 0)
+      {
+        secure_free_charbuf(&server_table.entries[i].cert);
+      }
+    }
+
+    //Free the storage allocated for the hash table
+    free(server_table.entries);
+    server_table.entries = NULL;
+    server_table.num_entries = 0;
+    server_table.mem_size = 0;
+    break;
+  default:
+    return (1);
+  }
+
+  pelz_log(LOG_DEBUG, "Table Destroy Function Complete");
+  return (0);
+}
+
+/*
 int server_table_delete(charbuf server_id)
 {
   int index;
@@ -169,4 +233,4 @@ int server_table_lookup(charbuf server_id, charbuf * cert)
     }
   }
   return (1);
-}
+}*/

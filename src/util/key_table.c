@@ -6,7 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pelz_io.h"
+#include <pelz_io.h>
+#include <common_table.h>
 #include <key_table.h>
 #include <util.h>
 #include <pelz_request_handler.h>
@@ -15,52 +16,6 @@
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
-
-KeyTable key_table;
-
-//Initialize key table
-int key_table_init(void)
-{
-  if ((key_table.entries = (KeyEntry *) malloc(sizeof(KeyEntry))) == NULL)
-  {
-    pelz_log(LOG_ERR, "Key List Space Allocation Error");
-    return (1);
-  }
-
-  key_table.num_entries = 0;
-  key_table.mem_size = 0;
-  return (0);
-}
-
-//Destroy key table
-int key_table_destroy(void)
-{
-  pelz_log(LOG_DEBUG, "Key Table Destroy Function Starting");
-  if (key_table.num_entries >= 0)
-  {
-    for (unsigned int i = 0; i < key_table.num_entries; i++)
-    {
-      if (key_table.entries[i].key_id.len != 0)
-      {
-        free_charbuf(&key_table.entries[i].key_id);
-      }
-      if (key_table.entries[i].key.len != 0)
-      {
-        secure_free_charbuf(&key_table.entries[i].key);
-      }
-    }
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "Destroy Table Error");
-    return (1);
-  }
-
-  //Free the storage allocated for the hash table
-  free(key_table.entries);
-  pelz_log(LOG_DEBUG, "Key Table Destroy Function Complete");
-  return (0);
-}
 
 int key_table_delete(charbuf key_id)
 {

@@ -9,21 +9,7 @@
 #include <stdbool.h>
 
 #include "charbuf.h"
-
-typedef struct TableEntry
-{
-  charbuf key_id;
-  charbuf key;
-} KeyEntry;
-
-typedef struct Keys
-{
-  KeyEntry *entries;
-  size_t num_entries;
-  size_t mem_size;
-} KeyTable;
-
-extern KeyTable key_table;
+#include "common_table.h"
 
 #ifdef __cplusplus
 extern "C"

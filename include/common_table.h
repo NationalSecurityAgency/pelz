@@ -10,7 +10,42 @@
 #include <stdint.h>
 
 #include "charbuf.h"
-#include "common_table.h"
+
+typedef struct TableEntry
+{
+  charbuf key_id;
+  charbuf key;
+} KeyEntry;
+
+typedef struct Keys
+{
+  KeyEntry *entries;
+  size_t num_entries;
+  size_t mem_size;
+} KeyTable;
+
+typedef struct ServerEntry
+{
+  charbuf server_id;
+  charbuf cert;
+} CertEntry;
+
+typedef struct Certs
+{
+  CertEntry *entries;
+  size_t num_entries;
+  size_t mem_size;
+} ServerTable;
+
+typedef enum
+{ KEY, SERVER } TableType;
+
+typedef enum
+{ ERR_REALLOC, ERR_BUF, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+
+extern KeyTable key_table;
+
+extern ServerTable server_table;
 
 #ifdef __cplusplus
 extern "C"

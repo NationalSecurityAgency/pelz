@@ -14,7 +14,9 @@
 #include "charbuf.h"
 #include "pelz_log.h"
 #include "pelz_io.h"
+#include "common_table.h"
 #include "key_table.h"
+#include "server_table.h"
 #include "pelz_request_handler.h"
 #include "util.h"
 
@@ -656,7 +658,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return RM_CERT;
     }
   case 5:
-    server_table_destroy(eid, &ret);
+    table_destroy(eid, &ret, SERVER);
     if (ret)
     {
       pelz_log(LOG_ERR, "Server Table Destroy Failure");
@@ -690,21 +692,13 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return RM_KEK;
     }
   case 7:
-    key_table_destroy(eid, &ret);
+    table_destroy(eid, &ret, KEY);
     if (ret)
     {
       pelz_log(LOG_ERR, "Key Table Destroy Failure");
       return KEK_TAB_DEST_FAIL;
     }
-    pelz_log(LOG_INFO, "Key Table Destroyed");
-
-    key_table_init(eid, &ret);
-    if (ret)
-    {
-      pelz_log(LOG_ERR, "Key Table Init Failure");
-      return KEK_TAB_INIT_FAIL;
-    }
-    pelz_log(LOG_INFO, "Key Table Re-Initialized");
+    pelz_log(LOG_INFO, "Key Table Destroyed and Re-Initialize");
     return RM_KEK_ALL;
   default:
     pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);

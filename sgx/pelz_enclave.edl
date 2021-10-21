@@ -4,34 +4,24 @@ enclave {
 	from "kmyth_enclave.edl" import *;
         include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
+	include "common_table.h"
 	include "key_table.h"
 	include "server_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
         include "util.h"
 	trusted {
-/**
- * <pre>
- * This function initializes a key table for lookup.
- * <pre>
- *
- * @param[in] key_table The pointer for key table to be initialized
- * @param[out] key_table The initialized key table
- *
- * @return 0 on success, 1 on error
- */
-public int key_table_init(void);
 
 /**
  * <pre>
- * This function destroys the key table.
+ * This function destroys the a table specified byt type.
  * <pre>
  *
- * @param[in] key_table The key table to be destroyed
+ * @param[in] type The type of table to be destoryed (ex: key_table or server_table)
  *
  * @return 0 on success, 1 on error
  */
-public int key_table_destroy(void);
+public int table_destroy(int type);
 
 /**
  * <pre>
@@ -46,17 +36,6 @@ public int key_table_destroy(void);
  * @return 0 on success, 1 on error
  */
 public int key_table_delete(charbuf key_id);
-
-/**
- * <pre>
- * This function destroys the server table.
- * <pre>
- *
- * @param[in] server_table The server table to be destroyed
- *
- * @return 0 on success, 1 on error
- */
-public int server_table_destroy(void);
 
 /**
  * <pre>

@@ -5,7 +5,9 @@
 #include <getopt.h>
 #include <stdlib.h>
 
+#include "common_table.h"
 #include "key_table.h"
+#include "server_table.h"
 #include "pelz_service.h"
 #include "pelz_log.h"
 
@@ -77,17 +79,9 @@ int main(int argc, char **argv)
   int ret;
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
-  key_table_init(eid, &ret);
-  if (ret)
-  {
-    pelz_log(LOG_ERR, "Key Table Init Failure");
-    return (1);
-  }
-
   pelz_service((const int) max_requests);
-
-  server_table_destroy(eid, &ret);
-  key_table_destroy(eid, &ret);
+  table_destroy(eid, &ret, SERVER);
+  table_destroy(eid, &ret, KEY);
   sgx_destroy_enclave(eid);
   return (0);
 }
