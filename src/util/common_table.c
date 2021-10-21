@@ -32,51 +32,51 @@ ServerTable server_table = {
 //Destroy server table
 int table_destroy(int type)
 {
-  KeyTable table;
-
   pelz_log(LOG_DEBUG, "Table Destroy Function Starting");
 
   switch (type)
   {
   case KEY:
-    KeyTable table;
-    table = key_table;
+    for (unsigned int i = 0; i < key_table.num_entries; i++)
+    {
+      if (key_table.entries[i].id.len != 0)
+      {
+        free_charbuf(&key_table.entries[i].id);
+      }
+      if (key_table.entries[i].key.len != 0)
+      {
+        secure_free_charbuf(&key_table.entries[i].key);
+      }
+    }
+
+    //Free the storage allocated for the hash table
+    free(key_table.entries);
+    key_table.entries = NULL;
+    key_table.num_entries = 0;
+    key_table.mem_size = 0;
     break;
   case SERVER:
-    ServerTable table2;
-    table2 = server_table;
+    for (unsigned int i = 0; i < server_table.num_entries; i++)
+    {
+      if (server_table.entries[i].id.len != 0)
+      {
+        free_charbuf(&server_table.entries[i].id);
+      }
+      if (server_table.entries[i].cert.len != 0)
+      {
+        secure_free_charbuf(&server_table.entries[i].cert);
+      }
+    }
+
+    //Free the storage allocated for the hash table
+    free(server_table.entries);
+    server_table.entries = NULL;
+    server_table.num_entries = 0;
+    server_table.mem_size = 0;
     break;
   default:
     return (1);
   }
-
-  for (unsigned int i = 0; i < table.num_entries; i++)
-  {
-    if (table.entries[i].id.len != 0)
-    {
-      free_charbuf(table->entries[i]->id);
-    }
-    if (type == KEY)
-    {
-      if (table.entries[i].key.len != 0)
-      {
-        secure_free_charbuf(table->entries[i]->key);
-      }
-    }
-    if (type == SERVER)
-    {
-      if (table.entries[i].cert.len != 0)
-      {
-        secure_free_charbuf(table->entries[i]->cert);
-      }
-    }
-  }
-
-  //Free the storage allocated for the hash table
-  free(table->entries);
-  table.entries = NULL;
-  table.num_entries = 0;
-  table.mem_size = 0;
 
   pelz_log(LOG_DEBUG, "Table Destroy Function Complete");
   return (0);
