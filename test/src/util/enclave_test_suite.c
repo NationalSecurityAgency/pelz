@@ -188,39 +188,39 @@ void test_table_requestDelete(void)
 
   //Testing the delete function
   tmp = copy_CWD_to_id(prefix, valid_id[3]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 0);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[5]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 0);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 0);
   free_charbuf(&tmp);
 
   //Testing that if the delete function does not find key_id then does not delete for valid files and non-valid files
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("adaj;ldkjidka;dfkjai"));
   memcpy(tmp.chars, "adaj;ldkjidka;dfkjai", tmp.len);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[5]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 1);
   free_charbuf(&tmp);
 

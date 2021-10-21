@@ -18,58 +18,6 @@
 #include "pelz_enclave_t.h"
 #include "kmyth_enclave.h"
 
-int server_table_delete(charbuf server_id)
-{
-  int index;
-
-  index = 0;
-  for (unsigned int i = 0; i < server_table.num_entries; i++)
-  {
-    if (cmp_charbuf(server_id, server_table.entries[i].server_id) == 0)
-    {
-      server_table.mem_size = server_table.mem_size -
-        ((server_table.entries[i].cert.len * sizeof(char)) + (server_table.entries[i].server_id.len * sizeof(char)) +
-        (2 * sizeof(size_t)));
-      free_charbuf(&server_table.entries[i].server_id);
-      secure_free_charbuf(&server_table.entries[i].cert);
-      index = i + 1;
-      break;
-    }
-  }
-  if (index == 0)
-  {
-    pelz_log(LOG_ERR, "Server ID not found.");
-    return (1);
-  }
-  else if (server_table.mem_size == 0)
-  {
-    free(server_table.entries);
-    server_table.entries = NULL;
-    server_table.num_entries = 0;
-  }
-  else
-  {
-    for (unsigned int i = index; i < server_table.num_entries; i++)
-    {
-      server_table.entries[i - 1] = server_table.entries[i];
-    }
-    server_table.num_entries -= 1;
-
-    CertEntry *temp;
-
-    if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
-    {
-      pelz_log(LOG_ERR, "Server List Space Reallocation Error");
-      return (2);
-    }
-    else
-    {
-      server_table.entries = temp;
-    }
-  }
-  return (0);
-}
-
 int server_table_add(charbuf server_id, uint64_t handle)
 {
   CertEntry tmp_entry;
@@ -77,6 +25,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
   charbuf tmpcert;
   uint8_t *data;
   size_t data_size = 0;
+  int index = 0;
 
   max_mem_size = 1000000;
 
@@ -110,8 +59,15 @@ int server_table_add(charbuf server_id, uint64_t handle)
 
   memcpy(tmp_entry.cert.chars, data, tmp_entry.cert.len);
 
-  if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
+  if (table_lookup(SERVER, tmp_entry.server_id, &index) == 0)
   {
+    tmpcert = new_charbuf(server_table.entries[index].cert.len);
+    if (server_table.entries[index].cert.len != tmpcert.len)
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return (1);
+    }
+    memcpy(tmpcert.chars, server_table.entries[index].cert.chars, tmpcert.len);
     if (cmp_charbuf(tmpcert, tmp_entry.cert) == 0)
     {
       pelz_log(LOG_DEBUG, "Cert already added.");
@@ -150,23 +106,4 @@ int server_table_add(charbuf server_id, uint64_t handle)
     (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Cert Added");
   return (0);
-}
-
-int server_table_lookup(charbuf server_id, charbuf * cert)
-{
-  for (unsigned int i = 0; i < server_table.num_entries; i++)
-  {
-    if (cmp_charbuf(server_id, server_table.entries[i].server_id) == 0)
-    {
-      *cert = new_charbuf(server_table.entries[i].cert.len);
-      if (server_table.entries[i].cert.len != cert->len)
-      {
-        pelz_log(LOG_ERR, "Charbuf creation error.");
-        return (1);
-      }
-      memcpy(cert->chars, server_table.entries[i].cert.chars, cert->len);
-      return (0);
-    }
-  }
-  return (1);
 }

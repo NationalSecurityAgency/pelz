@@ -636,18 +636,10 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ERR_CHARBUF;
     }
     memcpy(server_id.chars, tokens[2], server_id.len);
-    server_table_delete(eid, &ret, server_id);
+    table_delete(eid, &ret, SERVER, server_id);
     if (ret == 1)
     {
       pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
-      pelz_log(LOG_ERR, "Server ID not found");
-      free_charbuf(&server_id);
-      return RM_CERT_FAIL;
-    }
-    else if (ret == 2)
-    {
-      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
-      pelz_log(LOG_ERR, "Server Table reallocation failure");
       free_charbuf(&server_id);
       return RM_CERT_FAIL;
     }
@@ -678,7 +670,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ERR_CHARBUF;
     }
     memcpy(key_id.chars, tokens[2], key_id.len);
-    key_table_delete(eid, &ret, key_id);
+    table_delete(eid, &ret, KEY, key_id);
     if (ret == 1)
     {
       pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);

@@ -32,23 +32,6 @@ extern "C"
  */
   int key_table_add(charbuf key_id, charbuf * key);
 
-/**
- * <pre>
- * This function performs lookup of Keys by Identifier. Note the mutex needs to be unlocked by the function that calls this function.
- * </pre>
- *
- * @param[in] key_id.chars The key identifier assumed to be null terminated
- * @param[in] key_id.len Length of Key Identifier
- * @param[out] key.chars The key value
- * @param[out] key.len The length of the key
- * @param[in] key_table The key table that has the key and is used for the lookup
- * @param[out] key_table The key table returned if key was added
- * @param max_key_entries The max number of key entries for the table default set at 100000
- *
- * @return 0 on success, 1 on failure
- */
-  int key_table_lookup(charbuf key_id, charbuf * key);
-
 #ifdef __cplusplus
 }
 #endif

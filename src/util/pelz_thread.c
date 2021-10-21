@@ -190,6 +190,9 @@ void thread_process(void *arg)
       case REQUEST_TYPE_ERROR:
         err_message = "Request Type Error";
         break;
+      case CHARBUF_ERROR:
+        err_message = "Charbuf Error";
+        break;
       default:
         err_message = "Unrecognized response";
       }

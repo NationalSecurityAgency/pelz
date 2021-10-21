@@ -54,20 +54,18 @@ extern "C"
 
 /**
  * <pre>
- * This function performs lookup of certs by Identifier. Note the mutex needs to be unlocked by the function that calls this function.
+ * This function performs lookup on a table by Identifier. Note the mutex needs to be unlocked by the function that calls this function.
  * </pre>
  *
- * @param[in] server_id.chars The server identifier assumed to be null terminated
- * @param[in] server_id.len Length of server identifier
- * @param[out] cert.chars The cert value
- * @param[out] cert.len The length of the cert
- * @param[in] server_table The server table that has the cert and is used for the lookup
- * @param[out] server_table The server table returned if cert was added
- * @param max_cert_entries The max number of cert entries for the table default set at 100000
+ * @param[in] type The table type that used for the lookup
+ * @param[in] id.chars The identifier assumed to be null terminated
+ * @param[in] id.len Length of identifier
+ * @param[out] index The index location of the lookup value
+ * @param max_num_entries The max number of entries for the table that is default set at 100000
  *
  * @return 0 on success, 1 on failure
  */
-  int server_table_lookup(charbuf server_id, charbuf * cert);
+  int table_lookup(int type, charbuf id, int *index);
 
 #ifdef __cplusplus
 }
