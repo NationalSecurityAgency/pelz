@@ -662,15 +662,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       pelz_log(LOG_ERR, "Server Table Destroy Failure");
       return CERT_TAB_DEST_FAIL;
     }
-    pelz_log(LOG_INFO, "Server Table Destroyed");
-
-    server_table_init(eid, &ret);
-    if (ret)
-    {
-      pelz_log(LOG_ERR, "Server Table Init Failure");
-      return CERT_TAB_INIT_FAIL;
-    }
-    pelz_log(LOG_INFO, "Server Table Re-Initialized");
+    pelz_log(LOG_INFO, "Server Table Destroyed and Re-Initialized");
     return RM_ALL_CERT;
   case 6:
     if (num_tokens != 3)

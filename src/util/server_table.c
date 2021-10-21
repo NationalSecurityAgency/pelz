@@ -17,21 +17,11 @@
 #include "pelz_enclave_t.h"
 #include "kmyth_enclave.h"
 
-ServerTable server_table;
-
-//Initialize server table
-int server_table_init(void)
-{
-  if ((server_table.entries = (CertEntry *) malloc(sizeof(CertEntry))) == NULL)
-  {
-    pelz_log(LOG_ERR, "Server List Space Allocation Error");
-    return (1);
-  }
-
-  server_table.num_entries = 0;
-  server_table.mem_size = 0;
-  return (0);
-}
+ServerTable server_table = {
+  .entries = NULL,
+  .num_entries = 0,
+  .mem_size = 0
+};
 
 //Destroy server table
 int server_table_destroy(void)
@@ -51,6 +41,9 @@ int server_table_destroy(void)
 
   //Free the storage allocated for the hash table
   free(server_table.entries);
+  server_table.entries = NULL;
+  server_table.num_entries = 0;
+  server_table.mem_size = 0;
   pelz_log(LOG_DEBUG, "Server Table Destroy Function Complete");
   return (0);
 }
@@ -77,6 +70,12 @@ int server_table_delete(charbuf server_id)
   {
     pelz_log(LOG_ERR, "Server ID not found.");
     return (1);
+  }
+  else if (server_table.mem_size == 0)
+  {
+    free(server_table.entries);
+    server_table.entries = NULL;
+    server_table.num_entries = 0;
   }
   else
   {

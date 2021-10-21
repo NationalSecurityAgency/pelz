@@ -49,18 +49,6 @@ public int key_table_delete(charbuf key_id);
 
 /**
  * <pre>
- * This function initializes a server table for lookup.
- * <pre>
- *
- * @param[in] server_table The pointer for server table to be initialized
- * @param[out] server_table The initialized server table
- *
- * @return 0 on success, 1 on error
- */
-public int server_table_init(void);
-
-/**
- * <pre>
  * This function destroys the server table.
  * <pre>
  *

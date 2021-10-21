@@ -84,13 +84,6 @@ int main(int argc, char **argv)
     return (1);
   }
 
-  server_table_init(eid, &ret);
-  if (ret)
-  {
-    pelz_log(LOG_ERR, "Server Table Init Failure");
-    return (1);
-  }
-
   pelz_service((const int) max_requests);
 
   server_table_destroy(eid, &ret);
