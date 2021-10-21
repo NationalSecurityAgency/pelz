@@ -364,14 +364,14 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   char *path_ext = NULL;
   charbuf key_id;
   charbuf server_id;
+  uint8_t *data = NULL;
+  size_t data_length = 0;
   uint8_t *nkl_data = NULL;
   size_t nkl_data_len = 0;
   char *authString = NULL;
   size_t auth_string_len = 0;
   const char *ownerAuthPasswd = "";
   size_t oa_passwd_len = 0;
-  uint8_t *data = NULL;
-  size_t data_length = 0;
   uint64_t handle;
 
   pelz_log(LOG_DEBUG, "Token num: %d", num_tokens);
@@ -442,7 +442,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           return SGX_UNSEAL_FAIL;
         }
 
-        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(nkl_data);
