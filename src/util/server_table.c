@@ -35,14 +35,14 @@ int server_table_add(charbuf server_id, uint64_t handle)
     return MEM_ALLOC_FAIL;
   }
 
-  tmp_entry.server_id = new_charbuf(server_id.len);
-  if (server_id.len != tmp_entry.server_id.len)
+  tmp_entry.id = new_charbuf(server_id.len);
+  if (server_id.len != tmp_entry.id.len)
   {
     pelz_log(LOG_ERR, "Charbuf creation error.");
     return ERR_BUF;
   }
 
-  memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
+  memcpy(tmp_entry.id.chars, server_id.chars, tmp_entry.id.len);
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
@@ -59,7 +59,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
 
   memcpy(tmp_entry.cert.chars, data, tmp_entry.cert.len);
 
-  if (table_lookup(SERVER, tmp_entry.server_id, &index) == 0)
+  if (table_lookup(SERVER, tmp_entry.id, &index) == 0)
   {
     tmpcert = new_charbuf(server_table.entries[index].cert.len);
     if (server_table.entries[index].cert.len != tmpcert.len)
@@ -71,7 +71,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
     if (cmp_charbuf(tmpcert, tmp_entry.cert) == 0)
     {
       pelz_log(LOG_DEBUG, "Cert already added.");
-      free_charbuf(&tmp_entry.server_id);
+      free_charbuf(&tmp_entry.id);
       secure_free_charbuf(&tmp_entry.cert);
       secure_free_charbuf(&tmpcert);
       return (0);
@@ -79,7 +79,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
     else
     {
       pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
-      free_charbuf(&tmp_entry.server_id);
+      free_charbuf(&tmp_entry.id);
       secure_free_charbuf(&tmp_entry.cert);
       secure_free_charbuf(&tmpcert);
       return NO_MATCH;
@@ -91,7 +91,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
   if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries + 1) * sizeof(CertEntry))) == NULL)
   {
     pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
-    free_charbuf(&tmp_entry.server_id);
+    free_charbuf(&tmp_entry.id);
     secure_free_charbuf(&tmp_entry.cert);
     return ERR_REALLOC;
   }
@@ -102,8 +102,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
   server_table.entries[server_table.num_entries] = tmp_entry;
   server_table.num_entries++;
   server_table.mem_size =
-    server_table.mem_size + ((tmp_entry.cert.len * sizeof(char)) + (tmp_entry.server_id.len * sizeof(char)) +
-    (2 * sizeof(size_t)));
+    server_table.mem_size + ((tmp_entry.cert.len * sizeof(char)) + (tmp_entry.id.len * sizeof(char)) + (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Cert Added");
   return (0);
 }

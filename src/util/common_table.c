@@ -32,50 +32,51 @@ ServerTable server_table = {
 //Destroy server table
 int table_destroy(int type)
 {
+  KeyTable table;
+
   pelz_log(LOG_DEBUG, "Table Destroy Function Starting");
+
   switch (type)
   {
   case KEY:
-    for (unsigned int i = 0; i < key_table.num_entries; i++)
-    {
-      if (key_table.entries[i].key_id.len != 0)
-      {
-        free_charbuf(&key_table.entries[i].key_id);
-      }
-      if (key_table.entries[i].key.len != 0)
-      {
-        secure_free_charbuf(&key_table.entries[i].key);
-      }
-    }
-
-    //Free the storage allocated for the hash table
-    free(key_table.entries);
-    key_table.entries = NULL;
-    key_table.num_entries = 0;
-    key_table.mem_size = 0;
+    KeyTable table;
+    table = key_table;
     break;
   case SERVER:
-    for (unsigned int i = 0; i < server_table.num_entries; i++)
-    {
-      if (server_table.entries[i].server_id.len != 0)
-      {
-        free_charbuf(&server_table.entries[i].server_id);
-      }
-      if (server_table.entries[i].cert.len != 0)
-      {
-        secure_free_charbuf(&server_table.entries[i].cert);
-      }
-    }
-
-    //Free the storage allocated for the hash table
-    free(server_table.entries);
-    server_table.entries = NULL;
-    server_table.num_entries = 0;
-    server_table.mem_size = 0;
+    ServerTable table2;
+    table2 = server_table;
     break;
   default:
     return (1);
   }
+
+  for (unsigned int i = 0; i < table.num_entries; i++)
+  {
+    if (table.entries[i].id.len != 0)
+    {
+      free_charbuf(table->entries[i]->id);
+    }
+    if (type == KEY)
+    {
+      if (table.entries[i].key.len != 0)
+      {
+        secure_free_charbuf(table->entries[i]->key);
+      }
+    }
+    if (type == SERVER)
+    {
+      if (table.entries[i].cert.len != 0)
+      {
+        secure_free_charbuf(table->entries[i]->cert);
+      }
+    }
+  }
+
+  //Free the storage allocated for the hash table
+  free(table->entries);
+  table.entries = NULL;
+  table.num_entries = 0;
+  table.mem_size = 0;
 
   pelz_log(LOG_DEBUG, "Table Destroy Function Complete");
   return (0);
@@ -90,12 +91,11 @@ int table_delete(int type, charbuf id)
   case KEY:
     for (unsigned int i = 0; i < key_table.num_entries; i++)
     {
-      if (cmp_charbuf(id, key_table.entries[i].key_id) == 0)
+      if (cmp_charbuf(id, key_table.entries[i].id) == 0)
       {
         key_table.mem_size = key_table.mem_size -
-          ((key_table.entries[i].key.len * sizeof(char)) + (key_table.entries[i].key_id.len * sizeof(char)) +
-          (2 * sizeof(size_t)));
-        free_charbuf(&key_table.entries[i].key_id);
+          ((key_table.entries[i].key.len * sizeof(char)) + (key_table.entries[i].id.len * sizeof(char)) + (2 * sizeof(size_t)));
+        free_charbuf(&key_table.entries[i].id);
         secure_free_charbuf(&key_table.entries[i].key);
         index = i + 1;
         break;
@@ -136,12 +136,12 @@ int table_delete(int type, charbuf id)
   case SERVER:
     for (unsigned int i = 0; i < server_table.num_entries; i++)
     {
-      if (cmp_charbuf(id, server_table.entries[i].server_id) == 0)
+      if (cmp_charbuf(id, server_table.entries[i].id) == 0)
       {
         server_table.mem_size = server_table.mem_size -
-          ((server_table.entries[i].cert.len * sizeof(char)) + (server_table.entries[i].server_id.len * sizeof(char)) +
+          ((server_table.entries[i].cert.len * sizeof(char)) + (server_table.entries[i].id.len * sizeof(char)) +
           (2 * sizeof(size_t)));
-        free_charbuf(&server_table.entries[i].server_id);
+        free_charbuf(&server_table.entries[i].id);
         secure_free_charbuf(&server_table.entries[i].cert);
         index = i + 1;
         break;
@@ -192,7 +192,7 @@ int table_lookup(int type, charbuf id, int *index)
   case KEY:
     for (unsigned int i = 0; i < server_table.num_entries; i++)
     {
-      if (cmp_charbuf(id, key_table.entries[i].key_id) == 0)
+      if (cmp_charbuf(id, key_table.entries[i].id) == 0)
       {
         *index = i;
         return (0);
@@ -202,7 +202,7 @@ int table_lookup(int type, charbuf id, int *index)
   case SERVER:
     for (unsigned int i = 0; i < server_table.num_entries; i++)
     {
-      if (cmp_charbuf(id, server_table.entries[i].server_id) == 0)
+      if (cmp_charbuf(id, server_table.entries[i].id) == 0)
       {
         *index = i;
         return (0);

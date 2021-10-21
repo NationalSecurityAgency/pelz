@@ -13,7 +13,7 @@
 
 typedef struct TableEntry
 {
-  charbuf key_id;
+  charbuf id;
   charbuf key;
 } KeyEntry;
 
@@ -26,7 +26,7 @@ typedef struct Keys
 
 typedef struct ServerEntry
 {
-  charbuf server_id;
+  charbuf id;
   charbuf cert;
 } CertEntry;
 
