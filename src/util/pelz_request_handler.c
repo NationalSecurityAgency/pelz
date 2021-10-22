@@ -23,13 +23,13 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
   }
   else
   {
-    key = new_charbuf(key_table.entries[index].key.len);
-    if (key_table.entries[index].key.len != key.len)
+    key = new_charbuf(key_table.entries[index].value.key.len);
+    if (key_table.entries[index].value.key.len != key.len)
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
       return CHARBUF_ERROR;
     }
-    memcpy(key.chars, key_table.entries[index].key.chars, key.len);
+    memcpy(key.chars, key_table.entries[index].value.key.chars, key.len);
   }
 
   //Encrypt or Decrypt data per request_type

@@ -11,31 +11,24 @@
 
 #include "charbuf.h"
 
+typedef union EntryData
+{
+  charbuf key;
+  charbuf cert;
+} Data;
+
 typedef struct TableEntry
 {
   charbuf id;
-  charbuf key;
-} KeyEntry;
+  Data value;
+} Entry;
 
-typedef struct Keys
+typedef struct CommonTable
 {
-  KeyEntry *entries;
+  Entry *entries;
   size_t num_entries;
   size_t mem_size;
-} KeyTable;
-
-typedef struct ServerEntry
-{
-  charbuf id;
-  charbuf cert;
-} CertEntry;
-
-typedef struct Certs
-{
-  CertEntry *entries;
-  size_t num_entries;
-  size_t mem_size;
-} ServerTable;
+} Table;
 
 typedef enum
 { KEY, SERVER } TableType;
@@ -43,9 +36,9 @@ typedef enum
 typedef enum
 { ERR_REALLOC, ERR_BUF, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
 
-extern KeyTable key_table;
+extern Table key_table;
 
-extern ServerTable server_table;
+extern Table server_table;
 
 #ifdef __cplusplus
 extern "C"

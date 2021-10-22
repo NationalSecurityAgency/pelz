@@ -154,7 +154,6 @@ void test_table_requestDelete(void)
   charbuf data_in;
   charbuf data;
   charbuf output;
-
   const char *prefix = "file:";
 
   const char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
@@ -166,7 +165,7 @@ void test_table_requestDelete(void)
   data_in = new_charbuf(32);
   memcpy(data_in.chars, "abcdefghijklmnopqrstuvwxyz012345", data_in.len);
 
-  pelz_log(LOG_DEBUG, "Test Request and Delet Functions Start");
+  pelz_log(LOG_DEBUG, "Test Request and Delete Functions Start");
 
   //Initial load of keys into the key table
   for (int i = 0; i < 6; i++)
@@ -185,6 +184,8 @@ void test_table_requestDelete(void)
     secure_free_charbuf(&data);
     secure_free_charbuf(&output);
   }
+
+  pelz_log(LOG_DEBUG, "Initial load of keys finish and start testing of delete function");
 
   //Testing the delete function
   tmp = copy_CWD_to_id(prefix, valid_id[3]);

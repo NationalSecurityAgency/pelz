@@ -1,5 +1,5 @@
 /*
- * server_table.c
+ * common_table.c
  */
 
 #include <stdlib.h>
@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include <pelz_io.h>
-#include <server_table.h>
+#include <common_table.h>
 #include <util.h>
 #include <pelz_request_handler.h>
 #include <charbuf.h>
@@ -17,13 +17,13 @@
 #include "pelz_enclave_t.h"
 #include "kmyth_enclave.h"
 
-KeyTable key_table = {
+Table key_table = {
   .entries = NULL,
   .num_entries = 0,
   .mem_size = 0
 };
 
-ServerTable server_table = {
+Table server_table = {
   .entries = NULL,
   .num_entries = 0,
   .mem_size = 0
@@ -32,50 +32,57 @@ ServerTable server_table = {
 //Destroy server table
 int table_destroy(int type)
 {
+  Table table;
+
   pelz_log(LOG_DEBUG, "Table Destroy Function Starting");
 
   switch (type)
   {
   case KEY:
-    for (unsigned int i = 0; i < key_table.num_entries; i++)
-    {
-      if (key_table.entries[i].id.len != 0)
-      {
-        free_charbuf(&key_table.entries[i].id);
-      }
-      if (key_table.entries[i].key.len != 0)
-      {
-        secure_free_charbuf(&key_table.entries[i].key);
-      }
-    }
-
-    //Free the storage allocated for the hash table
-    free(key_table.entries);
-    key_table.entries = NULL;
-    key_table.num_entries = 0;
-    key_table.mem_size = 0;
+    table = key_table;
     break;
   case SERVER:
-    for (unsigned int i = 0; i < server_table.num_entries; i++)
-    {
-      if (server_table.entries[i].id.len != 0)
-      {
-        free_charbuf(&server_table.entries[i].id);
-      }
-      if (server_table.entries[i].cert.len != 0)
-      {
-        secure_free_charbuf(&server_table.entries[i].cert);
-      }
-    }
-
-    //Free the storage allocated for the hash table
-    free(server_table.entries);
-    server_table.entries = NULL;
-    server_table.num_entries = 0;
-    server_table.mem_size = 0;
+    table = server_table;
     break;
   default:
     return (1);
+  }
+
+  for (unsigned int i = 0; i < table.num_entries; i++)
+  {
+    if (table.entries[i].id.len != 0)
+    {
+      free_charbuf(&table.entries[i].id);
+    }
+    if (type == KEY)
+    {
+      if (table.entries[i].value.cert.len != 0)
+      {
+        secure_free_charbuf(&table.entries[i].value.key);
+      }
+    }
+    if (type == SERVER)
+    {
+      if (table.entries[i].value.cert.len != 0)
+      {
+        secure_free_charbuf(&table.entries[i].value.cert);
+      }
+    }
+  }
+
+  //Free the storage allocated for the hash table
+  free(table.entries);
+  table.entries = NULL;
+  table.num_entries = 0;
+  table.mem_size = 0;
+
+  if (type == KEY)
+  {
+    key_table = table;
+  }
+  if (type == SERVER)
+  {
+    server_table = table;
   }
 
   pelz_log(LOG_DEBUG, "Table Destroy Function Complete");
@@ -84,132 +91,116 @@ int table_destroy(int type)
 
 int table_delete(int type, charbuf id)
 {
+  Table table;
   int index = 0;
 
   switch (type)
   {
   case KEY:
-    for (unsigned int i = 0; i < key_table.num_entries; i++)
-    {
-      if (cmp_charbuf(id, key_table.entries[i].id) == 0)
-      {
-        key_table.mem_size = key_table.mem_size -
-          ((key_table.entries[i].key.len * sizeof(char)) + (key_table.entries[i].id.len * sizeof(char)) + (2 * sizeof(size_t)));
-        free_charbuf(&key_table.entries[i].id);
-        secure_free_charbuf(&key_table.entries[i].key);
-        index = i + 1;
-        break;
-      }
-    }
-    if (index == 0)
-    {
-      pelz_log(LOG_ERR, "Key ID not found.");
-      return (1);
-    }
-    else if (key_table.mem_size == 0)
-    {
-      free(key_table.entries);
-      key_table.entries = NULL;
-      key_table.num_entries = 0;
-    }
-    else
-    {
-      for (unsigned int i = index; key_table.num_entries; i++)
-      {
-        key_table.entries[i - 1] = key_table.entries[i];
-      }
-      key_table.num_entries -= 1;
-
-      KeyEntry *temp;
-
-      if ((temp = (KeyEntry *) realloc(key_table.entries, (key_table.num_entries) * sizeof(KeyEntry))) == NULL)
-      {
-        pelz_log(LOG_ERR, "Key List Space Reallocation Error");
-        return (1);
-      }
-      else
-      {
-        key_table.entries = temp;
-      }
-    }
+    table = key_table;
     break;
   case SERVER:
-    for (unsigned int i = 0; i < server_table.num_entries; i++)
-    {
-      if (cmp_charbuf(id, server_table.entries[i].id) == 0)
-      {
-        server_table.mem_size = server_table.mem_size -
-          ((server_table.entries[i].cert.len * sizeof(char)) + (server_table.entries[i].id.len * sizeof(char)) +
-          (2 * sizeof(size_t)));
-        free_charbuf(&server_table.entries[i].id);
-        secure_free_charbuf(&server_table.entries[i].cert);
-        index = i + 1;
-        break;
-      }
-    }
-    if (index == 0)
-    {
-      pelz_log(LOG_ERR, "Server ID not found.");
-      return (1);
-    }
-    else if (server_table.mem_size == 0)
-    {
-      free(server_table.entries);
-      server_table.entries = NULL;
-      server_table.num_entries = 0;
-    }
-    else
-    {
-      for (unsigned int i = index; i < server_table.num_entries; i++)
-      {
-        server_table.entries[i - 1] = server_table.entries[i];
-      }
-      server_table.num_entries -= 1;
-
-      CertEntry *temp;
-
-      if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
-      {
-        pelz_log(LOG_ERR, "Server List Space Reallocation Error");
-        return (1);
-      }
-      else
-      {
-        server_table.entries = temp;
-      }
-    }
+    table = server_table;
     break;
   default:
     return (1);
+  }
+
+  for (unsigned int i = 0; i < table.num_entries; i++)
+  {
+    if (cmp_charbuf(id, table.entries[i].id) == 0)
+    {
+      if (type == KEY)
+      {
+        table.mem_size =
+          table.mem_size - ((table.entries[i].value.key.len * sizeof(char)) + (table.entries[i].id.len * sizeof(char)) +
+          (2 * sizeof(size_t)));
+      }
+      else if (type == SERVER)
+      {
+        table.mem_size =
+          table.mem_size - ((table.entries[i].value.cert.len * sizeof(char)) + (table.entries[i].id.len * sizeof(char)) +
+          (2 * sizeof(size_t)));
+      }
+      free_charbuf(&table.entries[i].id);
+      if (type == KEY)
+      {
+        secure_free_charbuf(&table.entries[i].value.key);
+      }
+      if (type == SERVER)
+      {
+        secure_free_charbuf(&table.entries[i].value.cert);
+      }
+      index = i + 1;
+      break;
+    }
+  }
+  if (index == 0)
+  {
+    pelz_log(LOG_ERR, "ID not found.");
+    return (1);
+  }
+  else if (table.mem_size == 0)
+  {
+    free(table.entries);
+    table.entries = NULL;
+    table.num_entries = 0;
+  }
+  else
+  {
+    for (unsigned int i = index; i < table.num_entries; i++)
+    {
+      table.entries[i - 1] = table.entries[i];
+    }
+    table.num_entries -= 1;
+
+    Entry *temp;
+
+    if ((temp = (Entry *) realloc(table.entries, (table.num_entries) * sizeof(Entry))) == NULL)
+    {
+      pelz_log(LOG_ERR, "List Space Reallocation Error");
+      return (1);
+    }
+    else
+    {
+      table.entries = temp;
+    }
+
+    if (type == KEY)
+    {
+      key_table = table;
+    }
+    else if (type == SERVER)
+    {
+      server_table = table;
+    }
   }
   return (0);
 }
 
 int table_lookup(int type, charbuf id, int *index)
 {
+  Table table;
+
   switch (type)
   {
   case KEY:
-    for (unsigned int i = 0; i < server_table.num_entries; i++)
-    {
-      if (cmp_charbuf(id, key_table.entries[i].id) == 0)
-      {
-        *index = i;
-        return (0);
-      }
-    }
-    return (1);
+    table = key_table;
+    break;
   case SERVER:
-    for (unsigned int i = 0; i < server_table.num_entries; i++)
-    {
-      if (cmp_charbuf(id, server_table.entries[i].id) == 0)
-      {
-        *index = i;
-        return (0);
-      }
-    }
-    return (1);
+    table = server_table;
+    break;
   default:
     return (1);
   }
+
+  for (unsigned int i = 0; i < table.num_entries; i++)
+  {
+    if (cmp_charbuf(id, table.entries[i].id) == 0)
+    {
+      *index = i;
+      return (0);
+    }
+  }
+  return (1);
 }

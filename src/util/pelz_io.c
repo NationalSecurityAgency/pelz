@@ -154,6 +154,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   }
 
   uriFreeUriMembersA(&key_id_data);
+  pelz_log(LOG_DEBUG, "Successfully loaded key");
   return (0);
 }
 
