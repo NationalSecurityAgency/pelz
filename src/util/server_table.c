@@ -21,7 +21,7 @@
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
-#include "kmyth_enclave.h"
+#include "kmyth_enclave_trusted.h"
 //#include "ec_key_cert_unmarshal.h"
 
 ServerTable server_table;
