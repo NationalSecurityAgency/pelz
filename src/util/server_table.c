@@ -15,7 +15,7 @@
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
-#include "kmyth_enclave.h"
+#include "kmyth_enclave_trusted.h"
 
 ServerTable server_table = {
   .entries = NULL,

@@ -20,7 +20,7 @@
 #include "util.h"
 
 #include "sgx_urts.h"
-#include "kmyth_enclave.h"
+#include "sgx_seal_unseal_impl.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
