@@ -16,7 +16,7 @@
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
-#include "kmyth_enclave.h"
+#include "kmyth_enclave_trusted.h"
 
 int server_table_add(charbuf server_id, uint64_t handle)
 {

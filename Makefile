@@ -71,6 +71,24 @@ else
 		SGX_COMMON_CFLAGS += -O2
 endif
 
+# Specify indentation options
+INDENT_OPTS = -bli0#                     indent braces zero spaces
+INDENT_OPTS += -bap#                     blank lines after procedure bodies
+INDENT_OPTS += -bad#                     blank lines after declarations
+INDENT_OPTS += -sob#                     swallow optional blank lines
+INDENT_OPTS += -cli0#                    case label indent of zero spaces
+INDENT_OPTS += -npcs#                    no space after function in calls
+INDENT_OPTS += -nbc#                     don't force newlines after commas
+INDENT_OPTS += -bls#                     put braces on line after struct decl
+INDENT_OPTS += -blf#                     put braces on line after func def
+INDENT_OPTS += -nlp#                     align continued lines at parentheses
+INDENT_OPTS += -ip0#                     indent parameter types zero spaces
+INDENT_OPTS += -ts2#                     set tab size to two spaces
+INDENT_OPTS += -nut#                     use spaces instead of tabs
+INDENT_OPTS += -npsl#                    type of proc on same line as name
+INDENT_OPTS += -bbo#                     prefer break before boolean operator
+INDENT_OPTS += -l128#                    max non-comment line length is 128
+
 ######## App Settings ########
 
 ifneq ($(SGX_MODE), HW)
@@ -97,11 +115,22 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c	 
 
-App_Cpp_Kmyth_Files := kmyth/sgx/kmyth_enclave/sgx_seal_unseal_impl.c
+App_Cpp_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
 
-App_Include_Paths := -Iinclude -Isgx -I$(SGX_SDK)/include -Ikmyth/sgx/kmyth_enclave
+App_Include_Paths := -Iinclude 
+App_Include_Paths += -Isgx 
+App_Include_Paths += -I$(SGX_SDK)/include 
+App_Include_Paths += -Ikmyth/sgx/untrusted/include/wrapper
+App_Include_Paths += -Ikmyth/sgx/untrusted/include/ocall
+App_Include_Paths += -Ikmyth/sgx/common/include
 
-App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths) -DPELZ_SGX_UNTRUSTED -Wall -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
+App_C_Flags := $(SGX_COMMON_CFLAGS) 
+App_C_Flags += -fPIC 
+App_C_Flags += -Wno-attributes 
+App_C_Flags += $(App_Include_Paths) 
+App_C_Flags += -DPELZ_SGX_UNTRUSTED
+App_C_Flags += -Wall
+App_C_Flags += -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -117,7 +146,16 @@ endif
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DPELZ_SGX_UNTRUSTED
 
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_SSL_UNTRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lsgx_usgxssl -lkmyth-logger -lkmyth-utils -lkmyth-tpm -lpthread -luriparser
+App_Link_Flags := $(SGX_COMMON_CFLAGS) 
+App_Link_Flags += -L$(SGX_SSL_UNTRUSTED_LIB_PATH) 
+App_Link_Flags += -L$(SGX_LIBRARY_PATH) 
+App_Link_Flags += -l$(Urts_Library_Name) 
+App_Link_Flags += -lsgx_usgxssl 
+App_Link_Flags += -lkmyth-logger 
+App_Link_Flags += -lkmyth-utils 
+App_Link_Flags += -lkmyth-tpm 
+App_Link_Flags += -lpthread 
+App_Link_Flags += -luriparser
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim
@@ -142,18 +180,57 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Include_Paths := -Iinclude -Isgx/include -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/stlport -I$(SGX_SSL_INCLUDE_PATH) -Isgx -Ikmyth/sgx/kmyth_enclave
+Enclave_Include_Paths := -Iinclude 
+Enclave_Include_Paths += -Isgx/include 
+Enclave_Include_Paths += -I$(SGX_SDK)/include 
+Enclave_Include_Paths += -I$(SGX_SDK)/include/tlibc 
+Enclave_Include_Paths += -I$(SGX_SDK)/include/stlport 
+Enclave_Include_Paths += -I$(SGX_SSL_INCLUDE_PATH) 
+Enclave_Include_Paths += -Isgx 
+Enclave_Include_Paths += -Ikmyth/sgx/trusted/include
+Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/util
+Enclave_Include_Paths += -Ikmyth/sgx/common/include
 
-Enclave_C_Flags := $(SGX_COMMON_CFLAGS) -nostdinc -fvisibility=hidden -fpie -fstack-protector $(Enclave_Include_Paths) -DPELZ_SGX_TRUSTED -Wall -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED)
-Enclave_Cpp_Flags := $(Enclave_C_Flags) -std=c++03 -nostdinc++ --include "tsgxsslio.h" -Wall
-Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_SSL_TRUSTED_LIB_PATH) -L$(SGX_LIBRARY_PATH) \
-	-Wl,--whole-archive -lsgx_tsgxssl \
-	-Wl,--no-whole-archive -lsgx_tsgxssl_crypto \
-	-Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
-	-Wl,--start-group -lsgx_tstdc -lsgx_tcxx -lsgx_pthread -l$(Crypto_Library_Name) -l$(Service_Library_Name) -Wl,--end-group \
-	-Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
-	-Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
-	-Wl,--defsym,__ImageBase=0 \
+Enclave_C_Flags := $(SGX_COMMON_CFLAGS) 
+Enclave_C_Flags += -nostdinc 
+Enclave_C_Flags += -fvisibility=hidden 
+Enclave_C_Flags += -fpie 
+Enclave_C_Flags += -fstack-protector 
+Enclave_C_Flags += $(Enclave_Include_Paths) 
+Enclave_C_Flags += -DPELZ_SGX_TRUSTED
+Enclave_C_Flags += -Wall 
+Enclave_C_Flags += -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED)
+
+Enclave_Cpp_Flags := $(Enclave_C_Flags) 
+Enclave_Cpp_Flags += -std=c++03 
+Enclave_Cpp_Flags += -nostdinc++ 
+Enclave_Cpp_Flags += --include "tsgxsslio.h" 
+Enclave_Cpp_Flags += -Wall
+
+Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) 
+Enclave_Link_Flags += -Wl,--no-undefined 
+Enclave_Link_Flags += -nostdlib 
+Enclave_Link_Flags += -nodefaultlibs 
+Enclave_Link_Flags += -nostartfiles 
+Enclave_Link_Flags += -L$(SGX_SSL_TRUSTED_LIB_PATH) 
+Enclave_Link_Flags += -L$(SGX_LIBRARY_PATH)
+Enclave_Link_Flags += -Wl,--whole-archive -lsgx_tsgxssl
+Enclave_Link_Flags += -Wl,--no-whole-archive -lsgx_tsgxssl_crypto
+Enclave_Link_Flags += -Wl,--whole-archive -l$(Trts_Library_Name) 
+Enclave_Link_Flags += -Wl,--no-whole-archive 
+Enclave_Link_Flags += -Wl,--start-group 
+Enclave_Link_Flags += -lsgx_tstdc 
+Enclave_Link_Flags += -lsgx_tcxx 
+Enclave_Link_Flags += -lsgx_pthread 
+Enclave_Link_Flags += -l$(Crypto_Library_Name) 
+Enclave_Link_Flags += -l$(Service_Library_Name) 
+Enclave_Link_Flags += -Wl,--end-group
+Enclave_Link_Flags += -Wl,-Bstatic 
+Enclave_Link_Flags += -Wl,-Bsymbolic 
+Enclave_Link_Flags += -Wl,--no-undefined 
+Enclave_Link_Flags += -Wl,-pie,-eenclave_entry 
+Enclave_Link_Flags += -Wl,--export-dynamic
+Enclave_Link_Flags += -Wl,--defsym,__ImageBase=0
 
 Enclave_Name := pelz_enclave.so
 Enclave_Signing_Key := pelz_enclave_private.pem
@@ -196,43 +273,112 @@ ifneq ($(Build_Mode), HW_RELEASE)
 	@echo "RUN  =>  $(App_Name_Service) [$(SGX_MODE)|$(SGX_ARCH), OK]"
 endif
 
+######## Common Objects ########
+
+sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 ######## App Objects ########
 
+sgx/log_ocall.o: kmyth/sgx/untrusted/src/ocall/log_ocall.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
-	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl --search-path . --search-path include --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include --search-path ../kmyth/sgx/kmyth_enclave
+	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl \
+				  --search-path . \
+				  --search-path include \
+				  --search-path $(SGX_SDK)/include \
+				  --search-path $(SGX_SSL_INCLUDE_PATH) \
+				  --search-path ../include \
+				  --search-path ../kmyth/sgx/trusted
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) $(App_Cpp_Files) $(App_Cpp_Kmyth_Files) sgx/pelz_enclave_u.o
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Itest/include -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread -lcunit
+test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
+			   $(App_Cpp_Files) \
+			   $(App_Cpp_Kmyth_Files) \
+			   sgx/pelz_enclave_u.o \
+			   sgx/ec_key_cert_unmarshal.o \
+			   sgx/log_ocall.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
+			 $(App_Include_Paths) \
+			 -Itest/include \
+			 -Isgx \
+			 $(App_C_Flags) \
+			 $(App_Link_Flags) \
+			 -Lsgx \
+			 -lcrypto \
+			 -lcjson \
+			 -lpthread \
+			 -lcunit
 	@echo "LINK =>  $@"
 
-bin/$(App_Name_Service): $(App_Service_File) $(App_Cpp_Files) $(App_Cpp_Kmyth_Files) sgx/pelz_enclave_u.o
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
+bin/$(App_Name_Service): $(App_Service_File) \
+			 $(App_Cpp_Files) \
+			 $(App_Cpp_Kmyth_Files) \
+			 sgx/pelz_enclave_u.o \
+			 sgx/ec_key_cert_unmarshal.o \
+			 sgx/log_ocall.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
+			 $(App_Include_Paths) \
+			 -Isgx \
+			 $(App_C_Flags) \
+			 $(App_Link_Flags) \
+			 -Lsgx \
+			 -lcrypto \
+			 -lcjson \
+			 -lpthread
 	@echo "LINK =>  $@"
 
-bin/$(App_Name_Pipe): $(App_Pipe_File) $(App_Cpp_Files) $(App_Cpp_Kmyth_Files) sgx/pelz_enclave_u.o
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) $(App_Include_Paths) -Isgx $(App_C_Flags) $(App_Link_Flags) -Lsgx -lcrypto -lcjson -lpthread
+bin/$(App_Name_Pipe): $(App_Pipe_File) \
+		      $(App_Cpp_Files) \
+		      $(App_Cpp_Kmyth_Files) \
+		      sgx/pelz_enclave_u.o \
+		      sgx/ec_key_cert_unmarshal.o \
+		      sgx/log_ocall.o
+	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
+			 $(App_Include_Paths) \
+			 -Isgx \
+			 $(App_C_Flags) \
+			 $(App_Link_Flags) \
+			 -Lsgx \
+			 -lcrypto \
+			 -lcjson \
+			 -lpthread
 	@echo "LINK =>  $@"
 
 ######## Enclave Objects ########
 
 sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
-	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl --search-path . --search-path $(SGX_SDK)/include --search-path $(SGX_SSL_INCLUDE_PATH) --search-path ../include --search-path ../kmyth/sgx/kmyth_enclave
+	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl \
+				  --search-path . \
+				  --search-path $(SGX_SDK)/include \
+				  --search-path $(SGX_SSL_INCLUDE_PATH) \
+				  --search-path ../include \
+				  --search-path ../kmyth/sgx/trusted
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-sgx/kmyth_enclave_seal.o: kmyth/sgx/kmyth_enclave/kmyth_enclave_seal.cpp
+sgx/kmyth_enclave_seal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_seal.cpp
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+sgx/kmyth_enclave_unseal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_unseal.cpp
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-sgx/kmyth_enclave_unseal.o: kmyth/sgx/kmyth_enclave/kmyth_enclave_unseal.cpp
+sgx/kmyth_enclave_memory_util.o: kmyth/sgx/trusted/src/util/kmyth_enclave_memory_util.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/kmyth_enclave_retrieve_key.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_retrieve_key.cpp
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -264,8 +410,20 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/$(Enclave_Name): sgx/pelz_enclave_t.o sgx/key_table.o sgx/aes_keywrap_3394nopad.o sgx/pelz_request_handler.o sgx/charbuf.o sgx/util.o sgx/kmyth_enclave_seal.o \
-	sgx/kmyth_enclave_unseal.o sgx/server_table.o sgx/common_table.o
+sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
+		     sgx/common_table.o \
+		     sgx/key_table.o \
+		     sgx/server_table.o \
+		     sgx/aes_keywrap_3394nopad.o \
+		     sgx/pelz_request_handler.o \
+		     sgx/charbuf.o \
+		     sgx/util.o \
+		     sgx/kmyth_enclave_seal.o \
+	     	     sgx/kmyth_enclave_unseal.o \
+		     sgx/kmyth_enclave_memory_util.o \
+		     sgx/kmyth_enclave_retrieve_key.o \
+		     sgx/ec_key_cert_unmarshal.o
+
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -273,17 +431,20 @@ sgx/$(Enclave_Signing_Key):
 	$(error $(err_no_enclave_signing_key))
 
 sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
-	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) -enclave sgx/$(Enclave_Name) -out $@ -config $(Enclave_Config_File)
+	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) \
+				    -enclave sgx/$(Enclave_Name) \
+				    -out $@ \
+				    -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
 .PHONY: pre
 
 pre:
-	@indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 src/*/*.c
-	@indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 include/*.h
-	@indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/src/*.c
-	@indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/src/*/*.c
-	@indent -bli0 -bap -bad -sob -cli0 -npcs -nbc -bls -blf -nlp -ip0 -ts2 -nut -npsl -bbo -l128 test/include/*.h
+	@indent $(INDENT_OPTS) src/*/*.c
+	@indent $(INDENT_OPTS) include/*.h
+	@indent $(INDENT_OPTS) test/src/*.c
+	@indent $(INDENT_OPTS) test/src/*/*.c
+	@indent $(INDENT_OPTS) test/include/*.h
 	@rm -f src/*/*.c~
 	@rm -f include/*.h~
 	@rm -f test/src/*.c~
@@ -302,5 +463,13 @@ test: all
 .PHONY: clean
 
 clean:
-	@rm -f bin/pelz bin/pelz-service test/bin/pelz-test sgx/pelz_enclave.signed.so sgx/pelz_enclave.so sgx/*_u.* sgx/*_t.* sgx/*.o test/log/*
+	@rm -f bin/pelz
+	@rm -f bin/pelz-service
+	@rm -f test/bin/pelz-test
+	@rm -f sgx/pelz_enclave.signed.so
+	@rm -f sgx/pelz_enclave.so
+	@rm -f sgx/*_u.*
+	@rm -f sgx/*_t.*
+	@rm -f sgx/*.o
+	@rm -f test/log/*
 
