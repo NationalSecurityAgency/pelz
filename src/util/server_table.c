@@ -22,7 +22,7 @@
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #include "kmyth_enclave_trusted.h"
-//#include "ec_key_cert_unmarshal.h"
+#include "ec_key_cert_unmarshal.h"
 
 ServerTable server_table;
 EVP_PKEY *private_pkey;
@@ -234,14 +234,12 @@ int private_pkey_add(uint64_t handle)
     return (1);
   }
 
-  /*
-     if (unmarshal_ec_der_to_pkey(data, data_size, &private_pkey) == 1)
-     {
-     pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
-     free(data);
-     return (1);
-     }
-   */
+  if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) == 1)
+  {
+    pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
+    free(data);
+    return (1);
+  }
 
   free(data);
   return (0);
