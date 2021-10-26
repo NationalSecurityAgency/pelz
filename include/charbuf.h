@@ -18,7 +18,7 @@ typedef struct charbuffer
  * Takes a struct charbuf and allocates memory of len then sets charbuf len to @pram[in] len.
  * </pre>
  *
- * @param[in] len Length of new char array
+ * @param[in] len Length of new char array, must be smaller than SIZE_MAX.
  *
  * @return the initialized charbuf
  */
@@ -37,18 +37,25 @@ void free_charbuf(charbuf * buf);
 
 /**
  * <pre>
- * Takes a two charbufs and compares them to each other to determine which is greater.
+ * Takes a two charbufs and compares them to each other to determine which is greater
+ * in lexicographic order.
+ *
+ * The NULL buffer is less than any other (non-NULL) buffer.
+ *
+ * If both buffers are non-NULL, we first compare bytes up to the length
+ * of the shorter buffer. If the two buffers differ within that segment
+ * they are ordered based on the order within that segment.
+ *
+ * If both buffers are non-NULL and are the same up to the length of the
+ * shorter buffer, the shorter buffer is less than the longer buffer. 
  * </pre>
  *
  * @param[in] buf1 charbuf to be compared
  * @param[in] buf2 charbuf to be compared
  *
  * @return 0 if the buffers contain the same bytes
- *        -1 if buf1 is less than buf2 and the buffers are the same length
- *         1 if buf2 is less than buf1 and the buffers are the same length
- *        -2 if buf1 is longer than buf2
- *         2 if buf2 is longer than buf1
- *        -3 if error
+ *        -1 if buf1 is less than buf2
+ *         1 if buf2 is less than buf1
  */
 int cmp_charbuf(charbuf buf1, charbuf buf2);
 
@@ -90,9 +97,9 @@ int printcharbuf(charbuf buf, int format);
  *                      1 to search left of index
  *
  * @return index if char is contained in buf
- *         -1 if char is not found or invalid inputs
+ *         SIZE_MAX if char is not found or invalid inputs
  */
-int get_index_for_char(charbuf buf, char c, unsigned int index, int direction);
+size_t get_index_for_char(charbuf buf, char c, size_t index, int direction);
 
 /**
  * <pre>
@@ -105,6 +112,6 @@ int get_index_for_char(charbuf buf, char c, unsigned int index, int direction);
  *
  * @return charbuf copy of tail of buf starting at index
  */
-charbuf copy_chars_from_charbuf(charbuf buf, int index);
+charbuf copy_chars_from_charbuf(charbuf buf, size_t index);
 
 #endif /* INCLUDE_CHARBUF_H_ */

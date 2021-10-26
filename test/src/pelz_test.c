@@ -12,6 +12,7 @@
 #include "enclave_test_suite.h"
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
+#include "test_pelz_uri_helpers.h"
 #include <pelz_log.h>
 
 #include <CUnit/CUnit.h>
@@ -108,6 +109,20 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
   if (pelz_json_parser_suite_add_tests(pelz_json_parser_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
+  CU_pSuite test_pelz_uri_helpers_suite = NULL;
+
+  test_pelz_uri_helpers_suite = CU_add_suite("Pelz URI parser test suite", init_suite, clean_suite);
+  if (NULL == test_pelz_uri_helpers_suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if (test_pelz_uri_helpers_suite_add_tests(test_pelz_uri_helpers_suite))
   {
     CU_cleanup_registry();
     return CU_get_error();
