@@ -85,8 +85,16 @@ int main(int argc, char **argv)
     return (1);
   }
 
+  kmyth_unsealed_data_table_initialize(eid, &ret);
+  if (ret)
+  {
+    pelz_log(LOG_ERR, "Unseal Table Init Failure");
+    return (1);
+  }
+
   pelz_service((const int) max_requests);
 
+  kmyth_unsealed_data_table_cleanup(eid, &ret);
   server_table_destroy(eid, &ret);
   key_table_destroy(eid, &ret);
   sgx_destroy_enclave(eid);

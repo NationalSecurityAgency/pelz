@@ -90,7 +90,7 @@ int server_table_delete(charbuf server_id)
     if ((temp = (CertEntry *) realloc(server_table.entries, (server_table.num_entries) * sizeof(CertEntry))) == NULL)
     {
       pelz_log(LOG_ERR, "Server List Space Reallocation Error");
-      return (2);
+      return (1);
     }
     else
     {
@@ -148,7 +148,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
       free_charbuf(&tmp_entry.server_id);
       secure_free_charbuf(&tmp_entry.cert);
       secure_free_charbuf(&tmpcert);
-      return (0);
+      return OK;
     }
     else
     {
@@ -179,7 +179,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
     server_table.mem_size + ((tmp_entry.cert.len * sizeof(char)) + (tmp_entry.server_id.len * sizeof(char)) +
     (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Cert Added");
-  return (0);
+  return OK;
 }
 
 int server_table_lookup(charbuf server_id, charbuf * cert)

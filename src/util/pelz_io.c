@@ -451,18 +451,10 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        kmyth_unsealed_data_table_initialize(eid, &ret);
-        if (ret)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
-          return SGX_UNSEAL_FAIL;
-        }
-
         if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(nkl_data);
-          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return SGX_UNSEAL_FAIL;
         }
         pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
@@ -492,10 +484,8 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           default:
             pelz_log(LOG_ERR, "Server return not defined");
           }
-          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return ADD_CERT_FAIL;
         }
-        kmyth_unsealed_data_table_cleanup(eid, &ret);
         return LOAD_CERT;
       }
       else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
@@ -507,25 +497,17 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
         pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
 
-        kmyth_unsealed_data_table_initialize(eid, &ret);
-        if (ret)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
-          return SGX_UNSEAL_FAIL;
-        }
-
         if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting ");
           free(data);
-          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return SGX_UNSEAL_FAIL;
         }
         pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(data);
         server_table_add(eid, &ret, server_id, handle);
-        if (ret != 0)
+        if (ret != OK)
         {
           pelz_log(LOG_ERR, "Add cert call failed");
           switch (ret)
@@ -548,10 +530,8 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           default:
             pelz_log(LOG_ERR, "Server return not defined");
           }
-          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return ADD_CERT_FAIL;
         }
-        kmyth_unsealed_data_table_cleanup(eid, &ret);
         return LOAD_CERT;
       }
     }
@@ -586,22 +566,14 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        kmyth_unsealed_data_table_initialize(eid, &ret);
-        if (ret)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
-          return SGX_UNSEAL_FAIL;
-        }
         if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(nkl_data);
-          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return SGX_UNSEAL_FAIL;
         }
 
         free(nkl_data);
-        kmyth_unsealed_data_table_cleanup(eid, &ret);
         pelz_log(LOG_INFO, "Load private call not finished");
         return LOAD_PRIV_NOT_FIN;
       }
@@ -614,22 +586,14 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
         pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
 
-        kmyth_unsealed_data_table_initialize(eid, &ret);
-        if (ret)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
-          return SGX_UNSEAL_FAIL;
-        }
         if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle) == 1)
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(data);
-          kmyth_unsealed_data_table_cleanup(eid, &ret);
           return SGX_UNSEAL_FAIL;
         }
 
         free(data);
-        kmyth_unsealed_data_table_cleanup(eid, &ret);
         pelz_log(LOG_INFO, "Load private call not finished");
         return LOAD_PRIV_NOT_FIN;
       }
