@@ -6,7 +6,9 @@ extern "C"
 {
 #endif
 /**
- * @brief Loads a key from a specified key file.
+ * @brief Loads a key from a specified key file. Expects the file to consist of
+ *        unformatted, raw key bytes. The entire contents of the file are read
+ *        and output as the key.
  *
  * @param[in]     filename  The filename in a null-terminated string
  * @param[in,out] key_len   A pointer to a size_t to hold the key length
