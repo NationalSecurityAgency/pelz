@@ -75,7 +75,10 @@ void secure_free_charbuf(charbuf * buf)
 {
   if (buf != NULL)
   {
-    secure_memset(buf->chars, 0, buf->len);
+    if (buf->chars != NULL)
+    {
+      secure_memset(buf->chars, 0, buf->len);
+    }
     free_charbuf(buf);
   }
 }
