@@ -74,7 +74,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
       free_charbuf(&tmp_entry.id);
       secure_free_charbuf(&tmp_entry.value.cert);
       secure_free_charbuf(&tmpcert);
-      return (0);
+      return OK;
     }
     else
     {
@@ -105,5 +105,5 @@ int server_table_add(charbuf server_id, uint64_t handle)
     server_table.mem_size + ((tmp_entry.value.cert.len * sizeof(char)) + (tmp_entry.id.len * sizeof(char)) +
     (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Cert Added");
-  return (0);
+  return OK;
 }

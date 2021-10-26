@@ -79,7 +79,15 @@ int main(int argc, char **argv)
   int ret;
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+  kmyth_unsealed_data_table_initialize(eid, &ret);
+  if (ret)
+  {
+    pelz_log(LOG_ERR, "Unseal Table Init Failure");
+    return (1);
+  }
+
   pelz_service((const int) max_requests);
+  kmyth_unsealed_data_table_cleanup(eid, &ret);
   table_destroy(eid, &ret, SERVER);
   table_destroy(eid, &ret, KEY);
   sgx_destroy_enclave(eid);

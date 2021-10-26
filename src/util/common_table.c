@@ -159,7 +159,7 @@ int table_delete(int type, charbuf id)
     if ((temp = (Entry *) realloc(table.entries, (table.num_entries) * sizeof(Entry))) == NULL)
     {
       pelz_log(LOG_ERR, "List Space Reallocation Error");
-      return (1);
+      return (2);
     }
     else
     {
