@@ -14,7 +14,7 @@ enclave {
 
 /**
  * <pre>
- * This function destroys the a table specified byt type.
+ * This function destroys the a table specified by type.
  * <pre>
  *
  * @param[in] type The type of table to be destoryed (ex: key_table or server_table)
