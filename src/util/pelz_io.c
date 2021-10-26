@@ -17,6 +17,8 @@
 #include "pelz_io.h"
 #include "key_table.h"
 #include "pelz_request_handler.h"
+#include "pelz_uri_helpers.h"
+#include "pelz_key_loaders.h"
 #include "util.h"
 
 #include "sgx_urts.h"
@@ -90,18 +92,20 @@ int get_file_ext(charbuf buf, int *ext)
 
 int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
 {
+  int return_value = 1;
   UriUriA key_id_data;
-  unsigned char tmp_key[MAX_KEY_LEN + 1];
-  FILE *key_key_f = 0;
 
   const char *error_pos = NULL;
-
   char *key_uri_to_parse = NULL;
 
   // URI parser expects a null-terminated string to parse,
   // so we embed the key_id in a 1-longer array and
   // ensure it is null terminated.
   key_uri_to_parse = (char *) calloc(key_id_len + 1, 1);
+  if (key_uri_to_parse == NULL)
+  {
+    return return_value;
+  }
   memcpy(key_uri_to_parse, key_id, key_id_len);
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
@@ -114,62 +118,56 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     return (1);
   }
 
-  if (strncmp(key_id_data.scheme.first, "file:", 5) == 0)
+  URI_SCHEME scheme = get_uri_scheme(key_id_data);
+
+  switch (scheme)
   {
-    char *filename = NULL;
-
-    // The magic 4 here is derived from the uriparser documentation. It says 
-    // the length of the filename returned by uriUriStringToUnixFilenameA
-    // will be 5 bytes less than the length of the length of the input
-    // uri string including its null terminator. Since key_id_len doesn't include
-    // space for a null terminator that means we offset by 4.
-    filename = (char *) malloc(key_id_len - 4);
-    if (uriUriStringToUnixFilenameA((const char *) key_uri_to_parse, filename))
+  case FILE_URI:
     {
-      pelz_log(LOG_ERR, "Failed to parce key file name");
-      uriFreeUriMembersA(&key_id_data);
+      char *filename = get_filename_from_key_id(key_uri_to_parse);
+
+      if (filename == NULL)
+      {
+        pelz_log(LOG_ERR, "Failed to parse filename from URI %s\n", key_uri_to_parse);
+        break;
+      }
+
+      if (pelz_load_key_from_file(filename, key_len, key))
+      {
+        pelz_log(LOG_ERR, "Failed to read key file %s", filename);
+        free(filename);
+        break;
+      }
       free(filename);
-      free(key_uri_to_parse);
-      return (1);
+      return_value = 0;
+      break;
     }
-    free(key_uri_to_parse);
-    key_key_f = fopen(filename, "r");
-
-    if (key_key_f == NULL)
+  case PELZ_URI:
     {
-      pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-      uriFreeUriMembersA(&key_id_data);
-      free(filename);
-      return (1);
-    }
-    free(filename);
+      charbuf *common_name = NULL;
+      int port;
+      charbuf *key_id = NULL;
 
-    *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_key_f);
-    // If we've read MAX_KEY_LEN but not reached EOF there's probably
-    // been a problem.
-    if ((*key_len == MAX_KEY_LEN) && !feof(key_key_f))
+      if (get_pelz_uri_parts(key_id_data, common_name, &port, key_id, NULL) != 0)
+      {
+        pelz_log(LOG_ERR, "Failed to extract data from pelz uri");
+        break;
+      }
+      pelz_log(LOG_INFO, "Key load from PELZ URI not implemented.");
+      free_charbuf(common_name);
+      free_charbuf(key_id);
+      break;
+    }
+  case URI_SCHEME_UNKNOWN:
+    // Intentional fallthrough
+  default:
     {
-      pelz_log(LOG_ERR, "Error: Failed to fully read key file");
-      secure_memset(tmp_key, 0, *key_len);
-      uriFreeUriMembersA(&key_id_data);
-      fclose(key_key_f);
-      return (1);
+      pelz_log(LOG_ERR, "Scheme not supported");
     }
-    *key = (unsigned char *) malloc(*key_len);
-    memcpy(*key, tmp_key, *key_len);
-    secure_memset(tmp_key, 0, *key_len);
-    fclose(key_key_f);
   }
-  else
-  {
-    pelz_log(LOG_ERR, "Scheme not supported");
-    uriFreeUriMembersA(&key_id_data);
-    free(key_uri_to_parse);
-    return (1);
-  }
-
+  free(key_uri_to_parse);
   uriFreeUriMembersA(&key_id_data);
-  return (0);
+  return return_value;
 }
 
 int file_check(char *file_path)
