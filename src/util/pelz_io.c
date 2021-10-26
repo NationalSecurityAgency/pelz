@@ -461,7 +461,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 
         free(nkl_data);
         server_table_add(eid, &ret, server_id, handle);
-        if (ret != 0)
+        if (ret != OK)
         {
           pelz_log(LOG_ERR, "Add cert call failed");
           switch (ret)
