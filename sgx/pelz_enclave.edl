@@ -14,10 +14,10 @@ enclave {
 
 /**
  * <pre>
- * This function destroys the a table specified by type.
+ * This function destroys the table specified by type.
  * <pre>
  *
- * @param[in] type The type of table to be destoryed (ex: key_table or server_table)
+ * @param[in] type The type of table to be destroyed (ex: key_table or server_table)
  *
  * @return 0 on success, 1 on error
  */
@@ -25,10 +25,10 @@ public int table_destroy(int type);
 
 /**
  * <pre>
- * This function to delete values in hash table based on location in key_id.
+ * This function deletes a value in hash table based on location in id.
  * <pre>
  *
- * @param[in] type The table type that the id needs to be deleted from
+ * @param[in] type The table type that the id and value needs to be deleted from
  * @param[in] id.chars Identifier assumed to be null terminated
  * @param[in] id.len The length of the identifier
  *
@@ -38,7 +38,7 @@ public int table_delete(int type, charbuf id);
 
 /**
  * <pre>
- * This function to add values in hash table based on location in server_id.
+ * This function adds value in hash table based on location in server_id.
  * </pre>
  *
  * @param[in] server_id.chars Server identifier assumed to be null terminated
@@ -53,7 +53,7 @@ public int server_table_add(charbuf server_id, uint64_t handle);
 
 /**
  * <pre>
- * This function implements the request handling by looking if Pelz already has
+ * This function implements the request handling by looking if pelz already has
  * the key and if not then adding the key to the key table. Along with the
  * key lookup, this function checks the request type then based on the request
  * type it calls the wrap or unwrap functions to return requested key value.
