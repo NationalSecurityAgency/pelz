@@ -206,23 +206,23 @@ void test_table_requestDelete(void)
   //Testing that if the delete function does not find key_id then does not delete for valid files and non-valid files
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
   table_delete(eid, &ret, KEY, tmp);
-  CU_ASSERT(ret == 1);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
   table_delete(eid, &ret, KEY, tmp);
-  CU_ASSERT(ret == 1);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("adaj;ldkjidka;dfkjai"));
   memcpy(tmp.chars, "adaj;ldkjidka;dfkjai", tmp.len);
   table_delete(eid, &ret, KEY, tmp);
-  CU_ASSERT(ret == 1);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[5]);
   table_delete(eid, &ret, KEY, tmp);
-  CU_ASSERT(ret == 1);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   //Request will reload keys into the key table

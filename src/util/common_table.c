@@ -138,7 +138,7 @@ int table_delete(int type, charbuf id)
   if (index == 0)
   {
     pelz_log(LOG_ERR, "ID not found.");
-    return (1);
+    return NO_MATCH;
   }
   else if (table.mem_size == 0)
   {
@@ -159,7 +159,7 @@ int table_delete(int type, charbuf id)
     if ((temp = (Entry *) realloc(table.entries, (table.num_entries) * sizeof(Entry))) == NULL)
     {
       pelz_log(LOG_ERR, "List Space Reallocation Error");
-      return (2);
+      return ERR_REALLOC;
     }
     else
     {
@@ -175,7 +175,7 @@ int table_delete(int type, charbuf id)
       server_table = table;
     }
   }
-  return (0);
+  return OK;
 }
 
 int table_lookup(int type, charbuf id, int *index)
