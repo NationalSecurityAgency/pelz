@@ -30,6 +30,9 @@ typedef struct Certs
   size_t mem_size;
 } ServerTable;
 
+typedef enum
+{ OK, ERR_REALLOC, ERR_BUF, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+
 extern ServerTable server_table;
 
 extern EVP_PKEY *private_pkey;
@@ -38,21 +41,6 @@ extern EVP_PKEY *private_pkey;
 extern "C"
 {
 #endif
-
-/**
- * <pre>
- * This function to add values in hash table based on location in server_id.
- * </pre>
- *
- * @param[in] server_id.chars Server identifier assumed to be null terminated
- * @param[in] server_id.len The length of the server identifier
- * @param[in] handle The handle value for the cert data location in the kmyth unseal data table
- * @param[in] server_table The server table that the new cert needs to be added to
- * @param[out] server_table The server table with the new added cert
- *
- * @return 0 on success, 1 on error
- */
-  int server_table_add(charbuf server_id, uint64_t handle);
 
 /**
  * <pre>

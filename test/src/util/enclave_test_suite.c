@@ -37,7 +37,7 @@ int enclave_suite_add_tests(CU_pSuite suite)
   {
     return (1);
   }
-  if (NULL == CU_add_test(suite, "Test Server Table Initialization/Destruction", test_server_table_initDestroy))
+  if (NULL == CU_add_test(suite, "Test Server Table Destruction", test_server_table_destroy))
   {
     return (1);
   }
@@ -252,14 +252,12 @@ void test_table_requestDelete(void)
   pelz_log(LOG_DEBUG, "Test Request and Delete Functions Finish");
 }
 
-void test_server_table_initDestroy(void)
+void test_server_table_destroy(void)
 {
   int ret;
 
-  pelz_log(LOG_DEBUG, "Test Server Table Initialize and Destroy Functions Start");
-  server_table_init(eid, &ret);
-  CU_ASSERT(ret == 0);
+  pelz_log(LOG_DEBUG, "Test Server Table Destroy Function Start");
   server_table_destroy(eid, &ret);
   CU_ASSERT(ret == 0);
-  pelz_log(LOG_DEBUG, "Test Server Table Initialize and Destroy Functions Finish");
+  pelz_log(LOG_DEBUG, "Test Server Table Destroy Function Finish");
 }

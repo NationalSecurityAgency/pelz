@@ -16,6 +16,7 @@
 #include "pelz_log.h"
 #include "pelz_io.h"
 #include "key_table.h"
+#include "server_table.h"
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
 #include "pelz_key_loaders.h"
@@ -209,7 +210,7 @@ int write_to_pipe(char *pipe, char *msg)
     return 1;
   }
 
-  ret = write(fd, msg, strlen(msg) + 1);
+  ret = write(fd, msg, strlen(msg));
   if (close(fd) == -1)
   {
     pelz_log(LOG_DEBUG, "Error closing pipe");
@@ -226,7 +227,6 @@ int read_from_pipe(char *pipe, char **msg)
 {
   int fd;
   int ret;
-  int len;
   char buf[BUFSIZE];
 
   if (file_check(pipe))
@@ -255,9 +255,8 @@ int read_from_pipe(char *pipe, char **msg)
   }
   if (ret > 0)
   {
-    len = strcspn(buf, "\n");
-    *msg = (char *) malloc(len * sizeof(char));
-    memcpy(*msg, buf, len);
+    *msg = (char *) calloc(ret + 1, sizeof(char));
+    memcpy(*msg, buf, ret);
   }
   return 0;
 }
@@ -380,14 +379,15 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   int ret;
   char *path_ext = NULL;
   charbuf key_id;
+  charbuf server_id;
+  uint8_t *data = NULL;
+  size_t data_length = 0;
   uint8_t *nkl_data = NULL;
   size_t nkl_data_len = 0;
   char *authString = NULL;
   size_t auth_string_len = 0;
   const char *ownerAuthPasswd = "";
   size_t oa_passwd_len = 0;
-  uint8_t *data = NULL;
-  size_t data_length = 0;
   uint64_t handle;
 
   pelz_log(LOG_DEBUG, "Token num: %d", num_tokens);
@@ -424,6 +424,14 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     path_ext = strrchr(tokens[2], '.');
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
+    server_id = new_charbuf(strlen(tokens[2]));
+    if (server_id.len != strlen(tokens[2]))
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return ERR_CHARBUF;
+    }
+    memcpy(server_id.chars, tokens[2], server_id.len);
+
     if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
     {
       if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
@@ -449,10 +457,36 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           free(nkl_data);
           return SGX_UNSEAL_FAIL;
         }
+        pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(nkl_data);
-        pelz_log(LOG_INFO, "Load cert call not finished");
-        return LOAD_CERT_NOT_FIN;
+        server_table_add(eid, &ret, server_id, handle);
+        if (ret != OK)
+        {
+          pelz_log(LOG_ERR, "Add cert call failed");
+          switch (ret)
+          {
+          case ERR_REALLOC:
+            pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
+            break;
+          case ERR_BUF:
+            pelz_log(LOG_ERR, "Charbuf creation error.");
+            break;
+          case RET_FAIL:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+            break;
+          case NO_MATCH:
+            pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
+            break;
+          case MEM_ALLOC_FAIL:
+            pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+            break;
+          default:
+            pelz_log(LOG_ERR, "Server return not defined");
+          }
+          return ADD_CERT_FAIL;
+        }
+        return LOAD_CERT;
       }
       else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
       {
@@ -465,14 +499,40 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 
         if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
         {
-          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
+          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting ");
           free(data);
           return SGX_UNSEAL_FAIL;
         }
+        pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(data);
-        pelz_log(LOG_INFO, "Load cert call not finished");
-        return LOAD_CERT_NOT_FIN;
+        server_table_add(eid, &ret, server_id, handle);
+        if (ret != OK)
+        {
+          pelz_log(LOG_ERR, "Add cert call failed");
+          switch (ret)
+          {
+          case ERR_REALLOC:
+            pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
+            break;
+          case ERR_BUF:
+            pelz_log(LOG_ERR, "Charbuf creation error.");
+            break;
+          case RET_FAIL:
+            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+            break;
+          case NO_MATCH:
+            pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
+            break;
+          case MEM_ALLOC_FAIL:
+            pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+            break;
+          default:
+            pelz_log(LOG_ERR, "Server return not defined");
+          }
+          return ADD_CERT_FAIL;
+        }
+        return LOAD_CERT;
       }
     }
 
@@ -544,14 +604,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
         pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
 
-        kmyth_unsealed_data_table_initialize(eid, &ret);
-        if (ret == -1)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
-          return SGX_UNSEAL_FAIL;
-        }
-
-        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
+        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle) == 1)
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(data);
@@ -579,20 +632,61 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
     return INVALID_EXT_PRIV;
   case 4:
-    pelz_log(LOG_INFO, "Remove cert call not added");
-    return RM_CERT_NOT_FIN;
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+    server_id = new_charbuf(strlen(tokens[2]));
+    if (server_id.len != strlen(tokens[2]))
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return ERR_CHARBUF;
+    }
+    memcpy(server_id.chars, tokens[2], server_id.len);
+    server_table_delete(eid, &ret, server_id);
+    if (ret == 1)
+    {
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Server ID not found");
+      free_charbuf(&server_id);
+      return RM_CERT_FAIL;
+    }
+    else if (ret == 2)
+    {
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Server Table reallocation failure");
+      free_charbuf(&server_id);
+      return RM_CERT_FAIL;
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Delete Server ID form Server Table: %.*s", (int) server_id.len, server_id.chars);
+      free_charbuf(&server_id);
+      return RM_CERT;
+    }
   case 5:
-    pelz_log(LOG_INFO, "Remove all certs call not added");
-    return RM_ALL_CERT_NOT_FIN;
+    server_table_destroy(eid, &ret);
+    if (ret)
+    {
+      pelz_log(LOG_ERR, "Server Table Destroy Failure");
+      return CERT_TAB_DEST_FAIL;
+    }
+    pelz_log(LOG_INFO, "Server Table Destroyed and Re-Initialized");
+    return RM_ALL_CERT;
   case 6:
     if (num_tokens != 3)
     {
       return INVALID;
     }
-    key_id = new_charbuf(strlen(tokens[2]));  //the number 8 is used because it the number of chars in "pelz -6 "
+    key_id = new_charbuf(strlen(tokens[2]));
+    if (key_id.len != strlen(tokens[2]))
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return ERR_CHARBUF;
+    }
     memcpy(key_id.chars, tokens[2], key_id.len);
     key_table_delete(eid, &ret, key_id);
-    if (ret)
+    if (ret == 1)
     {
       pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
       free_charbuf(&key_id);
