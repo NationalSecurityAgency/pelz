@@ -29,6 +29,7 @@ ServerTable server_table = {
   .num_entries = 0,
   .mem_size = 0
 };
+
 EVP_PKEY *private_pkey;
 
 //Destroy server table
