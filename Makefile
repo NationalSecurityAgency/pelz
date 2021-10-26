@@ -107,13 +107,16 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_socket.c \
 		 src/util/pelz_thread.c \
 		 src/util/util.c \
-		 src/util/pelz_io.c
+		 src/util/pelz_io.c \
+		 src/util/pelz_uri_helpers.c \
+		 src/util/pelz_key_loaders.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/enclave_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
 	 	 test/src/util/util_test_suite.c \
-		 test/src/util/test_helper_functions.c	 
+		 test/src/util/test_helper_functions.c \
+		 test/src/util/test_pelz_uri_helpers.c
 
 App_Cpp_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
 
