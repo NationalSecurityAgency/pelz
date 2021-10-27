@@ -76,6 +76,17 @@ int main(int argc, char **argv)
     }
   }
 
+  if (optind < argc)
+  {
+    pelz_log(LOG_ERR, "Invalid arguments found.");
+    for (; optind < argc; optind++)
+    {
+      pelz_log(LOG_ERR, "...Invalid argument: %s", argv[optind]);
+    }
+    usage(argv[0]);
+    return (1);
+  }
+
   int ret;
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
