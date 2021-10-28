@@ -72,20 +72,6 @@ void secure_free_charbuf(charbuf * buf);
 
 /**
  * <pre>
- * This function prints the contents of a charbuf
- * </pre>
- *
- * @param[in] buf The charBuf containing the buffer to be printed
- * @param[in] format An integer indicating how to format the print:
- *                   0 as ascii characters
- *                   1 as hex characters
- *
- * @return 0 on success, 1 on error
- */
-int printcharbuf(charbuf buf, int format);
-
-/**
- * <pre>
  * This function determines the index location of a char in char array buf.
  * </pre>
  *
@@ -104,7 +90,7 @@ size_t get_index_for_char(charbuf buf, char c, size_t index, int direction);
 /**
  * <pre>
  * This function creates a new charbuf that contains the contents of another buffer starting at 
- * the specified index
+ * the specified index. Returns an empty charbuf if index is out of bounds.
  * </pre>
  *
  * @param[in] buf The charbuf to be copied from
