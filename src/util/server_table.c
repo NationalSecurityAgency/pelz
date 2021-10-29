@@ -213,6 +213,11 @@ int server_table_lookup(charbuf server_id, charbuf * cert)
 int private_pkey_init(void)
 {
   private_pkey = EVP_PKEY_new();
+  if (private_pkey == NULL)
+  {
+    pelz_log(LOG_ERR, "Error allocating EVP_PKEY");
+    return (1);
+  }
   return (0);
 }
 
