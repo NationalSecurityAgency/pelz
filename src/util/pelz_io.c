@@ -566,13 +566,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        kmyth_unsealed_data_table_initialize(eid, &ret);
-        if (ret == -1)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Init Failure");
-          return SGX_UNSEAL_FAIL;
-        }
-
         if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle) == 1)
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
@@ -586,12 +579,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         {
           pelz_log(LOG_ERR, "Add private pkey failure");
           return ADD_PRIV_FAIL;
-        }
-
-        kmyth_unsealed_data_table_cleanup(eid, &ret);
-        if (ret != 0)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Cleanup Failure");
         }
         return LOAD_PRIV;
       }
@@ -617,12 +604,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         {
           pelz_log(LOG_ERR, "Add private pkey failure");
           return ADD_PRIV_FAIL;
-        }
-
-        kmyth_unsealed_data_table_cleanup(eid, &ret);
-        if (ret != 0)
-        {
-          pelz_log(LOG_ERR, "Unsealed Data Table Cleanup Failure");
         }
         return LOAD_PRIV;
       }

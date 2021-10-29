@@ -95,6 +95,8 @@ int main(int argc, char **argv)
     pelz_log(LOG_ERR, "Key Table Init Failure");
     return (1);
   }
+
+  kmyth_unsealed_data_table_initialize(eid, &ret);
   if (ret)
   {
     pelz_log(LOG_ERR, "Unseal Table Init Failure");
