@@ -111,7 +111,7 @@ int server_table_delete(charbuf server_id)
   return (0);
 }
 
-int server_table_add(charbuf server_id, uint64_t handle)
+int server_table_add(uint64_t handle)
 {
   CertEntry tmp_entry;
   size_t max_mem_size;
@@ -119,6 +119,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
   uint8_t *data;
   size_t data_size = 0;
   int ret;
+  char *tmp_id;
 
   max_mem_size = 1000000;
 
@@ -128,14 +129,6 @@ int server_table_add(charbuf server_id, uint64_t handle)
     return MEM_ALLOC_FAIL;
   }
 
-  tmp_entry.server_id = new_charbuf(server_id.len);
-  if (server_id.len != tmp_entry.server_id.len)
-  {
-    pelz_log(LOG_ERR, "Charbuf creation error.");
-    return ERR_BUF;
-  }
-
-  memcpy(tmp_entry.server_id.chars, server_id.chars, tmp_entry.server_id.len);
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
@@ -152,6 +145,15 @@ int server_table_add(charbuf server_id, uint64_t handle)
   }
   free(data);
 
+  tmp_id = X509_NAME_oneline(X509_get_subject_name(tmp_entry.cert), NULL, 0);
+  tmp_entry.server_id = new_charbuf(strlen(tmp_id));
+  if (strlen(tmp_id) != tmp_entry.server_id.len)
+  {
+    pelz_log(LOG_ERR, "Charbuf creation error.");
+    return ERR_BUF;
+  }
+
+  memcpy(tmp_entry.server_id.chars, tmp_id, tmp_entry.server_id.len);
   if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
   {
     if (X509_cmp(tmpcert, tmp_entry.cert) == 0)

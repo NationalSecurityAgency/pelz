@@ -460,7 +460,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(nkl_data);
-        server_table_add(eid, &ret, server_id, handle);
+        server_table_add(eid, &ret, handle);
         if (ret != OK)
         {
           pelz_log(LOG_ERR, "Add cert call failed");
@@ -509,7 +509,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(data);
-        server_table_add(eid, &ret, server_id, handle);
+        server_table_add(eid, &ret, handle);
         if (ret != OK)
         {
           pelz_log(LOG_ERR, "Add cert call failed");
