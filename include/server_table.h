@@ -20,7 +20,7 @@
 typedef struct ServerEntry
 {
   charbuf server_id;
-  charbuf cert;
+  X509 *cert;
 } CertEntry;
 
 typedef struct Certs
@@ -31,7 +31,7 @@ typedef struct Certs
 } ServerTable;
 
 typedef enum
-{ OK, ERR_REALLOC, ERR_BUF, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+{ OK, ERR_REALLOC, ERR_BUF, ERR_X509, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
 
 extern ServerTable server_table;
 
@@ -49,15 +49,14 @@ extern "C"
  *
  * @param[in] server_id.chars The server identifier assumed to be null terminated
  * @param[in] server_id.len Length of server identifier
- * @param[out] cert.chars The cert value
- * @param[out] cert.len The length of the cert
+ * @param[out] cert The X509 cert based from server_id
  * @param[in] server_table The server table that has the cert and is used for the lookup
  * @param[out] server_table The server table returned if cert was added
  * @param max_cert_entries The max number of cert entries for the table default set at 100000
  *
  * @return 0 on success, 1 on failure
  */
-  int server_table_lookup(charbuf server_id, charbuf * cert);
+  int server_table_lookup(charbuf server_id, X509 ** cert);
 
 #ifdef __cplusplus
 }

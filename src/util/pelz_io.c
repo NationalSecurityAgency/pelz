@@ -472,6 +472,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
             break;
+          case ERR_X509:
+            pelz_log(LOG_ERR, "X509 allocation error.");
+            break;
           case RET_FAIL:
             pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
             break;
@@ -517,6 +520,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
             break;
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
+            break;
+          case ERR_X509:
+            pelz_log(LOG_ERR, "X509 allocation error.");
             break;
           case RET_FAIL:
             pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");

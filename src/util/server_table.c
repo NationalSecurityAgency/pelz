@@ -42,9 +42,9 @@ int server_table_destroy(void)
     {
       free_charbuf(&server_table.entries[i].server_id);
     }
-    if (server_table.entries[i].cert.len != 0)
+    if (server_table.entries[i].cert != NULL)
     {
-      secure_free_charbuf(&server_table.entries[i].cert);
+      X509_free(server_table.entries[i].cert);
     }
   }
 
@@ -60,17 +60,19 @@ int server_table_destroy(void)
 int server_table_delete(charbuf server_id)
 {
   int index;
+  int data_size;
 
   index = 0;
+
   for (unsigned int i = 0; i < server_table.num_entries; i++)
   {
     if (cmp_charbuf(server_id, server_table.entries[i].server_id) == 0)
     {
+      data_size = i2d_X509(server_table.entries[i].cert, NULL);
       server_table.mem_size = server_table.mem_size -
-        ((server_table.entries[i].cert.len * sizeof(char)) + (server_table.entries[i].server_id.len * sizeof(char)) +
-        (2 * sizeof(size_t)));
+        ((server_table.entries[i].server_id.len * sizeof(char)) + sizeof(size_t) + data_size);
       free_charbuf(&server_table.entries[i].server_id);
-      secure_free_charbuf(&server_table.entries[i].cert);
+      X509_free(server_table.entries[i].cert);
       index = i + 1;
       break;
     }
@@ -113,9 +115,10 @@ int server_table_add(charbuf server_id, uint64_t handle)
 {
   CertEntry tmp_entry;
   size_t max_mem_size;
-  charbuf tmpcert;
+  X509 *tmpcert;
   uint8_t *data;
   size_t data_size = 0;
+  int ret;
 
   max_mem_size = 1000000;
 
@@ -140,31 +143,29 @@ int server_table_add(charbuf server_id, uint64_t handle)
     return RET_FAIL;
   }
 
-  tmp_entry.cert = new_charbuf(data_size);
-  if (data_size != tmp_entry.cert.len)
+  ret = unmarshal_ec_der_to_x509(&data, &data_size, &tmp_entry.cert);
+  if (ret)
   {
-    pelz_log(LOG_ERR, "Charbuf creation error.");
-    return ERR_BUF;
+    pelz_log(LOG_ERR, "Unmarshal DER to X509 Failure");
+    free(data);
+    return ERR_X509;
   }
-
-  memcpy(tmp_entry.cert.chars, data, tmp_entry.cert.len);
+  free(data);
 
   if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
   {
-    if (cmp_charbuf(tmpcert, tmp_entry.cert) == 0)
+    if (X509_cmp(tmpcert, tmp_entry.cert) == 0)
     {
       pelz_log(LOG_DEBUG, "Cert already added.");
       free_charbuf(&tmp_entry.server_id);
-      secure_free_charbuf(&tmp_entry.cert);
-      secure_free_charbuf(&tmpcert);
+      X509_free(tmp_entry.cert);
       return OK;
     }
     else
     {
       pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
       free_charbuf(&tmp_entry.server_id);
-      secure_free_charbuf(&tmp_entry.cert);
-      secure_free_charbuf(&tmpcert);
+      X509_free(tmp_entry.cert);
       return NO_MATCH;
     }
   }
@@ -175,7 +176,7 @@ int server_table_add(charbuf server_id, uint64_t handle)
   {
     pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
     free_charbuf(&tmp_entry.server_id);
-    secure_free_charbuf(&tmp_entry.cert);
+    X509_free(tmp_entry.cert);
     return ERR_REALLOC;
   }
   else
@@ -184,26 +185,18 @@ int server_table_add(charbuf server_id, uint64_t handle)
   }
   server_table.entries[server_table.num_entries] = tmp_entry;
   server_table.num_entries++;
-  server_table.mem_size =
-    server_table.mem_size + ((tmp_entry.cert.len * sizeof(char)) + (tmp_entry.server_id.len * sizeof(char)) +
-    (2 * sizeof(size_t)));
+  server_table.mem_size = server_table.mem_size + (tmp_entry.server_id.len * sizeof(char)) + sizeof(size_t) + data_size;
   pelz_log(LOG_INFO, "Cert Added");
   return OK;
 }
 
-int server_table_lookup(charbuf server_id, charbuf * cert)
+int server_table_lookup(charbuf server_id, X509 ** cert)
 {
   for (unsigned int i = 0; i < server_table.num_entries; i++)
   {
     if (cmp_charbuf(server_id, server_table.entries[i].server_id) == 0)
     {
-      *cert = new_charbuf(server_table.entries[i].cert.len);
-      if (server_table.entries[i].cert.len != cert->len)
-      {
-        pelz_log(LOG_ERR, "Charbuf creation error.");
-        return (1);
-      }
-      memcpy(cert->chars, server_table.entries[i].cert.chars, cert->len);
+      *cert = server_table.entries[i].cert;
       return (0);
     }
   }
