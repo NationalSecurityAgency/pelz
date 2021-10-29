@@ -94,7 +94,7 @@ public int server_table_add(charbuf server_id, uint64_t handle);
  * <pre>
  *
  * @param[in] private_pkey The pointer for pkey to be initialized
- * @param[out] private_pke The initialized pkey
+ * @param[out] private_pkey The initialized pkey
  *
  * @return 0 on success, 1 on error
  */
@@ -113,7 +113,7 @@ public int private_pkey_free(void);
 
 /**
  * <pre>
- * This function to add pkey from unseal table based on handel.
+ * This function adds a pkey from unseal table based on handle.
  * </pre>
  *
  * @param[in] handle The handle value for the pkey data location in the kmyth unseal data table
