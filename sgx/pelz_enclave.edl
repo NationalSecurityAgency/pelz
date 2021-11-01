@@ -122,6 +122,43 @@ public int private_pkey_free(void);
  */
 public int private_pkey_add(uint64_t handle);
 
+
+/**
+ * <pre>
+ * This function initializes a pkey.
+ * <pre>
+ *
+ * @param[in] private_pkey The pointer for pkey to be initialized
+ * @param[out] private_pkey The initialized pkey
+ *
+ * @return 0 on success, 1 on error
+ */
+public int private_pkey_init(void);
+
+/**
+ * <pre>
+ * This function frees the pkey.
+ * <pre>
+ *
+ * @param[in] private_pkey The pointer for pkey to be freed
+ *
+ * @return 0 on success, 1 on error
+ */
+public int private_pkey_free(void);
+
+/**
+ * <pre>
+ * This function adds a pkey from unseal table based on handle.
+ * </pre>
+ *
+ * @param[in] handle The handle value for the pkey data location in the kmyth unseal data table
+ * @param[in] private_pkey The empty or old pkey
+ * @param[out] private_pkey The new pkey
+ *
+ * @return 0 on success, 1 on error
+ */
+public int private_pkey_add(uint64_t handle);
+
 /**
  * <pre>
  * This function implements the request handling by looking if Pelz already has
