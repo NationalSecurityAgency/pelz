@@ -100,6 +100,7 @@ int main(int argc, char **argv)
   if (ret)
   {
     pelz_log(LOG_ERR, "Unseal Table Init Failure");
+    key_table_destroy(eid, &ret);
     return (1);
   }
 
@@ -107,6 +108,8 @@ int main(int argc, char **argv)
   if (ret == 1)
   {
     pelz_log(LOG_ERR, "PKEY Init Failure");
+    kmyth_unsealed_data_table_cleanup(eid, &ret);
+    key_table_destroy(eid, &ret);
     return (1);
   }
 
