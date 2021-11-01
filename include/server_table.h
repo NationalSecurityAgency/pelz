@@ -9,6 +9,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/bn.h>
+#include <openssl/err.h>
+
 #include "charbuf.h"
 
 typedef struct ServerEntry
@@ -28,6 +34,8 @@ typedef enum
 { OK, ERR_REALLOC, ERR_BUF, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
 
 extern ServerTable server_table;
+
+extern EVP_PKEY *private_pkey;
 
 #ifdef __cplusplus
 extern "C"

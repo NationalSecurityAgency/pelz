@@ -566,7 +566,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
+        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle) == 1)
         {
           pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
           free(nkl_data);
@@ -574,8 +574,13 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(nkl_data);
-        pelz_log(LOG_INFO, "Load private call not finished");
-        return LOAD_PRIV_NOT_FIN;
+        private_pkey_add(eid, &ret, handle);
+        if (ret == 1)
+        {
+          pelz_log(LOG_ERR, "Add private pkey failure");
+          return ADD_PRIV_FAIL;
+        }
+        return LOAD_PRIV;
       }
       else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
       {
@@ -594,8 +599,13 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         }
 
         free(data);
-        pelz_log(LOG_INFO, "Load private call not finished");
-        return LOAD_PRIV_NOT_FIN;
+        private_pkey_add(eid, &ret, handle);
+        if (ret == 1)
+        {
+          pelz_log(LOG_ERR, "Add private pkey failure");
+          return ADD_PRIV_FAIL;
+        }
+        return LOAD_PRIV;
       }
     }
 
