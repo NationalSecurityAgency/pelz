@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/epoll.h>
 #include <fcntl.h>
 #include <kmyth/formatting_tools.h>
 
@@ -21,6 +22,34 @@
 #define PELZSERVICEOUT "/tmp/pelzServiceOut"
 #define BUFSIZE 1024
 #define MODE 0600
+
+void* pelz_listener_process(void){
+  int fd = open(PELZSERVICEOUT, O_RDONLY | O_NONBLOCK);
+  int poll = epoll_create1(0);
+
+  struct epoll_event listener listener_events[1];
+  listener.events = EPOLLIN;
+  listener.data.fd = 0;
+
+  if(epoll_ctl(poll, EPOLL_CTX_ADD, fd, &listener)){
+    pelz_log(LOG_ERR, "Failed to poll pipe.");
+    close(fd);
+    close(poll);
+    return;
+  }
+
+  int event_count = epoll_wait(poll, events, 1, 15000);
+  if(event_count == 0){
+    pelz_log(LOG_INFO, "No response received from pelz-server.");
+  }
+  else{
+    int bytes_read = read(events[0].data.fd, read_buffer, buffer_size);
+    pelz_log(LOG_INFO, "data");
+  }
+  close(fd);
+  close(poll);
+  return;
+}
 
 void *fifo_thread_process(void *arg)
 {
