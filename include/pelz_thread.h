@@ -37,4 +37,6 @@ void thread_process(void *arg);
  */
 void *fifo_thread_process(void *arg);
 
+void *pelz_listener(void *pipe);
+
 #endif

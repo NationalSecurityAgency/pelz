@@ -89,6 +89,8 @@ extern "C"
  * @return ParseResponseStatus status message indicating the outcome of parse
  */
   ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
+
+  int pelz_send_command(char *send_pipe, char* receive_pipe, char *msg);
 #ifdef __cplusplus
 }
 #endif

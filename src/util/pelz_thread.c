@@ -23,11 +23,11 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
-void *pelz_listener_process(void)
+void *pelz_listener(void *pipe)
 {
-  int fd = open(PELZSERVICEOUT, O_RDONLY | O_NONBLOCK);
+  int fd = open((char *) pipe, O_RDONLY | O_NONBLOCK);
   int poll = epoll_create1(0);
-  char msg[1024];
+  char msg[BUFSIZE];
 
   struct epoll_event listener;
   struct epoll_event listener_events[1];
@@ -51,7 +51,7 @@ void *pelz_listener_process(void)
   }
   else
   {
-    int bytes_read = read(listener_events[0].data.fd, msg, 1024);
+    int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
 
     pelz_log(LOG_INFO, "%*s", bytes_read, msg);
   }

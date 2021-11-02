@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
@@ -21,6 +22,7 @@
 #include "pelz_uri_helpers.h"
 #include "pelz_key_loaders.h"
 #include "util.h"
+#include "pelz_thread.h"
 
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
@@ -221,6 +223,20 @@ int write_to_pipe(char *pipe, char *msg)
     return 1;
   }
   return 0;
+}
+
+int pelz_send_command(char *send_pipe, char* receive_pipe, char *msg)
+{
+  pthread_t listener_thread;
+
+  if (pthread_create(&listener_thread, NULL, pelz_listener, (void *) receive_pipe))
+  {
+    pelz_log(LOG_ERR, "Unable to start thread to monitor pipe.");
+    return 1;
+  }
+  int write_result = write_to_pipe(send_pipe, msg);
+  pthread_join(listener_thread, NULL);
+  return write_result;
 }
 
 int read_from_pipe(char *pipe, char **msg)
