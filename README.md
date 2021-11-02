@@ -20,7 +20,10 @@ Pelz has been tested against Kmyth commit 41f83ef.
 ----
 
 ## Data formats
-This section describes the expected JSON and URI formats.
+This section describes the expected certificate, JSON and URI formats.
+
+### Certificate File Format
+The certificates used for load cert/private are expected to be converted to a DER format before being sealed.
 
 ### JSON Key and Value List
 The JSON objects can be in two forms: requests and responses.  
