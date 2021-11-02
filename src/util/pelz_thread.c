@@ -23,32 +23,41 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
-void* pelz_listener_process(void){
+void *pelz_listener_process(void)
+{
   int fd = open(PELZSERVICEOUT, O_RDONLY | O_NONBLOCK);
   int poll = epoll_create1(0);
+  char msg[1024];
 
-  struct epoll_event listener listener_events[1];
+  struct epoll_event listener;
+  struct epoll_event listener_events[1];
+
   listener.events = EPOLLIN;
   listener.data.fd = 0;
 
-  if(epoll_ctl(poll, EPOLL_CTX_ADD, fd, &listener)){
+  if (epoll_ctl(poll, EPOLL_CTL_ADD, fd, &listener))
+  {
     pelz_log(LOG_ERR, "Failed to poll pipe.");
     close(fd);
     close(poll);
-    return;
+    return NULL;
   }
 
-  int event_count = epoll_wait(poll, events, 1, 15000);
-  if(event_count == 0){
+  int event_count = epoll_wait(poll, listener_events, 1, 15000);
+
+  if (event_count == 0)
+  {
     pelz_log(LOG_INFO, "No response received from pelz-server.");
   }
-  else{
-    int bytes_read = read(events[0].data.fd, read_buffer, buffer_size);
-    pelz_log(LOG_INFO, "data");
+  else
+  {
+    int bytes_read = read(listener_events[0].data.fd, msg, 1024);
+
+    pelz_log(LOG_INFO, "%*s", bytes_read, msg);
   }
   close(fd);
   close(poll);
-  return;
+  return NULL;
 }
 
 void *fifo_thread_process(void *arg)
