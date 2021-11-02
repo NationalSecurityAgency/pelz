@@ -90,7 +90,7 @@ extern "C"
  */
   ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
 
-  int pelz_send_command(char *send_pipe, char* receive_pipe, char *msg);
+  int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg);
 #ifdef __cplusplus
 }
 #endif

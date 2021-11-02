@@ -23,6 +23,8 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
+pthread_mutex_t listener_mutex;
+
 void *pelz_listener(void *pipe)
 {
   int fd = open((char *) pipe, O_RDONLY | O_NONBLOCK);
@@ -33,7 +35,7 @@ void *pelz_listener(void *pipe)
   struct epoll_event listener_events[1];
 
   listener.events = EPOLLIN;
-  listener.data.fd = 0;
+  listener.data.fd = fd;
 
   if (epoll_ctl(poll, EPOLL_CTL_ADD, fd, &listener))
   {
@@ -43,6 +45,7 @@ void *pelz_listener(void *pipe)
     return NULL;
   }
 
+  pthread_mutex_unlock(&listener_mutex);
   int event_count = epoll_wait(poll, listener_events, 1, 15000);
 
   if (event_count == 0)
@@ -53,7 +56,7 @@ void *pelz_listener(void *pipe)
   {
     int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
 
-    pelz_log(LOG_INFO, "%*s", bytes_read, msg);
+    pelz_log(LOG_INFO, "%.*s", bytes_read, msg);
   }
   close(fd);
   close(poll);

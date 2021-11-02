@@ -225,16 +225,26 @@ int write_to_pipe(char *pipe, char *msg)
   return 0;
 }
 
-int pelz_send_command(char *send_pipe, char* receive_pipe, char *msg)
+int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg)
 {
   pthread_t listener_thread;
 
+  pthread_mutex_init(&listener_mutex, NULL);
+  pthread_mutex_lock(&listener_mutex);
   if (pthread_create(&listener_thread, NULL, pelz_listener, (void *) receive_pipe))
   {
     pelz_log(LOG_ERR, "Unable to start thread to monitor pipe.");
     return 1;
   }
+  pthread_mutex_lock(&listener_mutex);
+  pthread_mutex_unlock(&listener_mutex);
+  pthread_mutex_destroy(&listener_mutex);
   int write_result = write_to_pipe(send_pipe, msg);
+
+  if (write_result != 0)
+  {
+    pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+  }
   pthread_join(listener_thread, NULL);
   return write_result;
 }

@@ -155,23 +155,7 @@ int main(int argc, char **argv)
     msg = (char *) calloc(7, sizeof(char));
     memcpy(msg, "pelz 1", 6);
     pelz_log(LOG_DEBUG, "Message: %s", msg);
-    if (write_to_pipe((char *) PELZSERVICEIN, msg))
-    {
-      pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
-    }
-    else
-    {
-      pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
-    }
-    free(msg);
-    if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
-    {
-      pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
-    }
-    else
-    {
-      pelz_log(LOG_INFO, "%s", msg);
-    }
+    pelz_send_command((char *) PELZSERVICEIN, (char *) PELZSERVICEOUT, msg);
     free(msg);
     if (unlink(PELZSERVICEOUT) == 0)
     {
@@ -209,23 +193,7 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 2 ", 7);
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZSERVICEIN, msg))
-        {
-          pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
-        }
-        free(msg);
-        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
-        {
-          pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "%s", msg);
-        }
+        pelz_send_command((char *) PELZSERVICEIN, (char *) PELZSERVICEOUT, msg);
         free(msg);
         free(path_id);
       }
@@ -261,23 +229,7 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 3 ", 7);
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZSERVICEIN, msg))
-        {
-          pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
-        }
-        free(msg);
-        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
-        {
-          pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "%s", msg);
-        }
+        pelz_send_command((char *) PELZSERVICEIN, (char *) PELZSERVICEOUT, msg);
         free(msg);
         free(path_id);
       }
@@ -308,23 +260,7 @@ int main(int argc, char **argv)
         msg = (char *) calloc(7, sizeof(char));
         memcpy(msg, "pelz 7", 6);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZSERVICEIN, msg))
-        {
-          pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
-        }
-        free(msg);
-        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
-        {
-          pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "%s", msg);
-        }
+        pelz_send_command((char *) PELZSERVICEIN, (char *) PELZSERVICEOUT, msg);
         free(msg);
       }
       else if ((argv[arg_index + 3] != NULL) && !all)
@@ -341,23 +277,7 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 6 ", 7);
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZSERVICEIN, msg))
-        {
-          pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
-        }
-        free(msg);
-        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
-        {
-          pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "%s", msg);
-        }
+        pelz_send_command((char *) PELZSERVICEIN, (char *) PELZSERVICEOUT, msg);
         free(msg);
         free(path_id);
       }
@@ -378,23 +298,7 @@ int main(int argc, char **argv)
         msg = (char *) calloc(7, sizeof(char));
         memcpy(msg, "pelz 5", 6);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZSERVICEIN, msg))
-        {
-          pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
-        }
-        free(msg);
-        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
-        {
-          pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "%s", msg);
-        }
+        pelz_send_command((char *) PELZSERVICEIN, (char *) PELZSERVICEOUT, msg);
         free(msg);
       }
       else if (argv[arg_index + 3] != NULL && !all)
@@ -411,23 +315,7 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 4 ", 7);
         memcpy(&msg[7], path_id, path_id_size);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        if (write_to_pipe((char *) PELZSERVICEIN, msg))
-        {
-          pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
-        }
-        free(msg);
-        if (read_from_pipe((char *) PELZSERVICEOUT, &msg))
-        {
-          pelz_log(LOG_INFO, "Unable to recieve message from the pelz-service.");
-        }
-        else
-        {
-          pelz_log(LOG_INFO, "%s", msg);
-        }
+        pelz_send_command((char *) PELZSERVICEIN, (char *) PELZSERVICEOUT, msg);
         free(msg);
         free(path_id);
       }

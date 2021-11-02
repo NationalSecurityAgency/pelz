@@ -5,6 +5,8 @@
 
 extern bool global_pipe_reader_active;
 
+//extern bool listener_ready;
+extern pthread_mutex_t listener_mutex;
 typedef struct
 {
   int socket_id;
