@@ -90,6 +90,18 @@ extern "C"
  */
   ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
 
+/**
+ * <pre>
+ * Send the specified command msg over send_pipe and waits to receive a
+ * response on receive_pipe.
+ * </pre>
+ *
+ * @param[in] send_pipe    Null-terminated name of the pipe to send the message on
+ * @param[in] receive_pipe Null-terminated name of the pipe to receive the response on
+ * @param[in] msg          Null-terminated message to send.
+ *
+ * @return 0 on success, 1 on error
+ */
   int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg);
 #ifdef __cplusplus
 }
