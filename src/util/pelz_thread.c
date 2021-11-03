@@ -23,14 +23,41 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
-pthread_mutex_t listener_mutex;
-
-void *pelz_listener(void *pipe)
+void *pelz_listener(void *args)
 {
-  int fd = open((char *) pipe, O_RDONLY | O_NONBLOCK);
-  int poll = epoll_create1(0);
-  char msg[BUFSIZE];
+  pelz_listener_thread_args *thread_args = (pelz_listener_thread_args *) args;
+  char *pipe = thread_args->pipe;
+  pthread_mutex_t *lock = thread_args->reader_lock;
 
+  thread_args->return_value = 0;
+
+  if (file_check(pipe))
+  {
+    pelz_log(LOG_ERR, "Pipe not found");
+    thread_args->return_value = 1;
+    return NULL;
+  }
+
+  int fd = open(pipe, O_RDONLY | O_NONBLOCK);
+
+  if (fd == -1)
+  {
+    pelz_log(LOG_ERR, "Error opening pipe for reading");
+    thread_args->return_value = 1;
+    return NULL;
+  }
+
+  int poll = epoll_create1(0);
+
+  if (poll == -1)
+  {
+    pelz_log(LOG_ERR, "Unable to create epoll file descriptor.");
+    thread_args->return_value = 1;
+    close(fd);
+    return NULL;
+  }
+
+  char msg[BUFSIZE];
   struct epoll_event listener;
   struct epoll_event listener_events[1];
 
@@ -42,15 +69,17 @@ void *pelz_listener(void *pipe)
     pelz_log(LOG_ERR, "Failed to poll pipe.");
     close(fd);
     close(poll);
+    thread_args->return_value = 1;
     return NULL;
   }
 
-  pthread_mutex_unlock(&listener_mutex);
+  pthread_mutex_unlock(lock);
   int event_count = epoll_wait(poll, listener_events, 1, 15000);
 
   if (event_count == 0)
   {
     pelz_log(LOG_INFO, "No response received from pelz-server.");
+    thread_args->return_value = 1;
   }
   else
   {

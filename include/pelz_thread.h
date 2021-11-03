@@ -5,13 +5,18 @@
 
 extern bool global_pipe_reader_active;
 
-//extern bool listener_ready;
-extern pthread_mutex_t listener_mutex;
 typedef struct
 {
   int socket_id;
   pthread_mutex_t lock;
 } ThreadArgs;
+
+typedef struct
+{
+  char *pipe;
+  pthread_mutex_t *reader_lock;
+  int return_value;
+} pelz_listener_thread_args;
 
 /**
  * <pre>
