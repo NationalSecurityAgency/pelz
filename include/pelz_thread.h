@@ -14,9 +14,9 @@ typedef struct
 typedef struct
 {
   char *pipe;
-  pthread_mutex_t *reader_lock;
+  pthread_mutex_t *listener_mutex;
   int return_value;
-} pelz_listener_thread_args;
+} ListenerThreadArgs;
 
 /**
  * <pre>
@@ -44,6 +44,18 @@ void thread_process(void *arg);
  */
 void *fifo_thread_process(void *arg);
 
-void *pelz_listener(void *pipe);
+/**
+ * <pre>
+ * Listener function that receives responses from the pelz-service.
+ * </pre>
+ *
+ * @param[in,out] args a pointer to a ListenerThreadArgs structure
+ *                     containing the pipe to listen on, a mutex to indicate
+ *                     (by unlocking) that the listener is ready, and
+ *                     an int to hold the result of the function call.
+ *
+ * @return none
+ */
+void *pelz_listener(void *args);
 
 #endif

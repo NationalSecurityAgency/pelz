@@ -227,25 +227,38 @@ int write_to_pipe(char *pipe, char *msg)
 
 int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg)
 {
+  if (send_pipe == NULL || receive_pipe == NULL || msg == NULL)
+  {
+    pelz_log(LOG_ERR, "All arguments to pelz_send_command must be non-null.");
+    return 1;
+  }
+
   pthread_t listener_thread;
   pthread_mutex_t listener_mutex;
 
-  pthread_mutex_init(&listener_mutex, NULL);
+  if (pthread_mutex_init(&listener_mutex, NULL))
+  {
+    pelz_log(LOG_ERR, "Failed to initialize listener mutex.");
+    return 1;
+  }
   pthread_mutex_lock(&listener_mutex);
 
-  pelz_listener_thread_args args;
+  ListenerThreadArgs args;
 
   args.pipe = receive_pipe;
-  args.reader_lock = &listener_mutex;
+  args.listener_mutex = &listener_mutex;
 
   if (pthread_create(&listener_thread, NULL, pelz_listener, (void *) &args))
   {
     pelz_log(LOG_ERR, "Unable to start thread to monitor pipe.");
+    pthread_mutex_unlock(&listener_mutex);
+    pthread_mutex_destroy(&listener_mutex);
     return 1;
   }
   pthread_mutex_lock(&listener_mutex);
   pthread_mutex_unlock(&listener_mutex);
   pthread_mutex_destroy(&listener_mutex);
+
   int write_result = write_to_pipe(send_pipe, msg);
 
   if (write_result != 0)

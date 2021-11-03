@@ -25,20 +25,18 @@
 
 void *pelz_listener(void *args)
 {
-  pelz_listener_thread_args *thread_args = (pelz_listener_thread_args *) args;
-  char *pipe = thread_args->pipe;
-  pthread_mutex_t *lock = thread_args->reader_lock;
+  ListenerThreadArgs *thread_args = (ListenerThreadArgs *) args;
 
   thread_args->return_value = 0;
 
-  if (file_check(pipe))
+  if (file_check(thread_args->pipe))
   {
     pelz_log(LOG_ERR, "Pipe not found");
     thread_args->return_value = 1;
     return NULL;
   }
 
-  int fd = open(pipe, O_RDONLY | O_NONBLOCK);
+  int fd = open(thread_args->pipe, O_RDONLY | O_NONBLOCK);
 
   if (fd == -1)
   {
@@ -73,7 +71,7 @@ void *pelz_listener(void *args)
     return NULL;
   }
 
-  pthread_mutex_unlock(lock);
+  pthread_mutex_unlock(thread_args->listener_mutex);
   int event_count = epoll_wait(poll, listener_events, 1, 15000);
 
   if (event_count == 0)
