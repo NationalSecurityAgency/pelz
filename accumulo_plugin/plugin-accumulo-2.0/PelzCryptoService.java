@@ -81,7 +81,7 @@ public class PelzCryptoService implements CryptoService {
 
   private String keyLocation = null;
   private String keyManager = null;
-  private SecureRandom sr = null;
+  private SecureRandom sr = new SecureRandom();
   private boolean encryptEnabled = true;
 
   private static final FileEncrypter DISABLED = new NoFileEncrypter();
@@ -97,7 +97,6 @@ public class PelzCryptoService implements CryptoService {
     String keyMgr = "pelz";
     Objects.requireNonNull(keyLocation,
         "Config property instance.crypto.opts.key.uri is required.");
-    this.sr = CryptoUtils.newSha1SecureRandom();
     this.keyManager = keyMgr;
     this.keyLocation = keyLocation;
     if (!PelzKeyUtils.initSocket()) {
