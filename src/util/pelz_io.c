@@ -274,7 +274,7 @@ int pelz_send_command(char *msg)
   }
   else
   {
-    pelz_log(LOG_INFO, "%s", msg);
+    pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
   }
   pthread_join(listener_thread, NULL);
 
