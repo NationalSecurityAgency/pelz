@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
@@ -21,13 +22,13 @@
 #include "pelz_uri_helpers.h"
 #include "pelz_key_loaders.h"
 #include "util.h"
+#include "pelz_thread.h"
 
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZSERVICEIN "/tmp/pelzServiceIn"
 #define BUFSIZE 1024
 
 void ocall_malloc(size_t size, char **buf)
@@ -221,6 +222,65 @@ int write_to_pipe(char *pipe, char *msg)
     return 1;
   }
   return 0;
+}
+
+int pelz_send_command(char *msg)
+{
+  if (msg == NULL)
+  {
+    pelz_log(LOG_ERR, "msg for pelz_send_command must be non-null.");
+    return 1;
+  }
+
+  pthread_t listener_thread;
+  pthread_mutex_t listener_mutex;
+
+  if (pthread_mutex_init(&listener_mutex, NULL))
+  {
+    pelz_log(LOG_ERR, "Failed to initialize listener mutex.");
+    return 1;
+  }
+  pthread_mutex_lock(&listener_mutex);
+
+  ListenerThreadArgs args;
+
+  args.listener_mutex = &listener_mutex;
+  args.return_value = 0;
+
+  if (pthread_create(&listener_thread, NULL, pelz_listener, (void *) &args))
+  {
+    pelz_log(LOG_ERR, "Unable to start thread to monitor pipe.");
+    pthread_mutex_unlock(&listener_mutex);
+    pthread_mutex_destroy(&listener_mutex);
+    return 1;
+  }
+  pthread_mutex_lock(&listener_mutex);
+  pthread_mutex_unlock(&listener_mutex);
+  pthread_mutex_destroy(&listener_mutex);
+
+  // The only way for args.return_value to be 1 here is if pelz_listener had
+  // some failure in its setup routines, and so is not actually listening.
+  if (args.return_value == 1)
+  {
+    pelz_log(LOG_ERR, "Unable to monitor responses from pelz-service. Please make sure service is running.");
+    return 1;
+  }
+
+  int write_result = write_to_pipe((char *) PELZSERVICEIN, msg);
+
+  if (write_result != 0)
+  {
+    pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
+  }
+  else
+  {
+    pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+  }
+  pthread_join(listener_thread, NULL);
+
+  // This captures either an error from write_to_pipe, or the error
+  // returned by pelz_listener if no response data is provided.
+  return write_result | args.return_value;
 }
 
 int read_from_pipe(char *pipe, char **msg)
