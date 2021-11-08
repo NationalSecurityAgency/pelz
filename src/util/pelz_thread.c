@@ -76,7 +76,7 @@ void *pelz_listener(void *args)
 
   if (event_count == 0)
   {
-    pelz_log(LOG_INFO, "No response received from pelz-server.");
+    pelz_log(LOG_INFO, "No response received from pelz-service.");
     thread_args->return_value = 1;
   }
   else
