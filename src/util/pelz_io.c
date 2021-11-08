@@ -272,6 +272,10 @@ int pelz_send_command(char *msg)
   {
     pelz_log(LOG_INFO, "Unable to connect to the pelz-service. Please make sure service is running.");
   }
+  else
+  {
+    pelz_log(LOG_INFO, "%s", msg);
+  }
   pthread_join(listener_thread, NULL);
 
   // This captures either an error from write_to_pipe, or the error
