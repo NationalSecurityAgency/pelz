@@ -245,6 +245,7 @@ int pelz_send_command(char *msg)
   ListenerThreadArgs args;
 
   args.listener_mutex = &listener_mutex;
+  args.return_value = 0;
 
   if (pthread_create(&listener_thread, NULL, pelz_listener, (void *) &args))
   {
@@ -257,6 +258,14 @@ int pelz_send_command(char *msg)
   pthread_mutex_unlock(&listener_mutex);
   pthread_mutex_destroy(&listener_mutex);
 
+  // The only way for args.return_value to be 1 here is if pelz_listener had
+  // some failure in its setup routines, and so is not actually listening.
+  if (args.return_value == 1)
+  {
+    pelz_log(LOG_ERR, "Unable to monitor responses from pelz-service. Please make sure service is running.");
+    return 1;
+  }
+
   int write_result = write_to_pipe((char *) PELZSERVICEIN, msg);
 
   if (write_result != 0)
@@ -265,7 +274,8 @@ int pelz_send_command(char *msg)
   }
   pthread_join(listener_thread, NULL);
 
-  // Either the write could have failed or the listener could fail
+  // This captures either an error from write_to_pipe, or the error
+  // returned by pelz_listener if no response data is provided.
   return write_result | args.return_value;
 }
 

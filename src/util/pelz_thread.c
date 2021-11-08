@@ -30,8 +30,8 @@ void *pelz_listener(void *args)
   if (file_check((char *) PELZSERVICEOUT))
   {
     pelz_log(LOG_ERR, "Pipe not found");
-    pthread_mutex_unlock(thread_args->listener_mutex);
     thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
     return NULL;
   }
 
@@ -40,8 +40,8 @@ void *pelz_listener(void *args)
   if (fd == -1)
   {
     pelz_log(LOG_ERR, "Error opening pipe for reading");
-    pthread_mutex_unlock(thread_args->listener_mutex);
     thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
     return NULL;
   }
 
@@ -50,8 +50,8 @@ void *pelz_listener(void *args)
   if (poll == -1)
   {
     pelz_log(LOG_ERR, "Unable to create epoll file descriptor.");
-    pthread_mutex_unlock(thread_args->listener_mutex);
     thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
     close(fd);
     return NULL;
   }
@@ -68,8 +68,8 @@ void *pelz_listener(void *args)
     pelz_log(LOG_ERR, "Failed to poll pipe.");
     close(fd);
     close(poll);
-    pthread_mutex_unlock(thread_args->listener_mutex);
     thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
     return NULL;
   }
 
