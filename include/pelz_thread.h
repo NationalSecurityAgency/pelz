@@ -13,7 +13,6 @@ typedef struct
 
 typedef struct
 {
-  char *pipe;
   pthread_mutex_t *listener_mutex;
   int return_value;
 } ListenerThreadArgs;
@@ -50,9 +49,9 @@ void *fifo_thread_process(void *arg);
  * </pre>
  *
  * @param[in,out] args a pointer to a ListenerThreadArgs structure
- *                     containing the pipe to listen on, a mutex to indicate
- *                     (by unlocking) that the listener is ready, and
- *                     an int to hold the result of the function call.
+ *                     containing a mutex to indicate (by unlocking) 
+ *                     that the listener is ready, and an int to hold 
+ *                     the result of the function call.
  *
  * @return none
  */

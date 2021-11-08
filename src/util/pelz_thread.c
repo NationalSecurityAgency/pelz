@@ -18,8 +18,6 @@
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZSERVICEIN "/tmp/pelzServiceIn"
-#define PELZSERVICEOUT "/tmp/pelzServiceOut"
 #define BUFSIZE 1024
 #define MODE 0600
 
@@ -29,14 +27,14 @@ void *pelz_listener(void *args)
 
   thread_args->return_value = 0;
 
-  if (file_check(thread_args->pipe))
+  if (file_check((char *) PELZSERVICEOUT))
   {
     pelz_log(LOG_ERR, "Pipe not found");
     thread_args->return_value = 1;
     return NULL;
   }
 
-  int fd = open(thread_args->pipe, O_RDONLY | O_NONBLOCK);
+  int fd = open((char *) PELZSERVICEOUT, O_RDONLY | O_NONBLOCK);
 
   if (fd == -1)
   {

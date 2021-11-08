@@ -29,7 +29,6 @@
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZSERVICEIN "/tmp/pelzServiceIn"
 #define BUFSIZE 1024
 
 void ocall_malloc(size_t size, char **buf)
@@ -225,11 +224,11 @@ int write_to_pipe(char *pipe, char *msg)
   return 0;
 }
 
-int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg)
+int pelz_send_command(char *msg)
 {
-  if (send_pipe == NULL || receive_pipe == NULL || msg == NULL)
+  if (msg == NULL)
   {
-    pelz_log(LOG_ERR, "All arguments to pelz_send_command must be non-null.");
+    pelz_log(LOG_ERR, "msg for pelz_send_command must be non-null.");
     return 1;
   }
 
@@ -245,7 +244,6 @@ int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg)
 
   ListenerThreadArgs args;
 
-  args.pipe = receive_pipe;
   args.listener_mutex = &listener_mutex;
 
   if (pthread_create(&listener_thread, NULL, pelz_listener, (void *) &args))
@@ -259,7 +257,7 @@ int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg)
   pthread_mutex_unlock(&listener_mutex);
   pthread_mutex_destroy(&listener_mutex);
 
-  int write_result = write_to_pipe(send_pipe, msg);
+  int write_result = write_to_pipe((char *) PELZSERVICEIN, msg);
 
   if (write_result != 0)
   {

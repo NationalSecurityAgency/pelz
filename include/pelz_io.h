@@ -5,6 +5,9 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 
+#define PELZSERVICEIN "/tmp/pelzServiceIn"
+#define PELZSERVICEOUT "/tmp/pelzServiceOut"
+
 typedef enum
 { INVALID, EXIT, UNABLE_RD_F, TPM_UNSEAL_FAIL, SGX_UNSEAL_FAIL, ADD_CERT_FAIL, LOAD_CERT, INVALID_EXT_CERT,
   ADD_PRIV_FAIL, LOAD_PRIV, INVALID_EXT_PRIV, RM_CERT_FAIL, RM_CERT, CERT_TAB_DEST_FAIL, RM_ALL_CERT, RM_KEK_FAIL,
@@ -96,13 +99,11 @@ extern "C"
  * response on receive_pipe.
  * </pre>
  *
- * @param[in] send_pipe    Null-terminated name of the pipe to send the message on
- * @param[in] receive_pipe Null-terminated name of the pipe to receive the response on
  * @param[in] msg          Null-terminated message to send.
  *
  * @return 0 on success, 1 on error
  */
-  int pelz_send_command(char *send_pipe, char *receive_pipe, char *msg);
+  int pelz_send_command(char *msg);
 #ifdef __cplusplus
 }
 #endif
