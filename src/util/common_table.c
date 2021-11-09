@@ -165,15 +165,15 @@ int table_delete(int type, charbuf id)
     {
       table.entries = temp;
     }
+  }
 
-    if (type == KEY)
-    {
-      key_table = table;
-    }
-    else if (type == SERVER)
-    {
-      server_table = table;
-    }
+  if (type == KEY)
+  {
+    key_table = table;
+  }
+  else if (type == SERVER)
+  {
+    server_table = table;
   }
   return OK;
 }
