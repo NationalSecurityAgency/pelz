@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/epoll.h>
 #include <fcntl.h>
 #include <kmyth/formatting_tools.h>
 
@@ -17,10 +18,79 @@
 #include "pelz_enclave.h"
 #include "pelz_enclave_u.h"
 
-#define PELZSERVICEIN "/tmp/pelzServiceIn"
-#define PELZSERVICEOUT "/tmp/pelzServiceOut"
 #define BUFSIZE 1024
 #define MODE 0600
+
+void *pelz_listener(void *args)
+{
+  ListenerThreadArgs *thread_args = (ListenerThreadArgs *) args;
+
+  thread_args->return_value = 0;
+
+  if (file_check((char *) PELZSERVICEOUT))
+  {
+    pelz_log(LOG_ERR, "Pipe not found");
+    thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
+    return NULL;
+  }
+
+  int fd = open((char *) PELZSERVICEOUT, O_RDONLY | O_NONBLOCK);
+
+  if (fd == -1)
+  {
+    pelz_log(LOG_ERR, "Error opening pipe for reading");
+    thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
+    return NULL;
+  }
+
+  int poll = epoll_create1(0);
+
+  if (poll == -1)
+  {
+    pelz_log(LOG_ERR, "Unable to create epoll file descriptor.");
+    thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
+    close(fd);
+    return NULL;
+  }
+
+  char msg[BUFSIZE];
+  struct epoll_event listener;
+  struct epoll_event listener_events[1];
+
+  listener.events = EPOLLIN;
+  listener.data.fd = fd;
+
+  if (epoll_ctl(poll, EPOLL_CTL_ADD, fd, &listener))
+  {
+    pelz_log(LOG_ERR, "Failed to poll pipe.");
+    close(fd);
+    close(poll);
+    thread_args->return_value = 1;
+    pthread_mutex_unlock(thread_args->listener_mutex);
+    return NULL;
+  }
+
+  pthread_mutex_unlock(thread_args->listener_mutex);
+  int event_count = epoll_wait(poll, listener_events, 1, 15000);
+
+  if (event_count == 0)
+  {
+    pelz_log(LOG_INFO, "No response received from pelz-service.");
+    thread_args->return_value = 1;
+  }
+  else
+  {
+    int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
+
+    pelz_log(LOG_INFO, "%.*s", bytes_read, msg);
+  }
+  close(fd);
+  close(poll);
+  return NULL;
+}
 
 void *fifo_thread_process(void *arg)
 {
@@ -32,9 +102,9 @@ void *fifo_thread_process(void *arg)
   size_t num_tokens = 0;
   int ret = 0;
 
-  const char *resp_str[20] =
+  const char *resp_str[21] =
     { "Pipe command invalid", "Exit pelz-service", "Unable to read file", "TPM unseal failed", "SGX unseal failed",
-    "Failure to add cert", "Load cert", "Invalid extention for load cert call", "Load private call not finished",
+    "Failure to add cert", "Load cert", "Invalid extention for load cert call", "Failure to add private", "Load private",
     "Invalid extention for load private call", "Failure to remove cert", "Remove cert", "Server Table Destroy Failure",
     "All certs removed", "Failure to remove key", "Removed key", "Key Table Destroy Failure", "Key Table Init Failure",
     "All keys removed", "Charbuf creation error."

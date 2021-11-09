@@ -94,13 +94,35 @@ int main(int argc, char **argv)
   if (ret)
   {
     pelz_log(LOG_ERR, "Unseal Table Init Failure");
+    sgx_destroy_enclave(eid);
+    return (1);
+  }
+
+  private_pkey_init(eid, &ret);
+  if (ret == 1)
+  {
+    pelz_log(LOG_ERR, "PKEY Init Failure");
+    kmyth_unsealed_data_table_cleanup(eid, &ret);
+    sgx_destroy_enclave(eid);
     return (1);
   }
 
   pelz_service((const int) max_requests);
+
+  pelz_log(LOG_INFO, "Shutdown Clean-up Start");
+  private_pkey_free(eid, &ret);
+  if (ret == 1)
+  {
+    pelz_log(LOG_ERR, "PKEY Free Failure");
+  }
+  pelz_log(LOG_INFO, "Private Pkey Freed");
   kmyth_unsealed_data_table_cleanup(eid, &ret);
+  pelz_log(LOG_INFO, "Kmyth Unsealed Data Table Cleanup Complete");
   table_destroy(eid, &ret, SERVER);
+  pelz_log(LOG_INFO, "Server Table Destroy Complete");
   table_destroy(eid, &ret, KEY);
+  pelz_log(LOG_INFO, "Key Table Destroy Complete");
   sgx_destroy_enclave(eid);
+  pelz_log(LOG_INFO, "SGX Enclave Destroyed");
   return (0);
 }

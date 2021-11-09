@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/bn.h>
+#include <openssl/err.h>
+
 #include <pelz_io.h>
 #include <common_table.h>
 #include <server_table.h>
@@ -17,6 +23,9 @@
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 #include "kmyth_enclave_trusted.h"
+#include "ec_key_cert_unmarshal.h"
+
+EVP_PKEY *private_pkey;
 
 int server_table_add(charbuf server_id, uint64_t handle)
 {
@@ -106,4 +115,44 @@ int server_table_add(charbuf server_id, uint64_t handle)
     (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Cert Added");
   return OK;
+}
+
+int private_pkey_init(void)
+{
+  private_pkey = EVP_PKEY_new();
+  if (private_pkey == NULL)
+  {
+    pelz_log(LOG_ERR, "Error allocating EVP_PKEY");
+    return (1);
+  }
+  return (0);
+}
+
+int private_pkey_free(void)
+{
+  EVP_PKEY_free(private_pkey);
+  return (0);
+}
+
+int private_pkey_add(uint64_t handle)
+{
+  uint8_t *data;
+  size_t data_size = 0;
+
+  data_size = retrieve_from_unseal_table(handle, &data);
+  if (data_size == 0)
+  {
+    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    return (1);
+  }
+
+  if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) == 1)
+  {
+    pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
+    free(data);
+    return (1);
+  }
+
+  free(data);
+  return (0);
 }

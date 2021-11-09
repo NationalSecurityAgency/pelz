@@ -70,7 +70,7 @@ public class PelzCryptoService implements CryptoService {
 
   private String keyLocation = null;
   private String keyManager = null;
-  private SecureRandom sr = null;
+  private SecureRandom sr = new SecureRandom();
 
   @Override
   public void init(Map<String,String> conf) throws CryptoException {
@@ -79,7 +79,6 @@ public class PelzCryptoService implements CryptoService {
     String keyMgr = "pelz";
     Objects.requireNonNull(keyLocation,
         "Config property instance.crypto.opts.key.uri is required.");
-    this.sr = CryptoUtils.newSha1SecureRandom();
     this.keyManager = keyMgr;
     this.keyLocation = keyLocation;
     if (!PelzKeyUtils.initSocket()) {

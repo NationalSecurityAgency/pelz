@@ -5,10 +5,13 @@
 #include "key_table.h"
 #include "pelz_request_handler.h"
 
+#define PELZSERVICEIN "/tmp/pelzServiceIn"
+#define PELZSERVICEOUT "/tmp/pelzServiceOut"
+
 typedef enum
-{ INVALID, EXIT, UNABLE_RD_F, TPM_UNSEAL_FAIL, SGX_UNSEAL_FAIL, ADD_CERT_FAIL, LOAD_CERT, INVALID_EXT_CERT, LOAD_PRIV_NOT_FIN,
-  INVALID_EXT_PRIV, RM_CERT_FAIL, RM_CERT, CERT_TAB_DEST_FAIL, RM_ALL_CERT, RM_KEK_FAIL, RM_KEK,
-  KEK_TAB_DEST_FAIL, KEK_TAB_INIT_FAIL, RM_KEK_ALL, ERR_CHARBUF
+{ INVALID, EXIT, UNABLE_RD_F, TPM_UNSEAL_FAIL, SGX_UNSEAL_FAIL, ADD_CERT_FAIL, LOAD_CERT, INVALID_EXT_CERT,
+  ADD_PRIV_FAIL, LOAD_PRIV, INVALID_EXT_PRIV, RM_CERT_FAIL, RM_CERT, CERT_TAB_DEST_FAIL, RM_ALL_CERT, RM_KEK_FAIL,
+  RM_KEK, KEK_TAB_DEST_FAIL, KEK_TAB_INIT_FAIL, RM_KEK_ALL, ERR_CHARBUF
 } ParseResponseStatus;
 
 #ifdef __cplusplus
@@ -89,6 +92,18 @@ extern "C"
  * @return ParseResponseStatus status message indicating the outcome of parse
  */
   ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
+
+/**
+ * <pre>
+ * Send the specified command msg over send_pipe and waits to receive a
+ * response on receive_pipe.
+ * </pre>
+ *
+ * @param[in] msg          Null-terminated message to send.
+ *
+ * @return 0 on success, 1 on error
+ */
+  int pelz_send_command(char *msg);
 #ifdef __cplusplus
 }
 #endif
