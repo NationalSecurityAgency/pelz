@@ -154,6 +154,7 @@ int server_table_add(uint64_t handle)
   }
 
   memcpy(tmp_entry.server_id.chars, tmp_id, tmp_entry.server_id.len);
+  print_server_info(&ret, tmp_entry.server_id.len, tmp_entry.server_id.chars);
   if (!server_table_lookup(tmp_entry.server_id, &tmpcert))
   {
     if (X509_cmp(tmpcert, tmp_entry.cert) == 0)
