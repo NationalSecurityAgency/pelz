@@ -13,7 +13,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
   charbuf key;
   int index;
 
-  if (table_lookup(KEY, key_id, &index) == 1)
+  if (table_lookup(KEY, key_id, &index))
   {
     if (key_table_add(key_id, &key))
     {

@@ -51,14 +51,14 @@ extern "C"
  * </pre>
  *
  * @param[in] type The table type that used for the lookup
- * @param[in] id.chars The identifier assumed to be null terminated
+ * @param[in] id.chars The table value identifier
  * @param[in] id.len Length of identifier
  * @param[out] index The index location of the lookup value
  * @param max_num_entries The max number of entries for the table that is default set at 100000
  *
  * @return 0 on success, 1 on failure
  */
-  int table_lookup(int type, charbuf id, int *index);
+  int table_lookup(TableType type, charbuf id, int *index);
 
 #ifdef __cplusplus
 }

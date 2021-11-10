@@ -30,7 +30,7 @@ Table server_table = {
 };
 
 //Destroy server table
-int table_destroy(int type)
+int table_destroy(TableType type)
 {
   Table table;
 
@@ -89,7 +89,7 @@ int table_destroy(int type)
   return (0);
 }
 
-int table_delete(int type, charbuf id)
+int table_delete(TableType type, charbuf id)
 {
   Table table;
   int index = 0;
@@ -178,7 +178,7 @@ int table_delete(int type, charbuf id)
   return OK;
 }
 
-int table_lookup(int type, charbuf id, int *index)
+int table_lookup(TableType type, charbuf id, int *index)
 {
   Table table;
 

@@ -21,7 +21,7 @@ enclave {
  *
  * @return 0 on success, 1 on error
  */
-public int table_destroy(int type);
+public int table_destroy(TableType type);
 
 /**
  * <pre>
@@ -29,19 +29,19 @@ public int table_destroy(int type);
  * <pre>
  *
  * @param[in] type The table type that the id and value needs to be deleted from
- * @param[in] id.chars Identifier assumed to be null terminated
+ * @param[in] id.chars Table value identifier 
  * @param[in] id.len The length of the identifier
  *
  * @return 0 on success, 1 on error
  */
-public int table_delete(int type, charbuf id);
+public int table_delete(TableType type, charbuf id);
 
 /**
  * <pre>
  * This function adds value in hash table based on location in server_id.
  * </pre>
  *
- * @param[in] server_id.chars Server identifier assumed to be null terminated
+ * @param[in] server_id.chars Server identifier 
  * @param[in] server_id.len The length of the server identifier
  * @param[in] handle The handle value for the cert data location in the kmyth unseal data table
  * @param[in] server_table The server table that the new cert needs to be added to

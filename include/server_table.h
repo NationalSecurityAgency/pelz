@@ -13,7 +13,6 @@
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
 #include <openssl/bn.h>
-#include <openssl/err.h>
 
 #include "charbuf.h"
 #include "common_table.h"

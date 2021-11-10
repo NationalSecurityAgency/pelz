@@ -21,7 +21,7 @@ extern "C"
  * This function to add values in hash table based on location in key_id.
  * </pre>
  *
- * @param[in] key_id.chars Key identifier assumed to be null terminated
+ * @param[in] key_id.chars Key identifier
  * @param[in] key_id.len The length of the key identifier
  * @param[out] key.chars The key value
  * @param[out] key.len The length of the key
