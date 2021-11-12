@@ -18,7 +18,6 @@
 #include "pelz_io.h"
 #include "common_table.h"
 #include "key_table.h"
-#include "server_table.h"
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
 #include "pelz_key_loaders.h"

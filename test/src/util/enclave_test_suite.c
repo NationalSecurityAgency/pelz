@@ -15,7 +15,6 @@
 #include <pelz_log.h>
 #include <common_table.h>
 #include <key_table.h>
-#include <server_table.h>
 #include <pelz_request_handler.h>
 
 #include "sgx_urts.h"

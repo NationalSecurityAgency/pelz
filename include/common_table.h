@@ -1,10 +1,10 @@
 /*
- * @file server_table.h
- * @brief Provides hash table for server cert lookup.
+ * @file common_table.h
+ * @brief Pr
  */
 
-#ifndef INCLUDE_SERVER_TABLE_H_
-#define INCLUDE_SERVER_TABLE_H_
+#ifndef INCLUDE_COMMON_TABLE_H_
+#define INCLUDE_COMMON_TABLE_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -63,4 +63,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-#endif                          /* INCLUDE_SERVER_TABLE_H_ */
+#endif                          /* INCLUDE_COMMON_TABLE_H_ */

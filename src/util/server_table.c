@@ -13,7 +13,6 @@
 
 #include <pelz_io.h>
 #include <common_table.h>
-#include <server_table.h>
 #include <util.h>
 #include <pelz_request_handler.h>
 #include <charbuf.h>
