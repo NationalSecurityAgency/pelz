@@ -125,6 +125,7 @@ App_Include_Paths += -Isgx
 App_Include_Paths += -I$(SGX_SDK)/include 
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/wrapper
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/ocall
+App_Include_Paths += -Ikmyth/sgx/untrusted/include/util
 App_Include_Paths += -Ikmyth/sgx/common/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) 
@@ -192,6 +193,7 @@ Enclave_Include_Paths += -I$(SGX_SSL_INCLUDE_PATH)
 Enclave_Include_Paths += -Isgx 
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/util
+Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/wrapper
 Enclave_Include_Paths += -Ikmyth/sgx/common/include
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) 
@@ -278,13 +280,33 @@ endif
 
 ######## Common Objects ########
 
+sgx/ec_key_cert_marshal.o: kmyth/sgx/common/src/ec_key_cert_marshal.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/ecdh_util.o: kmyth/sgx/common/src/ecdh_util.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
 ######## App Objects ########
 
 sgx/log_ocall.o: kmyth/sgx/untrusted/src/ocall/log_ocall.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/memory_ocall.o: kmyth/sgx/untrusted/src/ocall/memory_ocall.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/ecdh_ocall.o: kmyth/sgx/untrusted/src/ocall/ecdh_ocall.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/ecdh_dummy_server.o: kmyth/sgx/untrusted/src/util/ecdh_dummy_server.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -307,6 +329,11 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Kmyth_Files) \
 			   sgx/pelz_enclave_u.o \
 			   sgx/ec_key_cert_unmarshal.o \
+			   sgx/log_ocall.o \
+			   sgx/ecdh_ocall.o \
+			   sgx/ecdh_util.o \
+			   sgx/ecdh_dummy_server.o \
+			   sgx/memory_ocall.o \
 			   sgx/log_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
@@ -326,6 +353,11 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 $(App_Cpp_Kmyth_Files) \
 			 sgx/pelz_enclave_u.o \
 			 sgx/ec_key_cert_unmarshal.o \
+			 sgx/log_ocall.o \
+			 sgx/ecdh_ocall.o \
+                         sgx/ecdh_util.o \
+                         sgx/ecdh_dummy_server.o \
+                         sgx/memory_ocall.o \
 			 sgx/log_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
@@ -343,6 +375,11 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      $(App_Cpp_Kmyth_Files) \
 		      sgx/pelz_enclave_u.o \
 		      sgx/ec_key_cert_unmarshal.o \
+		      sgx/log_ocall.o \
+		      sgx/ecdh_ocall.o \
+                      sgx/ecdh_util.o \
+                      sgx/ecdh_dummy_server.o \
+                      sgx/memory_ocall.o \
 		      sgx/log_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
@@ -385,6 +422,10 @@ sgx/kmyth_enclave_retrieve_key.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_retr
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
+sgx/sgx_retrieve_key_impl.o: kmyth/sgx/trusted/src/wrapper/sgx_retrieve_key_impl.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/key_table.o: src/util/key_table.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <=  $<"
@@ -420,7 +461,10 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 	     	     sgx/kmyth_enclave_unseal.o \
 		     sgx/kmyth_enclave_memory_util.o \
 		     sgx/kmyth_enclave_retrieve_key.o \
-		     sgx/ec_key_cert_unmarshal.o
+		     sgx/ec_key_cert_unmarshal.o \
+		     sgx/ec_key_cert_marshal.o \
+		     sgx/ecdh_util.o \
+		     sgx/sgx_retrieve_key_impl.o 
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
