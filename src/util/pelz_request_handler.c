@@ -1,6 +1,7 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 #include "pelz_log.h"
+#include "common_table.h"
 #include "key_table.h"
 #include "aes_keywrap_3394nopad.h"
 
@@ -10,14 +11,25 @@
 RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
 {
   charbuf key;
+  int index;
 
-  if (key_table_lookup(key_id, &key))
+  if (table_lookup(KEY, key_id, &index))
   {
     if (key_table_add(key_id, &key))
     {
       pelz_log(LOG_ERR, "Key not added.");
       return KEK_LOAD_ERROR;
     }
+  }
+  else
+  {
+    key = new_charbuf(key_table.entries[index].value.key.len);
+    if (key_table.entries[index].value.key.len != key.len)
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return CHARBUF_ERROR;
+    }
+    memcpy(key.chars, key_table.entries[index].value.key.chars, key.len);
   }
 
   //Encrypt or Decrypt data per request_type

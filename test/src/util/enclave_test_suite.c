@@ -13,8 +13,8 @@
 
 #include <charbuf.h>
 #include <pelz_log.h>
+#include <common_table.h>
 #include <key_table.h>
-#include <server_table.h>
 #include <pelz_request_handler.h>
 
 #include "sgx_urts.h"
@@ -25,7 +25,7 @@
 int enclave_suite_add_tests(CU_pSuite suite)
 {
 
-  if (NULL == CU_add_test(suite, "Test Key Table Initialization/Destruction", test_table_initDestroy))
+  if (NULL == CU_add_test(suite, "Test Key Table Destruction", test_table_destroy))
   {
     return (1);
   }
@@ -44,16 +44,14 @@ int enclave_suite_add_tests(CU_pSuite suite)
   return (0);
 }
 
-void test_table_initDestroy(void)
+void test_table_destroy(void)
 {
   int ret;
 
-  pelz_log(LOG_DEBUG, "Test Key Table Initialize and Destroy Functions Start");
-  key_table_init(eid, &ret);
+  pelz_log(LOG_DEBUG, "Test Key Table Destroy Function Start");
+  table_destroy(eid, &ret, KEY);
   CU_ASSERT(ret == 0);
-  key_table_destroy(eid, &ret);
-  CU_ASSERT(ret == 0);
-  pelz_log(LOG_DEBUG, "Test Key Table Initialize and Destroy Functions Finish");
+  pelz_log(LOG_DEBUG, "Test Key Table Destroy Function Finish");
 }
 
 void test_table_request(void)
@@ -74,8 +72,6 @@ void test_table_request(void)
   memcpy(data_in.chars, "abcdefghijklmnopqrstuvwxyz012345", data_in.len);
 
   pelz_log(LOG_DEBUG, "Test Request Function Start");
-  key_table_init(eid, &ret);
-  CU_ASSERT(ret == 0);
 
   //Initial check if request encrypts and decrypts keys
   for (int i = 0; i < 3; i++)
@@ -143,7 +139,7 @@ void test_table_request(void)
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
 
-  key_table_destroy(eid, &ret);
+  table_destroy(eid, &ret, KEY);
   CU_ASSERT(ret == 0);
   pelz_log(LOG_DEBUG, "Test Request Function Finish");
 }
@@ -157,7 +153,6 @@ void test_table_requestDelete(void)
   charbuf data_in;
   charbuf data;
   charbuf output;
-
   const char *prefix = "file:";
 
   const char *valid_id[6] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt",
@@ -169,9 +164,7 @@ void test_table_requestDelete(void)
   data_in = new_charbuf(32);
   memcpy(data_in.chars, "abcdefghijklmnopqrstuvwxyz012345", data_in.len);
 
-  pelz_log(LOG_DEBUG, "Test Request and Delet Functions Start");
-  key_table_init(eid, &ret);
-  CU_ASSERT(ret == 0);
+  pelz_log(LOG_DEBUG, "Test Request and Delete Functions Start");
 
   //Initial load of keys into the key table
   for (int i = 0; i < 6; i++)
@@ -191,42 +184,44 @@ void test_table_requestDelete(void)
     secure_free_charbuf(&output);
   }
 
+  pelz_log(LOG_DEBUG, "Initial load of keys finish and start testing of delete function");
+
   //Testing the delete function
   tmp = copy_CWD_to_id(prefix, valid_id[3]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 0);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[5]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 0);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
-  key_table_delete(eid, &ret, tmp);
+  table_delete(eid, &ret, KEY, tmp);
   CU_ASSERT(ret == 0);
   free_charbuf(&tmp);
 
   //Testing that if the delete function does not find key_id then does not delete for valid files and non-valid files
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
-  key_table_delete(eid, &ret, tmp);
-  CU_ASSERT(ret == 1);
+  table_delete(eid, &ret, KEY, tmp);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
-  key_table_delete(eid, &ret, tmp);
-  CU_ASSERT(ret == 1);
+  table_delete(eid, &ret, KEY, tmp);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("adaj;ldkjidka;dfkjai"));
   memcpy(tmp.chars, "adaj;ldkjidka;dfkjai", tmp.len);
-  key_table_delete(eid, &ret, tmp);
-  CU_ASSERT(ret == 1);
+  table_delete(eid, &ret, KEY, tmp);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[5]);
-  key_table_delete(eid, &ret, tmp);
-  CU_ASSERT(ret == 1);
+  table_delete(eid, &ret, KEY, tmp);
+  CU_ASSERT(ret == NO_MATCH);
   free_charbuf(&tmp);
 
   //Request will reload keys into the key table
@@ -247,7 +242,7 @@ void test_table_requestDelete(void)
     secure_free_charbuf(&output);
   }
 
-  key_table_destroy(eid, &ret);
+  table_destroy(eid, &ret, KEY);
   CU_ASSERT(ret == 0);
   pelz_log(LOG_DEBUG, "Test Request and Delete Functions Finish");
 }
@@ -257,7 +252,7 @@ void test_server_table_destroy(void)
   int ret;
 
   pelz_log(LOG_DEBUG, "Test Server Table Destroy Function Start");
-  server_table_destroy(eid, &ret);
+  table_destroy(eid, &ret, SERVER);
   CU_ASSERT(ret == 0);
   pelz_log(LOG_DEBUG, "Test Server Table Destroy Function Finish");
 }
