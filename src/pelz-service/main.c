@@ -5,8 +5,8 @@
 #include <getopt.h>
 #include <stdlib.h>
 
+#include "common_table.h"
 #include "key_table.h"
-#include "server_table.h"
 #include "pelz_service.h"
 #include "pelz_log.h"
 
@@ -89,18 +89,11 @@ int main(int argc, char **argv)
   int ret;
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
-  key_table_init(eid, &ret);
-  if (ret)
-  {
-    pelz_log(LOG_ERR, "Key Table Init Failure");
-    return (1);
-  }
-
   kmyth_unsealed_data_table_initialize(eid, &ret);
   if (ret)
   {
     pelz_log(LOG_ERR, "Unseal Table Init Failure");
-    key_table_destroy(eid, &ret);
+    sgx_destroy_enclave(eid);
     return (1);
   }
 
@@ -109,20 +102,26 @@ int main(int argc, char **argv)
   {
     pelz_log(LOG_ERR, "PKEY Init Failure");
     kmyth_unsealed_data_table_cleanup(eid, &ret);
-    key_table_destroy(eid, &ret);
+    sgx_destroy_enclave(eid);
     return (1);
   }
 
   pelz_service((const int) max_requests);
 
+  pelz_log(LOG_INFO, "Shutdown Clean-up Start");
   private_pkey_free(eid, &ret);
   if (ret == 1)
   {
     pelz_log(LOG_ERR, "PKEY Free Failure");
   }
+  pelz_log(LOG_INFO, "Private Pkey Freed");
   kmyth_unsealed_data_table_cleanup(eid, &ret);
-  server_table_destroy(eid, &ret);
-  key_table_destroy(eid, &ret);
+  pelz_log(LOG_INFO, "Kmyth Unsealed Data Table Cleanup Complete");
+  table_destroy(eid, &ret, SERVER);
+  pelz_log(LOG_INFO, "Server Table Destroy Complete");
+  table_destroy(eid, &ret, KEY);
+  pelz_log(LOG_INFO, "Key Table Destroy Complete");
   sgx_destroy_enclave(eid);
+  pelz_log(LOG_INFO, "SGX Enclave Destroyed");
   return (0);
 }

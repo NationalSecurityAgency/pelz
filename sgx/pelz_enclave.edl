@@ -4,80 +4,43 @@ enclave {
 	from "kmyth_enclave.edl" import *;
         include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
+	include "common_table.h"
 	include "key_table.h"
-	include "server_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
         include "util.h"
 	trusted {
-/**
- * <pre>
- * This function initializes a key table for lookup.
- * <pre>
- *
- * @param[in] key_table The pointer for key table to be initialized
- * @param[out] key_table The initialized key table
- *
- * @return 0 on success, 1 on error
- */
-public int key_table_init(void);
 
 /**
  * <pre>
- * This function destroys the key table.
+ * This function destroys the table specified by type.
  * <pre>
  *
- * @param[in] key_table The key table to be destroyed
- *
- * @return 0 on success, 1 on error
- */
-public int key_table_destroy(void);
-
-/**
- * <pre>
- * This function to delete values in hash table based on location in key_id.
- * <pre>
- *
- * @param[in] key_id.chars Key identifier assumed to be null terminated
- * @param[in] key_id.len The length of the key identifier
- * @param[in] key_table The key table that the key needs to be deleted from
- * @param[out] key_table The key table without the deleted key
+ * @param[in] type The type of table to be destroyed (ex: key_table or server_table)
  *
  * @return 0 on success, 1 on error
  */
-public int key_table_delete(charbuf key_id);
+public int table_destroy(TableType type);
 
 /**
  * <pre>
- * This function destroys the server table.
+ * This function deletes a value in hash table based on location in id.
  * <pre>
  *
- * @param[in] server_table The server table to be destroyed
+ * @param[in] type The table type that the id and value needs to be deleted from
+ * @param[in] id.chars Table value identifier 
+ * @param[in] id.len The length of the identifier
  *
  * @return 0 on success, 1 on error
  */
-public int server_table_destroy(void);
+public int table_delete(TableType type, charbuf id);
 
 /**
  * <pre>
- * This function to delete values in hash table based on location in key_id.
- * <pre>
- *
- * @param[in] server_id.chars Server identifier assumed to be null terminated
- * @param[in] server_id.len The length of the server identifier
- * @param[in] server_table The server table that the cert needs to be deleted from
- * @param[out] server_table The server table without the deleted cert
- *
- * @return 0 on success, 1 on error
- */
-public int server_table_delete(charbuf server_id);
-
-/**
- * <pre>
- * This function to add values in hash table based on location in server_id.
+ * This function adds value in hash table based on location in server_id.
  * </pre>
  *
- * @param[in] server_id.chars Server identifier assumed to be null terminated
+ * @param[in] server_id.chars Server identifier 
  * @param[in] server_id.len The length of the server identifier
  * @param[in] handle The handle value for the cert data location in the kmyth unseal data table
  * @param[in] server_table The server table that the new cert needs to be added to
@@ -126,7 +89,7 @@ public int private_pkey_add(uint64_t handle);
 
 /**
  * <pre>
- * This function implements the request handling by looking if Pelz already has
+ * This function implements the request handling by looking if pelz already has
  * the key and if not then adding the key to the key table. Along with the
  * key lookup, this function checks the request type then based on the request
  * type it calls the wrap or unwrap functions to return requested key value.

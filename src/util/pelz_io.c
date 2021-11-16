@@ -16,8 +16,8 @@
 #include "charbuf.h"
 #include "pelz_log.h"
 #include "pelz_io.h"
+#include "common_table.h"
 #include "key_table.h"
-#include "server_table.h"
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
 #include "pelz_key_loaders.h"
@@ -684,15 +684,15 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ERR_CHARBUF;
     }
     memcpy(server_id.chars, tokens[2], server_id.len);
-    server_table_delete(eid, &ret, server_id);
-    if (ret == 1)
+    table_delete(eid, &ret, SERVER, server_id);
+    if (ret == NO_MATCH)
     {
       pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
       pelz_log(LOG_ERR, "Server ID not found");
       free_charbuf(&server_id);
       return RM_CERT_FAIL;
     }
-    else if (ret == 2)
+    else if (ret == ERR_REALLOC)
     {
       pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
       pelz_log(LOG_ERR, "Server Table reallocation failure");
@@ -706,7 +706,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return RM_CERT;
     }
   case 5:
-    server_table_destroy(eid, &ret);
+    table_destroy(eid, &ret, SERVER);
     if (ret)
     {
       pelz_log(LOG_ERR, "Server Table Destroy Failure");
@@ -726,7 +726,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ERR_CHARBUF;
     }
     memcpy(key_id.chars, tokens[2], key_id.len);
-    key_table_delete(eid, &ret, key_id);
+    table_delete(eid, &ret, KEY, key_id);
     if (ret == 1)
     {
       pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
@@ -740,21 +740,13 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return RM_KEK;
     }
   case 7:
-    key_table_destroy(eid, &ret);
+    table_destroy(eid, &ret, KEY);
     if (ret)
     {
       pelz_log(LOG_ERR, "Key Table Destroy Failure");
       return KEK_TAB_DEST_FAIL;
     }
-    pelz_log(LOG_INFO, "Key Table Destroyed");
-
-    key_table_init(eid, &ret);
-    if (ret)
-    {
-      pelz_log(LOG_ERR, "Key Table Init Failure");
-      return KEK_TAB_INIT_FAIL;
-    }
-    pelz_log(LOG_INFO, "Key Table Re-Initialized");
+    pelz_log(LOG_INFO, "Key Table Destroyed and Re-Initialize");
     return RM_KEK_ALL;
   default:
     pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);
