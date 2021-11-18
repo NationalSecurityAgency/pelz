@@ -17,7 +17,6 @@
 #include "pelz_log.h"
 #include "pelz_io.h"
 #include "common_table.h"
-#include "key_table.h"
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
 #include "pelz_key_loaders.h"
@@ -92,9 +91,11 @@ int get_file_ext(charbuf buf, int *ext)
   return 0;
 }
 
-int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key)
+int key_load(charbuf key_id)
 {
+  charbuf key;
   int return_value = 1;
+  TableResponseStatus status;
   UriUriA key_id_data;
 
   const char *error_pos = NULL;
@@ -103,15 +104,15 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   // URI parser expects a null-terminated string to parse,
   // so we embed the key_id in a 1-longer array and
   // ensure it is null terminated.
-  key_uri_to_parse = (char *) calloc(key_id_len + 1, 1);
+  key_uri_to_parse = (char *) calloc(key_id.len + 1, 1);
   if (key_uri_to_parse == NULL)
   {
     return return_value;
   }
-  memcpy(key_uri_to_parse, key_id, key_id_len);
+  memcpy(key_uri_to_parse, key_id.chars, key_id.len);
 
   pelz_log(LOG_DEBUG, "Starting Key Load");
-  pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id_len, key_id);
+  pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id.len, key_id.chars);
   if (uriParseSingleUriA(&key_id_data, (const char *) key_uri_to_parse, &error_pos) != URI_SUCCESS
     || key_id_data.scheme.first == NULL || key_id_data.scheme.afterLast == NULL || error_pos != NULL)
   {
@@ -119,6 +120,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
     free(key_uri_to_parse);
     return (1);
   }
+  pelz_log(LOG_DEBUG, "URI Parse Success");
 
   URI_SCHEME scheme = get_uri_scheme(key_id_data);
 
@@ -126,6 +128,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   {
   case FILE_URI:
     {
+      pelz_log(LOG_DEBUG, "File Scheme Start");
       char *filename = get_filename_from_key_id(key_uri_to_parse);
 
       if (filename == NULL)
@@ -134,18 +137,62 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
         break;
       }
 
-      if (pelz_load_key_from_file(filename, key_len, key))
+      if (pelz_load_key_from_file(filename, &key))
       {
         pelz_log(LOG_ERR, "Failed to read key file %s", filename);
         free(filename);
         break;
       }
+      pelz_log(LOG_DEBUG, "Key loaded from file");
       free(filename);
-      return_value = 0;
+      key_table_add_key(eid, &status, key_id, key);
+      pelz_log(LOG_DEBUG, "Add Key Return Value: %lu", status);
+      pelz_log(LOG_DEBUG, "Key Length: %d", key.len);
+      pelz_log(LOG_DEBUG, "Key: %.*s", key.len, key.chars);
+      secure_free_charbuf(&key);
+      switch (status)
+      {
+      case ERR:
+        {
+          pelz_log(LOG_ERR, "Failed to load key to table");
+          return_value = 1;
+          break;
+        }
+      case ERR_MEM:
+        {
+          pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+          return_value = 1;
+          break;
+        }
+      case NO_MATCH:
+        {
+          pelz_log(LOG_ERR, "Key entry and Key ID lookup do not match.");
+          return_value = 1;
+          break;
+        }
+      case ERR_REALLOC:
+        {
+          pelz_log(LOG_ERR, "Key List Space Reallocation Error");
+          return_value = 1;
+          break;
+        }
+      case OK:
+        {
+          pelz_log(LOG_DEBUG, "Key added to table.");
+          return_value = 0;
+          break;
+        }
+      default:
+        {
+          return_value = 1;
+          break;
+        }
+      }
       break;
     }
   case PELZ_URI:
     {
+      pelz_log(LOG_DEBUG, "Pelz Scheme Start");
       charbuf *common_name = NULL;
       int port;
       charbuf *key_id = NULL;
@@ -167,6 +214,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
       pelz_log(LOG_ERR, "Scheme not supported");
     }
   }
+  pelz_log(LOG_DEBUG, "Scheme Switch Complete");
   free(key_uri_to_parse);
   uriFreeUriMembersA(&key_id_data);
   return return_value;
@@ -436,7 +484,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
 
 ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 {
-  int ret;
+  TableResponseStatus ret;
   char *path_ext = NULL;
   charbuf key_id;
   charbuf server_id;

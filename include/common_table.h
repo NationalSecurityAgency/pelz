@@ -39,7 +39,7 @@ typedef enum
 { KEY, SERVER } TableType;
 
 typedef enum
-{ OK, ERR_REALLOC, ERR_BUF, ERR_X509, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+{ OK, ERR, ERR_MEM, ERR_REALLOC, ERR_BUF, ERR_X509, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } TableResponseStatus;
 
 extern Table key_table;
 
@@ -65,7 +65,7 @@ extern "C"
  *
  * @return 0 on success, 1 on failure
  */
-  int table_lookup(TableType type, charbuf id, int *index);
+  TableResponseStatus table_lookup(TableType type, charbuf id, int *index);
 
 #ifdef __cplusplus
 }

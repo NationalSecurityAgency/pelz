@@ -5,7 +5,6 @@ enclave {
         include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "common_table.h"
-	include "key_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
         include "util.h"
@@ -20,7 +19,7 @@ enclave {
  *
  * @return 0 on success, 1 on error
  */
-public int table_destroy(TableType type);
+public TableResponseStatus table_destroy(TableType type);
 
 /**
  * <pre>
@@ -33,7 +32,7 @@ public int table_destroy(TableType type);
  *
  * @return 0 on success, 1 on error
  */
-public int table_delete(TableType type, charbuf id);
+public TableResponseStatus table_delete(TableType type, charbuf id);
 
 /**
  * <pre>
@@ -46,7 +45,7 @@ public int table_delete(TableType type, charbuf id);
  *
  * @return 0 on success, 1 on error
  */
-public int server_table_add(uint64_t handle);
+public TableResponseStatus server_table_add(uint64_t handle);
 
 
 /**
@@ -59,7 +58,7 @@ public int server_table_add(uint64_t handle);
  *
  * @return 0 on success, 1 on error
  */
-public int private_pkey_init(void);
+public TableResponseStatus private_pkey_init(void);
 
 /**
  * <pre>
@@ -70,7 +69,7 @@ public int private_pkey_init(void);
  *
  * @return 0 on success, 1 on error
  */
-public int private_pkey_free(void);
+public TableResponseStatus private_pkey_free(void);
 
 /**
  * <pre>
@@ -83,7 +82,41 @@ public int private_pkey_free(void);
  *
  * @return 0 on success, 1 on error
  */
-public int private_pkey_add(uint64_t handle);
+public TableResponseStatus private_pkey_add(uint64_t handle);
+
+/**
+ * <pre>
+ * This function to add values in hash table based on location in key_id.
+ * </pre>
+ *
+ * @param[in] key_id.chars Key identifier
+ * @param[in] key_id.len The length of the key identifier
+ * @param[out] key.chars The key value
+ * @param[out] key.len The length of the key
+ * @param[in] key_table The key table that the new key needs to be added to
+ * @param[out] key_table The key table with the new added key
+ *
+ * @return 0 on success, 1 on error
+ */
+public TableResponseStatus key_table_add_key(charbuf key_id, charbuf key);
+
+/**
+ * <pre>
+ * This function to add values in hash table based on location in key_id.
+ * </pre>
+ *
+ * @param[in] key_id.chars Key identifier
+ * @param[in] key_id.len The length of the key identifier
+ * @param[in] server.chars Server identifier
+ * @param[in] server.len The length of the server identifier
+ * @param[in] port.chars Port on server to use
+ * @param[in] port.len The length of the port valule
+ * @param[in] key_table The key table that the new key needs to be added to
+ * @param[out] key_table The key table with the new added key
+ *
+ * @return 0 on success, 1 on error
+ */
+public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server, charbuf port);
 
 /**
  * <pre>
@@ -110,16 +143,12 @@ public RequestResponseStatus pelz_request_handler(RequestType request_type, char
  * Load key from location stated by Key ID
  * <pre>
  *
- * @param[in] key_id_len   the length of the key identifier
- * @param[in] key_id       a pointer to the key identifier
- * @param[out] key_len     the length of the loaded key
- * @param[out] key         a pointer to a pointer to the key, will be
- *                         allocated within key_load
+ * @param[in] key_id.len     the length of the key identifier
+ * @param[in] key_id.chars   the key identifier
  *
  * @return 0 on success, 1 on error
  */
-int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
-             [out] size_t* key_len, [user_check] unsigned char** key);
+int key_load(charbuf key_id);
 
 int print_server_info(size_t len, [in, size=len] unsigned char * id);
 

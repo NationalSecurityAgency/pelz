@@ -11,13 +11,13 @@ extern "C"
  *        and output as the key.
  *
  * @param[in]     filename  The filename in a null-terminated string
- * @param[in,out] key_len   A pointer to a size_t to hold the key length
- * @param[in,out] key       A pointer to a location to allocate memory for 
+ * @param[in,out] key.len   A pointer to a size_t to hold the key length
+ * @param[in,out] key.char  A pointer to a location to allocate memory for 
  *                          the key.
  *
  * @returns 0 on success, 1 on error
  */
-  int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **key);
+  int pelz_load_key_from_file(char *filename, charbuf * key);
 
 #ifdef __cplusplus
 }

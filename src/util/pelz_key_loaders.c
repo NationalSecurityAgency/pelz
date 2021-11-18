@@ -6,13 +6,9 @@
 #include "pelz_key_loaders.h"
 #include "pelz_request_handler.h"
 
-int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **key)
+int pelz_load_key_from_file(char *filename, charbuf * key)
 {
-  if (key_len == NULL || key == NULL)
-  {
-    pelz_log(LOG_ERR, "No valid pointer provided for key_len or key.");
-    return 1;
-  }
+  size_t key_len;
 
   if (filename == NULL)
   {
@@ -30,25 +26,25 @@ int pelz_load_key_from_file(char *filename, size_t * key_len, unsigned char **ke
     return 1;
   }
 
-  *key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_file_handle);
+  key_len = fread(tmp_key, sizeof(char), MAX_KEY_LEN, key_file_handle);
 
   // If we've not reached EOF something has probably gone wrong.
-  if ((*key_len == 0) || (!feof(key_file_handle)))
+  if ((key_len == 0) || (!feof(key_file_handle)))
   {
     pelz_log(LOG_ERR, "Error: Failed to fully read key file.");
-    secure_memset(tmp_key, 0, *key_len);
+    secure_memset(tmp_key, 0, key_len);
     fclose(key_file_handle);
     return 1;
   }
   fclose(key_file_handle);
 
-  *key = (unsigned char *) malloc(*key_len);
-  if (*key == NULL)
+  *key = new_charbuf(key_len);
+  if (key->len == 0)
   {
     pelz_log(LOG_ERR, "Error: Failed to allocate memory for key.");
     return 1;
   }
-  memcpy(*key, tmp_key, *key_len);
-  secure_memset(tmp_key, 0, *key_len);
+  memcpy(key->chars, tmp_key, key->len);
+  secure_memset(tmp_key, 0, key_len);
   return 0;
 }
