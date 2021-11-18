@@ -91,8 +91,8 @@ public TableResponseStatus private_pkey_add(uint64_t handle);
  *
  * @param[in] key_id.chars Key identifier
  * @param[in] key_id.len The length of the key identifier
- * @param[out] key.chars The key value
- * @param[out] key.len The length of the key
+ * @param[in] key.chars The key value
+ * @param[in] key.len The length of the key
  * @param[in] key_table The key table that the new key needs to be added to
  * @param[out] key_table The key table with the new added key
  *
@@ -109,14 +109,12 @@ public TableResponseStatus key_table_add_key(charbuf key_id, charbuf key);
  * @param[in] key_id.len The length of the key identifier
  * @param[in] server.chars Server identifier
  * @param[in] server.len The length of the server identifier
- * @param[in] port.chars Port on server to use
- * @param[in] port.len The length of the port valule
  * @param[in] key_table The key table that the new key needs to be added to
  * @param[out] key_table The key table with the new added key
  *
  * @return 0 on success, 1 on error
  */
-public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server, charbuf port);
+public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id);
 
 /**
  * <pre>
@@ -151,6 +149,8 @@ public RequestResponseStatus pelz_request_handler(RequestType request_type, char
 int key_load(charbuf key_id);
 
 int print_server_info(size_t len, [in, size=len] unsigned char * id);
+
+int print_key_info(charbuf info);
 
 /**
  * <pre>

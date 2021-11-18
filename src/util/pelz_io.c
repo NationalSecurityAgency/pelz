@@ -806,3 +806,9 @@ int print_server_info(size_t len, unsigned char *id)
   pelz_log(LOG_INFO, "Server ID: %lu, %.*s", len, len, id);
   return 0;
 }
+
+int print_key_info(charbuf info)
+{
+  pelz_log(LOG_INFO, "Key Info: %lu, %.*s", info.len, info.len, info.chars);
+  return 0;
+}

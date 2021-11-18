@@ -12,6 +12,7 @@
 #include <pelz_request_handler.h>
 #include <charbuf.h>
 #include <pelz_log.h>
+#include <sgx_retrieve_key_impl.h>
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
@@ -22,8 +23,13 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
   size_t max_mem_size;
   charbuf tmpkey;
   int index = 0;
+  int ret;
 
   max_mem_size = 1000000;
+
+  print_key_info(&ret, key_id);
+  print_key_info(&ret, key);
+  print_server_info(&ret, key.len, key.chars);
 
   if (key_table.mem_size >= max_mem_size)
   {
@@ -77,12 +83,13 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
   return OK;
 }
 
-TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server, charbuf port)
+TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id)
 {
   Entry tmp_entry;
   size_t max_mem_size;
   charbuf tmpkey;
   int index = 0;
+  int ret;
 
   max_mem_size = 1000000;
 
@@ -94,7 +101,19 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server, ch
 
   tmp_entry.id = copy_chars_from_charbuf(key_id, 0);
 
-  //Code for retieve key
+  if (table_lookup(SERVER, server_id, &index))
+  {
+    pelz_log(LOG_ERR, "Server ID not found");
+    return ERR;
+  }
+
+  ret = enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert);
+  if (ret)
+  {
+    pelz_log(LOG_ERR, "Retrieve Key function failure");
+    return ERR;
+  }
+  index = 0;
 
   if (table_lookup(KEY, tmp_entry.id, &index) == 0)
   {
