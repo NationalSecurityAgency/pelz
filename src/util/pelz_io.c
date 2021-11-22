@@ -752,9 +752,3 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   }
   return INVALID;
 }
-
-int print_server_info(size_t len, unsigned char *id)
-{
-  pelz_log(LOG_INFO, "Server ID: %lu, %.*s", len, len, id);
-  return 0;
-}

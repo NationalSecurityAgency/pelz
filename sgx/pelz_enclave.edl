@@ -121,8 +121,6 @@ public RequestResponseStatus pelz_request_handler(RequestType request_type, char
 int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
              [out] size_t* key_len, [user_check] unsigned char** key);
 
-int print_server_info(size_t len, [in, size=len] unsigned char * id);
-
 /**
  * <pre>
  * Malloc untrusted memory from within the enclave. The result must
