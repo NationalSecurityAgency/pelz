@@ -237,6 +237,14 @@ void thread_process(void *arg)
 
     pthread_mutex_lock(&lock);
     pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+    if (status == KEK_NOT_LOADED)
+    {
+      if (key_load(key_id))
+      {
+        status = KEK_LOAD_ERROR;
+      }
+      pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+    }
     pthread_mutex_unlock(&lock);
     free_charbuf(&data);
 

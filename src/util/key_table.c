@@ -6,13 +6,18 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/bn.h>
+
 #include <common_table.h>
 #include <charbuf.h>
 #include <pelz_log.h>
-#include <sgx_retrieve_key_impl.h>
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
+#include "sgx_retrieve_key_impl.h"
 
 TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 {

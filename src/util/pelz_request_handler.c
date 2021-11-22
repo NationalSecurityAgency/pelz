@@ -10,21 +10,10 @@
 RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
 {
   int index;
-  int ret;
 
   if (table_lookup(KEY, key_id, &index))
   {
-    key_load(&ret, key_id);
-    if (ret == 1)
-    {
-      pelz_log(LOG_ERR, "Key not added.");
-      return KEK_LOAD_ERROR;
-    }
-    index = key_table.num_entries - 1;
-    if (cmp_charbuf(key_table.entries[index].id, key_id) != 0)
-    {
-      return KEK_LOAD_ERROR;
-    }
+    return KEK_NOT_LOADED;
   }
 
   //Encrypt or Decrypt data per request_type

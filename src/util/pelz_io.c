@@ -147,7 +147,13 @@ int key_load(charbuf key_id)
       }
       pelz_log(LOG_DEBUG, "Key loaded from file");
       free(filename);
-      key_table_add_key(eid, &status, key_id, key);
+      sgx_status_t r = key_table_add_key(eid, &status, key_id, key);
+
+      if (r != SGX_SUCCESS)
+      {
+        pelz_log(LOG_DEBUG, "SGX Status: %lu", r);
+        return (1);
+      }
       pelz_log(LOG_DEBUG, "Add Key Return Value: %lu", status);
       pelz_log(LOG_DEBUG, "Key Length: %d", key.len);
       pelz_log(LOG_DEBUG, "Key: %.*s", key.len, key.chars);
