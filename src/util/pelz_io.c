@@ -147,11 +147,6 @@ int key_load(charbuf key_id)
       }
       pelz_log(LOG_DEBUG, "Key loaded from file");
       free(filename);
-      pelz_log(LOG_DEBUG, "Add Key Return Value: %lu", status);
-      pelz_log(LOG_DEBUG, "Key Length: %d", key.len);
-      pelz_log(LOG_DEBUG, "Key: %.*s", key.len, key.chars);
-      pelz_log(LOG_DEBUG, "Key ID Length: %d", key_id.len);
-      pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id.len, key_id.chars);
       key_table_add_key(eid, &status, key_id, key);
       pelz_log(LOG_DEBUG, "Add Key Return Value: %lu", status);
       pelz_log(LOG_DEBUG, "Key Length: %d", key.len);
