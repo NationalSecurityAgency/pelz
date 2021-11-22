@@ -101,6 +101,8 @@ int key_load(charbuf key_id)
   const char *error_pos = NULL;
   char *key_uri_to_parse = NULL;
 
+  status = ERR;
+
   // URI parser expects a null-terminated string to parse,
   // so we embed the key_id in a 1-longer array and
   // ensure it is null terminated.
@@ -145,6 +147,11 @@ int key_load(charbuf key_id)
       }
       pelz_log(LOG_DEBUG, "Key loaded from file");
       free(filename);
+      pelz_log(LOG_DEBUG, "Add Key Return Value: %lu", status);
+      pelz_log(LOG_DEBUG, "Key Length: %d", key.len);
+      pelz_log(LOG_DEBUG, "Key: %.*s", key.len, key.chars);
+      pelz_log(LOG_DEBUG, "Key ID Length: %d", key_id.len);
+      pelz_log(LOG_DEBUG, "Key ID: %.*s", key_id.len, key_id.chars);
       key_table_add_key(eid, &status, key_id, key);
       pelz_log(LOG_DEBUG, "Add Key Return Value: %lu", status);
       pelz_log(LOG_DEBUG, "Key Length: %d", key.len);
@@ -161,12 +168,6 @@ int key_load(charbuf key_id)
       case ERR_MEM:
         {
           pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
-          return_value = 1;
-          break;
-        }
-      case NO_MATCH:
-        {
-          pelz_log(LOG_ERR, "Key entry and Key ID lookup do not match.");
           return_value = 1;
           break;
         }
@@ -195,16 +196,48 @@ int key_load(charbuf key_id)
       pelz_log(LOG_DEBUG, "Pelz Scheme Start");
       charbuf *common_name = NULL;
       int port;
-      charbuf *key_id = NULL;
+      charbuf *server_key_id = NULL;
 
-      if (get_pelz_uri_parts(key_id_data, common_name, &port, key_id, NULL) != 0)
+      if (get_pelz_uri_parts(key_id_data, common_name, &port, server_key_id, NULL) != 0)
       {
         pelz_log(LOG_ERR, "Failed to extract data from pelz uri");
         break;
       }
-      pelz_log(LOG_INFO, "Key load from PELZ URI not implemented.");
+
+      key_table_add_from_server(eid, &status, key_id, *common_name);
       free_charbuf(common_name);
-      free_charbuf(key_id);
+      switch (status)
+      {
+      case ERR:
+        {
+          pelz_log(LOG_ERR, "Failed to load key to table");
+          return_value = 1;
+          break;
+        }
+      case ERR_MEM:
+        {
+          pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+          return_value = 1;
+          break;
+        }
+      case ERR_REALLOC:
+        {
+          pelz_log(LOG_ERR, "Key List Space Reallocation Error");
+          return_value = 1;
+          break;
+        }
+      case OK:
+        {
+          pelz_log(LOG_DEBUG, "Key added to table.");
+          return_value = 0;
+          break;
+        }
+      default:
+        {
+          return_value = 1;
+          break;
+        }
+      }
       break;
     }
   case URI_SCHEME_UNKNOWN:

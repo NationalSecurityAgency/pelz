@@ -47,7 +47,6 @@ public TableResponseStatus table_delete(TableType type, charbuf id);
  */
 public TableResponseStatus server_table_add(uint64_t handle);
 
-
 /**
  * <pre>
  * This function initializes a pkey.

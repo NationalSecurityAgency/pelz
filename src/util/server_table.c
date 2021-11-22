@@ -70,6 +70,7 @@ TableResponseStatus server_table_add(uint64_t handle)
 
   memcpy(tmp_entry.id.chars, tmp_id, tmp_entry.id.len);
   print_server_info(&ret, tmp_entry.id.len, tmp_entry.id.chars);
+  print_key_info(&ret, tmp_entry.id);
   if (table_lookup(SERVER, tmp_entry.id, &index) == 0)
   {
     tmpcert = server_table.entries[index].value.cert;

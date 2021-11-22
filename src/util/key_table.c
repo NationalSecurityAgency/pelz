@@ -21,12 +21,11 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 {
   Entry tmp_entry;
   size_t max_mem_size;
-  charbuf tmpkey;
-  int index = 0;
   int ret;
 
   max_mem_size = 1000000;
 
+  print_server_info(&ret, key_id.len, key_id.chars);
   print_key_info(&ret, key_id);
   print_key_info(&ret, key);
   print_server_info(&ret, key.len, key.chars);
@@ -39,27 +38,6 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 
   tmp_entry.id = copy_chars_from_charbuf(key_id, 0);
   tmp_entry.value.key = copy_chars_from_charbuf(key, 0);
-
-  if (table_lookup(KEY, tmp_entry.id, &index) == 0)
-  {
-    tmpkey = copy_chars_from_charbuf(key_table.entries[index].value.key, 0);
-    if (cmp_charbuf(tmpkey, tmp_entry.value.key) == 0)
-    {
-      pelz_log(LOG_DEBUG, "Key already added.");
-      free_charbuf(&tmp_entry.id);
-      secure_free_charbuf(&tmp_entry.value.key);
-      secure_free_charbuf(&tmpkey);
-      return OK;                //Review add key flow and check if code is necessary
-    }
-    else
-    {
-      pelz_log(LOG_ERR, "Key entry and Key ID lookup do not match.");
-      free_charbuf(&tmp_entry.id);
-      secure_free_charbuf(&tmp_entry.value.key);
-      secure_free_charbuf(&tmpkey);
-      return NO_MATCH;
-    }
-  }
 
   Entry *temp;
 
@@ -87,7 +65,6 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id)
 {
   Entry tmp_entry;
   size_t max_mem_size;
-  charbuf tmpkey;
   int index = 0;
   int ret;
 
@@ -112,28 +89,6 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");
     return ERR;
-  }
-  index = 0;
-
-  if (table_lookup(KEY, tmp_entry.id, &index) == 0)
-  {
-    tmpkey = copy_chars_from_charbuf(key_table.entries[index].value.key, 0);
-    if (cmp_charbuf(tmpkey, tmp_entry.value.key) == 0)
-    {
-      pelz_log(LOG_DEBUG, "Key already added.");
-      free_charbuf(&tmp_entry.id);
-      secure_free_charbuf(&tmp_entry.value.key);
-      secure_free_charbuf(&tmpkey);
-      return OK;                //Review add key flow and check if code is necessary
-    }
-    else
-    {
-      pelz_log(LOG_ERR, "Key entry and Key ID lookup do not match.");
-      free_charbuf(&tmp_entry.id);
-      secure_free_charbuf(&tmp_entry.value.key);
-      secure_free_charbuf(&tmpkey);
-      return NO_MATCH;
-    }
   }
 
   Entry *temp;
