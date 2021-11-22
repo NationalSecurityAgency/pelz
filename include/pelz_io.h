@@ -31,6 +31,18 @@ extern "C"
 
 /**
  * <pre>
+ * Load key from location stated by Key ID
+ * <pre>
+ *
+ * @param[in] key_id.len     the length of the key identifier
+ * @param[in] key_id.chars   the key identifier
+ *
+ * @return 0 on success, 1 on error
+ */
+  int key_load(charbuf key_id);
+
+/**
+ * <pre>
  * Using key_id to check if there is actual file
  * <pre>
  *

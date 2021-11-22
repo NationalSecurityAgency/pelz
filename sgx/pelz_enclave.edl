@@ -135,18 +135,6 @@ public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf ser
 public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
 	};
 	untrusted {
-/**
- * <pre>
- * Load key from location stated by Key ID
- * <pre>
- *
- * @param[in] key_id.len     the length of the key identifier
- * @param[in] key_id.chars   the key identifier
- *
- * @return 0 on success, 1 on error
- */
-int key_load(charbuf key_id);
-
 int print_server_info(size_t len, [in, size=len] unsigned char * id);
 
 int print_key_info(charbuf info);
