@@ -23,14 +23,8 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 {
   Entry tmp_entry;
   size_t max_mem_size;
-  int ret;
 
   max_mem_size = 1000000;
-
-  print_server_info(&ret, key_id.len, key_id.chars);
-  print_key_info(&ret, key_id);
-  print_key_info(&ret, key);
-  print_server_info(&ret, key.len, key.chars);
 
   if (key_table.mem_size >= max_mem_size)
   {

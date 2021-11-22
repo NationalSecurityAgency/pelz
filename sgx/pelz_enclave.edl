@@ -135,10 +135,6 @@ public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf ser
 public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
 	};
 	untrusted {
-int print_server_info(size_t len, [in, size=len] unsigned char * id);
-
-int print_key_info(charbuf info);
-
 /**
  * <pre>
  * Malloc untrusted memory from within the enclave. The result must
