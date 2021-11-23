@@ -126,7 +126,7 @@ int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigne
   {
   case FILE_URI:
     {
-      char *filename = get_filename_from_key_id(key_uri_to_parse);
+      char *filename = get_filename_from_key_id(key_id_data);
 
       if (filename == NULL)
       {
