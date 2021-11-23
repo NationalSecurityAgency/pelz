@@ -10,6 +10,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/evp.h>
 #include <openssl/bn.h>
+#include <openssl/asn1.h>
 
 #include <common_table.h>
 #include <charbuf.h>
@@ -30,8 +31,10 @@ TableResponseStatus server_table_add(uint64_t handle)
   uint8_t *data;
   size_t data_size = 0;
   int ret;
-  char *tmp_id;
   int index = 0;
+  int lastpos = 0;
+  size_t len = 0;
+  char *tmp_id;
 
   max_mem_size = 1000000;
 
@@ -57,14 +60,30 @@ TableResponseStatus server_table_add(uint64_t handle)
   }
   free(data);
 
-  tmp_id = X509_NAME_oneline(X509_get_subject_name(tmp_entry.value.cert), NULL, 0);
-  tmp_entry.id = new_charbuf(strlen(tmp_id));
-  if (strlen(tmp_id) != tmp_entry.id.len)
+  X509_NAME *subj = X509_get_subject_name(tmp_entry.value.cert);
+
+  for (;;)
+  {
+    int count = X509_NAME_get_index_by_NID(subj, NID_commonName, lastpos);
+
+    if (count == -1)
+    {
+      break;
+    }
+    lastpos = count;
+  }
+  X509_NAME_ENTRY *entry = X509_NAME_get_entry(subj, lastpos);
+  ASN1_STRING *entry_data = X509_NAME_ENTRY_get_data(entry);
+
+  len = ASN1_STRING_length(entry_data);
+  tmp_id = (char *) ASN1_STRING_get0_data(entry_data);
+
+  tmp_entry.id = new_charbuf(len);
+  if (len != tmp_entry.id.len)
   {
     pelz_log(LOG_ERR, "Charbuf creation error.");
     return ERR_BUF;
   }
-
   memcpy(tmp_entry.id.chars, tmp_id, tmp_entry.id.len);
   if (table_lookup(SERVER, tmp_entry.id, &index) == 0)
   {

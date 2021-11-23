@@ -29,12 +29,11 @@ extern "C"
 /**
  * @brief Returns the filename from a null-terminated key_id.
  *
- * @param[in] null_terminated_key_id The key id embedded in a
- *                                   null-terminated string
+ * @param[in] The (already parsed) URI.
  *
  * @return The filename, or NULL on error.
  */
-  char *get_filename_from_key_id(const char *null_terminated_key_id);
+  char *get_filename_from_key_id(UriUriA uri);
 
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.

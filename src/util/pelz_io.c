@@ -101,8 +101,6 @@ int key_load(charbuf key_id)
   const char *error_pos = NULL;
   char *key_uri_to_parse = NULL;
 
-  status = ERR;
-
   // URI parser expects a null-terminated string to parse,
   // so we embed the key_id in a 1-longer array and
   // ensure it is null terminated.
@@ -122,7 +120,6 @@ int key_load(charbuf key_id)
     free(key_uri_to_parse);
     return (1);
   }
-  pelz_log(LOG_DEBUG, "URI Parse Success");
 
   URI_SCHEME scheme = get_uri_scheme(key_id_data);
 
@@ -130,8 +127,7 @@ int key_load(charbuf key_id)
   {
   case FILE_URI:
     {
-      pelz_log(LOG_DEBUG, "File Scheme Start");
-      char *filename = get_filename_from_key_id(key_uri_to_parse);
+      char *filename = get_filename_from_key_id(key_id_data);
 
       if (filename == NULL)
       {
@@ -145,18 +141,8 @@ int key_load(charbuf key_id)
         free(filename);
         break;
       }
-      pelz_log(LOG_DEBUG, "Key loaded from file");
       free(filename);
-      sgx_status_t r = key_table_add_key(eid, &status, key_id, key);
-
-      if (r != SGX_SUCCESS)
-      {
-        pelz_log(LOG_DEBUG, "SGX Status: %lu", r);
-        return (1);
-      }
-      pelz_log(LOG_DEBUG, "Add Key Return Value: %lu", status);
-      pelz_log(LOG_DEBUG, "Key Length: %d", key.len);
-      pelz_log(LOG_DEBUG, "Key: %.*s", key.len, key.chars);
+      key_table_add_key(eid, &status, key_id, key);
       secure_free_charbuf(&key);
       switch (status)
       {
@@ -196,8 +182,8 @@ int key_load(charbuf key_id)
     {
       pelz_log(LOG_DEBUG, "Pelz Scheme Start");
       charbuf *common_name = NULL;
-      int port;
       charbuf *server_key_id = NULL;
+      int port;
 
       if (get_pelz_uri_parts(key_id_data, common_name, &port, server_key_id, NULL) != 0)
       {
@@ -248,7 +234,6 @@ int key_load(charbuf key_id)
       pelz_log(LOG_ERR, "Scheme not supported");
     }
   }
-  pelz_log(LOG_DEBUG, "Scheme Switch Complete");
   free(key_uri_to_parse);
   uriFreeUriMembersA(&key_id_data);
   return return_value;
