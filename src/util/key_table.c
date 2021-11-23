@@ -57,7 +57,7 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
   return OK;
 }
 
-TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id)
+TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, charbuf server_key_id)
 {
   Entry tmp_entry;
   size_t max_mem_size;
