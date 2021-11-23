@@ -19,26 +19,24 @@ URI_SCHEME get_uri_scheme(UriUriA uri)
   return URI_SCHEME_UNKNOWN;
 }
 
-char *get_filename_from_key_id(const char *null_terminated_key_id)
+char *get_filename_from_key_id(UriUriA uri)
 {
-  if (null_terminated_key_id == NULL)
+  ptrdiff_t field_length = uri.pathHead->text.afterLast - uri.pathHead->text.first;
+
+  if (field_length <= 0)
   {
+    pelz_log(LOG_ERR, "Invalid URI field length.");
     return NULL;
   }
-
-  // The magic 4 here is from the uriparser documentation.
-  char *filename = (char *) malloc(strlen((const char *) null_terminated_key_id) - 4);
+  char *filename = (char*)calloc(field_length + 1, sizeof(char));
 
   if (filename == NULL)
   {
+    pelz_log(LOG_ERR, "Failed to allocate memory for filename.");
     return NULL;
   }
-  if (uriUriStringToUnixFilenameA((const char *) null_terminated_key_id, filename))
-  {
-    pelz_log(LOG_ERR, "Failed to parse key file name from URI %s\n", null_terminated_key_id);
-    free(filename);
-    return NULL;
-  }
+  memcpy(filename, uri.pathHead->text.first, field_length);
+  printf("%s\n", filename);
   return filename;
 }
 

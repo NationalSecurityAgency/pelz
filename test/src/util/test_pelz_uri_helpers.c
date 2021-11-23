@@ -23,12 +23,11 @@ void test_scheme_extraction(void)
   const char *file_uri = "file:/filename";
   const char *file_uri_2 = "file:///filename";
   const char *pelz_uri = "pelz://common_name/0/key_uid/other_data";
-
   UriUriA uri;
 
   uriParseSingleUriA(&uri, file_uri, NULL);
   CU_ASSERT(get_uri_scheme(uri) == FILE_URI);
-  char *filename = get_filename_from_key_id(file_uri);
+  char *filename = get_filename_from_key_id(uri);
 
   CU_ASSERT(strncmp((char *) filename, "/filename", strlen("/filename")) == 0);
   free(filename);
@@ -36,7 +35,7 @@ void test_scheme_extraction(void)
 
   uriParseSingleUriA(&uri, file_uri_2, NULL);
   CU_ASSERT(get_uri_scheme(uri) == FILE_URI);
-  filename = get_filename_from_key_id(file_uri_2);
+  filename = get_filename_from_key_id(uri);
   CU_ASSERT(strncmp((char *) filename, "/filename", strlen("/filename")) == 0);
   free(filename);
   uriFreeUriMembersA(&uri);
