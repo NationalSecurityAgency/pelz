@@ -21,22 +21,30 @@ URI_SCHEME get_uri_scheme(UriUriA uri)
 
 char *get_filename_from_key_id(UriUriA uri)
 {
-  ptrdiff_t field_length = uri.pathHead->text.afterLast - uri.pathHead->text.first;
+  if (uri.pathHead == NULL)
+  {
+    pelz_log(LOG_ERR, "Invalid URI.");
+    return NULL;
+  }
+
+  ptrdiff_t field_length = uri.pathTail->text.afterLast - uri.pathHead->text.first;
 
   if (field_length <= 0)
   {
     pelz_log(LOG_ERR, "Invalid URI field length.");
     return NULL;
   }
-  char *filename = (char*)calloc(field_length + 1, sizeof(char));
+
+  // The extra 2 bytes here are to prepend '/' and to append a null byte.
+  char *filename = (char *) calloc(field_length + 2, sizeof(char));
 
   if (filename == NULL)
   {
     pelz_log(LOG_ERR, "Failed to allocate memory for filename.");
     return NULL;
   }
-  memcpy(filename, uri.pathHead->text.first, field_length);
-  printf("%s\n", filename);
+  filename[0] = '/';
+  memcpy(filename + 1, uri.pathHead->text.first, field_length);
   return filename;
 }
 
