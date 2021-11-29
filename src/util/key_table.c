@@ -80,6 +80,12 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
     return ERR;
   }
 
+  if (private_pkey == NULL)
+  {
+    pelz_log(LOG_ERR, "Private key not found");
+    return ERR;
+  }
+
   ret = enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert);
   if (ret)
   {
