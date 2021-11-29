@@ -13,6 +13,9 @@ typedef enum
   RM_KEK, KEK_TAB_DEST_FAIL, KEK_TAB_INIT_FAIL, RM_KEK_ALL, ERR_CHARBUF
 } ParseResponseStatus;
 
+typedef enum
+{ NO_EXT, NKL, SKI } ExtensionType;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -27,7 +30,7 @@ extern "C"
  *
  * @return 0 on success, 1 on error
  */
-  int get_file_ext(charbuf buf, int *ext);
+  int get_file_ext(charbuf buf, ExtensionType * ext);
 
 /**
  * <pre>
