@@ -30,7 +30,6 @@ int server_table_add(uint64_t handle)
 {
   Entry tmp_entry;
   size_t max_mem_size;
-  X509 *tmpcert;
   uint8_t *data;
   size_t data_size = 0;
   int ret;
@@ -65,6 +64,14 @@ int server_table_add(uint64_t handle)
 
   X509_NAME *subj = X509_get_subject_name(tmp_entry.value.cert);
 
+  if (subj == NULL)
+  {
+    pelz_log(LOG_ERR, "Could not parse certificate data");
+    return ERR_X509;
+  }
+
+  //extract the common name from the  X509 subject name by the index location
+  //by iterating over the subject name to the last position
   for (;;)
   {
     int count = X509_NAME_get_index_by_NID(subj, NID_commonName, lastpos);
@@ -90,8 +97,7 @@ int server_table_add(uint64_t handle)
   memcpy(tmp_entry.id.chars, tmp_id, tmp_entry.id.len);
   if (table_lookup(SERVER, tmp_entry.id, &index) == 0)
   {
-    tmpcert = server_table.entries[index].value.cert;
-    if (X509_cmp(tmpcert, tmp_entry.value.cert) == 0)
+    if (X509_cmp(server_table.entries[index].value.cert, tmp_entry.value.cert) == 0)
     {
       pelz_log(LOG_DEBUG, "Cert already added.");
       free_charbuf(&tmp_entry.id);
