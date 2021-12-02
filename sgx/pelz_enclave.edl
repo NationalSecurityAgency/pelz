@@ -37,18 +37,16 @@ public int table_delete(TableType type, charbuf id);
 
 /**
  * <pre>
- * This function adds value in hash table based on location in server_id.
+ * This function to add values into the server hash table.
  * </pre>
  *
- * @param[in] server_id.chars Server identifier 
- * @param[in] server_id.len The length of the server identifier
  * @param[in] handle The handle value for the cert data location in the kmyth unseal data table
  * @param[in] server_table The server table that the new cert needs to be added to
  * @param[out] server_table The server table with the new added cert
  *
  * @return 0 on success, 1 on error
  */
-public int server_table_add(charbuf server_id, uint64_t handle);
+public int server_table_add(uint64_t handle);
 
 
 /**

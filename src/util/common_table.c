@@ -56,17 +56,14 @@ int table_destroy(TableType type)
     }
     if (type == KEY)
     {
-      if (table->entries[i].value.cert.len != 0)
+      if (table->entries[i].value.key.len != 0)
       {
         secure_free_charbuf(&table->entries[i].value.key);
       }
     }
     if (type == SERVER)
     {
-      if (table->entries[i].value.cert.len != 0)
-      {
-        secure_free_charbuf(&table->entries[i].value.cert);
-      }
+      X509_free(table->entries[i].value.cert);
     }
   }
 
@@ -84,6 +81,7 @@ int table_delete(TableType type, charbuf id)
 {
   Table *table;
   int index = 0;
+  int data_size = 0;
 
   switch (type)
   {
@@ -109,9 +107,8 @@ int table_delete(TableType type, charbuf id)
       }
       else if (type == SERVER)
       {
-        table->mem_size =
-          table->mem_size - ((table->entries[i].value.cert.len * sizeof(char)) + (table->entries[i].id.len * sizeof(char)) +
-          (2 * sizeof(size_t)));
+        data_size = i2d_X509(table->entries[i].value.cert, NULL);
+        table->mem_size = table->mem_size - ((table->entries[i].id.len * sizeof(char)) + sizeof(size_t) + data_size);
       }
       free_charbuf(&table->entries[i].id);
       if (type == KEY)
@@ -120,7 +117,7 @@ int table_delete(TableType type, charbuf id)
       }
       if (type == SERVER)
       {
-        secure_free_charbuf(&table->entries[i].value.cert);
+        X509_free(table->entries[i].value.cert);
       }
       index = i + 1;
       break;

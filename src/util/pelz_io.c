@@ -484,14 +484,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     path_ext = strrchr(tokens[2], '.');
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-    server_id = new_charbuf(strlen(tokens[2]));
-    if (server_id.len != strlen(tokens[2]))
-    {
-      pelz_log(LOG_ERR, "Charbuf creation error.");
-      return ERR_CHARBUF;
-    }
-    memcpy(server_id.chars, tokens[2], server_id.len);
-
     if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
     {
       if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
@@ -520,7 +512,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(nkl_data);
-        server_table_add(eid, &ret, server_id, handle);
+        server_table_add(eid, &ret, handle);
         if (ret != OK)
         {
           pelz_log(LOG_ERR, "Add cert call failed");
@@ -531,6 +523,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
             break;
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
+            break;
+          case ERR_X509:
+            pelz_log(LOG_ERR, "X509 allocation error.");
             break;
           case RET_FAIL:
             pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
@@ -566,7 +561,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
 
         free(data);
-        server_table_add(eid, &ret, server_id, handle);
+        server_table_add(eid, &ret, handle);
         if (ret != OK)
         {
           pelz_log(LOG_ERR, "Add cert call failed");
@@ -577,6 +572,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
             break;
           case ERR_BUF:
             pelz_log(LOG_ERR, "Charbuf creation error.");
+            break;
+          case ERR_X509:
+            pelz_log(LOG_ERR, "X509 allocation error.");
             break;
           case RET_FAIL:
             pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");

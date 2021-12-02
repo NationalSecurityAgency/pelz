@@ -9,12 +9,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/bn.h>
+
 #include "charbuf.h"
 
 typedef union EntryData
 {
   charbuf key;
-  charbuf cert;
+  X509 *cert;
 } Data;
 
 typedef struct TableEntry
@@ -34,11 +39,13 @@ typedef enum
 { KEY, SERVER } TableType;
 
 typedef enum
-{ OK, ERR_REALLOC, ERR_BUF, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+{ OK, ERR_REALLOC, ERR_BUF, ERR_X509, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
 
 extern Table key_table;
 
 extern Table server_table;
+
+extern EVP_PKEY *private_pkey;
 
 #ifdef __cplusplus
 extern "C"
