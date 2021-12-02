@@ -41,7 +41,7 @@ void ocall_free(void *ptr, size_t len)
   free(ptr);
 }
 
-int get_file_ext(charbuf buf, int *ext)
+int get_file_ext(charbuf buf)
 {
   size_t period_index = 0;
   size_t ext_len = 0;
@@ -50,7 +50,7 @@ int get_file_ext(charbuf buf, int *ext)
 
   if (buf.chars == NULL)
   {
-    return 1;
+    return NO_EXT;
   }
 
   // We know that if buf.chars != NULL then buf.len > 0, so there's
@@ -58,13 +58,13 @@ int get_file_ext(charbuf buf, int *ext)
   period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
   if (period_index == SIZE_MAX)
   {
-    return 1;
+    return NO_EXT;
   }
 
   ext_len = (buf.len - period_index);
   if (ext_len == 0)
   {
-    return 1;
+    return NO_EXT;
   }
 
   // If buf.chars is null terminated we don't want to include
@@ -83,12 +83,11 @@ int get_file_ext(charbuf buf, int *ext)
     {
       if (memcmp(buf.chars + period_index, ext_type[i], strlen(ext_type[i])) == 0)
       {
-        *ext = i + 1;
-        break;
+        return (i + 1);
       }
     }
   }
-  return 0;
+  return NO_EXT;
 }
 
 int key_load(charbuf key_id)
@@ -97,15 +96,12 @@ int key_load(charbuf key_id)
   int return_value = 1;
   TableResponseStatus status;
   UriUriA key_id_data;
-  int ext = 0;
+  int ext = NO_EXT;
 
   const char *error_pos = NULL;
   char *key_uri_to_parse = NULL;
 
-  if (get_file_ext(key_id, &ext))
-  {
-    ext = 0;                    //same as no extention
-  }
+  ext = get_file_ext(key_id);
 
   // URI parser expects a null-terminated string to parse,
   // so we embed the key_id in a 1-longer array and
