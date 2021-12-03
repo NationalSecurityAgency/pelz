@@ -39,7 +39,7 @@ typedef enum
 { KEY, SERVER } TableType;
 
 typedef enum
-{ OK, ERR_REALLOC, ERR_BUF, ERR_X509, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+{ OK, ERR, ERR_MEM, ERR_REALLOC, ERR_BUF, ERR_X509, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } TableResponseStatus;
 
 extern Table key_table;
 
@@ -63,9 +63,10 @@ extern "C"
  * @param[out] index The index location of the lookup value
  * @param max_num_entries The max number of entries for the table that is default set at 100000
  *
- * @return 0 on success, 1 on failure
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
  */
-  int table_lookup(TableType type, charbuf id, int *index);
+  TableResponseStatus table_lookup(TableType type, charbuf id, int *index);
 
 #ifdef __cplusplus
 }

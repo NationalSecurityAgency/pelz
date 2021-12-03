@@ -46,7 +46,7 @@ int enclave_suite_add_tests(CU_pSuite suite)
 
 void test_table_destroy(void)
 {
-  int ret;
+  TableResponseStatus ret;
 
   pelz_log(LOG_DEBUG, "Test Key Table Destroy Function Start");
   table_destroy(eid, &ret, KEY);
@@ -58,7 +58,7 @@ void test_table_request(void)
 {
   RequestResponseStatus status;
   RequestType request_type = REQ_UNK;
-  int ret;
+  TableResponseStatus ret;
   charbuf tmp;
   charbuf data_in;
   charbuf data;
@@ -148,7 +148,7 @@ void test_table_requestDelete(void)
 {
   RequestResponseStatus status;
   RequestType request_type = REQ_UNK;
-  int ret;
+  TableResponseStatus ret;
   charbuf tmp;
   charbuf data_in;
   charbuf data;
@@ -249,7 +249,7 @@ void test_table_requestDelete(void)
 
 void test_server_table_destroy(void)
 {
-  int ret;
+  TableResponseStatus ret;
 
   pelz_log(LOG_DEBUG, "Test Server Table Destroy Function Start");
   table_destroy(eid, &ret, SERVER);
