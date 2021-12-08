@@ -181,5 +181,5 @@ TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
       return OK;
     }
   }
-  return ERR;
+  return NO_MATCH;
 }

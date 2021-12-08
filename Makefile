@@ -112,7 +112,8 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_key_loaders.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
-		 test/src/util/enclave_test_suite.c \
+		 test/src/util/table_test_suite.c \
+		 test/src/util/request_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c \

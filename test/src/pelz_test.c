@@ -9,7 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "enclave_test_suite.h"
+#include "table_test_suite.h"
+#include "request_test_suite.h"
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
 #include "test_pelz_uri_helpers.h"
@@ -69,16 +70,31 @@ int main(int argc, char **argv)
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
 
-  // Add enclave suite ---- tests key table init/destroy/delete and pelz_request_handler functions 
-  CU_pSuite enclave_Suite = NULL;
+  // Add table suite ---- tests table destroy/add/lookup/delete functions 
+  CU_pSuite table_Suite = NULL;
 
-  enclave_Suite = CU_add_suite("Enclave Suite", init_suite, clean_suite);
-  if (NULL == enclave_Suite)
+  table_Suite = CU_add_suite("Table Suite", init_suite, clean_suite);
+  if (NULL == table_Suite)
   {
     CU_cleanup_registry();
     return CU_get_error();
   }
-  if (enclave_suite_add_tests(enclave_Suite))
+  if (table_suite_add_tests(table_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
+  // Add request suite ---- tests pelz_request_handler functions
+  CU_pSuite request_Suite = NULL;
+
+  request_Suite = CU_add_suite("Request Suite", init_suite, clean_suite);
+  if (NULL == request_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if (request_suite_add_tests(request_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();
