@@ -817,7 +817,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         return LOAD_CERT;
       }
     }
-
     pelz_log(LOG_INFO, "Invaild extention for load cert call");
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
     return INVALID_EXT_CERT;
@@ -890,7 +889,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         return LOAD_PRIV;
       }
     }
-
     pelz_log(LOG_INFO, "Invaild extention for load private call");
     pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
     return INVALID_EXT_PRIV;
@@ -929,7 +927,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
   case 5:
     table_destroy(eid, &ret, SERVER);
-    if (ret)
+    if (ret != OK)
     {
       pelz_log(LOG_ERR, "Server Table Destroy Failure");
       return CERT_TAB_DEST_FAIL;
@@ -969,21 +967,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       free_charbuf(&key_id);
       return RM_KEK;
     }
-    if (ret == 1)
-    {
-      pelz_log(LOG_ERR, "Delete Key ID from Key Table Failure: %.*s", (int) key_id.len, key_id.chars);
-      free_charbuf(&key_id);
-      return RM_KEK_FAIL;
-    }
-    else
-    {
-      pelz_log(LOG_INFO, "Delete Key ID form Key Table: %.*s", (int) key_id.len, key_id.chars);
-      free_charbuf(&key_id);
-      return RM_KEK;
-    }
   case 7:
     table_destroy(eid, &ret, KEY);
-    if (ret)
+    if (ret != OK)
     {
       pelz_log(LOG_ERR, "Key Table Destroy Failure");
       return KEK_TAB_DEST_FAIL;
