@@ -17,7 +17,7 @@
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
 
-int key_table_add(charbuf key_id, charbuf * key)
+TableResponseStatus key_table_add(charbuf key_id, charbuf * key)
 {
   Entry tmp_entry;
   size_t max_mem_size;
@@ -29,7 +29,7 @@ int key_table_add(charbuf key_id, charbuf * key)
   if (key_table.mem_size >= max_mem_size)
   {
     pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
-    return (1);
+    return ERR_MEM;
   }
 
   tmp_entry.id = new_charbuf(key_id.len);
@@ -43,7 +43,7 @@ int key_table_add(charbuf key_id, charbuf * key)
   if (!sgx_is_outside_enclave(ocall_key_data, ocall_key_len))
   {
     free_charbuf(&tmp_entry.id);
-    return (1);
+    return ERR_BUF;
   }
   tmp_entry.value.key.len = ocall_key_len;
   tmp_entry.value.key.chars = (unsigned char *) malloc(ocall_key_len);
@@ -61,7 +61,7 @@ int key_table_add(charbuf key_id, charbuf * key)
   {
     //If the code cannot retrieve the key from the URI provided by the Key ID, then we error out of the function before touching the Key Table.
     free_charbuf(&tmp_entry.id);
-    return (1);
+    return RET_FAIL;
   }
 
   if (table_lookup(KEY, tmp_entry.id, &index) == 0)
@@ -70,7 +70,7 @@ int key_table_add(charbuf key_id, charbuf * key)
     if (key_table.entries[index].value.key.len != tmpkey.len)
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
-      return (1);
+      return ERR_BUF;
     }
     memcpy(tmpkey.chars, key_table.entries[index].value.key.chars, tmpkey.len);
     if (cmp_charbuf(tmpkey, tmp_entry.value.key) == 0)
@@ -80,7 +80,7 @@ int key_table_add(charbuf key_id, charbuf * key)
       free_charbuf(&tmp_entry.id);
       secure_free_charbuf(&tmp_entry.value.key);
       secure_free_charbuf(&tmpkey);
-      return (0);
+      return OK;
     }
     else
     {
@@ -88,7 +88,7 @@ int key_table_add(charbuf key_id, charbuf * key)
       free_charbuf(&tmp_entry.id);
       secure_free_charbuf(&tmp_entry.value.key);
       secure_free_charbuf(&tmpkey);
-      return (1);
+      return NO_MATCH;
     }
   }
 
@@ -99,7 +99,7 @@ int key_table_add(charbuf key_id, charbuf * key)
     pelz_log(LOG_ERR, "Key List Space Reallocation Error");
     free_charbuf(&tmp_entry.id);
     secure_free_charbuf(&tmp_entry.value.key);
-    return (1);
+    return ERR_REALLOC;
   }
   else
   {
@@ -112,5 +112,5 @@ int key_table_add(charbuf key_id, charbuf * key)
     key_table.mem_size + ((tmp_entry.value.key.len * sizeof(char)) + (tmp_entry.id.len * sizeof(char)) + (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Key Added");
   *key = copy_chars_from_charbuf(tmp_entry.value.key, 0);
-  return (0);
+  return OK;
 }

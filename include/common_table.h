@@ -38,8 +38,19 @@ typedef struct CommonTable
 typedef enum
 { KEY, SERVER } TableType;
 
+/// Enum to provide a return response status for table related functions.
 typedef enum
-{ OK, ERR_REALLOC, ERR_BUF, ERR_X509, RET_FAIL, NO_MATCH, MEM_ALLOC_FAIL } AddResponseStatus;
+{
+  OK,             /**< OK             Function success*/
+  ERR,            /**< ERR            Generic error response*/
+  ERR_MEM,        /**< ERR_MEM        Error because set table memory allocation exceeded*/
+  ERR_REALLOC,    /**< ERR_REALLOC    Table reallocation failure*/
+  ERR_BUF,        /**< ERR_BUF        Charbuf creation error*/
+  ERR_X509,       /**< ERR_X509       Error with X509*/
+  RET_FAIL,       /**< RET_FAIL       Failure to return value from other function*/
+  NO_MATCH,       /**< NO_MATCH       Look up found no match so function returned*/
+  MEM_ALLOC_FAIL  /**< MEM_ALLOC_FAIL Failure to allocate initial memory*/
+} TableResponseStatus;
 
 extern Table key_table;
 
@@ -63,9 +74,10 @@ extern "C"
  * @param[out] index The index location of the lookup value
  * @param max_num_entries The max number of entries for the table that is default set at 100000
  *
- * @return 0 on success, 1 on failure
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
  */
-  int table_lookup(TableType type, charbuf id, int *index);
+  TableResponseStatus table_lookup(TableType type, charbuf id, int *index);
 
 #ifdef __cplusplus
 }

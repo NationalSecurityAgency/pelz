@@ -28,9 +28,10 @@ extern "C"
  * @param[in] key_table The key table that the new key needs to be added to
  * @param[out] key_table The key table with the new added key
  *
- * @return 0 on success, 1 on error
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
  */
-  int key_table_add(charbuf key_id, charbuf * key);
+  TableResponseStatus key_table_add(charbuf key_id, charbuf * key);
 
 #ifdef __cplusplus
 }

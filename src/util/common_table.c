@@ -30,7 +30,7 @@ Table server_table = {
 };
 
 //Destroy server table
-int table_destroy(TableType type)
+TableResponseStatus table_destroy(TableType type)
 {
   Table *table;
 
@@ -45,7 +45,7 @@ int table_destroy(TableType type)
     table = &server_table;
     break;
   default:
-    return (1);
+    return ERR;
   }
 
   for (unsigned int i = 0; i < table->num_entries; i++)
@@ -74,10 +74,10 @@ int table_destroy(TableType type)
   table->mem_size = 0;
 
   pelz_log(LOG_DEBUG, "Table Destroy Function Complete");
-  return (0);
+  return OK;
 }
 
-int table_delete(TableType type, charbuf id)
+TableResponseStatus table_delete(TableType type, charbuf id)
 {
   Table *table;
   int index = 0;
@@ -92,7 +92,7 @@ int table_delete(TableType type, charbuf id)
     table = &server_table;
     break;
   default:
-    return (1);
+    return ERR;
   }
 
   for (unsigned int i = 0; i < table->num_entries; i++)
@@ -157,7 +157,7 @@ int table_delete(TableType type, charbuf id)
   return OK;
 }
 
-int table_lookup(TableType type, charbuf id, int *index)
+TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
 {
   Table *table;
 
@@ -170,7 +170,7 @@ int table_lookup(TableType type, charbuf id, int *index)
     table = &server_table;
     break;
   default:
-    return (1);
+    return ERR;
   }
 
   for (unsigned int i = 0; i < table->num_entries; i++)
@@ -178,8 +178,8 @@ int table_lookup(TableType type, charbuf id, int *index)
     if (cmp_charbuf(id, table->entries[i].id) == 0)
     {
       *index = i;
-      return (0);
+      return OK;
     }
   }
-  return (1);
+  return ERR;
 }

@@ -436,7 +436,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
 
 ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 {
-  int ret;
+  TableResponseStatus ret;
   char *path_ext = NULL;
   charbuf key_id;
   charbuf server_id;

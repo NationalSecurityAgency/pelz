@@ -26,7 +26,7 @@
 
 EVP_PKEY *private_pkey;
 
-int server_table_add(uint64_t handle)
+TableResponseStatus server_table_add(uint64_t handle)
 {
   Entry tmp_entry;
   size_t max_mem_size;
@@ -133,24 +133,24 @@ int server_table_add(uint64_t handle)
   return OK;
 }
 
-int private_pkey_init(void)
+TableResponseStatus private_pkey_init(void)
 {
   private_pkey = EVP_PKEY_new();
   if (private_pkey == NULL)
   {
     pelz_log(LOG_ERR, "Error allocating EVP_PKEY");
-    return (1);
+    return MEM_ALLOC_FAIL;
   }
-  return (0);
+  return OK;
 }
 
-int private_pkey_free(void)
+TableResponseStatus private_pkey_free(void)
 {
   EVP_PKEY_free(private_pkey);
-  return (0);
+  return OK;
 }
 
-int private_pkey_add(uint64_t handle)
+TableResponseStatus private_pkey_add(uint64_t handle)
 {
   uint8_t *data;
   size_t data_size = 0;
@@ -159,16 +159,16 @@ int private_pkey_add(uint64_t handle)
   if (data_size == 0)
   {
     pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-    return (1);
+    return RET_FAIL;
   }
 
   if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) == 1)
   {
     pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
     free(data);
-    return (1);
+    return ERR_X509;
   }
 
   free(data);
-  return (0);
+  return OK;
 }
