@@ -136,7 +136,7 @@ TableResponseStatus private_pkey_init(void)
   if (private_pkey == NULL)
   {
     pelz_log(LOG_ERR, "Error allocating EVP_PKEY");
-    return ERR;
+    return MEM_ALLOC_FAIL;
   }
   return OK;
 }
@@ -156,14 +156,14 @@ TableResponseStatus private_pkey_add(uint64_t handle)
   if (data_size == 0)
   {
     pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-    return ERR;
+    return RET_FAIL;
   }
 
   if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) == 1)
   {
     pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
     free(data);
-    return ERR;
+    return ERR_X509;
   }
 
   free(data);

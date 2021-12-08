@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   }
 
   private_pkey_init(eid, &status);
-  if (status == ERR)
+  if (status != OK)
   {
     pelz_log(LOG_ERR, "PKEY Init Failure");
     kmyth_unsealed_data_table_cleanup(eid, &ret);
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 
   pelz_log(LOG_INFO, "Shutdown Clean-up Start");
   private_pkey_free(eid, &status);
-  if (status == ERR)
+  if (status != OK)
   {
     pelz_log(LOG_ERR, "PKEY Free Failure");
   }
