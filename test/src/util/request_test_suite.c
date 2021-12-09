@@ -36,12 +36,14 @@ void test_request(void)
   RequestResponseStatus status;
   RequestType request_type = REQ_UNK;
   charbuf tmp;
+  charbuf key;
   charbuf data_in;
   charbuf data;
   charbuf output;
   const char *prefix = "file:";
   const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
   const char *tmp_id[2] = { "/test/key7.txt", "/test/key1txt" };
+  const char *key_str[3] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN" };
 
   //Initial data_in values
   data_in = new_charbuf(32);
@@ -49,18 +51,34 @@ void test_request(void)
 
   pelz_log(LOG_DEBUG, "Test Request Function Start");
 
+  //KEK not loaded so function should return KEK_LOAD_ERROR
+  tmp = copy_CWD_to_id(prefix, valid_id[0]);
+  request_type = REQ_ENC;
+  pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+  CU_ASSERT(status == KEK_NOT_LOADED);
+  request_type = REQ_DEC;
+  pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+  CU_ASSERT(status == KEK_NOT_LOADED);
+  free_charbuf(&tmp);
+  request_type = REQ_UNK;
+
   //Initial check if request encrypts and decrypts keys
   for (int i = 0; i < 3; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
+    key = new_charbuf(strlen(key_str[i]));
+    memcpy(key.chars, key_str[i], key.len);
+    key_table_add_key(eid, &ret, tmp, key);
+    CU_ASSERT(ret == OK);
+    secure_free_charbuf(&key);
     request_type = REQ_ENC;
     pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
-    CU_ASSERT(status == 0);
+    CU_ASSERT(status == REQUEST_OK);
     request_type = REQ_DEC;
     data = copy_chars_from_charbuf(output, 0);
     secure_free_charbuf(&output);
     pelz_request_handler(eid, &status, request_type, tmp, data, &output);
-    CU_ASSERT(status == 0);
+    CU_ASSERT(status == REQUEST_OK);
     CU_ASSERT(cmp_charbuf(output, data_in) == 0);
     free_charbuf(&tmp);
     secure_free_charbuf(&data);
@@ -70,12 +88,12 @@ void test_request(void)
   //Check that non-valid file does not load key
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
   pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
-  CU_ASSERT(status == KEK_LOAD_ERROR);
+  CU_ASSERT(status == KEK_NOT_LOADED);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
   pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
-  CU_ASSERT(status == KEK_LOAD_ERROR);
+  CU_ASSERT(status == KEK_NOT_LOADED);
   free_charbuf(&tmp);
 
   //Check that non-valid request type returns correct error status

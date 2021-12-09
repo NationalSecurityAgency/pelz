@@ -131,7 +131,7 @@ void test_table_lookup(void)
 
   const char *valid_id[8] = {
     "/test/key1.txt", "/test/key2.txt", "/test/key3.txt", "/test/key4.txt", "/test/key5.txt", "/test/key6.txt",
-    "test/client_cert_test.der.nkl" "test/server_cert_test.der.nkl"
+    "test/client_cert_test.der.nkl", "test/server_cert_test.der.nkl"
   };
   const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
@@ -229,7 +229,7 @@ void test_table_delete(void)
 
   const char *valid_id[8] = {
     "/test/key1.txt", "/test/key2.txt", "/test/key3.txt", "/test/key4.txt", "/test/key5.txt", "/test/key6.txt",
-    "test/client_cert_test.der.nkl" "test/server_cert_test.der.nkl"
+    "test/client_cert_test.der.nkl", "test/server_cert_test.der.nkl"
   };
   const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
@@ -311,7 +311,7 @@ void test_table_delete(void)
   tmp = new_charbuf(strlen("TestClient"));
   memcpy(tmp.chars, "TestClient", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(status == OK);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("TestClient"));
@@ -323,7 +323,7 @@ void test_table_delete(void)
   tmp = new_charbuf(strlen("TestServer"));
   memcpy(tmp.chars, "TestServer", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(status == OK);
   free_charbuf(&tmp);
 
   table_destroy(eid, &status, KEY);
