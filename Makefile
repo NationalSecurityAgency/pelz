@@ -112,12 +112,18 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_key_loaders.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
-		 test/src/util/table_test_suite.c \
-		 test/src/util/request_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c \
-		 test/src/util/test_pelz_uri_helpers.c
+		 test/src/util/test_pelz_uri_helpers.c \
+		 test/src/util/table_test_suite.c \
+		 test/src/util/request_test_suite.c
+
+App_Cpp_Files_for_Test := src/util/common_table.c \
+		 src/util/key_table.c \
+		 src/util/server_table.c \
+		 src/util/aes_keywrap_3394nopad.c \
+		 src/util/pelz_request_handler.c
 
 App_Cpp_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
 
@@ -318,7 +324,7 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted
+				  --search-path ../kmyth/sgx/trusted 
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -326,28 +332,17 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@echo "CC   <=  $<"
 
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
-			   $(App_Cpp_Files) \
-			   $(App_Cpp_Kmyth_Files) \
-			   sgx/pelz_enclave_u.o \
-			   sgx/ec_key_cert_unmarshal.o \
-			   sgx/log_ocall.o \
-			   sgx/ecdh_ocall.o \
-			   sgx/ecdh_util.o \
-			   sgx/ecdh_dummy_server.o \
-			   sgx/memory_ocall.o \
-			   sgx/log_ocall.o
+                           $(App_Cpp_Files_for_Test) \
+			   $(App_Cpp_Files) 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
-			 $(App_Include_Paths) \
+			 -Iinclude \
 			 -Itest/include \
-			 -Isgx \
 			 $(App_C_Flags) \
-			 $(App_Link_Flags) \
-			 -Lsgx \
 			 -lcrypto \
 			 -lcjson \
 			 -lpthread \
 			 -lcunit
-	@echo "LINK =>  $@"
+	@echo "LINK =>  $(App_Name_Test)"
 
 bin/$(App_Name_Service): $(App_Service_File) \
 			 $(App_Cpp_Files) \
@@ -369,7 +364,7 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 -lcrypto \
 			 -lcjson \
 			 -lpthread
-	@echo "LINK =>  $@"
+	@echo "LINK =>  $(App_Name_Service)"
 
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      $(App_Cpp_Files) \
@@ -391,7 +386,7 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 			 -lcrypto \
 			 -lcjson \
 			 -lpthread
-	@echo "LINK =>  $@"
+	@echo "LINK =>  $(App_Name_Pipe)"
 
 ######## Enclave Objects ########
 
@@ -401,7 +396,7 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted
+				  --search-path ../kmyth/sgx/trusted 
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
@@ -470,7 +465,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/ec_key_cert_unmarshal.o \
 		     sgx/ec_key_cert_marshal.o \
 		     sgx/ecdh_util.o \
-		     sgx/sgx_retrieve_key_impl.o 
+		     sgx/sgx_retrieve_key_impl.o \
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -505,7 +500,18 @@ pre:
 .PHONY: test
 
 test: all
+	@cd test && ./../kmyth/sgx/demo/data/gen_test_keys_certs.bash
+	@openssl x509 -in test/client_cert_test.pem -inform pem -out test/client_cert_test.der -outform der
+	@openssl x509 -in test/server_cert_test.pem -inform pem -out test/server_cert_test.der -outform der
+	@openssl pkey -in test/client_priv_test.pem -inform pem -out test/client_priv_test.der -outform der
+	@./bin/pelz seal test/client_cert_test.der -o test/client_cert_test.der.nkl
+	@./bin/pelz seal test/server_cert_test.der -o test/server_cert_test.der.nkl
+	@./bin/pelz seal test/client_priv_test.der -o test/client_priv_test.der.nkl
+	@echo "GEN => Test Key/Cert Files"
 	@./test/bin/pelz-test 2> /dev/null
+	@rm -f test/*.pem
+	@rm -f test/*.der
+	@rm -f test/*.nkl
 
 .PHONY: clean
 
@@ -519,4 +525,8 @@ clean:
 	@rm -f sgx/*_t.*
 	@rm -f sgx/*.o
 	@rm -f test/log/*
+	@rm -f test/*.pem
+	@rm -f test/*.der
+	@rm -f test/*.nkl
+	@rm -f test/*.txt
 
