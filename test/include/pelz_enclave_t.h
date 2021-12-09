@@ -5,7 +5,6 @@
 
 #include "pelz_request_handler.h"
 #include "common_table.h"
-#include "key_table.h"
 #include "pelz_io.h"
 #include "charbuf.h"
 #include "util.h"
@@ -28,7 +27,6 @@ extern "C"
   TableResponseStatus private_pkey_free(void);
   TableResponseStatus private_pkey_add(uint64_t handle);
   RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output);
-  int key_load(size_t key_id_len, unsigned char *key_id, size_t * key_len, unsigned char **key);
   void ocall_malloc(size_t size, char **buf);
   void ocall_free(void *ptr, size_t len);
 #ifdef __cplusplus

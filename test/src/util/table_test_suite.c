@@ -16,12 +16,8 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 #include <common_table.h>
-#include <key_table.h>
 
-#include "sgx_urts.h"
-#include "sgx_seal_unseal_impl.h"
-#include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include "pelz_enclave_t.h"
 
 // Adds all table tests to main test runner.
 int table_suite_add_tests(CU_pSuite suite)

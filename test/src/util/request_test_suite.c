@@ -15,10 +15,6 @@
 #include <pelz_log.h>
 #include <pelz_request_handler.h>
 
-#include "sgx_urts.h"
-#include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
-
 // Adds all request handler tests to main test runner.
 int request_suite_add_tests(CU_pSuite suite)
 {

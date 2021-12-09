@@ -12,10 +12,7 @@
 #include <openssl/bn.h>
 #include <openssl/asn1.h>
 
-#include <pelz_io.h>
 #include <common_table.h>
-#include <util.h>
-#include <pelz_request_handler.h>
 #include <charbuf.h>
 #include <pelz_log.h>
 
