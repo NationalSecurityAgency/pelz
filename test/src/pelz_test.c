@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "table_test_suite.h"
+#include "request_test_suite.h"
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
 #include "test_pelz_uri_helpers.h"
@@ -16,6 +18,13 @@
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
+
+#include "sgx_urts.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
+sgx_enclave_id_t eid = 0;
+
+#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
 // Blank Suite's init and cleanup code
 int init_suite(void)
@@ -31,6 +40,8 @@ int clean_suite(void)
 //Main function for the unit testing of the Pelz Service application
 int main(int argc, char **argv)
 {
+  int status;
+
   const char *key_file_id[6] = { "test/key1.txt", "test/key2.txt", "test/key3.txt", "test/key4.txt", "test/key5.txt",
     "test/key6.txt"
   };
@@ -58,7 +69,16 @@ int main(int argc, char **argv)
   {
     return CU_get_error();
   }
-/*
+
+  sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+  kmyth_unsealed_data_table_initialize(eid, &status);
+  if (status)
+  {
+    pelz_log(LOG_ERR, "Unseal Table Init Failure");
+    sgx_destroy_enclave(eid);
+    return (1);
+  }
+
   // Add table suite ---- tests table destroy/add/lookup/delete functions 
   CU_pSuite table_Suite = NULL;
 
@@ -88,7 +108,7 @@ int main(int argc, char **argv)
     CU_cleanup_registry();
     return CU_get_error();
   }
-*/
+
   // Add utility suite --- tests util/util.h functions
   CU_pSuite utility_Suite = NULL;
 
@@ -139,6 +159,8 @@ int main(int argc, char **argv)
   //CU_console_run_tests();
   //CU_automated_run_tests();
 
+  kmyth_unsealed_data_table_cleanup(eid, &status);
+  sgx_destroy_enclave(eid);
   for (int i = 0; i < 6; i++)
   {
     remove(key_file_id[i]);

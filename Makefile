@@ -324,7 +324,8 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted 
+				  --search-path ../kmyth/sgx/trusted \
+			  	  --search-path ../test/include	  
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -332,17 +333,19 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@echo "CC   <=  $<"
 
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
-                           $(App_Cpp_Files_for_Test) \
 			   $(App_Cpp_Files) \
-			   sgx/ec_key_cert_unmarshal.o \
-			   sgx/log_ocall.o 
+			   $(App_Cpp_Kmyth_Files) \
+                           sgx/pelz_enclave_u.o \
+                           sgx/ec_key_cert_unmarshal.o \
+                           sgx/log_ocall.o \
+                           sgx/ecdh_ocall.o \
+                           sgx/ecdh_util.o \
+                           sgx/ecdh_dummy_server.o \
+			   sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
-			 -Iinclude \
+			 $(App_Include_Paths) \
+                         -Isgx \
 			 -Itest/include \
-			 -Ikmyth/sgx/trusted/include \
-			 -Ikmyth/sgx/trusted/include/util \
-			 -Ikmyth/sgx/trusted/include/wrapper \
-			 -Ikmyth/sgx/common/include \
 			 $(App_C_Flags) \
 			 $(App_Link_Flags) \
 			 -lcrypto \
@@ -401,7 +404,8 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted 
+				  --search-path ../kmyth/sgx/trusted \
+                                  --search-path ../test/include 
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
@@ -455,6 +459,10 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
+sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
+	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <= $<"
+
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
@@ -471,6 +479,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/ec_key_cert_marshal.o \
 		     sgx/ecdh_util.o \
 		     sgx/sgx_retrieve_key_impl.o \
+		     sgx/enclave_helper_functions.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
