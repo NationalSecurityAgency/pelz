@@ -333,11 +333,18 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
                            $(App_Cpp_Files_for_Test) \
-			   $(App_Cpp_Files) 
+			   $(App_Cpp_Files) \
+			   sgx/ec_key_cert_unmarshal.o \
+			   sgx/log_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 -Iinclude \
 			 -Itest/include \
+			 -Ikmyth/sgx/trusted/include \
+			 -Ikmyth/sgx/trusted/include/util \
+			 -Ikmyth/sgx/trusted/include/wrapper \
+			 -Ikmyth/sgx/common/include \
 			 $(App_C_Flags) \
+			 $(App_Link_Flags) \
 			 -lcrypto \
 			 -lcjson \
 			 -lpthread \
@@ -353,8 +360,7 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 sgx/ecdh_ocall.o \
                          sgx/ecdh_util.o \
                          sgx/ecdh_dummy_server.o \
-                         sgx/memory_ocall.o \
-			 sgx/log_ocall.o
+                         sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -375,8 +381,7 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      sgx/ecdh_ocall.o \
                       sgx/ecdh_util.o \
                       sgx/ecdh_dummy_server.o \
-                      sgx/memory_ocall.o \
-		      sgx/log_ocall.o
+                      sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \

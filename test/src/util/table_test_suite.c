@@ -53,7 +53,6 @@ void test_table_destroy(void)
 
 void test_table_add(void)
 {
-  TableResponseStatus status;
   charbuf tmp;
   charbuf key;
   uint8_t *data = NULL;
@@ -61,12 +60,15 @@ void test_table_add(void)
   uint64_t handle;
   const char *prefix = "file:";
   const char *valid_id[3] = { "/test/key1.txt", "test/client_cert_test.der.nkl", "test/client_priv_test.der.nkl" };
+  const char *key_str = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
 
   pelz_log(LOG_DEBUG, "Test Table Add Function Start");
 
   //Testing the key table add
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
-  CU_ASSERT(key_table_add(tmp, &key) == OK);
+  key = new_charbuf(strlen(key_str));
+  memcpy(key.chars, key_str, key.len);
+  CU_ASSERT(key_table_add_key(tmp, key) == OK);
   free_charbuf(&tmp);
   secure_free_charbuf(&key);
   pelz_log(LOG_DEBUG, "Key Table Add Successful");
@@ -75,40 +77,31 @@ void test_table_add(void)
   CU_ASSERT(server_table_add(handle) == RET_FAIL);
 
   CU_ASSERT(read_bytes_from_file((char *) valid_id[1], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  CU_ASSERT(kmyth_sgx_unseal_nkl(data, data_len, &handle) == 0);
   free(data);
 
-  server_table_add(eid, &status, handle);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(server_table_add(handle) == OK);
   pelz_log(LOG_DEBUG, "Server Table Add Successful");
 
   //Testing the private pkey add
-  private_pkey_init(eid, &status);
-  CU_ASSERT(status == OK);
-  private_pkey_add(eid, &status, handle);
-  CU_ASSERT(status == RET_FAIL);
+  CU_ASSERT(private_pkey_init() == OK);
+  CU_ASSERT(private_pkey_add(handle) == RET_FAIL);
 
   CU_ASSERT(read_bytes_from_file((char *) valid_id[2], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  CU_ASSERT(kmyth_sgx_unseal_nkl(data, data_len, &handle) == 0);
   free(data);
 
-  private_pkey_add(eid, &status, handle);
-  pelz_log(LOG_DEBUG, "private_pkey_add return: %lu", status);
-  CU_ASSERT(status == OK);
-  private_pkey_free(eid, &status);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(private_pkey_add(handle) == OK);
+  CU_ASSERT(private_pkey_free() == OK);
   pelz_log(LOG_DEBUG, "Private Key Add Successful");
 
-  table_destroy(eid, &status, KEY);
-  CU_ASSERT(status == OK);
-  table_destroy(eid, &status, SERVER);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_destroy(KEY) == OK);
+  CU_ASSERT(table_destroy(SERVER) == OK);
   pelz_log(LOG_DEBUG, "Test Table Add Function Finish");
 }
 
 void test_table_lookup(void)
 {
-  TableResponseStatus status;
   charbuf tmp;
   charbuf key;
   uint8_t *data = NULL;
@@ -121,6 +114,9 @@ void test_table_lookup(void)
     "/test/key1.txt", "/test/key2.txt", "/test/key3.txt", "/test/key4.txt", "/test/key5.txt", "/test/key6.txt",
     "test/client_cert_test.der.nkl" "test/server_cert_test.der.nkl"
   };
+  const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
+    "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
+  };
   const char *tmp_id[2] = { "/test/key.txt", "/test/key1txt" };
 
   pelz_log(LOG_DEBUG, "Test Table Look-up Function Start");
@@ -128,31 +124,29 @@ void test_table_lookup(void)
   for (int i = 0; i < 6; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    status = key_table_add(tmp, &key);
-    CU_ASSERT(status == OK);
+    key = new_charbuf(strlen(key_str[i]));
+    memcpy(key.chars, key_str[i], key.len);
+    CU_ASSERT(key_table_add_key(tmp, key) == OK);
     free_charbuf(&tmp);
     secure_free_charbuf(&key);
   }
 
   //Initial load of certs into the server table
   CU_ASSERT(read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  CU_ASSERT(kmyth_sgx_unseal_nkl(data, data_len, &handle) == 0);
   free(data);
-  server_table_add(eid, &status, handle);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(server_table_add(handle) == OK);
 
   CU_ASSERT(read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  CU_ASSERT(kmyth_sgx_unseal_nkl(data, data_len, &handle) == 0);
   free(data);
-  server_table_add(eid, &status, handle);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(server_table_add(handle) == OK);
 
   //Testing the look-up function for key table
   for (int i = 0; i < 6; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    status = table_lookup(KEY, tmp, &index);
-    CU_ASSERT(status == OK);
+    CU_ASSERT(table_lookup(KEY, tmp, &index) == OK);
     CU_ASSERT(index == i);
     free_charbuf(&tmp);
     index = 0;
@@ -160,28 +154,24 @@ void test_table_lookup(void)
 
   //Testing id not found for key table
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
-  status = table_lookup(KEY, tmp, &index);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_lookup(KEY, tmp, &index) == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
-  status = table_lookup(KEY, tmp, &index);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_lookup(KEY, tmp, &index) == NO_MATCH);
   free_charbuf(&tmp);
 
   //Testing the look-up function for server table
   tmp = new_charbuf(strlen("TestClient"));
   memcpy(tmp.chars, "TestClient", tmp.len);
-  status = table_lookup(SERVER, tmp, &index);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_lookup(SERVER, tmp, &index) == OK);
   CU_ASSERT(index == 0);
   free_charbuf(&tmp);
   index = 0;
 
   tmp = new_charbuf(strlen("TestServer"));
   memcpy(tmp.chars, "TestServer", tmp.len);
-  status = table_lookup(SERVER, tmp, &index);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_lookup(SERVER, tmp, &index) == OK);
   CU_ASSERT(index == 1);
   free_charbuf(&tmp);
   index = 0;
@@ -189,20 +179,16 @@ void test_table_lookup(void)
   //Testing id not found for server table
   tmp = new_charbuf(strlen("TestTestTest"));
   memcpy(tmp.chars, "TestTestTest", tmp.len);
-  status = table_lookup(SERVER, tmp, &index);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_lookup(SERVER, tmp, &index) == NO_MATCH);
   free_charbuf(&tmp);
 
-  table_destroy(eid, &status, KEY);
-  CU_ASSERT(status == OK);
-  table_destroy(eid, &status, SERVER);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_destroy(KEY) == OK);
+  CU_ASSERT(table_destroy(SERVER) == OK);
   pelz_log(LOG_DEBUG, "Test Table Look-up Function Finish");
 }
 
 void test_table_delete(void)
 {
-  TableResponseStatus status;
   charbuf tmp;
   charbuf key;
   uint8_t *data = NULL;
@@ -214,6 +200,9 @@ void test_table_delete(void)
     "/test/key1.txt", "/test/key2.txt", "/test/key3.txt", "/test/key4.txt", "/test/key5.txt", "/test/key6.txt",
     "test/client_cert_test.der.nkl" "test/server_cert_test.der.nkl"
   };
+  const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
+    "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
+  };
   const char *tmp_id[2] = {
     "/test/key.txt", "/test/key1txt"
   };
@@ -222,91 +211,77 @@ void test_table_delete(void)
   for (int i = 0; i < 6; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
-    status = key_table_add(tmp, &key);
-    CU_ASSERT(status == OK);
+    key = new_charbuf(strlen(key_str[i]));
+    memcpy(key.chars, key_str[i], key.len);
+    CU_ASSERT(key_table_add_key(tmp, key) == OK);
     free_charbuf(&tmp);
     secure_free_charbuf(&key);
   }
 
   //Initial load of certs into the server table
   CU_ASSERT(read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  CU_ASSERT(kmyth_sgx_unseal_nkl(data, data_len, &handle) == 0);
   free(data);
-  server_table_add(eid, &status, handle);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(server_table_add(handle) == OK);
 
   CU_ASSERT(read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  CU_ASSERT(kmyth_sgx_unseal_nkl(data, data_len, &handle) == 0);
   free(data);
-  server_table_add(eid, &status, handle);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(server_table_add(handle) == OK);
 
   //Testing the delete function for key table
   tmp = copy_CWD_to_id(prefix, valid_id[3]);
-  table_delete(eid, &status, KEY, tmp);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_delete(KEY, tmp) == OK);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[5]);
-  table_delete(eid, &status, KEY, tmp);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_delete(KEY, tmp) == OK);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
-  table_delete(eid, &status, KEY, tmp);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_delete(KEY, tmp) == OK);
   free_charbuf(&tmp);
 
   //Testing that if the delete function does not find key_id then does not delete for valid files and non-valid files
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
-  table_delete(eid, &status, KEY, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_delete(KEY, tmp) == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
-  table_delete(eid, &status, KEY, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_delete(KEY, tmp) == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("adaj;ldkjidka;dfkjai"));
   memcpy(tmp.chars, "adaj;ldkjidka;dfkjai", tmp.len);
-  table_delete(eid, &status, KEY, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_delete(KEY, tmp) == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, valid_id[5]);
-  table_delete(eid, &status, KEY, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_delete(KEY, tmp) == NO_MATCH);
   free_charbuf(&tmp);
 
   //Testing the delete function for server table
   tmp = new_charbuf(strlen("TestTestTest"));
   memcpy(tmp.chars, "TestTestTest", tmp.len);
-  table_delete(eid, &status, SERVER, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_delete(SERVER, tmp) == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("TestClient"));
   memcpy(tmp.chars, "TestClient", tmp.len);
-  table_delete(eid, &status, SERVER, tmp);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_delete(SERVER, tmp) == OK);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("TestClient"));
   memcpy(tmp.chars, "TestClient", tmp.len);
-  table_delete(eid, &status, SERVER, tmp);
-  CU_ASSERT(status == NO_MATCH);
+  CU_ASSERT(table_delete(SERVER, tmp) == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("TestServer"));
   memcpy(tmp.chars, "TestServer", tmp.len);
-  table_delete(eid, &status, SERVER, tmp);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_delete(SERVER, tmp) == OK);
   free_charbuf(&tmp);
 
-  table_destroy(eid, &status, KEY);
-  CU_ASSERT(status == OK);
-  table_destroy(eid, &status, SERVER);
-  CU_ASSERT(status == OK);
+  CU_ASSERT(table_destroy(KEY) == OK);
+  CU_ASSERT(table_destroy(SERVER) == OK);
   pelz_log(LOG_DEBUG, "Test Table Delete Function Finish");
 }

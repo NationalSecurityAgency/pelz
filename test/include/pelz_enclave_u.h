@@ -1,10 +1,12 @@
 // TEST FILE FOR TEST PURPOSES ONLY
 
-#ifndef INCLUDE_PELZ_ENCLAVE_T_H_
-#define INCLUDE_PELZ_ENCLAVE_T_H_
+#ifndef INCLUDE_PELZ_ENCLAVE_U_H_
+#define INCLUDE_PELZ_ENCLAVE_U_H_
 
 #include "test_helper_functions.h"
 
+#include "aes_keywrap_3394nopad.h"
+#include "util"
 #include "pelz_request_handler.h"
 #include "common_table.h"
 #include "pelz_io.h"

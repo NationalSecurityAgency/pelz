@@ -12,7 +12,7 @@
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
 #include "test_pelz_uri_helpers.h"
-#include <pelz_log.h>
+#include "pelz_log.h"
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>

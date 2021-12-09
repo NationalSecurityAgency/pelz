@@ -13,7 +13,10 @@
 
 #include <charbuf.h>
 #include <pelz_log.h>
+#include <common_table.h>
 #include <pelz_request_handler.h>
+
+#include "pelz_enclave_t.h"
 
 // Adds all request handler tests to main test runner.
 int request_suite_add_tests(CU_pSuite suite)
@@ -29,7 +32,6 @@ void test_request(void)
 {
   RequestResponseStatus status;
   RequestType request_type = REQ_UNK;
-  TableResponseStatus ret;
   charbuf tmp;
   charbuf data_in;
   charbuf data;
@@ -49,12 +51,12 @@ void test_request(void)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
     request_type = REQ_ENC;
-    pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+    status = pelz_request_handler(request_type, tmp, data_in, &output);
     CU_ASSERT(status == 0);
     request_type = REQ_DEC;
     data = copy_chars_from_charbuf(output, 0);
     secure_free_charbuf(&output);
-    pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+    status = pelz_request_handler(request_type, tmp, data, &output);
     CU_ASSERT(status == 0);
     CU_ASSERT(cmp_charbuf(output, data_in) == 0);
     free_charbuf(&tmp);
@@ -64,19 +66,19 @@ void test_request(void)
 
   //Check that non-valid file does not load key
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
-  pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
+  status = pelz_request_handler(REQ_ENC, tmp, data_in, &output);
   CU_ASSERT(status == KEK_LOAD_ERROR);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
-  pelz_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output);
+  status = pelz_request_handler(REQ_ENC, tmp, data_in, &output);
   CU_ASSERT(status == KEK_LOAD_ERROR);
   free_charbuf(&tmp);
 
   //Check that non-valid request type returns correct error status
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
   request_type = REQ_UNK;
-  pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);
+  status = pelz_request_handler(request_type, tmp, data_in, &output);
   CU_ASSERT(status == REQUEST_TYPE_ERROR);
   free_charbuf(&tmp);
 
@@ -85,12 +87,12 @@ void test_request(void)
   request_type = REQ_ENC;
   data = new_charbuf(8);
   memcpy(data.chars, "abcdefgh", data.len);
-  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  status = pelz_request_handler(request_type, tmp, data, &output);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   data = new_charbuf(30);
   memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
-  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  status = pelz_request_handler(request_type, tmp, data, &output);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
@@ -100,17 +102,16 @@ void test_request(void)
   request_type = REQ_DEC;
   data = new_charbuf(8);
   memcpy(data.chars, "abcdefgh", data.len);
-  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  status = pelz_request_handler(request_type, tmp, data, &output);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   data = new_charbuf(30);
   memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
-  pelz_request_handler(eid, &status, request_type, tmp, data, &output);
+  status = pelz_request_handler(request_type, tmp, data, &output);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
 
-  table_destroy(eid, &ret, KEY);
-  CU_ASSERT(ret == 0);
+  CU_ASSERT(table_destroy(KEY) == OK);
   pelz_log(LOG_DEBUG, "Test Request Function Finish");
 }
