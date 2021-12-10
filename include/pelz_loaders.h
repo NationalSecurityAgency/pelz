@@ -1,8 +1,13 @@
 #ifndef _PELZ_LOADERS_H_
 #define _PELZ_LOADERS_H_
 
-typedef enum
-{ OK, INVALID_EXT, UNABLE_RD_F, TPM_UNSEAL_FAIL, SGX_UNSEAL_FAIL } LoaderResponseStatus;
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stddef.h>
+
+#include "pelz_io.h"
+#include "charbuf.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -22,11 +27,37 @@ extern "C"
  */
   int pelz_load_key_from_file(char *filename, charbuf * key);
 
-  LoaderResponseStatus pelz_load_file_to_enclave((uint8_t path, uint8_t * handle);
-    LoaderResponseStatus pelz_unseal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len);
-    LoaderResponseStatus pelz_unseal_nkl(uint8_t * data, size_t data_len, uint8_t ** handle);
+/**
+ * @brief Loads a .nkl or .ski file into the enclave data table.
+ *
+ * @param[in]   path    The filename path
+ * @param[out]  handle  The handle value for the data location in the kmyth unseal data table
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int pelz_load_file_to_enclave(charbuf path, uint64_t * handle);
+/**
+ * @brief Takes TPM sealed data and calls the kmyth TPM unseal function to output unsealed data.
+ *
+ * @param[in]   data          The data to be TPM unsealed from the loaded file
+ * @param[in]   data_len      The data length
+ * @param[out]  data_out      The TPM unsealed data from the loaded file
+ * @param[out]  data_out_len  The unsealed data length
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int pelz_unseal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len);
+/**
+ * @brief Takes SGX enclave sealled data adn call the kmyth SGX unseal function providing back a handle value.
+ *
+ * @param[in]   data          The data to be SGX enclave unsealed from the loaded file
+ * @param[in]   data_len      The data length
+ * @param[out]  handle        The handle value for the data location in the kmyth unseal data table
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int pelz_unseal_nkl(uint8_t * data, size_t data_len, uint64_t * handle);
 #ifdef __cplusplus
-  }
+};
 #endif
-
 #endif

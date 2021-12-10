@@ -1,10 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <kmyth/kmyth.h>
+#include <kmyth/file_io.h>
 
 #include "util.h"
 #include "pelz_log.h"
 #include "pelz_loaders.h"
 #include "pelz_request_handler.h"
+
+#include "sgx_urts.h"
+#include "sgx_seal_unseal_impl.h"
+#include "pelz_enclave.h"
+#include "pelz_enclave_u.h"
 
 int pelz_load_key_from_file(char *filename, charbuf * key)
 {
@@ -49,18 +56,18 @@ int pelz_load_key_from_file(char *filename, charbuf * key)
   return 0;
 }
 
-LoaderResponseStatus pelz_load_file_to_enclave(uint8_t path, uint8_t * handle)
+int pelz_load_file_to_enclave(charbuf path, uint64_t * handle)
 {
-  ExtentionType ext;
+  int ext;
   uint8_t *data = NULL;
   size_t data_len = 0;
   uint8_t *data_out = NULL;
   size_t data_out_len = 0;
 
-  if (read_bytes_from_file(path, &data, &data_len))
+  if (read_bytes_from_file((char *) path.chars, &data, &data_len))
   {
     pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
-    return UNABLE_RD_F;
+    return (1);
   }
   pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_len, path);
 
@@ -70,43 +77,43 @@ LoaderResponseStatus pelz_load_file_to_enclave(uint8_t path, uint8_t * handle)
   case SKI:
     pelz_unseal_ski(data, data_len, &data_out, &data_out_len);
     free(data);
-    pelz_unseal_nkl(data_out, data_out_len, &handle);
+    pelz_unseal_nkl(data_out, data_out_len, handle);
     free(data_out);
     break;
   case NKL:
-    pelz_unseal_nkl(data, data_len, &handle);
+    pelz_unseal_nkl(data, data_len, handle);
     free(data);
     break;
   default:
-    return INVALID_EXT;
+    return (1);
   }
-  return OK;
+  return (0);
 }
 
-LoaderResponseStatus pelz_unseal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len)
+int pelz_unseal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len)
 {
   char *authString = NULL;
   size_t auth_string_len = 0;
   const char *ownerAuthPasswd = "";
   size_t oa_passwd_len = 0;
 
-  if (tpm2_kmyth_unseal(data, data_length, &data_out, &data_out_len, (uint8_t *) authString, auth_string_len,
+  if (tpm2_kmyth_unseal(data, data_len, data_out, data_out_len, (uint8_t *) authString, auth_string_len,
       (uint8_t *) ownerAuthPasswd, oa_passwd_len))
   {
     pelz_log(LOG_ERR, "TPM unseal failed");
-    return TPM_UNSEAL_FAIL;
+    return (1);
   }
 
-  return OK;
+  return (0);
 }
 
-LoaderResponseStatus pelz_unseal_nkl(uint8_t * data, size_t data_len, uint8_t ** handle)
+int pelz_unseal_nkl(uint8_t * data, size_t data_len, uint64_t * handle)
 {
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle))
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, handle))
   {
     pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-    return SGX_UNSEAL_FAIL;
+    return (1);
   }
   pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
-  return OK;
+  return (0);
 }
