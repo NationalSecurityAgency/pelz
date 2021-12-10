@@ -30,12 +30,12 @@ extern "C"
 /**
  * @brief Loads a .nkl or .ski file into the enclave data table.
  *
- * @param[in]   path    The filename path
- * @param[out]  handle  The handle value for the data location in the kmyth unseal data table
+ * @param[in]   filename  The filename in a null-terminated string
+ * @param[out]  handle    The handle value for the data location in the kmyth unseal data table
  *
  * @returns 0 on success, 1 on error
  */
-  int pelz_load_file_to_enclave(charbuf path, uint64_t * handle);
+  int pelz_load_file_to_enclave(char *filename, uint64_t * handle);
 /**
  * @brief Takes TPM sealed data and calls the kmyth TPM unseal function to output unsealed data.
  *

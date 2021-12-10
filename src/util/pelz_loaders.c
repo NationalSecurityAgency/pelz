@@ -17,12 +17,6 @@ int pelz_load_key_from_file(char *filename, charbuf * key)
 {
   size_t key_len;
 
-  if (filename == NULL)
-  {
-    pelz_log(LOG_ERR, "No filename provided.");
-    return 1;
-  }
-
   unsigned char tmp_key[MAX_KEY_LEN];
   FILE *key_file_handle = NULL;
 
@@ -56,7 +50,7 @@ int pelz_load_key_from_file(char *filename, charbuf * key)
   return 0;
 }
 
-int pelz_load_file_to_enclave(charbuf path, uint64_t * handle)
+int pelz_load_file_to_enclave(char *filename, uint64_t * handle)
 {
   int ext;
   uint8_t *data = NULL;
@@ -64,14 +58,14 @@ int pelz_load_file_to_enclave(charbuf path, uint64_t * handle)
   uint8_t *data_out = NULL;
   size_t data_out_len = 0;
 
-  if (read_bytes_from_file((char *) path.chars, &data, &data_len))
+  if (read_bytes_from_file(filename, &data, &data_len))
   {
-    pelz_log(LOG_ERR, "Unable to read file %s ... exiting", path);
+    pelz_log(LOG_ERR, "Unable to read file %s ... exiting", filename);
     return (1);
   }
-  pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_len, path);
+  pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_len, filename);
 
-  ext = get_file_ext(path);
+  ext = get_file_ext(filename);
   switch (ext)
   {
   case SKI:
@@ -85,8 +79,10 @@ int pelz_load_file_to_enclave(charbuf path, uint64_t * handle)
     free(data);
     break;
   default:
+    free(data);
     return (1);
   }
+  free(data);
   return (0);
 }
 
