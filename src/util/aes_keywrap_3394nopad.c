@@ -43,7 +43,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   //   - the ciphertext output is the same length as the expanded plaintext
   *outData_len = inData_len + 8;
   *outData = NULL;
-  ocall_malloc(*outData_len, outData);
+  *outData = (unsigned char *) malloc(*outData_len);
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "malloc error for output ciphertext ... exiting");
@@ -58,7 +58,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
     pelz_log(LOG_ERR, "error creating AES Key Wrap cipher context ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     return 1;
   }
   EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
@@ -81,7 +81,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!init_result)
   {
     pelz_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -90,7 +90,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!EVP_EncryptInit_ex(ctx, NULL, NULL, key, NULL))
   {
     pelz_log(LOG_ERR, "error setting key ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -107,7 +107,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!EVP_EncryptUpdate(ctx, *outData, &tmp_len, inData, inData_len))
   {
     pelz_log(LOG_ERR, "error wrapping key ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -118,7 +118,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!EVP_EncryptFinal_ex(ctx, (*outData) + ciphertext_len, &tmp_len))
   {
     pelz_log(LOG_ERR, "finalization error ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -129,7 +129,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (ciphertext_len != *outData_len)
   {
     pelz_log(LOG_ERR, "CT length error (expected %lu, actual %d) bytes ... exiting", *outData_len, ciphertext_len);
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -179,7 +179,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   // should be the same size as the input ciphertext data (original plaintext
   // plus prepended 8-byte integrity check value)
   *outData = NULL;
-  ocall_malloc(*outData_len, outData);
+  *outData = (unsigned char *) malloc(inData_len);
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "malloc error (%d bytes) for PT output ... exiting", inData_len);
@@ -194,7 +194,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
     pelz_log(LOG_ERR, "error creating cipher context ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     return 1;
   }
   EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
@@ -217,7 +217,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!init_result)
   {
     pelz_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -227,7 +227,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, NULL))
   {
     pelz_log(LOG_ERR, "error setting key ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -242,7 +242,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!EVP_DecryptUpdate(ctx, *outData, &tmp_len, inData, inData_len))
   {
     pelz_log(LOG_ERR, "key unwrapping error ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -253,7 +253,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!EVP_DecryptFinal_ex(ctx, *outData + *outData_len, &tmp_len))
   {
     pelz_log(LOG_ERR, "key unwrap 'finalize' error ... exiting");
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -265,7 +265,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   {
     pelz_log(LOG_ERR, "unwrapped data length (%d bytes) mis-matches expected "
       "(%lu bytes) ... exiting", *outData_len, inData_len - 8);
-    ocall_free(*outData, *outData_len);
+    free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
