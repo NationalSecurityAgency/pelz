@@ -22,9 +22,6 @@
 TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 {
   Entry tmp_entry;
-  size_t max_mem_size;
-
-  max_mem_size = 1000000;
 
   if (key_table.mem_size >= max_mem_size)
   {
@@ -60,11 +57,8 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
 {
   Entry tmp_entry;
-  size_t max_mem_size;
   uint8_t *data;
   size_t data_size = 0;
-
-  max_mem_size = 1000000;
 
   if (key_table.mem_size >= max_mem_size)
   {
@@ -114,11 +108,8 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
 TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, charbuf server_key_id)
 {
   Entry tmp_entry;
-  size_t max_mem_size;
   int index = 0;
   int ret;
-
-  max_mem_size = 1000000;
 
   if (key_table.mem_size >= max_mem_size)
   {

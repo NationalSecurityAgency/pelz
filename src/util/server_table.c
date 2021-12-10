@@ -26,7 +26,6 @@ EVP_PKEY *private_pkey;
 TableResponseStatus server_table_add(uint64_t handle)
 {
   Entry tmp_entry;
-  size_t max_mem_size;
   uint8_t *data;
   size_t data_size = 0;
   int ret;
@@ -34,8 +33,6 @@ TableResponseStatus server_table_add(uint64_t handle)
   int lastpos = 0;
   size_t len = 0;
   char *tmp_id;
-
-  max_mem_size = 1000000;
 
   if (server_table.mem_size >= max_mem_size)
   {

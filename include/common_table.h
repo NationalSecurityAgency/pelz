@@ -58,6 +58,8 @@ extern Table server_table;
 
 extern EVP_PKEY *private_pkey;
 
+extern size_t max_mem_size;
+
 #ifdef __cplusplus
 extern "C"
 {

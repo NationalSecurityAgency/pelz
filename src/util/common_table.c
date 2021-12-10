@@ -29,6 +29,8 @@ Table server_table = {
   .mem_size = 0
 };
 
+size_t max_mem_size = 1000000;
+
 //Destroy server table
 TableResponseStatus table_destroy(TableType type)
 {

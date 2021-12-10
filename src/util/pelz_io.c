@@ -41,12 +41,12 @@ void ocall_free(void *ptr, size_t len)
   free(ptr);
 }
 
-int get_file_ext(charbuf buf)
+ExtensionType get_file_ext(charbuf buf)
 {
   size_t period_index = 0;
   size_t ext_len = 0;
-  int ext_type_size = 2;
-  const char *ext_type[ext_type_size] = { ".nkl", ".ski" };
+  size_t ext_type_len = 4;
+  const char *ext_type[2] = { ".nkl", ".ski" };
 
   if (buf.chars == NULL)
   {
@@ -77,15 +77,17 @@ int get_file_ext(charbuf buf)
     ext_len--;
   }
   pelz_log(LOG_DEBUG, "Finding file extension.");
-  for (int i = 0; i < ext_type_size; i++)
+  if (ext_len != ext_type_len)
   {
-    if (ext_len == strlen(ext_type[i]))
-    {
-      if (memcmp(buf.chars + period_index, ext_type[i], strlen(ext_type[i])) == 0)
-      {
-        return (i + 1);
-      }
-    }
+    return NO_EXT;
+  }
+  else if (memcmp(buf.chars + period_index, ext_type[0], ext_type_len) == 0)
+  {
+    return NKL;
+  }
+  else if (memcmp(buf.chars + period_index, ext_type[1], ext_type_len) == 0)
+  {
+    return SKI;
   }
   return NO_EXT;
 }

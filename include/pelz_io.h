@@ -27,9 +27,9 @@ extern "C"
  *
  * @param[in] buf The charbuf that contains the file name string
  *
- * @return ExtensionType as int
+ * @return ExtensionType
  */
-  int get_file_ext(charbuf buf);
+  ExtensionType get_file_ext(charbuf buf);
 
 /**
  * <pre>
