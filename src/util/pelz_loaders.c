@@ -82,7 +82,6 @@ int pelz_load_file_to_enclave(char *filename, uint64_t * handle)
     free(data);
     return (1);
   }
-  free(data);
   return (0);
 }
 
