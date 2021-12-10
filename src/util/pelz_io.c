@@ -19,7 +19,7 @@
 #include "common_table.h"
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
-#include "pelz_key_loaders.h"
+#include "pelz_loaders.h"
 #include "util.h"
 #include "pelz_thread.h"
 
