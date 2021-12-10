@@ -63,6 +63,12 @@ int main(int argc, char **argv)
     fclose(fp);
   }
 
+  status = system("./bin/pelz seal test/key1.txt -o test/key1.txt.nkl");
+  if (status != 0)
+  {
+    pelz_log(LOG_INFO, "Seal key1.txt to .nkl failed");
+  }
+
   pelz_log(LOG_DEBUG, "Start Unit Test");
   // Initialize CUnit test registry
   if (CUE_SUCCESS != CU_initialize_registry())

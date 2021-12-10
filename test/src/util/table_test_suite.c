@@ -64,11 +64,16 @@ void test_table_add(void)
   TableResponseStatus status;
   charbuf tmp;
   charbuf key;
+  charbuf server_id;
+  charbuf server_key_id;
   uint8_t *data = NULL;
   size_t data_len = 0;
   uint64_t handle;
   const char *prefix = "file:";
-  const char *valid_id[3] = { "/test/key1.txt", "test/client_cert_test.der.nkl", "test/client_priv_test.der.nkl" };
+
+  const char *valid_id[5] = { "/test/key1.txt", "test/key1.txt.nkl", "/test/key2.txt", "test/client_cert_test.der.nkl",
+    "test/client_priv_test.der.nkl"
+  };
   const char *key_str = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
 
   pelz_log(LOG_DEBUG, "Test Table Add Function Start");
@@ -81,19 +86,32 @@ void test_table_add(void)
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
   secure_free_charbuf(&key);
-  pelz_log(LOG_DEBUG, "Key Table Add Successful");
+  pelz_log(LOG_INFO, "Key Table add Key success");
 
-  //Testing the server table add
-  server_table_add(eid, &status, handle);
+  tmp = copy_CWD_to_id(prefix, valid_id[1]);
+  key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == RET_FAIL);
 
   CU_ASSERT(read_bytes_from_file((char *) valid_id[1], &data, &data_len) == 0);
   CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
   free(data);
 
+  key_table_add_from_handle(eid, &status, tmp, handle);
+  CU_ASSERT(status == OK);
+  free_charbuf(&tmp);
+  pelz_log(LOG_INFO, "Key Table add from Handle success");
+
+  //Testing the server table add
+  server_table_add(eid, &status, handle);
+  CU_ASSERT(status == RET_FAIL);
+
+  CU_ASSERT(read_bytes_from_file((char *) valid_id[3], &data, &data_len) == 0);
+  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  free(data);
+
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == OK);
-  pelz_log(LOG_DEBUG, "Server Table Add Successful");
+  pelz_log(LOG_INFO, "Server Table add success");
 
   //Testing the private pkey add
   private_pkey_init(eid, &status);
@@ -101,16 +119,28 @@ void test_table_add(void)
   private_pkey_add(eid, &status, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[2], &data, &data_len) == 0);
+  CU_ASSERT(read_bytes_from_file((char *) valid_id[4], &data, &data_len) == 0);
   CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
   free(data);
 
   private_pkey_add(eid, &status, handle);
   CU_ASSERT(status == OK);
+  pelz_log(LOG_INFO, "Private Pkey add success");
+
+  tmp = copy_CWD_to_id(prefix, valid_id[2]);
+  server_id = new_charbuf(strlen("TestClient"));
+  memcpy(server_id.chars, "TestClient", server_id.len);
+  server_key_id = new_charbuf(strlen(valid_id[2]));
+  memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
+  key_table_add_from_server(eid, &status, tmp, server_id, server_key_id);
+  CU_ASSERT(status == OK);
+  free_charbuf(&tmp);
+  free_charbuf(&server_id);
+  free_charbuf(&server_key_id);
+  pelz_log(LOG_INFO, "Key Table add from Server success");
+
   private_pkey_free(eid, &status);
   CU_ASSERT(status == OK);
-  pelz_log(LOG_DEBUG, "Private Key Add Successful");
-
   table_destroy(eid, &status, KEY);
   CU_ASSERT(status == OK);
   table_destroy(eid, &status, SERVER);
