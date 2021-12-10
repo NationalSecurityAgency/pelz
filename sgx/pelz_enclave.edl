@@ -138,7 +138,7 @@ int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
  *
  * @return none
  */
-void ocall_malloc(size_t size, [user_check] char** buf);
+void ocall_malloc(size_t size, [user_check] unsigned char** buf);
 
 
 /**

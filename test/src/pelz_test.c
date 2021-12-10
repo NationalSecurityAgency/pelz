@@ -133,12 +133,16 @@ int main(int argc, char **argv)
   CU_basic_run_tests();
   //CU_console_run_tests();
   //CU_automated_run_tests();
+  pelz_log(LOG_DEBUG, "Test Complete");
 
   sgx_destroy_enclave(eid);
+  pelz_log(LOG_DEBUG, "Enclave Destroyed");
   for (int i = 0; i < 6; i++)
   {
     remove(key_file_id[i]);
+    pelz_log(LOG_DEBUG, "Key file %s cleaned up", key_file_id[i]);
   }
+  pelz_log(LOG_DEBUG, "Key files cleaned up");
 
   pelz_log(LOG_DEBUG, "Clean up registry and return");
   // Clean up registry and return

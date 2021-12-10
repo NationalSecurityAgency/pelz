@@ -43,7 +43,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   //   - the ciphertext output is the same length as the expanded plaintext
   *outData_len = inData_len + 8;
   *outData = NULL;
-  *outData = (unsigned char *) malloc(*outData_len);
+  ocall_malloc(*outData_len, (unsigned char **) outData);
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "malloc error for output ciphertext ... exiting");
@@ -179,7 +179,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   // should be the same size as the input ciphertext data (original plaintext
   // plus prepended 8-byte integrity check value)
   *outData = NULL;
-  *outData = (unsigned char *) malloc(inData_len);
+  ocall_malloc(*outData_len, (unsigned char **) outData);
   if (*outData == NULL)
   {
     pelz_log(LOG_ERR, "malloc error (%d bytes) for PT output ... exiting", inData_len);
