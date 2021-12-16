@@ -23,7 +23,7 @@ TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 {
   Entry tmp_entry;
 
-  if (key_table.mem_size >= max_mem_size)
+  if (key_table.mem_size >= MAX_MEM_SIZE)
   {
     pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
     return ERR_MEM;
@@ -61,7 +61,7 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
   uint8_t *data;
   size_t data_size = 0;
 
-  if (key_table.mem_size >= max_mem_size)
+  if (key_table.mem_size >= MAX_MEM_SIZE)
   {
     pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
     return ERR_MEM;
@@ -95,7 +95,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
   uint8_t *data;
   size_t data_size = 0;
 
-  if (key_table.mem_size >= max_mem_size)
+  if (key_table.mem_size >= MAX_MEM_SIZE)
   {
     pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
     return ERR_MEM;
