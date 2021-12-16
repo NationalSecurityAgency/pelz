@@ -71,8 +71,9 @@ void test_table_add(void)
   uint64_t handle;
   const char *prefix = "file:";
 
-  const char *valid_id[5] = { "/test/key1.txt", "test/key1.txt.nkl", "/test/key2.txt", "test/client_cert_test.der.nkl",
-    "test/client_priv_test.der.nkl"
+  const char *valid_id[5] =
+    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "/test/data/key2.txt", "test/data/server_cert_test.der.nkl",
+    "test/data/client_priv_test.der.nkl"
   };
   const char *key_str = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
 
@@ -128,8 +129,8 @@ void test_table_add(void)
   pelz_log(LOG_INFO, "Private Pkey add success");
 
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
-  server_id = new_charbuf(strlen("TestClient"));
-  memcpy(server_id.chars, "TestClient", server_id.len);
+  server_id = new_charbuf(strlen("TestServer"));
+  memcpy(server_id.chars, "TestServer", server_id.len);
   server_key_id = new_charbuf(strlen(valid_id[2]));
   memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
   key_table_add_from_server(eid, &status, tmp, server_id, server_key_id);
@@ -160,13 +161,13 @@ void test_table_lookup(void)
   const char *prefix = "file:";
 
   const char *valid_id[8] = {
-    "/test/key1.txt", "/test/key2.txt", "/test/key3.txt", "/test/key4.txt", "/test/key5.txt", "/test/key6.txt",
-    "test/client_cert_test.der.nkl", "test/server_cert_test.der.nkl"
+    "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt", "/test/data/key4.txt", "/test/data/key5.txt",
+    "/test/data/key6.txt", "test/data/client_cert_test.der.nkl", "test/data/server_cert_test.der.nkl"
   };
   const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
   };
-  const char *tmp_id[2] = { "/test/key.txt", "/test/key1txt" };
+  const char *tmp_id[2] = { "/test/data/key.txt", "/test/data/key1txt" };
 
   pelz_log(LOG_DEBUG, "Test Table Look-up Function Start");
   //Initial load of keys into the key table
@@ -258,14 +259,14 @@ void test_table_delete(void)
   const char *prefix = "file:";
 
   const char *valid_id[8] = {
-    "/test/key1.txt", "/test/key2.txt", "/test/key3.txt", "/test/key4.txt", "/test/key5.txt", "/test/key6.txt",
-    "test/client_cert_test.der.nkl", "test/server_cert_test.der.nkl"
+    "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt", "/test/data/key4.txt", "/test/data/key5.txt",
+    "/test/data/key6.txt", "test/data/client_cert_test.der.nkl", "test/data/server_cert_test.der.nkl"
   };
   const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
   };
   const char *tmp_id[2] = {
-    "/test/key.txt", "/test/key1txt"
+    "/test/data/key.txt", "/test/data/key1txt"
   };
   pelz_log(LOG_DEBUG, "Test  Table Delete Function Start");
   //Initial load of keys into the key table

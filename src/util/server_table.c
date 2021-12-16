@@ -26,7 +26,6 @@ EVP_PKEY *private_pkey;
 TableResponseStatus server_table_add(uint64_t handle)
 {
   Entry tmp_entry;
-  size_t max_mem_size;
   uint8_t *data;
   size_t data_size = 0;
   int ret;
@@ -35,9 +34,7 @@ TableResponseStatus server_table_add(uint64_t handle)
   size_t len = 0;
   char *tmp_id;
 
-  max_mem_size = 1000000;
-
-  if (server_table.mem_size >= max_mem_size)
+  if (server_table.mem_size >= MAX_MEM_SIZE)
   {
     pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
     return MEM_ALLOC_FAIL;

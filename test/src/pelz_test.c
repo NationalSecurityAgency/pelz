@@ -42,8 +42,9 @@ int main(int argc, char **argv)
 {
   int status;
 
-  const char *key_file_id[6] = { "test/key1.txt", "test/key2.txt", "test/key3.txt", "test/key4.txt", "test/key5.txt",
-    "test/key6.txt"
+  const char *key_file_id[6] =
+    { "test/data/key1.txt", "test/data/key2.txt", "test/data/key3.txt", "test/data/key4.txt", "test/data/key5.txt",
+    "test/data/key6.txt"
   };
   const char *key[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
@@ -63,7 +64,7 @@ int main(int argc, char **argv)
     fclose(fp);
   }
 
-  status = system("./bin/pelz seal test/key1.txt -o test/key1.txt.nkl");
+  status = system("./bin/pelz seal test/data/key1.txt -o test/data/key1.txt.nkl");
   if (status != 0)
   {
     pelz_log(LOG_INFO, "Seal key1.txt to .nkl failed");

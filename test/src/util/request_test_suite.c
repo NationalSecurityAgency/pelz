@@ -41,8 +41,8 @@ void test_request(void)
   charbuf data;
   charbuf output;
   const char *prefix = "file:";
-  const char *valid_id[3] = { "/test/key1.txt", "/test/key2.txt", "/test/key3.txt" };
-  const char *tmp_id[2] = { "/test/key7.txt", "/test/key1txt" };
+  const char *valid_id[3] = { "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt" };
+  const char *tmp_id[2] = { "/test/data/key7.txt", "/test/data/key1txt" };
   const char *key_str[3] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN" };
 
   //Initial data_in values

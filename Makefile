@@ -509,23 +509,24 @@ pre:
 	@mkdir -p bin
 	@mkdir -p test/bin
 	@mkdir -p test/log
+	@mkdir -p test/data
 
 
 .PHONY: test
 
 test: all
-	@cd test && ./../kmyth/sgx/demo/data/gen_test_keys_certs.bash
-	@openssl x509 -in test/client_cert_test.pem -inform pem -out test/client_cert_test.der -outform der
-	@openssl x509 -in test/server_cert_test.pem -inform pem -out test/server_cert_test.der -outform der
-	@openssl pkey -in test/client_priv_test.pem -inform pem -out test/client_priv_test.der -outform der
-	@./bin/pelz seal test/client_cert_test.der -o test/client_cert_test.der.nkl
-	@./bin/pelz seal test/server_cert_test.der -o test/server_cert_test.der.nkl
-	@./bin/pelz seal test/client_priv_test.der -o test/client_priv_test.der.nkl
+	@cd test/data && ./../../kmyth/sgx/demo/data/gen_test_keys_certs.bash
+	@openssl x509 -in test/data/client_cert_test.pem -inform pem -out test/data/client_cert_test.der -outform der
+	@openssl x509 -in test/data/server_cert_test.pem -inform pem -out test/data/server_cert_test.der -outform der
+	@openssl pkey -in test/data/client_priv_test.pem -inform pem -out test/data/client_priv_test.der -outform der
+	@./bin/pelz seal test/data/client_cert_test.der -o test/data/client_cert_test.der.nkl
+	@./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
+	@./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
 	@echo "GEN => Test Key/Cert Files"
 	@./test/bin/pelz-test 2> /dev/null
-	@rm -f test/*.pem
-	@rm -f test/*.der
-	@rm -f test/*.nkl
+	@rm -f test/data/*.pem
+	@rm -f test/data/*.der
+	@rm -f test/data/*.nkl
 
 .PHONY: clean
 
@@ -539,8 +540,8 @@ clean:
 	@rm -f sgx/*_t.*
 	@rm -f sgx/*.o
 	@rm -f test/log/*
-	@rm -f test/*.pem
-	@rm -f test/*.der
-	@rm -f test/*.nkl
-	@rm -f test/*.txt
+	@rm -f test/data/*.pem
+	@rm -f test/data/*.der
+	@rm -f test/data/*.nkl
+	@rm -f test/data/*.txt
 
