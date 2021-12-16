@@ -134,12 +134,11 @@ int main(int argc, char **argv)
   //CU_console_run_tests();
   //CU_automated_run_tests();
 
+  sgx_destroy_enclave(eid);
   for (int i = 0; i < 6; i++)
   {
     remove(key_file_id[i]);
   }
-  sgx_destroy_enclave(eid);
-  pelz_log(LOG_DEBUG, "Enclave Destroyed");
 
   pelz_log(LOG_DEBUG, "Clean up registry and return");
   // Clean up registry and return
