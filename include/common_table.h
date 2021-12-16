@@ -16,6 +16,8 @@
 
 #include "charbuf.h"
 
+#define MAX_MEM_SIZE 1000000
+
 typedef union EntryData
 {
   charbuf key;

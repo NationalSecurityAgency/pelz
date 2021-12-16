@@ -12,7 +12,8 @@ int enclave_suite_add_tests(CU_pSuite suite);
 
 // Tests
 void test_table_destroy(void);
+void test_table_key_load(void);
+void test_table_delete(void);
 void test_table_request(void);
-void test_table_requestDelete(void);
 void test_server_table_destroy(void);
 #endif /* ENCLAVE_TEST_SUITE_H_ */
