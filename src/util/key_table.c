@@ -6,91 +6,31 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <pelz_io.h>
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/evp.h>
+#include <openssl/bn.h>
+
 #include <common_table.h>
-#include <key_table.h>
-#include <util.h>
-#include <pelz_request_handler.h>
 #include <charbuf.h>
 #include <pelz_log.h>
 
 #include "sgx_trts.h"
 #include "pelz_enclave_t.h"
+#include "sgx_retrieve_key_impl.h"
 
-TableResponseStatus key_table_add(charbuf key_id, charbuf * key)
+TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 {
   Entry tmp_entry;
-  size_t max_mem_size;
-  charbuf tmpkey;
-  int index = 0;
 
-  max_mem_size = 1000000;
-
-  if (key_table.mem_size >= max_mem_size)
+  if (key_table.mem_size >= MAX_MEM_SIZE)
   {
     pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
     return ERR_MEM;
   }
 
-  tmp_entry.id = new_charbuf(key_id.len);
-  memcpy(tmp_entry.id.chars, key_id.chars, tmp_entry.id.len);
-
-  int ret;
-  size_t ocall_key_len = 0;
-  unsigned char *ocall_key_data = NULL;
-
-  key_load(&ret, tmp_entry.id.len, tmp_entry.id.chars, &ocall_key_len, &ocall_key_data);
-  if (!sgx_is_outside_enclave(ocall_key_data, ocall_key_len))
-  {
-    free_charbuf(&tmp_entry.id);
-    return ERR_BUF;
-  }
-  tmp_entry.value.key.len = ocall_key_len;
-  tmp_entry.value.key.chars = (unsigned char *) malloc(ocall_key_len);
-  memcpy(tmp_entry.value.key.chars, ocall_key_data, ocall_key_len);
-  if (!sgx_is_outside_enclave(ocall_key_data, ocall_key_len))
-  {
-    ret = 1;
-  }
-  else
-  {
-    ocall_free(ocall_key_data, ocall_key_len);
-  }
-
-  if (ret)
-  {
-    //If the code cannot retrieve the key from the URI provided by the Key ID, then we error out of the function before touching the Key Table.
-    free_charbuf(&tmp_entry.id);
-    return RET_FAIL;
-  }
-
-  if (table_lookup(KEY, tmp_entry.id, &index) == 0)
-  {
-    tmpkey = new_charbuf(key_table.entries[index].value.key.len);
-    if (key_table.entries[index].value.key.len != tmpkey.len)
-    {
-      pelz_log(LOG_ERR, "Charbuf creation error.");
-      return ERR_BUF;
-    }
-    memcpy(tmpkey.chars, key_table.entries[index].value.key.chars, tmpkey.len);
-    if (cmp_charbuf(tmpkey, tmp_entry.value.key) == 0)
-    {
-      pelz_log(LOG_DEBUG, "Key already added.");
-      *key = copy_chars_from_charbuf(tmpkey, 0);
-      free_charbuf(&tmp_entry.id);
-      secure_free_charbuf(&tmp_entry.value.key);
-      secure_free_charbuf(&tmpkey);
-      return OK;
-    }
-    else
-    {
-      pelz_log(LOG_ERR, "Key entry and Key ID lookup do not match.");
-      free_charbuf(&tmp_entry.id);
-      secure_free_charbuf(&tmp_entry.value.key);
-      secure_free_charbuf(&tmpkey);
-      return NO_MATCH;
-    }
-  }
+  tmp_entry.id = copy_chars_from_charbuf(key_id, 0);
+  tmp_entry.value.key = copy_chars_from_charbuf(key, 0);
 
   Entry *temp;
 
@@ -111,6 +51,86 @@ TableResponseStatus key_table_add(charbuf key_id, charbuf * key)
   key_table.mem_size =
     key_table.mem_size + ((tmp_entry.value.key.len * sizeof(char)) + (tmp_entry.id.len * sizeof(char)) + (2 * sizeof(size_t)));
   pelz_log(LOG_INFO, "Key Added");
-  *key = copy_chars_from_charbuf(tmp_entry.value.key, 0);
   return OK;
+}
+
+TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
+{
+  TableResponseStatus status;
+  charbuf key;
+  uint8_t *data;
+  size_t data_size = 0;
+
+  if (key_table.mem_size >= MAX_MEM_SIZE)
+  {
+    pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+    return ERR_MEM;
+  }
+
+  data_size = retrieve_from_unseal_table(handle, &data);
+  if (data_size == 0)
+  {
+    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    return RET_FAIL;
+  }
+
+  key = new_charbuf(data_size);
+  if (data_size != key.len)
+  {
+    pelz_log(LOG_ERR, "Charbuf creation error.");
+    return ERR_BUF;
+  }
+  memcpy(key.chars, data, key.len);
+
+  status = key_table_add_key(key_id, key);
+  return status;
+}
+
+TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, charbuf server_key_id)
+{
+  TableResponseStatus status;
+  charbuf key;
+  int index = 0;
+  int ret;
+  uint8_t *data;
+  size_t data_size = 0;
+
+  if (key_table.mem_size >= MAX_MEM_SIZE)
+  {
+    pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+    return ERR_MEM;
+  }
+
+  if (table_lookup(SERVER, server_id, &index))
+  {
+    pelz_log(LOG_ERR, "Server ID not found");
+    return ERR;
+  }
+
+  if (private_pkey == NULL)
+  {
+    pelz_log(LOG_ERR, "Private key not found");
+    return ERR;
+  }
+
+  ret = enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert);
+  if (ret)
+  {
+    pelz_log(LOG_ERR, "Retrieve Key function failure");
+    return ERR;
+  }
+
+  data = (uint8_t *) "TestKeyabcdefghi";
+  data_size = strlen("TestKeyabcdefghi");
+
+  key = new_charbuf(data_size);
+  if (data_size != key.len)
+  {
+    pelz_log(LOG_ERR, "Charbuf creation error.");
+    return ERR_BUF;
+  }
+  memcpy(key.chars, data, key.len);
+
+  status = key_table_add_key(key_id, key);
+  return status;
 }

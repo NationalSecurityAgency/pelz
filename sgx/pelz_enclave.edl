@@ -5,7 +5,6 @@ enclave {
         include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "common_table.h"
-	include "key_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
         include "util.h"
@@ -92,6 +91,55 @@ public TableResponseStatus private_pkey_add(uint64_t handle);
 
 /**
  * <pre>
+ * This function to add values in hash table based on location in key_id.
+ * </pre>
+ *
+ * @param[in] key_id.chars Key identifier
+ * @param[in] key_id.len The length of the key identifier
+ * @param[in] key.chars The key value
+ * @param[in] key.len The length of the key
+ * @param[in] key_table The key table that the new key needs to be added to
+ * @param[out] key_table The key table with the new added key
+ *
+ * @return 0 on success, 1 on error
+ */
+public TableResponseStatus key_table_add_key(charbuf key_id, charbuf key);
+
+/**
+ * <pre>
+ * This function to add values in hash table based on location in key_id.
+ * </pre>
+ *
+ * @param[in] key_id.chars Key identifier
+ * @param[in] key_id.len The length of the key identifier
+ * @param[in] handle The handle value for the key data location in the kmyth unseal data table
+ * @param[in] key_table The key table that the new key needs to be added to
+ * @param[out] key_table The key table with the new added key
+ *
+ * @return 0 on success, 1 on error
+ */
+public TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle);
+
+/**
+ * <pre>
+ * This function to add values in hash table based on location in key_id.
+ * </pre>
+ *
+ * @param[in] key_id.chars Key identifier
+ * @param[in] key_id.len The length of the key identifier
+ * @param[in] server.chars Server identifier
+ * @param[in] server.len The length of the server identifier
+ * @param[in] server_key_id.chars Key on server identifier
+ * @param[in] server_key_id.len The length of the key on server identifier
+ * @param[in] key_table The key table that the new key needs to be added to
+ * @param[out] key_table The key table with the new added key
+ *
+ * @return 0 on success, 1 on error
+ */
+public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, charbuf server_key_id);
+
+/**
+ * <pre>
  * This function implements the request handling by looking if pelz already has
  * the key and if not then adding the key to the key table. Along with the
  * key lookup, this function checks the request type then based on the request
@@ -110,22 +158,6 @@ public TableResponseStatus private_pkey_add(uint64_t handle);
 public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
 	};
 	untrusted {
-/**
- * <pre>
- * Load key from location stated by Key ID
- * <pre>
- *
- * @param[in] key_id_len   the length of the key identifier
- * @param[in] key_id       a pointer to the key identifier
- * @param[out] key_len     the length of the loaded key
- * @param[out] key         a pointer to a pointer to the key, will be
- *                         allocated within key_load
- *
- * @return 0 on success, 1 on error
- */
-int key_load(size_t key_id_len, [in, size=key_id_len] unsigned char* key_id,
-             [out] size_t* key_len, [user_check] unsigned char** key);
-
 /**
  * <pre>
  * Malloc untrusted memory from within the enclave. The result must

@@ -2,7 +2,6 @@
 #define INCLUDE_PELZ_IO_H_
 
 #include "charbuf.h"
-#include "key_table.h"
 #include "pelz_request_handler.h"
 
 #define PELZSERVICEIN "/tmp/pelzServiceIn"
@@ -14,6 +13,9 @@ typedef enum
   RM_KEK, KEK_TAB_DEST_FAIL, KEK_TAB_INIT_FAIL, RM_KEK_ALL, ERR_CHARBUF
 } ParseResponseStatus;
 
+typedef enum
+{ NO_EXT, NKL, SKI } ExtensionType;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -24,11 +26,22 @@ extern "C"
  * </pre>
  *
  * @param[in] buf The charbuf that contains the file name string
- * @param[out] ext The integer representation of the file extension type
+ *
+ * @return ExtensionType
+ */
+  ExtensionType get_file_ext(charbuf buf);
+
+/**
+ * <pre>
+ * Load key from location stated by Key ID
+ * <pre>
+ *
+ * @param[in] key_id.len     the length of the key identifier
+ * @param[in] key_id.chars   the key identifier
  *
  * @return 0 on success, 1 on error
  */
-  int get_file_ext(charbuf buf, int *ext);
+  int key_load(charbuf key_id);
 
 /**
  * <pre>
