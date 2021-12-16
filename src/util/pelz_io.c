@@ -147,20 +147,26 @@ int key_load(charbuf key_id)
         break;
       }
 
-      if (pelz_load_file_to_enclave(filename, &handle) == 0)
+      if (get_file_ext(filename) == NO_EXT)
       {
-        key_table_add_from_handle(eid, &status, key_id, handle);
-      }
-      else if (pelz_load_key_from_file(filename, &key) == 0)
-      {
+        if (pelz_load_key_from_file(filename, &key) != 0)
+        {
+          pelz_log(LOG_ERR, "Failed to read key file %s", filename);
+          free(filename);
+          break;
+        }
         key_table_add_key(eid, &status, key_id, key);
         secure_free_charbuf(&key);
       }
       else
       {
-        pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-        free(filename);
-        break;
+        if (pelz_load_file_to_enclave(filename, &handle) != 0)
+        {
+          pelz_log(LOG_ERR, "Failed to read key file %s", filename);
+          free(filename);
+          break;
+        }
+        key_table_add_from_handle(eid, &status, key_id, handle);
       }
       free(filename);
       switch (status)
