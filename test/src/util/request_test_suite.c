@@ -51,7 +51,7 @@ void test_request(void)
 
   pelz_log(LOG_DEBUG, "Test Request Function Start");
 
-  //KEK not loaded so function should return KEK_LOAD_ERROR
+  //KEK not loaded so function should return KEK_NOT_LOADED
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
   request_type = REQ_ENC;
   pelz_request_handler(eid, &status, request_type, tmp, data_in, &output);

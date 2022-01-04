@@ -68,7 +68,7 @@ void test_table_add(void)
   charbuf server_key_id;
   uint8_t *data = NULL;
   size_t data_len = 0;
-  uint64_t handle;
+  uint64_t handle = 0;
   const char *prefix = "file:";
 
   const char *valid_id[5] =
@@ -93,8 +93,14 @@ void test_table_add(void)
   key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[1], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  if (read_bytes_from_file((char *) valid_id[1], &data, &data_len) == 0)
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
   free(data);
 
   key_table_add_from_handle(eid, &status, tmp, handle);
@@ -106,8 +112,14 @@ void test_table_add(void)
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[3], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  if (read_bytes_from_file((char *) valid_id[3], &data, &data_len) == 0)
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
   free(data);
 
   server_table_add(eid, &status, handle);
@@ -120,8 +132,14 @@ void test_table_add(void)
   private_pkey_add(eid, &status, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[4], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  if (read_bytes_from_file((char *) valid_id[4], &data, &data_len) == 0)
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
   free(data);
 
   private_pkey_add(eid, &status, handle);
@@ -156,7 +174,7 @@ void test_table_lookup(void)
   charbuf key;
   uint8_t *data = NULL;
   size_t data_len = 0;
-  uint64_t handle;
+  uint64_t handle = 0;
   int index = 0;
   const char *prefix = "file:";
 
@@ -183,14 +201,26 @@ void test_table_lookup(void)
   }
 
   //Initial load of certs into the server table
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  if (read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0)
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
   free(data);
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == OK);
 
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  if (read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0)
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
   free(data);
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == OK);
@@ -255,7 +285,7 @@ void test_table_delete(void)
   charbuf key;
   uint8_t *data = NULL;
   size_t data_len = 0;
-  uint64_t handle;
+  uint64_t handle = 0;
   const char *prefix = "file:";
 
   const char *valid_id[8] = {
@@ -282,14 +312,26 @@ void test_table_delete(void)
   }
 
   //Initial load of certs into the server table
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  if (read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0)
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
   free(data);
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == OK);
 
-  CU_ASSERT(read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0);
-  CU_ASSERT(kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0);
+  if (read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0)
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
   free(data);
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == OK);
