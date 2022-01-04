@@ -30,9 +30,9 @@
 
 #define BUFSIZE 1024
 
-void ocall_malloc(size_t size, char **buf)
+void ocall_malloc(size_t size, unsigned char **buf)
 {
-  *buf = (char *) malloc(size);
+  *buf = (unsigned char *) malloc(size);
 }
 
 void ocall_free(void *ptr, size_t len)
