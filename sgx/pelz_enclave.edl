@@ -170,7 +170,7 @@ public RequestResponseStatus pelz_request_handler(RequestType request_type, char
  *
  * @return none
  */
-void ocall_malloc(size_t size, [user_check] char** buf);
+void ocall_malloc(size_t size, [user_check] unsigned char** buf);
 
 
 /**

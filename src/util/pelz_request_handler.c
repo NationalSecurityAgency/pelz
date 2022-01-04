@@ -9,6 +9,7 @@
 
 RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
 {
+  charbuf outData;
   int index;
 
   if (table_lookup(KEY, key_id, &index))
@@ -26,7 +27,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
       return KEY_OR_DATA_ERROR;
     }
     if (aes_keywrap_3394nopad_encrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-        data.chars, data.len, &output->chars, &output->len))
+        data.chars, data.len, &outData.chars, &outData.len))
     {
       return ENCRYPT_ERROR;
     }
@@ -38,7 +39,7 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
       return KEY_OR_DATA_ERROR;
     }
     if (aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-        data.chars, data.len, &output->chars, &output->len))
+        data.chars, data.len, &outData.chars, &outData.len))
     {
       return DECRYPT_ERROR;
     }
@@ -47,5 +48,8 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
     return REQUEST_TYPE_ERROR;
 
   }
+  output->len = outData.len;
+  ocall_malloc(output->len, &output->chars);
+  memcpy(output->chars, outData.chars, output->len);
   return REQUEST_OK;
 }
