@@ -117,7 +117,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");
-    return ERR;
+    //return ERR;
   }
 
   data = (uint8_t *) "TestKeyabcdefghi";
