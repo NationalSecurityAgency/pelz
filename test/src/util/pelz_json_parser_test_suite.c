@@ -11,7 +11,6 @@
 
 #include <charbuf.h>
 #include <pelz_log.h>
-#include <pelz_request_handler.h>
 
 // Adds all key table tests to main test runner.
 int pelz_json_parser_suite_add_tests(CU_pSuite suite)

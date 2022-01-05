@@ -4,7 +4,6 @@
 
 #include "util_test_suite.h"
 #include "test_helper_functions.h"
-#include "pelz_enclave_u.h"
 
 #include <stdio.h>
 #include <stdlib.h>

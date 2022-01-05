@@ -1,0 +1,10 @@
+enclave {
+        from "sgx_tsgxssl.edl" import *;
+        from "sgx_pthread.edl" import *;
+        include "common_table.h"
+        include "charbuf.h"
+        trusted {
+
+public TableResponseStatus test_table_lookup(TableType type, charbuf id, [out] int *index);
+	};
+};

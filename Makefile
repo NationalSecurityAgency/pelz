@@ -112,11 +112,18 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_loaders.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
-		 test/src/util/enclave_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
 	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c \
-		 test/src/util/test_pelz_uri_helpers.c
+		 test/src/util/test_pelz_uri_helpers.c \
+		 test/src/util/table_test_suite.c \
+		 test/src/util/request_test_suite.c
+
+App_Cpp_Files_for_Test := src/util/common_table.c \
+		 src/util/key_table.c \
+		 src/util/server_table.c \
+		 src/util/aes_keywrap_3394nopad.c \
+		 src/util/pelz_request_handler.c
 
 App_Cpp_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
 
@@ -317,7 +324,8 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted
+				  --search-path ../kmyth/sgx/trusted \
+			  	  --search-path ../test/include	  
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -327,26 +335,24 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Files) \
 			   $(App_Cpp_Kmyth_Files) \
-			   sgx/pelz_enclave_u.o \
-			   sgx/ec_key_cert_unmarshal.o \
-			   sgx/log_ocall.o \
-			   sgx/ecdh_ocall.o \
-			   sgx/ecdh_util.o \
-			   sgx/ecdh_dummy_server.o \
-			   sgx/memory_ocall.o \
-			   sgx/log_ocall.o
+                           sgx/pelz_enclave_u.o \
+                           sgx/ec_key_cert_unmarshal.o \
+                           sgx/log_ocall.o \
+                           sgx/ecdh_ocall.o \
+                           sgx/ecdh_util.o \
+                           sgx/ecdh_dummy_server.o \
+			   sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
+                         -Isgx \
 			 -Itest/include \
-			 -Isgx \
 			 $(App_C_Flags) \
 			 $(App_Link_Flags) \
-			 -Lsgx \
 			 -lcrypto \
 			 -lcjson \
 			 -lpthread \
 			 -lcunit
-	@echo "LINK =>  $@"
+	@echo "LINK =>  $(App_Name_Test)"
 
 bin/$(App_Name_Service): $(App_Service_File) \
 			 $(App_Cpp_Files) \
@@ -357,8 +363,7 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 sgx/ecdh_ocall.o \
                          sgx/ecdh_util.o \
                          sgx/ecdh_dummy_server.o \
-                         sgx/memory_ocall.o \
-			 sgx/log_ocall.o
+                         sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -368,7 +373,7 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 -lcrypto \
 			 -lcjson \
 			 -lpthread
-	@echo "LINK =>  $@"
+	@echo "LINK =>  $(App_Name_Service)"
 
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      $(App_Cpp_Files) \
@@ -379,8 +384,7 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      sgx/ecdh_ocall.o \
                       sgx/ecdh_util.o \
                       sgx/ecdh_dummy_server.o \
-                      sgx/memory_ocall.o \
-		      sgx/log_ocall.o
+                      sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -390,7 +394,7 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 			 -lcrypto \
 			 -lcjson \
 			 -lpthread
-	@echo "LINK =>  $@"
+	@echo "LINK =>  $(App_Name_Pipe)"
 
 ######## Enclave Objects ########
 
@@ -400,7 +404,8 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted
+				  --search-path ../kmyth/sgx/trusted \
+                                  --search-path ../test/include 
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
@@ -454,6 +459,10 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
+sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
+	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <= $<"
+
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
@@ -469,7 +478,8 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/ec_key_cert_unmarshal.o \
 		     sgx/ec_key_cert_marshal.o \
 		     sgx/ecdh_util.o \
-		     sgx/sgx_retrieve_key_impl.o 
+		     sgx/sgx_retrieve_key_impl.o \
+		     sgx/enclave_helper_functions.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -499,12 +509,24 @@ pre:
 	@mkdir -p bin
 	@mkdir -p test/bin
 	@mkdir -p test/log
+	@mkdir -p test/data
 
 
 .PHONY: test
 
 test: all
+	@cd test/data && ./../../kmyth/sgx/demo/data/gen_test_keys_certs.bash
+	@openssl x509 -in test/data/client_cert_test.pem -inform pem -out test/data/client_cert_test.der -outform der
+	@openssl x509 -in test/data/server_cert_test.pem -inform pem -out test/data/server_cert_test.der -outform der
+	@openssl pkey -in test/data/client_priv_test.pem -inform pem -out test/data/client_priv_test.der -outform der
+	@./bin/pelz seal test/data/client_cert_test.der -o test/data/client_cert_test.der.nkl
+	@./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
+	@./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
+	@echo "GEN => Test Key/Cert Files"
 	@./test/bin/pelz-test 2> /dev/null
+	@rm -f test/data/*.pem
+	@rm -f test/data/*.der
+	@rm -f test/data/*.nkl
 
 .PHONY: clean
 
@@ -518,4 +540,8 @@ clean:
 	@rm -f sgx/*_t.*
 	@rm -f sgx/*.o
 	@rm -f test/log/*
+	@rm -f test/data/*.pem
+	@rm -f test/data/*.der
+	@rm -f test/data/*.nkl
+	@rm -f test/data/*.txt
 

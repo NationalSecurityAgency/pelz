@@ -9,11 +9,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "enclave_test_suite.h"
+#include "table_test_suite.h"
+#include "request_test_suite.h"
 #include "util_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
 #include "test_pelz_uri_helpers.h"
-#include <pelz_log.h>
+#include "pelz_log.h"
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
@@ -39,8 +40,11 @@ int clean_suite(void)
 //Main function for the unit testing of the Pelz Service application
 int main(int argc, char **argv)
 {
-  const char *key_file_id[6] = { "test/key1.txt", "test/key2.txt", "test/key3.txt", "test/key4.txt", "test/key5.txt",
-    "test/key6.txt"
+  int status;
+
+  const char *key_file_id[6] =
+    { "test/data/key1.txt", "test/data/key2.txt", "test/data/key3.txt", "test/data/key4.txt", "test/data/key5.txt",
+    "test/data/key6.txt"
   };
   const char *key[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
@@ -60,6 +64,12 @@ int main(int argc, char **argv)
     fclose(fp);
   }
 
+  status = system("./bin/pelz seal test/data/key1.txt -o test/data/key1.txt.nkl");
+  if (status != 0)
+  {
+    pelz_log(LOG_INFO, "Seal key1.txt to .nkl failed");
+  }
+
   pelz_log(LOG_DEBUG, "Start Unit Test");
   // Initialize CUnit test registry
   if (CUE_SUCCESS != CU_initialize_registry())
@@ -68,17 +78,39 @@ int main(int argc, char **argv)
   }
 
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+  kmyth_unsealed_data_table_initialize(eid, &status);
+  if (status)
+  {
+    pelz_log(LOG_ERR, "Unseal Table Init Failure");
+    sgx_destroy_enclave(eid);
+    return (1);
+  }
 
-  // Add enclave suite ---- tests key table init/destroy/delete and pelz_request_handler functions 
-  CU_pSuite enclave_Suite = NULL;
+  // Add table suite ---- tests table destroy/add/lookup/delete functions 
+  CU_pSuite table_Suite = NULL;
 
-  enclave_Suite = CU_add_suite("Enclave Suite", init_suite, clean_suite);
-  if (NULL == enclave_Suite)
+  table_Suite = CU_add_suite("Table Suite", init_suite, clean_suite);
+  if (NULL == table_Suite)
   {
     CU_cleanup_registry();
     return CU_get_error();
   }
-  if (enclave_suite_add_tests(enclave_Suite))
+  if (table_suite_add_tests(table_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
+  // Add request suite ---- tests pelz_request_handler functions
+  CU_pSuite request_Suite = NULL;
+
+  request_Suite = CU_add_suite("Request Suite", init_suite, clean_suite);
+  if (NULL == request_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if (request_suite_add_tests(request_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();
@@ -134,6 +166,7 @@ int main(int argc, char **argv)
   //CU_console_run_tests();
   //CU_automated_run_tests();
 
+  kmyth_unsealed_data_table_cleanup(eid, &status);
   sgx_destroy_enclave(eid);
   for (int i = 0; i < 6; i++)
   {
