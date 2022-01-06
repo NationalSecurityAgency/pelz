@@ -80,6 +80,7 @@ int pelz_load_file_to_enclave(char *filename, uint64_t * handle)
     break;
   default:
     free(data);
+    pelz_log(LOG_ERR, "Invalid file type of file %s ... exiting", filename);
     return (1);
   }
   return (0);
