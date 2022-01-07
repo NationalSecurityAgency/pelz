@@ -109,7 +109,7 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/util.c \
 		 src/util/pelz_io.c \
 		 src/util/pelz_uri_helpers.c \
-		 src/util/pelz_key_loaders.c
+		 src/util/pelz_loaders.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/util_test_suite.c \
