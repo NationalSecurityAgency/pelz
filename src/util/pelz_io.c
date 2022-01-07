@@ -19,7 +19,7 @@
 #include "common_table.h"
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
-#include "pelz_key_loaders.h"
+#include "pelz_loaders.h"
 #include "util.h"
 #include "pelz_thread.h"
 
@@ -41,29 +41,35 @@ void ocall_free(void *ptr, size_t len)
   free(ptr);
 }
 
-ExtensionType get_file_ext(charbuf buf)
+ExtensionType get_file_ext(char *filename)
 {
+  charbuf buf;
   size_t period_index = 0;
   size_t ext_len = 0;
   size_t ext_type_len = 4;
   const char *ext_type[2] = { ".nkl", ".ski" };
 
-  if (buf.chars == NULL)
+  if (filename == NULL)
   {
     return NO_EXT;
   }
 
-  // We know that if buf.chars != NULL then buf.len > 0, so there's
+  buf = new_charbuf(strlen(filename));
+  memcpy(buf.chars, filename, buf.len);
+
+  // We know that if filename != NULL then buf.len > 0, so there's
   // no wrap-around concern with buf.len-1.
   period_index = get_index_for_char(buf, '.', (buf.len - 1), 1);
   if (period_index == SIZE_MAX)
   {
+    free_charbuf(&buf);
     return NO_EXT;
   }
 
   ext_len = (buf.len - period_index);
   if (ext_len == 0)
   {
+    free_charbuf(&buf);
     return NO_EXT;
   }
 
@@ -79,16 +85,20 @@ ExtensionType get_file_ext(charbuf buf)
   pelz_log(LOG_DEBUG, "Finding file extension.");
   if (ext_len != ext_type_len)
   {
+    free_charbuf(&buf);
     return NO_EXT;
   }
   else if (memcmp(buf.chars + period_index, ext_type[0], ext_type_len) == 0)
   {
+    free_charbuf(&buf);
     return NKL;
   }
   else if (memcmp(buf.chars + period_index, ext_type[1], ext_type_len) == 0)
   {
+    free_charbuf(&buf);
     return SKI;
   }
+  free_charbuf(&buf);
   return NO_EXT;
 }
 
@@ -98,12 +108,9 @@ int key_load(charbuf key_id)
   int return_value = 1;
   TableResponseStatus status;
   UriUriA key_id_data;
-  int ext = NO_EXT;
 
   const char *error_pos = NULL;
   char *key_uri_to_parse = NULL;
-
-  ext = get_file_ext(key_id);
 
   // URI parser expects a null-terminated string to parse,
   // so we embed the key_id in a 1-longer array and
@@ -132,14 +139,6 @@ int key_load(charbuf key_id)
   case FILE_URI:
     {
       char *filename = get_filename_from_key_id(key_id_data);
-      uint8_t *data = NULL;
-      size_t data_length = 0;
-      uint8_t *nkl_data = NULL;
-      size_t nkl_data_len = 0;
-      char *authString = NULL;
-      size_t auth_string_len = 0;
-      const char *ownerAuthPasswd = "";
-      size_t oa_passwd_len = 0;
       uint64_t handle;
 
       if (filename == NULL)
@@ -148,189 +147,69 @@ int key_load(charbuf key_id)
         break;
       }
 
-      switch (ext)
+      if (get_file_ext(filename) == NO_EXT)
       {
-      case (NO_EXT):
+        if (pelz_load_key_from_file(filename, &key) != 0)
         {
-          if (pelz_load_key_from_file(filename, &key))
-          {
-            pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-            free(filename);
-            break;
-          }
+          pelz_log(LOG_ERR, "Failed to read key file %s", filename);
           free(filename);
-          key_table_add_key(eid, &status, key_id, key);
-          secure_free_charbuf(&key);
-          switch (status)
-          {
-          case ERR:
-            {
-              pelz_log(LOG_ERR, "Failed to load key to table");
-              return_value = 1;
-              break;
-            }
-          case ERR_MEM:
-            {
-              pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
-              return_value = 1;
-              break;
-            }
-          case ERR_REALLOC:
-            {
-              pelz_log(LOG_ERR, "Key List Space Reallocation Error");
-              return_value = 1;
-              break;
-            }
-          case OK:
-            {
-              pelz_log(LOG_DEBUG, "Key added to table.");
-              return_value = 0;
-              break;
-            }
-          default:
-            {
-              return_value = 1;
-              break;
-            }
-          }
           break;
         }
-      case (NKL):
+        key_table_add_key(eid, &status, key_id, key);
+        secure_free_charbuf(&key);
+      }
+      else
+      {
+        if (pelz_load_file_to_enclave(filename, &handle) != 0)
         {
-          if (read_bytes_from_file(filename, &data, &data_length))
-          {
-            pelz_log(LOG_ERR, "Unable to read file %s ... exiting", filename);
-            return UNABLE_RD_F;
-          }
-          pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, filename);
-
-          if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
-          {
-            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting ");
-            free(data);
-            return SGX_UNSEAL_FAIL;
-          }
-          pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
-
-          free(data);
-          key_table_add_from_handle(eid, &status, key_id, handle);
-          switch (status)
-          {
-          case ERR:
-            {
-              pelz_log(LOG_ERR, "Failed to load key to table");
-              return_value = 1;
-              break;
-            }
-          case ERR_MEM:
-            {
-              pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
-              return_value = 1;
-              break;
-            }
-          case RET_FAIL:
-            {
-              pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-              return_value = 1;
-              break;
-            }
-          case ERR_BUF:
-            {
-              pelz_log(LOG_ERR, "Charbuf creation error.");
-              return_value = 1;
-              break;
-            }
-          case ERR_REALLOC:
-            {
-              pelz_log(LOG_ERR, "Key List Space Reallocation Error");
-              return_value = 1;
-              break;
-            }
-          case OK:
-            {
-              pelz_log(LOG_DEBUG, "Key added to table.");
-              return_value = 0;
-              break;
-            }
-          default:
-            {
-              return_value = 1;
-              break;
-            }
-          }
+          pelz_log(LOG_ERR, "Failed to read key file %s", filename);
+          free(filename);
           break;
         }
-      case (SKI):
+        key_table_add_from_handle(eid, &status, key_id, handle);
+      }
+      free(filename);
+      switch (status)
+      {
+      case ERR:
         {
-          if (read_bytes_from_file(filename, &data, &data_length))
-          {
-            pelz_log(LOG_ERR, "Unable to read file %s ... exiting", filename);
-            return UNABLE_RD_F;
-          }
-          pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, filename);
-          if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
-              (uint8_t *) ownerAuthPasswd, oa_passwd_len))
-          {
-            pelz_log(LOG_ERR, "TPM unseal failed");
-            free(data);
-            return TPM_UNSEAL_FAIL;
-          }
-
-          free(data);
-          if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
-          {
-            pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-            free(nkl_data);
-            return SGX_UNSEAL_FAIL;
-          }
-          pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
-
-          free(nkl_data);
-          key_table_add_from_handle(eid, &status, key_id, handle);
-          switch (status)
-          {
-          case ERR:
-            {
-              pelz_log(LOG_ERR, "Failed to load key to table");
-              return_value = 1;
-              break;
-            }
-          case ERR_MEM:
-            {
-              pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
-              return_value = 1;
-              break;
-            }
-          case RET_FAIL:
-            {
-              pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-              return_value = 1;
-              break;
-            }
-          case ERR_BUF:
-            {
-              pelz_log(LOG_ERR, "Charbuf creation error.");
-              return_value = 1;
-              break;
-            }
-          case ERR_REALLOC:
-            {
-              pelz_log(LOG_ERR, "Key List Space Reallocation Error");
-              return_value = 1;
-              break;
-            }
-          case OK:
-            {
-              pelz_log(LOG_DEBUG, "Key added to table.");
-              return_value = 0;
-              break;
-            }
-          default:
-            {
-              return_value = 1;
-              break;
-            }
-          }
+          pelz_log(LOG_ERR, "Failed to load key to table");
+          return_value = 1;
+          break;
+        }
+      case ERR_MEM:
+        {
+          pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+          return_value = 1;
+          break;
+        }
+      case RET_FAIL:
+        {
+          pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+          return_value = 1;
+          break;
+        }
+      case ERR_BUF:
+        {
+          pelz_log(LOG_ERR, "Charbuf creation error.");
+          return_value = 1;
+          break;
+        }
+      case ERR_REALLOC:
+        {
+          pelz_log(LOG_ERR, "Key List Space Reallocation Error");
+          return_value = 1;
+          break;
+        }
+      case OK:
+        {
+          pelz_log(LOG_DEBUG, "Key added to table.");
+          return_value = 0;
+          break;
+        }
+      default:
+        {
+          return_value = 1;
           break;
         }
       }
@@ -663,17 +542,8 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
 ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 {
   TableResponseStatus ret;
-  char *path_ext = NULL;
   charbuf key_id;
   charbuf server_id;
-  uint8_t *data = NULL;
-  size_t data_length = 0;
-  uint8_t *nkl_data = NULL;
-  size_t nkl_data_len = 0;
-  char *authString = NULL;
-  size_t auth_string_len = 0;
-  const char *ownerAuthPasswd = "";
-  size_t oa_passwd_len = 0;
   uint64_t handle;
 
   pelz_log(LOG_DEBUG, "Token num: %d", num_tokens);
@@ -708,192 +578,61 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     {
       return INVALID;
     }
-    path_ext = strrchr(tokens[2], '.');
-    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-    if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
+
+    if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
-      {
-        if (read_bytes_from_file(tokens[2], &data, &data_length))
-        {
-          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
-          return UNABLE_RD_F;
-        }
-        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
-        if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
-            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
-        {
-          pelz_log(LOG_ERR, "TPM unseal failed");
-          free(data);
-          return TPM_UNSEAL_FAIL;
-        }
-
-        free(data);
-        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle))
-        {
-          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-          free(nkl_data);
-          return SGX_UNSEAL_FAIL;
-        }
-        pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
-
-        free(nkl_data);
-        server_table_add(eid, &ret, handle);
-        if (ret != OK)
-        {
-          pelz_log(LOG_ERR, "Add cert call failed");
-          switch (ret)
-          {
-          case ERR_REALLOC:
-            pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
-            break;
-          case ERR_BUF:
-            pelz_log(LOG_ERR, "Charbuf creation error.");
-            break;
-          case ERR_X509:
-            pelz_log(LOG_ERR, "X509 allocation error.");
-            break;
-          case RET_FAIL:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-            break;
-          case NO_MATCH:
-            pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
-            break;
-          case MEM_ALLOC_FAIL:
-            pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
-            break;
-          default:
-            pelz_log(LOG_ERR, "Server return not defined");
-          }
-          return ADD_CERT_FAIL;
-        }
-        return LOAD_CERT;
-      }
-      else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
-      {
-        if (read_bytes_from_file(tokens[2], &data, &data_length))
-        {
-          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
-          return UNABLE_RD_F;
-        }
-        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
-
-        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle))
-        {
-          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting ");
-          free(data);
-          return SGX_UNSEAL_FAIL;
-        }
-        pelz_log(LOG_DEBUG, "SGX unsealed nkl file with %lu handle", handle);
-
-        free(data);
-        server_table_add(eid, &ret, handle);
-        if (ret != OK)
-        {
-          pelz_log(LOG_ERR, "Add cert call failed");
-          switch (ret)
-          {
-          case ERR_REALLOC:
-            pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
-            break;
-          case ERR_BUF:
-            pelz_log(LOG_ERR, "Charbuf creation error.");
-            break;
-          case ERR_X509:
-            pelz_log(LOG_ERR, "X509 allocation error.");
-            break;
-          case RET_FAIL:
-            pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
-            break;
-          case NO_MATCH:
-            pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
-            break;
-          case MEM_ALLOC_FAIL:
-            pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
-            break;
-          default:
-            pelz_log(LOG_ERR, "Server return not defined");
-          }
-          return ADD_CERT_FAIL;
-        }
-        return LOAD_CERT;
-      }
+      pelz_log(LOG_INFO, "Invaild extention for load cert call");
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      return INVALID_EXT_CERT;
     }
-    pelz_log(LOG_INFO, "Invaild extention for load cert call");
-    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-    return INVALID_EXT_CERT;
+    server_table_add(eid, &ret, handle);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "Add cert call failed");
+      switch (ret)
+      {
+      case ERR_REALLOC:
+        pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
+        break;
+      case ERR_BUF:
+        pelz_log(LOG_ERR, "Charbuf creation error.");
+        break;
+      case ERR_X509:
+        pelz_log(LOG_ERR, "X509 allocation error.");
+        break;
+      case RET_FAIL:
+        pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+        break;
+      case NO_MATCH:
+        pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
+        break;
+      case MEM_ALLOC_FAIL:
+        pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+        break;
+      default:
+        pelz_log(LOG_ERR, "Server return not defined");
+      }
+      return ADD_CERT_FAIL;
+    }
+    return LOAD_CERT;
   case 3:
     if (num_tokens != 3)
     {
       return INVALID;
     }
-    path_ext = strrchr(tokens[2], '.');
-    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-    if (strlen(path_ext) == 4)  //4 is the set length of .nkl and .ski
+    if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      if (memcmp(path_ext, ".ski", 4) == 0) //4 is the set length of .nkl and .ski
-      {
-        if (read_bytes_from_file(tokens[2], &data, &data_length))
-        {
-          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
-          return UNABLE_RD_F;
-        }
-        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
-
-        if (tpm2_kmyth_unseal(data, data_length, &nkl_data, &nkl_data_len, (uint8_t *) authString, auth_string_len,
-            (uint8_t *) ownerAuthPasswd, oa_passwd_len))
-        {
-          pelz_log(LOG_ERR, "TPM unseal failed");
-          free(data);
-          return TPM_UNSEAL_FAIL;
-        }
-
-        free(data);
-        if (kmyth_sgx_unseal_nkl(eid, nkl_data, nkl_data_len, &handle) == 1)
-        {
-          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-          free(nkl_data);
-          return SGX_UNSEAL_FAIL;
-        }
-
-        free(nkl_data);
-        private_pkey_add(eid, &ret, handle);
-        if (ret == 1)
-        {
-          pelz_log(LOG_ERR, "Add private pkey failure");
-          return ADD_PRIV_FAIL;
-        }
-        return LOAD_PRIV;
-      }
-      else if (memcmp(path_ext, ".nkl", 4) == 0)  //4 is the set length of .nkl and .ski
-      {
-        if (read_bytes_from_file(tokens[2], &data, &data_length))
-        {
-          pelz_log(LOG_ERR, "Unable to read file %s ... exiting", tokens[2]);
-          return UNABLE_RD_F;
-        }
-        pelz_log(LOG_DEBUG, "Read %d bytes from file %s", data_length, tokens[2]);
-
-        if (kmyth_sgx_unseal_nkl(eid, data, data_length, &handle) == 1)
-        {
-          pelz_log(LOG_ERR, "Unable to unseal contents ... exiting");
-          free(data);
-          return SGX_UNSEAL_FAIL;
-        }
-
-        free(data);
-        private_pkey_add(eid, &ret, handle);
-        if (ret == 1)
-        {
-          pelz_log(LOG_ERR, "Add private pkey failure");
-          return ADD_PRIV_FAIL;
-        }
-        return LOAD_PRIV;
-      }
+      pelz_log(LOG_INFO, "Invaild extention for load private call");
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      return INVALID_EXT_PRIV;
     }
-    pelz_log(LOG_INFO, "Invaild extention for load private call");
-    pelz_log(LOG_DEBUG, "Path_ext: %s", path_ext);
-    return INVALID_EXT_PRIV;
+    private_pkey_add(eid, &ret, handle);
+    if (ret == 1)
+    {
+      pelz_log(LOG_ERR, "Add private pkey failure");
+      return ADD_PRIV_FAIL;
+    }
+    return LOAD_PRIV;
   case 4:
     if (num_tokens != 3)
     {
@@ -927,6 +666,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       free_charbuf(&server_id);
       return RM_CERT;
     }
+
   case 5:
     table_destroy(eid, &ret, SERVER);
     if (ret != OK)
@@ -969,6 +709,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       free_charbuf(&key_id);
       return RM_KEK;
     }
+
   case 7:
     table_destroy(eid, &ret, KEY);
     if (ret != OK)
@@ -982,5 +723,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);
     return INVALID;
   }
+
   return INVALID;
 }

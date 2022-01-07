@@ -22,14 +22,14 @@ extern "C"
 #endif
 /**
  * <pre>
- * This function creates a new charbuf that contains the file extension of a file name sting in a charbuf
+ * This function returns an ExtensionType to tell program if filename has a .nkl or .ski extension
  * </pre>
  *
- * @param[in] buf The charbuf that contains the file name string
+ * @param[in] filename Contains the file name string
  *
  * @return ExtensionType
  */
-  ExtensionType get_file_ext(charbuf buf);
+  ExtensionType get_file_ext(char *filename);
 
 /**
  * <pre>
