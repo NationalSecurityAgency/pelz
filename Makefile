@@ -560,4 +560,5 @@ clean:
 	@rm -f test/data/*.der
 	@rm -f test/data/*.nkl
 	@rm -f test/data/*.txt
+	@cd kmyth/sgx/demo && make clean
 
