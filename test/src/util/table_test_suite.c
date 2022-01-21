@@ -151,7 +151,7 @@ void test_table_add(void)
   memcpy(server_id.chars, "TestServer", server_id.len);
   server_key_id = new_charbuf(strlen(valid_id[2]));
   memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
-  key_table_add_from_server(eid, &status, tmp, server_id, server_key_id);
+  key_table_add_from_server(eid, &status, tmp, server_id, 7000, server_key_id);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
   free_charbuf(&server_id);

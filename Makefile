@@ -134,6 +134,8 @@ App_Include_Paths += -Ikmyth/sgx/untrusted/include/wrapper
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/ocall
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/util
 App_Include_Paths += -Ikmyth/sgx/common/include
+App_Include_Paths += -Ikmyth/include/network
+App_Include_Paths += -Ikmyth/include/protocol
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) 
 App_C_Flags += -fPIC 
@@ -198,10 +200,15 @@ Enclave_Include_Paths += -I$(SGX_SDK)/include/tlibc
 Enclave_Include_Paths += -I$(SGX_SDK)/include/stlport 
 Enclave_Include_Paths += -I$(SGX_SSL_INCLUDE_PATH) 
 Enclave_Include_Paths += -Isgx 
+Enclave_Include_Paths += -I/usr/local/include
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/util
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/wrapper
 Enclave_Include_Paths += -Ikmyth/sgx/common/include
+Enclave_Include_Paths += -Ikmyth/include
+Enclave_Include_Paths += -Ikmyth/include/protocol
+Enclave_Include_Paths += -Ikmyth/include/cipher
+Enclave_Include_Paths += -Ikmyth/utils/include/kmyth
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) 
 Enclave_C_Flags += -nostdinc 
@@ -212,6 +219,7 @@ Enclave_C_Flags += $(Enclave_Include_Paths)
 Enclave_C_Flags += -DPELZ_SGX_TRUSTED
 Enclave_C_Flags += -Wall 
 Enclave_C_Flags += -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED)
+Enclave_C_Flags += -DKMYTH_SGX
 
 Enclave_Cpp_Flags := $(Enclave_C_Flags) 
 Enclave_Cpp_Flags += -std=c++03 
@@ -243,6 +251,7 @@ Enclave_Link_Flags += -Wl,--no-undefined
 Enclave_Link_Flags += -Wl,-pie,-eenclave_entry 
 Enclave_Link_Flags += -Wl,--export-dynamic
 Enclave_Link_Flags += -Wl,--defsym,__ImageBase=0
+Enclave_Link_Flags += -lkmip-core
 
 Enclave_Name := pelz_enclave.so
 Enclave_Signing_Key := pelz_enclave_private.pem
@@ -287,10 +296,6 @@ endif
 
 ######## Common Objects ########
 
-sgx/ec_key_cert_marshal.o: kmyth/sgx/common/src/ec_key_cert_marshal.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
-	@echo "CC   <=  $<"
-
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -310,10 +315,6 @@ sgx/memory_ocall.o: kmyth/sgx/untrusted/src/ocall/memory_ocall.c
 	@echo "CC   <=  $<"
 
 sgx/ecdh_ocall.o: kmyth/sgx/untrusted/src/ocall/ecdh_ocall.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
-	@echo "CC   <=  $<"
-
-sgx/ecdh_dummy_server.o: kmyth/sgx/untrusted/src/util/ecdh_dummy_server.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -340,7 +341,6 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
                            sgx/log_ocall.o \
                            sgx/ecdh_ocall.o \
                            sgx/ecdh_util.o \
-                           sgx/ecdh_dummy_server.o \
 			   sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
@@ -362,7 +362,6 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 sgx/log_ocall.o \
 			 sgx/ecdh_ocall.o \
                          sgx/ecdh_util.o \
-                         sgx/ecdh_dummy_server.o \
                          sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
@@ -383,7 +382,6 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      sgx/log_ocall.o \
 		      sgx/ecdh_ocall.o \
                       sgx/ecdh_util.o \
-                      sgx/ecdh_dummy_server.o \
                       sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
@@ -415,6 +413,7 @@ sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
 sgx/kmyth_enclave_seal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_seal.cpp
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
+
 sgx/kmyth_enclave_unseal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_unseal.cpp
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -428,6 +427,18 @@ sgx/kmyth_enclave_retrieve_key.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_retr
 	@echo "CC   <=  $<"
 
 sgx/sgx_retrieve_key_impl.o: kmyth/sgx/trusted/src/wrapper/sgx_retrieve_key_impl.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/aes_gcm.o: kmyth/src/cipher/aes_gcm.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/memory_util.o: kmyth/utils/src/memory_util.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/kmip_util.o: kmyth/src/protocol/kmip_util.c
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -476,9 +487,11 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/kmyth_enclave_memory_util.o \
 		     sgx/kmyth_enclave_retrieve_key.o \
 		     sgx/ec_key_cert_unmarshal.o \
-		     sgx/ec_key_cert_marshal.o \
 		     sgx/ecdh_util.o \
 		     sgx/sgx_retrieve_key_impl.o \
+		     sgx/aes_gcm.o \
+		     sgx/memory_util.o \
+		     sgx/kmip_util.o \
 		     sgx/enclave_helper_functions.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
@@ -523,6 +536,9 @@ test: all
 	@./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
 	@./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
 	@echo "GEN => Test Key/Cert Files"
+	@cd kmyth/sgx/demo && make pre bin/ecdh-server bin/ecdh-client
+	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/server_priv_test.pem -u test/data/client_cert_test.pem -p 7000 &
+	@sleep 1
 	@./test/bin/pelz-test 2> /dev/null
 	@rm -f test/data/*.pem
 	@rm -f test/data/*.der

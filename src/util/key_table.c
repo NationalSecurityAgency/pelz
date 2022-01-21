@@ -86,10 +86,12 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
   return status;
 }
 
-TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, charbuf server_key_id)
+TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, int port, charbuf server_key_id)
 {
   TableResponseStatus status;
   charbuf key;
+  int port_len = 4;
+  const char port_value[port_len] = "7000";
   int index = 0;
   int ret;
   uint8_t *data;
@@ -113,11 +115,13 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
     return ERR;
   }
 
-  ret = enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert);
+  ret =
+    enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, (const char *) server_id.chars, server_id.len,
+    port_value, port_len);
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");
-    //return ERR;
+    return ERR;
   }
 
   data = (uint8_t *) "TestKeyabcdefghi";

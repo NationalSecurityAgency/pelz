@@ -228,7 +228,7 @@ int key_load(charbuf key_id)
         break;
       }
 
-      key_table_add_from_server(eid, &status, key_id, *common_name, *server_key_id);
+      key_table_add_from_server(eid, &status, key_id, *common_name, port, *server_key_id);
       free_charbuf(common_name);
       free_charbuf(server_key_id);
       switch (status)
