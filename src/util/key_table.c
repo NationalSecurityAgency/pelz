@@ -90,8 +90,8 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
 {
   TableResponseStatus status;
   charbuf key;
-  int port_len = 4;
-  const char port_value[port_len] = "7000";
+  const char *server_name = "localhost";
+  const char *port_value = "7000";
   int index = 0;
   int ret;
   uint8_t *data;
@@ -116,8 +116,8 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
   }
 
   ret =
-    enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, (const char *) server_id.chars, server_id.len,
-    port_value, port_len);
+    enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, server_name, strlen(server_name),
+    port_value, strlen(port_value));
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");

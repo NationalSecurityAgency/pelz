@@ -25,7 +25,6 @@
 // Adds all table tests to main test runner.
 int table_suite_add_tests(CU_pSuite suite)
 {
-
   if (NULL == CU_add_test(suite, "Test Table Destruction", test_table_destroy))
   {
     return (1);
