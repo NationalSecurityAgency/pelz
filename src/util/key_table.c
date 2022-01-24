@@ -86,11 +86,12 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
   return status;
 }
 
-TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, int port, charbuf server_key_id)
+TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_name_len, const char *server_name, int port,
+  size_t server_key_id_len, const char *server_key_id)
 {
   TableResponseStatus status;
   charbuf key;
-  const char *server_name = "localhost";
+  charbuf server_id;
   const char *port_value = "7000";
   int index = 0;
   int ret;
@@ -103,30 +104,33 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
     return ERR_MEM;
   }
 
+  server_id = new_charbuf(server_name_len - 1);
+  memcpy(server_id.chars, server_name, server_id.len);
   if (table_lookup(SERVER, server_id, &index))
   {
     pelz_log(LOG_ERR, "Server ID not found");
-    return ERR;
+    free_charbuf(&server_id);
+    return NO_MATCH;
   }
+  free_charbuf(&server_id);
 
   if (private_pkey == NULL)
   {
     pelz_log(LOG_ERR, "Private key not found");
-    return ERR;
+    return NO_MATCH;
   }
 
   ret =
     enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, server_name,
-    (strlen(server_name) + 1), port_value, (strlen(port_value) + 1));
+    server_name_len, port_value, (strlen(port_value) + 1));
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");
-    return ERR;
+    return RET_FAIL;
   }
 
   data = (uint8_t *) "TestKeyabcdefghi";
   data_size = strlen("TestKeyabcdefghi");
-
   key = new_charbuf(data_size);
   if (data_size != key.len)
   {
@@ -134,7 +138,6 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
     return ERR_BUF;
   }
   memcpy(key.chars, data, key.len);
-
   status = key_table_add_key(key_id, key);
   return status;
 }

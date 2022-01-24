@@ -148,6 +148,7 @@ int main(int argc, char **argv)
 
   CU_pSuite test_pelz_uri_helpers_suite = NULL;
 
+  // Add pelz uri helpers suite ---- tests pelz uri helpers
   test_pelz_uri_helpers_suite = CU_add_suite("Pelz URI parser test suite", init_suite, clean_suite);
   if (NULL == test_pelz_uri_helpers_suite)
   {

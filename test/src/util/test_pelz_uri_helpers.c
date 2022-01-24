@@ -25,6 +25,7 @@ void test_scheme_extraction(void)
   const char *pelz_uri = "pelz://common_name/0/key_uid/other_data";
   UriUriA uri;
 
+  pelz_log(LOG_DEBUG, "Start URI functions");
   uriParseSingleUriA(&uri, file_uri, NULL);
   CU_ASSERT(get_uri_scheme(uri) == FILE_URI);
   char *filename = get_filename_from_key_id(uri);
@@ -42,27 +43,35 @@ void test_scheme_extraction(void)
 
   uriParseSingleUriA(&uri, pelz_uri, NULL);
   CU_ASSERT(get_uri_scheme(uri) == PELZ_URI);
+  pelz_log(LOG_DEBUG, "Finish URI functions");
 
-  charbuf common_name;
+  char *common_name;
   int port = -1;
-  charbuf key_id;
+  char *key_id;
   charbuf additional_data;
 
-  get_pelz_uri_parts(uri, &common_name, &port, &key_id, &additional_data);
+  pelz_log(LOG_DEBUG, "Start URI Helper functions");
+  get_pelz_uri_hostname(uri, &common_name);
+  CU_ASSERT(strlen(common_name) == strlen("common_name"));
+  CU_ASSERT(memcmp(common_name, "common_name", strlen("common_name")) == 0);
+  pelz_log(LOG_DEBUG, "Finish URI hostname");
 
-  CU_ASSERT(common_name.len == strlen("common_name"));
-  CU_ASSERT(memcmp(common_name.chars, "common_name", strlen("common_name")) == 0);
-
+  get_pelz_uri_port(uri, &port);
   CU_ASSERT(port == 0);
+  pelz_log(LOG_DEBUG, "Finish URI port");
 
-  CU_ASSERT(key_id.len == strlen("key_uid"));
-  CU_ASSERT(memcmp(key_id.chars, "key_uid", strlen("key_uid")) == 0);
+  get_pelz_uri_key_UID(uri, &key_id);
+  CU_ASSERT(strlen(key_id) == strlen("key_uid"));
+  CU_ASSERT(memcmp(key_id, "key_uid", strlen("key_uid")) == 0);
+  pelz_log(LOG_DEBUG, "Finish URI key UID");
 
+  get_pelz_uri_additional_data(uri, &additional_data);
   CU_ASSERT(additional_data.len == strlen("other_data"));
   CU_ASSERT(memcmp(additional_data.chars, "other_data", strlen("other_data")) == 0);
+  pelz_log(LOG_DEBUG, "Finish URI Helper functions");
 
-  free_charbuf(&common_name);
-  free_charbuf(&key_id);
+  free(common_name);
+  free(key_id);
   free_charbuf(&additional_data);
   uriFreeUriMembersA(&uri);
   return;

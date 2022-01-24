@@ -40,18 +40,45 @@ extern "C"
  * 
  * @param[in] uri   The (already parsed) URI)
  *
- * @param[in,out] comon_name Pointer to charbuf to hold the common name
+ * @param[in,out] comon_name Pointer to char to hold the common name
+ *
+ * @return 0 on success, 1 on error
+ */
+  int get_pelz_uri_hostname(UriUriA uri, char **common_name);
+
+/**
+ * @brief Extracts the necessary parts from a parsed pelz uri.
+ * 
+ * @param[in] uri   The (already parsed) URI)
  *
  * @param[in,out] port       Pointer to int to hold the port
  *
- * @param[in,out] key_id     Pointer to charbuf to hold the key_id
+ * @return 0 on success, 1 on error
+ */
+  int get_pelz_uri_port(UriUriA uri, int *port);
+
+/**
+ * @brief Extracts the necessary parts from a parsed pelz uri.
+ * 
+ * @param[in] uri   The (already parsed) URI)
+ *
+ * @param[in,out] key_id     Pointer to char to hold the key_id
+ *
+ * @return 0 on success, 1 on error
+ */
+  int get_pelz_uri_key_UID(UriUriA uri, char **key_id);
+
+/**
+ * @brief Extracts the necessary parts from a parsed pelz uri.
+ * 
+ * @param[in] uri   The (already parsed) URI)
  *
  * @param[in,out] additional_data Pointer to charbuf to hold additional data
  *                                May be NULL.
  *
  * @return 0 on success, 1 on error
  */
-  int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * key_id, charbuf * additional_data);
+  int get_pelz_uri_additional_data(UriUriA uri, charbuf * additional_data);
 
 #ifdef __cplusplus
 }

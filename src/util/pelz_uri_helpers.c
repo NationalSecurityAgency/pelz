@@ -48,7 +48,7 @@ char *get_filename_from_key_id(UriUriA uri)
   return filename;
 }
 
-int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * key_id, charbuf * additional_data)
+int get_pelz_uri_hostname(UriUriA uri, char **common_name)
 {
   ptrdiff_t field_length;
 
@@ -59,20 +59,23 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
     pelz_log(LOG_ERR, "Invalid URI field length.");
     return 1;
   }
-  *common_name = new_charbuf((size_t) field_length);
-  if (common_name->chars == NULL)
-  {
-    pelz_log(LOG_ERR, "Failed to initialize charbuf.");
-    return 1;
-  }
-  memcpy(common_name->chars, uri.hostText.first, field_length);
+
+  // The extra 2 bytes here are to prepend '/' and to append a null byte.
+  *common_name = (char *) calloc(field_length + 2, sizeof(char));
+
+  memcpy(*common_name, uri.hostText.first, field_length);
+  return 0;
+}
+
+int get_pelz_uri_port(UriUriA uri, int *port)
+{
+  ptrdiff_t field_length;
 
   // Extract the port
   field_length = uri.pathHead->text.afterLast - uri.pathHead->text.first;
   if (field_length <= 0)
   {
     pelz_log(LOG_ERR, "Invalid URI field length.");
-    free_charbuf(common_name);
     return 1;
   }
   char *port_text = (char *) calloc((1 + field_length), sizeof(char));
@@ -80,7 +83,6 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
   if (port_text == NULL)
   {
     pelz_log(LOG_ERR, "Failed to initialize memory.");
-    free_charbuf(common_name);
     return 1;
   }
   memcpy(port_text, uri.pathHead->text.first, field_length);
@@ -90,27 +92,34 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
   if (port_long < 0 || port_long > INT_MAX)
   {
     pelz_log(LOG_ERR, "Invalid port specified: %ld", port_long);
-    free_charbuf(common_name);
     return 1;
   }
   *port = (int) port_long;
+  return 0;
+}
+
+int get_pelz_uri_key_UID(UriUriA uri, char **key_id)
+{
+  ptrdiff_t field_length;
 
   // Extract the key UID
   field_length = uri.pathHead->next->text.afterLast - uri.pathHead->next->text.first;
   if (field_length <= 0)
   {
     pelz_log(LOG_ERR, "Invalid URI field length.");
-    free_charbuf(common_name);
     return 1;
   }
-  *key_id = new_charbuf((size_t) field_length);
-  if (key_id->chars == NULL)
-  {
-    pelz_log(LOG_ERR, "Failed to initialize charbuf.");
-    free_charbuf(common_name);
-    return 1;
-  }
-  memcpy(key_id->chars, uri.pathHead->next->text.first, field_length);
+
+  // The extra 2 bytes here are to prepend '/' and to append a null byte.
+  *key_id = (char *) calloc(field_length + 2, sizeof(char));
+
+  memcpy(*key_id, uri.pathHead->next->text.first, field_length);
+  return 0;
+}
+
+int get_pelz_uri_additional_data(UriUriA uri, charbuf * additional_data)
+{
+  ptrdiff_t field_length;
 
   // Extract any additional data
   if (additional_data != NULL)
@@ -119,20 +128,17 @@ int get_pelz_uri_parts(UriUriA uri, charbuf * common_name, int *port, charbuf * 
     if (field_length <= 0)
     {
       pelz_log(LOG_ERR, "Invalid URI field length.");
-      free_charbuf(key_id);
-      free_charbuf(common_name);
       return 1;
     }
+
     *additional_data = new_charbuf((size_t) field_length);
     if (additional_data->chars == NULL)
     {
       pelz_log(LOG_ERR, "Failed to initialize charbuf.");
-      free_charbuf(key_id);
-      free_charbuf(common_name);
       return 1;
     }
+
     memcpy(additional_data->chars, uri.pathHead->next->next->text.first, field_length);
   }
   return 0;
-
 }
