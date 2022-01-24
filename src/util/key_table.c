@@ -116,8 +116,8 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
   }
 
   ret =
-    enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, server_name, (strlen(server_name) + 1),
-    port_value, (strlen(port_value) + 1));
+    enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, server_name,
+    (strlen(server_name) + 1), port_value, (strlen(port_value) + 1));
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");

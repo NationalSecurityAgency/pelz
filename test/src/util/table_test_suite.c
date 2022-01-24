@@ -146,8 +146,8 @@ void test_table_add(void)
   pelz_log(LOG_INFO, "Private Pkey add success");
 
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
-  server_id = new_charbuf(strlen("TestServer"));
-  memcpy(server_id.chars, "TestServer", server_id.len);
+  server_id = new_charbuf(strlen("localhost"));
+  memcpy(server_id.chars, "localhost", server_id.len);
   server_key_id = new_charbuf(strlen(valid_id[2]));
   memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
   key_table_add_from_server(eid, &status, tmp, server_id, 7000, server_key_id);
@@ -255,8 +255,8 @@ void test_table_lookup(void)
   free_charbuf(&tmp);
   index = 0;
 
-  tmp = new_charbuf(strlen("TestServer"));
-  memcpy(tmp.chars, "TestServer", tmp.len);
+  tmp = new_charbuf(strlen("localhost"));
+  memcpy(tmp.chars, "localhost", tmp.len);
   test_table_lookup(eid, &status, SERVER, tmp, &index);
   CU_ASSERT(status == OK);
   CU_ASSERT(index == 1);
@@ -392,8 +392,8 @@ void test_table_delete(void)
   CU_ASSERT(status == NO_MATCH);
   free_charbuf(&tmp);
 
-  tmp = new_charbuf(strlen("TestServer"));
-  memcpy(tmp.chars, "TestServer", tmp.len);
+  tmp = new_charbuf(strlen("localhost"));
+  memcpy(tmp.chars, "localhost", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);

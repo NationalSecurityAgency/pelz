@@ -528,7 +528,7 @@ pre:
 .PHONY: test
 
 test: all
-	@cd test/data && ./../../kmyth/sgx/demo/data/gen_test_keys_certs.bash
+	@cd test/data && ./gen_test_keys_certs.bash
 	@openssl x509 -in test/data/client_cert_test.pem -inform pem -out test/data/client_cert_test.der -outform der
 	@openssl x509 -in test/data/server_cert_test.pem -inform pem -out test/data/server_cert_test.der -outform der
 	@openssl pkey -in test/data/client_priv_test.pem -inform pem -out test/data/client_priv_test.der -outform der
@@ -536,8 +536,8 @@ test: all
 	@./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
 	@./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
 	@echo "GEN => Test Key/Cert Files"
-	@cd kmyth/sgx/demo && make pre bin/ecdh-server bin/ecdh-client
-	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/server_priv_test.pem -u test/data/client_cert_test.pem -p 7000 &
+	@cd kmyth/sgx/demo && make pre bin/ecdh-server
+	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/server_priv_test.pem -u test/data/client_cert_test.pem -p 7000 2> /dev/null &
 	@sleep 1
 	@./test/bin/pelz-test 2> /dev/null
 	@rm -f test/data/*.pem
