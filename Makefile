@@ -71,24 +71,6 @@ else
 		SGX_COMMON_CFLAGS += -O2
 endif
 
-# Specify indentation options
-INDENT_OPTS = -bli0#                     indent braces zero spaces
-INDENT_OPTS += -bap#                     blank lines after procedure bodies
-INDENT_OPTS += -bad#                     blank lines after declarations
-INDENT_OPTS += -sob#                     swallow optional blank lines
-INDENT_OPTS += -cli0#                    case label indent of zero spaces
-INDENT_OPTS += -npcs#                    no space after function in calls
-INDENT_OPTS += -nbc#                     don't force newlines after commas
-INDENT_OPTS += -bls#                     put braces on line after struct decl
-INDENT_OPTS += -blf#                     put braces on line after func def
-INDENT_OPTS += -nlp#                     align continued lines at parentheses
-INDENT_OPTS += -ip0#                     indent parameter types zero spaces
-INDENT_OPTS += -ts2#                     set tab size to two spaces
-INDENT_OPTS += -nut#                     use spaces instead of tabs
-INDENT_OPTS += -npsl#                    type of proc on same line as name
-INDENT_OPTS += -bbo#                     prefer break before boolean operator
-INDENT_OPTS += -l128#                    max non-comment line length is 128
-
 ######## App Settings ########
 
 ifneq ($(SGX_MODE), HW)
@@ -497,11 +479,6 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 .PHONY: pre
 
 pre:
-	@indent $(INDENT_OPTS) src/*/*.c
-	@indent $(INDENT_OPTS) include/*.h
-	@indent $(INDENT_OPTS) test/src/*.c
-	@indent $(INDENT_OPTS) test/src/*/*.c
-	@indent $(INDENT_OPTS) test/include/*.h
 	@rm -f src/*/*.c~
 	@rm -f include/*.h~
 	@rm -f test/src/*.c~
