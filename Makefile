@@ -112,8 +112,9 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_loaders.c
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
+		 test/src/util/util_test_suite.c \
+		 test/src/util/aes_keywrap_test.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
-	 	 test/src/util/util_test_suite.c \
 		 test/src/util/test_helper_functions.c \
 		 test/src/util/test_pelz_uri_helpers.c \
 		 test/src/util/table_test_suite.c \
@@ -527,6 +528,17 @@ test: all
 	@rm -f test/data/*.pem
 	@rm -f test/data/*.der
 	@rm -f test/data/*.nkl
+
+.PHONY: install-test-vectors
+install-test-vectors: uninstall-test-vectors
+	mkdir -p test/data/kwtestvectors
+	wget https://csrc.nist.gov/groups/STM/cavp/documents/mac/kwtestvectors.zip
+	unzip kwtestvectors.zip -d test/data
+	rm kwtestvectors.zip
+
+.PHONY: uninstall-test-vectors
+uninstall-test-vectors:
+	rm -rf test/data/kwtestvectors
 
 .PHONY: clean
 
