@@ -6,5 +6,9 @@ enclave {
         trusted {
 
 public TableResponseStatus test_table_lookup(TableType type, charbuf id, [out] int *index);
+public int test_aes_keywrap_3394nopad_encrypt(size_t key_len, [in, size=key_len] unsigned char *key,
+  size_t inData_len, [in, size=inData_len] unsigned char *inData, [out] size_t * outData_len, [out] unsigned char **outData);
+public int test_aes_keywrap_3394nopad_decrypt(size_t key_len, [in, size=key_len] unsigned char *key, 
+  size_t inData_len, [in, size=inData_len] unsigned char *inData, [out] size_t * outData_len, [out] unsigned char **outData);
 	};
 };
