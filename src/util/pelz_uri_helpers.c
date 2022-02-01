@@ -48,7 +48,7 @@ char *get_filename_from_key_id(UriUriA uri)
   return filename;
 }
 
-int get_pelz_uri_hostname(UriUriA uri, char **common_name)
+int get_pelz_uri_hostname(UriUriA uri, unsigned char **common_name, size_t *common_name_len)
 {
   ptrdiff_t field_length;
 
@@ -61,7 +61,8 @@ int get_pelz_uri_hostname(UriUriA uri, char **common_name)
   }
 
   // The extra 2 bytes here are to prepend '/' and to append a null byte.
-  *common_name = (char *) calloc(field_length + 2, sizeof(char));
+  *common_name_len = field_length + 2;
+  *common_name = (unsigned char *) calloc(*common_name_len, sizeof(char));
 
   memcpy(*common_name, uri.hostText.first, field_length);
   return 0;
@@ -98,7 +99,7 @@ int get_pelz_uri_port(UriUriA uri, int *port)
   return 0;
 }
 
-int get_pelz_uri_key_UID(UriUriA uri, char **key_id)
+int get_pelz_uri_key_UID(UriUriA uri, unsigned char **key_id, size_t *key_id_len)
 {
   ptrdiff_t field_length;
 
@@ -111,7 +112,8 @@ int get_pelz_uri_key_UID(UriUriA uri, char **key_id)
   }
 
   // The extra 2 bytes here are to prepend '/' and to append a null byte.
-  *key_id = (char *) calloc(field_length + 2, sizeof(char));
+  *key_id_len = field_length + 2;
+  *key_id = (unsigned char *) calloc(*key_id_len, sizeof(char));
 
   memcpy(*key_id, uri.pathHead->next->text.first, field_length);
   return 0;

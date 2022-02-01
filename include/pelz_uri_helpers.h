@@ -40,18 +40,20 @@ extern "C"
  * 
  * @param[in] uri   The (already parsed) URI)
  *
- * @param[in,out] comon_name Pointer to char to hold the common name
+ * @param[in,out] common_name Pointer to char to hold the common name
+ *
+ * @param[in,out] common_name_len Point to size_t to hold common name length with null termination
  *
  * @return 0 on success, 1 on error
  */
-  int get_pelz_uri_hostname(UriUriA uri, char **common_name);
+  int get_pelz_uri_hostname(UriUriA uri, unsigned char **common_name, size_t *common_name_len);
 
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.
  * 
- * @param[in] uri   The (already parsed) URI)
+ * @param[in] uri The (already parsed) URI)
  *
- * @param[in,out] port       Pointer to int to hold the port
+ * @param[in,out] port Pointer to int to hold the port
  *
  * @return 0 on success, 1 on error
  */
@@ -60,13 +62,15 @@ extern "C"
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.
  * 
- * @param[in] uri   The (already parsed) URI)
+ * @param[in] uri The (already parsed) URI)
  *
- * @param[in,out] key_id     Pointer to char to hold the key_id
+ * @param[in,out] key_id Pointer to char to hold the key_id
+ *
+ * @param[in,out] key_id_len Pointer to size_t to hole the key_id length with null termination
  *
  * @return 0 on success, 1 on error
  */
-  int get_pelz_uri_key_UID(UriUriA uri, char **key_id);
+  int get_pelz_uri_key_UID(UriUriA uri, unsigned char **key_id, size_t *key_id_len);
 
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.

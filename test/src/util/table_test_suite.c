@@ -64,13 +64,15 @@ void test_table_add(void)
   charbuf tmp;
   charbuf key;
   const char *server_id = "localhost";
+  unsigned char *server_key_id;
+  size_t server_key_id_len = 12;
   uint8_t *data = NULL;
   size_t data_len = 0;
   uint64_t handle = 0;
   const char *prefix = "file:";
 
   const char *valid_id[5] =
-    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "/test/data/key2.txt", "test/data/server_cert_test.der.nkl",
+    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "fake_key_id", "test/data/server_cert_test.der.nkl",
     "test/data/client_priv_test.der.nkl"
   };
   const char *key_str = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
@@ -85,7 +87,7 @@ void test_table_add(void)
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
   secure_free_charbuf(&key);
-  pelz_log(LOG_INFO, "Key Table add Key success");
+  pelz_log(LOG_INFO, "Key Table add Key complete");
 
   tmp = copy_CWD_to_id(prefix, valid_id[1]);
   key_table_add_from_handle(eid, &status, tmp, handle);
@@ -104,7 +106,7 @@ void test_table_add(void)
   key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
-  pelz_log(LOG_INFO, "Key Table add from Handle success");
+  pelz_log(LOG_INFO, "Key Table add from Handle complete");
 
   //Testing the server table add
   server_table_add(eid, &status, handle);
@@ -122,7 +124,7 @@ void test_table_add(void)
 
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == OK);
-  pelz_log(LOG_INFO, "Server Table add success");
+  pelz_log(LOG_INFO, "Server Table add complete");
 
   //Testing the private pkey add
   private_pkey_init(eid, &status);
@@ -145,10 +147,12 @@ void test_table_add(void)
   pelz_log(LOG_INFO, "Private Pkey add success");
 
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
-  key_table_add_from_server(eid, &status, tmp, (strlen(server_id) + 1), server_id, 7000, strlen(valid_id[2]), valid_id[2]);
+  server_key_id = (unsigned char *) calloc(server_key_id_len, sizeof(char));
+  memcpy(server_key_id, valid_id[2], (server_key_id_len - 1));
+  key_table_add_from_server(eid, &status, tmp, (strlen(server_id) + 1), server_id, 7000, server_key_id_len, server_key_id);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
-  pelz_log(LOG_INFO, "Key Table add from Server success");
+  pelz_log(LOG_INFO, "Key Table add from Server complete");
 
   private_pkey_free(eid, &status);
   CU_ASSERT(status == OK);

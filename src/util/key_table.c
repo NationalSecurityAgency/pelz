@@ -87,14 +87,15 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
 }
 
 TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_name_len, const char *server_name, int port,
-  size_t server_key_id_len, const char *server_key_id)
+  size_t server_key_id_len, unsigned char *server_key_id)
 {
   TableResponseStatus status;
   charbuf key;
   charbuf server_id;
-  const char *port_value = "7000";
   int index = 0;
   int ret;
+  unsigned char *retrieved_key_id;
+  size_t retrieved_key_id_len = 0;
   uint8_t *data;
   size_t data_size = 0;
 
@@ -122,15 +123,26 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_name
 
   ret =
     enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, server_name,
-    server_name_len, port_value, (strlen(port_value) + 1));
+    server_name_len, port, server_key_id, server_key_id_len, &retrieved_key_id, &retrieved_key_id_len,
+    &data, &data_size);
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");
     return RET_FAIL;
   }
 
-  data = (uint8_t *) "TestKeyabcdefghi";
-  data_size = strlen("TestKeyabcdefghi");
+  if (server_key_id_len != retrieved_key_id_len || memcmp(retrieved_key_id, server_key_id, retrieved_key_id_len) != 0)
+  {	
+    pelz_log(LOG_ERR, "Retrieved Key Invalid Key ID");
+    return RET_FAIL;
+  }
+
+  if (data_size == 0  || data == NULL)
+  {
+    pelz_log(LOG_ERR, "Retrieved Key Invalid");
+    return RET_FAIL;
+  }	  
+
   key = new_charbuf(data_size);
   if (data_size != key.len)
   {
