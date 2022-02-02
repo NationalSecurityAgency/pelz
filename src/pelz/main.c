@@ -157,11 +157,11 @@ int main(int argc, char **argv)
     free(msg);
     if (unlink(PELZSERVICEOUT) == 0)
     {
-      pelz_log(LOG_INFO, "Second pipe deleted successfully");
+      pelz_log(LOG_DEBUG, "Second pipe deleted successfully");
     }
     else
     {
-      pelz_log(LOG_INFO, "Failed to delete the second pipe");
+      pelz_log(LOG_DEBUG, "Failed to delete the second pipe");
     }
   }
   else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "load", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
@@ -506,7 +506,7 @@ int main(int argc, char **argv)
           return 1;
         }
 
-        pelz_log(LOG_WARNING, "output file not specified, default = %s", outPath);
+        pelz_log(LOG_DEBUG, "output file not specified, default = %s", outPath);
         if (tpm)
         {
           if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
@@ -537,6 +537,7 @@ int main(int argc, char **argv)
       free(outPath);
       return 1;
     }
+    printf("Successfully sealed contents to file: %s\n", outPath);
   }
   else
   {

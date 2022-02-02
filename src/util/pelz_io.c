@@ -305,7 +305,7 @@ int write_to_pipe(char *pipe, char *msg)
 
   if (file_check(pipe))
   {
-    pelz_log(LOG_DEBUG, "Pipe not found");
+    pelz_log(LOG_DEBUG, "Pipe not found, unable to communicate with pelz-service");
     return 1;
   }
 
@@ -379,7 +379,7 @@ int pelz_send_command(char *msg)
   }
   else
   {
-    pelz_log(LOG_INFO, "Pelz command options sent to pelz-service");
+    pelz_log(LOG_DEBUG, "Pelz command options sent to pelz-service");
   }
   pthread_join(listener_thread, NULL);
 
