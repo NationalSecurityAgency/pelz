@@ -50,9 +50,11 @@ Examples:
 
 JSON Request for AES Key Wrap
 * {"key_id": "file:~/pelz/test/key1.txt", "request_type": 1, "enc_data_len": 33, "key_id_len": 37, "enc_data": "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n"}
+* {"key_id": "pelz://localhost/7000/fake_key_id", "request_type": 1, "enc_data_len": 33, "key_id_len": 33, "enc_data": "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n"}
 
 JSON Request for AES Key Unwrap
 * {"key_id": "file:~/pelz/test/key1.txt", "request_type": 2, "dec_data_len": 45, "key_id_len": 37, "dec_data": "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n"}
+* {"key_id": "pelz://localhost/7000/fake_key_id", "request_type": 2, "dec_data_len": 45, "key_id_len": 33, "dec_data": "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n"}
 
 #### Response JSON Key and Values
 * key_id : string of charaters
@@ -83,7 +85,7 @@ Although any URI scheme could be supported, we currently only support reading fr
 * Retrieve a key from the local host at the location provided by URI.
 * RFC 8089 (File Scheme) based sytax.
 
-#### FTP 
+#### Pelz 
 * Retrieve a key from a networked server (to be implemented as a future enhancement).
 * RFC 1738 (Uniform Resource Locators) Section 3.1 based syntax. No specific application of the protocol sections for RFC959 (FTP).
 * This implementation assumes user and password are included into host if applicable.
