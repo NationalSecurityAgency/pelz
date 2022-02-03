@@ -60,8 +60,8 @@ int get_pelz_uri_hostname(UriUriA uri, unsigned char **common_name, size_t *comm
     return 1;
   }
 
-  // The extra 2 bytes here are to prepend '/' and to append a null byte.
-  *common_name_len = field_length + 2;
+  // The extra 1 bytes here are to append a null byte.
+  *common_name_len = field_length + 1;
   *common_name = (unsigned char *) calloc(*common_name_len, sizeof(char));
 
   memcpy(*common_name, uri.hostText.first, field_length);
@@ -111,8 +111,8 @@ int get_pelz_uri_key_UID(UriUriA uri, unsigned char **key_id, size_t *key_id_len
     return 1;
   }
 
-  // The extra 2 bytes here are to prepend '/' and to append a null byte.
-  *key_id_len = field_length + 2;
+  // The extra 1 bytes here are to append a null byte.
+  *key_id_len = field_length + 1;
   *key_id = (unsigned char *) calloc(*key_id_len, sizeof(char));
 
   memcpy(*key_id, uri.pathHead->next->text.first, field_length);

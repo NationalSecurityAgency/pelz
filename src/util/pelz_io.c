@@ -244,6 +244,9 @@ int key_load(charbuf key_id)
         break;
       }
 
+      pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", common_name_len, common_name, common_name_len);
+      pelz_log(LOG_DEBUG, "Port Number: %d", port);
+      pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id, server_key_id);
       key_table_add_from_server(eid, &status, key_id, common_name_len, (const char *) common_name, port,
         server_key_id_len, server_key_id);
       free(common_name);
@@ -268,6 +271,12 @@ int key_load(charbuf key_id)
           return_value = 1;
           break;
         }
+      case NO_MATCH:
+	{
+	  pelz_log(LOG_ERR, "Cerificate or Private Key not matched");
+          return_value = 1;
+          break;
+	}
       case RET_FAIL:
 	{
 	  pelz_log(LOG_ERR, "Key Retrieve Failure");

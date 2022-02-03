@@ -54,7 +54,7 @@ void test_scheme_extraction(void)
 
   pelz_log(LOG_DEBUG, "Start URI Helper functions");
   get_pelz_uri_hostname(uri, &common_name, &common_name_len);
-  CU_ASSERT((common_name_len - 2) == strlen("common_name"));
+  CU_ASSERT((common_name_len - 1) == strlen("common_name"));
   CU_ASSERT(memcmp(common_name, "common_name", strlen("common_name")) == 0);
   pelz_log(LOG_DEBUG, "Finish URI hostname");
 
@@ -63,7 +63,7 @@ void test_scheme_extraction(void)
   pelz_log(LOG_DEBUG, "Finish URI port");
 
   get_pelz_uri_key_UID(uri, &key_id, &key_id_len);
-  CU_ASSERT((key_id_len - 2) == strlen("key_uid"));
+  CU_ASSERT((key_id_len - 1) == strlen("key_uid"));
   CU_ASSERT(memcmp(key_id, "key_uid", strlen("key_uid")) == 0);
   pelz_log(LOG_DEBUG, "Finish URI key UID");
 
