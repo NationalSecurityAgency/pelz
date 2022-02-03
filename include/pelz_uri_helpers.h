@@ -38,7 +38,7 @@ extern "C"
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.
  * 
- * @param[in] uri   The (already parsed) URI)
+ * @param[in] uri   The (already parsed) URI
  *
  * @param[in,out] common_name Pointer to char to hold the common name
  *
@@ -51,7 +51,7 @@ extern "C"
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.
  * 
- * @param[in] uri The (already parsed) URI)
+ * @param[in] uri The (already parsed) URI
  *
  * @param[in,out] port Pointer to int to hold the port
  *
@@ -62,7 +62,7 @@ extern "C"
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.
  * 
- * @param[in] uri The (already parsed) URI)
+ * @param[in] uri The (already parsed) URI
  *
  * @param[in,out] key_id Pointer to char to hold the key_id
  *
@@ -75,7 +75,7 @@ extern "C"
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.
  * 
- * @param[in] uri   The (already parsed) URI)
+ * @param[in] uri   The (already parsed) URI
  *
  * @param[in,out] additional_data Pointer to charbuf to hold additional data
  *                                May be NULL.
