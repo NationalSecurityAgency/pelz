@@ -581,7 +581,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 
     if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      pelz_log(LOG_INFO, "Invaild extention for load cert call");
+      pelz_log(LOG_INFO, "Invaild extension for load cert call");
       pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
       return INVALID_EXT_CERT;
     }
@@ -622,7 +622,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      pelz_log(LOG_INFO, "Invaild extention for load private call");
+      pelz_log(LOG_INFO, "Invaild extension for load private call");
       pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
       return INVALID_EXT_PRIV;
     }
