@@ -234,7 +234,7 @@ Enclave_Link_Flags += -Wl,--no-undefined
 Enclave_Link_Flags += -Wl,-pie,-eenclave_entry 
 Enclave_Link_Flags += -Wl,--export-dynamic
 Enclave_Link_Flags += -Wl,--defsym,__ImageBase=0
-Enclave_Link_Flags += -lkmip-core
+Enclave_Link_Flags += -lkmip-sgx
 
 Enclave_Name := pelz_enclave.so
 Enclave_Signing_Key := pelz_enclave_private.pem
