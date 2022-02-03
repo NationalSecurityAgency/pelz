@@ -69,13 +69,28 @@ int pelz_load_file_to_enclave(char *filename, uint64_t * handle)
   switch (ext)
   {
   case SKI:
-    pelz_unseal_ski(data, data_len, &data_out, &data_out_len);
+    if(pelz_unseal_ski(data, data_len, &data_out, &data_out_len))
+    {
+      pelz_log(LOG_ERR, "Failed to tpm-unseal %s ... exiting", filename);
+      free(data);
+      return (1);
+    }
     free(data);
-    pelz_unseal_nkl(data_out, data_out_len, handle);
+    if( pelz_unseal_nkl(data_out, data_out_len, handle))
+    {
+      pelz_log(LOG_ERR, "Failed to sgx-unseal %s ... exiting", filename);
+      free(data_out);
+      return (1);
+    }
     free(data_out);
     break;
   case NKL:
-    pelz_unseal_nkl(data, data_len, handle);
+    if(pelz_unseal_nkl(data, data_len, handle))
+    {
+      pelz_log(LOG_ERR, "Failed to sgx-unseal %s ... exiting", filename);
+      free(data);
+      return (1);
+    }
     free(data);
     break;
   default:
