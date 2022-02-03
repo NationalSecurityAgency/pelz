@@ -179,13 +179,13 @@ int key_load(charbuf key_id)
         }
       case ERR_MEM:
         {
-          pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+          pelz_log(LOG_ERR, "Key Table memory allocation greater than specified limit.");
           return_value = 1;
           break;
         }
       case RET_FAIL:
         {
-          pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+          pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
           return_value = 1;
           break;
         }
@@ -261,7 +261,7 @@ int key_load(charbuf key_id)
         }
       case ERR_MEM:
         {
-          pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+          pelz_log(LOG_ERR, "Key Table memory allocation greater than specified limit.");
           return_value = 1;
           break;
         }
@@ -273,7 +273,7 @@ int key_load(charbuf key_id)
         }
       case NO_MATCH:
 	{
-	  pelz_log(LOG_ERR, "Cerificate or Private Key not matched");
+	  pelz_log(LOG_ERR, "Certificate or Private Key not matched");
           return_value = 1;
           break;
 	}
@@ -613,7 +613,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 
     if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      pelz_log(LOG_INFO, "Invaild extention for load cert call");
+      pelz_log(LOG_INFO, "Invalid extension for load cert call");
       pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
       return INVALID_EXT_CERT;
     }
@@ -633,7 +633,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         pelz_log(LOG_ERR, "X509 allocation error.");
         break;
       case RET_FAIL:
-        pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
         break;
       case NO_MATCH:
         pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
@@ -654,7 +654,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      pelz_log(LOG_INFO, "Invaild extention for load private call");
+      pelz_log(LOG_INFO, "Invaild extension for load private call");
       pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
       return INVALID_EXT_PRIV;
     }
