@@ -268,6 +268,12 @@ int key_load(charbuf key_id)
           return_value = 1;
           break;
         }
+      case RET_FAIL:
+	{
+	  pelz_log(LOG_ERR, "Key Retrieve Failure");
+	  return_value = 1;
+          break;
+	}
       case OK:
         {
           pelz_log(LOG_DEBUG, "Key added to table.");
