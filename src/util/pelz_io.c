@@ -627,9 +627,20 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return INVALID_EXT_PRIV;
     }
     private_pkey_add(eid, &ret, handle);
-    if (ret == 1)
+    if (ret != OK)
     {
       pelz_log(LOG_ERR, "Add private pkey failure");
+      switch (ret)
+      {
+      case ERR_X509:
+        pelz_log(LOG_ERR, "X509 allocation error.");
+        return X509_FAIL;
+      case RET_FAIL:
+        pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+        break;
+      default:
+        pelz_log(LOG_ERR, "Private PKey Add return not defined");
+      }
       return ADD_PRIV_FAIL;
     }
     return LOAD_PRIV;
