@@ -636,7 +636,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         pelz_log(LOG_ERR, "X509 allocation error.");
         return X509_FAIL;
       case RET_FAIL:
-        pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
         break;
       default:
         pelz_log(LOG_ERR, "Private PKey Add return not defined");
