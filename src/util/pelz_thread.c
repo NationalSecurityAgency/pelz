@@ -103,7 +103,7 @@ void *fifo_thread_process(void *arg)
   size_t num_tokens = 0;
   int ret = 0;
 
-  const char *resp_str[21] =
+  const char *resp_str[22] =
     { "Invalid pipe command received by pelz-service.",
       "Successfully initiated termination of pelz-service.",
       "Unable to read file",
@@ -124,7 +124,8 @@ void *fifo_thread_process(void *arg)
       "Key Table Destroy Failure",
       "Key Table Init Failure",
       "All keys removed",
-      "Charbuf creation error."
+      "Charbuf creation error.",
+      "DER to 509 Failure"
   };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
