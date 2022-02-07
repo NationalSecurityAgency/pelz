@@ -14,7 +14,7 @@
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include ENCLAVE_HEADER_UNTRUSTED
 
 #define AES_KW_VECTOR_PATH "test/data/kwtestvectors"
 

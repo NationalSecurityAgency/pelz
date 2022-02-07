@@ -6,7 +6,7 @@
 #include "charbuf.h"
 
 #include "sgx_trts.h"
-#include "pelz_enclave_t.h"
+#include "test_enclave_t.h"
 
 TableResponseStatus test_table_lookup(TableType type, charbuf id, int *index)
 {

@@ -26,7 +26,7 @@
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include ENCLAVE_HEADER_UNTRUSTED
 
 #define BUFSIZE 1024
 

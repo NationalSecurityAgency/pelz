@@ -14,7 +14,7 @@
 #include <pelz_log.h>
 
 #include "sgx_trts.h"
-#include "pelz_enclave_t.h"
+#include ENCLAVE_HEADER_TRUSTED
 #include "kmyth_enclave_trusted.h"
 
 Table key_table = {

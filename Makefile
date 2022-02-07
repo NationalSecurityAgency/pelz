@@ -41,6 +41,9 @@ SGX_SSL_INCLUDE_PATH ?= /opt/intel/sgxssl/include/
 ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
 ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
 
+#ENCLAVE_HEADER_TRUSTED ?= '"test_enclave_t.h"'
+#ENCLAVE_HEADER_UNTRUSTED ?= '"test_enclave_u.h"'
+
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
 else ifeq ($(findstring -m32, $(CXXFLAGS)), -m32)
@@ -201,8 +204,8 @@ Enclave_C_Flags += -fstack-protector
 Enclave_C_Flags += $(Enclave_Include_Paths) 
 Enclave_C_Flags += -DPELZ_SGX_TRUSTED
 Enclave_C_Flags += -Wall 
-Enclave_C_Flags += -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED)
 Enclave_C_Flags += -DKMYTH_SGX
+Enclave_C_Flags += -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED)
 
 Enclave_Cpp_Flags := $(Enclave_C_Flags) 
 Enclave_Cpp_Flags += -std=c++03 
@@ -334,24 +337,25 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-sgx/pelz_test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
+test/include/test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --untrusted test_enclave.edl \
-					   --search-path . \
-					   --search-path $(SGX_SDK)/include \
-					   --search-path $(SGX_SSL_INCLUDE_PATH) \
-					   --search-path ../../include \
-					   --search-path ../../kmyth/sgx/trusted \
-					   --search-path ../../sgx
+                                           --search-path . \
+                                           --search-path $(SGX_SDK)/include \
+                                           --search-path $(SGX_SSL_INCLUDE_PATH) \
+                                           --search-path ../../include \
+                                           --search-path ../../kmyth/sgx/trusted \
+                                           --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
-sgx/pelz_test_enclave_u.o: sgx/pelz_test_enclave_u.c
+sgx/test_enclave_u.o: test/include/test_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
+
 
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Files) \
 			   $(App_Cpp_Kmyth_Files) \
-                           sgx/pelz_test_enclave_u.o \
+                           sgx/test_enclave_u.o \
                            sgx/ec_key_cert_unmarshal.o \
                            sgx/log_ocall.o \
                            sgx/ecdh_ocall.o \
@@ -362,6 +366,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
                          -Isgx \
 			 -Itest/include \
 			 $(App_C_Flags) \
+			 $(App_C_Flags_Test) \
 			 $(App_Link_Flags) \
 			 -lcrypto \
 			 -lcjson \
@@ -382,6 +387,7 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 $(App_Include_Paths) \
 			 -Isgx \
 			 $(App_C_Flags) \
+			 $(App_C_Flags_Pelz) \
 			 $(App_Link_Flags) \
 			 -Lsgx \
 			 -lcrypto \
@@ -402,6 +408,7 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 			 $(App_Include_Paths) \
 			 -Isgx \
 			 $(App_C_Flags) \
+			 $(App_C_Flages_Pelz) \
 			 $(App_Link_Flags) \
 			 -Lsgx \
 			 -lcrypto \
@@ -517,17 +524,17 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 
 ######## Test Enclave Objects ########
 
-sgx/pelz_test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
+test/include/test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --trusted test_enclave.edl \
-                                  --search-path . \
-                                  --search-path $(SGX_SDK)/include \
-                                  --search-path $(SGX_SSL_INCLUDE_PATH) \
-                                  --search-path ../../include \
-                                  --search-path ../../kmyth/sgx/trusted \
-                                  --search-path ../sgx 
+					   --search-path . \
+					   --search-path $(SGX_SDK)/include \
+	 				   --search-path $(SGX_SSL_INCLUDE_PATH) \
+	 				   --search-path ../../include \
+	 				   --search-path ../../kmyth/sgx/trusted \
+	 				   --search-path ../sgx 
 	@echo "GEN => $@"
 
-sgx/pelz_test_enclave_t.o: sgx/pelz_test_enclave_t.c
+sgx/test_enclave_t.o: test/include/test_enclave_t.c
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -535,25 +542,25 @@ sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/$(Test_Enclave_Name): sgx/pelz_enclave_t.o \
-                     sgx/common_table.o \
-                     sgx/key_table.o \
-                     sgx/server_table.o \
-                     sgx/aes_keywrap_3394nopad.o \
-                     sgx/pelz_request_handler.o \
-                     sgx/charbuf.o \
-                     sgx/util.o \
-                     sgx/kmyth_enclave_seal.o \
-                     sgx/kmyth_enclave_unseal.o \
-                     sgx/kmyth_enclave_memory_util.o \
-                     sgx/kmyth_enclave_retrieve_key.o \
-                     sgx/ec_key_cert_unmarshal.o \
-                     sgx/ecdh_util.o \
-                     sgx/sgx_retrieve_key_impl.o \
-                     sgx/aes_gcm.o \
-                     sgx/memory_util.o \
-                     sgx/kmip_util.o \
-                     sgx/enclave_helper_functions.o
+sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
+			  sgx/common_table.o \
+     			  sgx/key_table.o \
+     			  sgx/server_table.o \
+     			  sgx/aes_keywrap_3394nopad.o \
+     			  sgx/pelz_request_handler.o \
+     			  sgx/charbuf.o \
+     			  sgx/util.o \
+     			  sgx/kmyth_enclave_seal.o \
+     			  sgx/kmyth_enclave_unseal.o \
+     			  sgx/kmyth_enclave_memory_util.o \
+     			  sgx/kmyth_enclave_retrieve_key.o \
+     			  sgx/ec_key_cert_unmarshal.o \
+     			  sgx/ecdh_util.o \
+     			  sgx/sgx_retrieve_key_impl.o \
+     			  sgx/aes_gcm.o \
+     			  sgx/memory_util.o \
+     			  sgx/kmip_util.o \
+     			  sgx/enclave_helper_functions.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -577,7 +584,6 @@ pre:
 	@mkdir -p test/log
 	@mkdir -p test/data
 
-
 .PHONY: test
 
 test: test-all
@@ -598,6 +604,7 @@ test: test-all
 	@rm -f test/data/*.nkl
 
 .PHONY: install-test-vectors
+
 install-test-vectors: uninstall-test-vectors
 	mkdir -p test/data/kwtestvectors
 	wget https://csrc.nist.gov/groups/STM/cavp/documents/mac/kwtestvectors.zip
@@ -605,6 +612,7 @@ install-test-vectors: uninstall-test-vectors
 	rm kwtestvectors.zip
 
 .PHONY: uninstall-test-vectors
+
 uninstall-test-vectors:
 	rm -rf test/data/kwtestvectors
 
@@ -619,6 +627,8 @@ clean:
 	@rm -f sgx/*_u.*
 	@rm -f sgx/*_t.*
 	@rm -f sgx/*.o
+	@rm -f test/include/*_u.*
+	@rm -f test/include/*_t.*
 	@rm -f test/log/*
 	@rm -f test/data/*.pem
 	@rm -f test/data/*.der
