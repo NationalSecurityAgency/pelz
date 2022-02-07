@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
 
-  // Add pelz uri helpers suite ----
+  // Add pelz uri helpers suite ---- tests pelz uri helpers
   CU_pSuite test_pelz_uri_helpers_suite = NULL;
 
   test_pelz_uri_helpers_suite = CU_add_suite("Pelz URI parser test suite", init_suite, clean_suite);

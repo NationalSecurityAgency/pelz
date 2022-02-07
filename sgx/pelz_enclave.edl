@@ -130,6 +130,7 @@ public TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t ha
  * @param[in] key_id.len The length of the key identifier
  * @param[in] server.chars Server identifier
  * @param[in] server.len The length of the server identifier
+ * @param[in] port The connection port to server
  * @param[in] server_key_id.chars Key on server identifier
  * @param[in] server_key_id.len The length of the key on server identifier
  * @param[in] key_table The key table that the new key needs to be added to
@@ -137,7 +138,8 @@ public TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t ha
  *
  * @return 0 on success, 1 on error
  */
-public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id, charbuf server_key_id);
+public TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_id_len, 
+  [in, size=server_id_len] const char *server_id, int port, size_t server_key_id_len, [in, size=server_key_id_len] unsigned char *server_key_id);
 
 /**
  * <pre>
