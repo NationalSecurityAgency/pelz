@@ -18,6 +18,16 @@ cJSON is required to build pelz.
 
 For more information on building cJSON, please see their [build instructions](https://github.com/DaveGamble/cJSON#building).
 
+#### libkmip:
+libkmip is required to build pelz.
+
+    git clone https://github.com/OpenKMIP/libkmip.git
+    cd libkmip
+    sudo make
+    sudo make install
+
+For more information on installing libkmip, please see their [installation instructions](https://libkmip.readthedocs.io/en/latest/installation.html).
+
 #### uriparser
 [uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser#compilation). You may find it convenient to use the ```-DURIPARSER_BUILD_TESTS=OFF``` and ```-DURIPARSER_BUILD_DOCS=OFF``` flags.
 
