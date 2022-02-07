@@ -237,8 +237,10 @@ Enclave_Link_Flags += -Wl,--defsym,__ImageBase=0
 Enclave_Link_Flags += -lkmip-sgx
 
 Enclave_Name := pelz_enclave.so
+Test_Enclave_Name := pelz_test_enclave.so
 Enclave_Signing_Key := pelz_enclave_private.pem
 Signed_Enclave_Name := pelz_enclave.signed.so
+Signed_Test_Enclave_Name := pelz_test_enclave.signed.so
 Enclave_Config_File := sgx/pelz_enclave.config.xml
 
 ifeq ($(SGX_MODE), HW)
@@ -257,7 +259,7 @@ e.g., run 'openssl genrsa -out sgx/$(Enclave_Signing_Key) -3 3072'
 endef
 
 
-.PHONY: all run
+.PHONY: all run test-run test-all
 
 ifeq ($(Build_Mode), HW_RELEASE)
 all: $(App_Name) $(Enclave_Name)
@@ -268,13 +270,31 @@ all: $(App_Name) $(Enclave_Name)
 	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
 	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
 else
-all: pre bin/$(App_Name_Service) bin/$(App_Name_Pipe) test/bin/$(App_Name_Test) sgx/$(Signed_Enclave_Name)
+all: pre bin/$(App_Name_Service) bin/$(App_Name_Pipe) sgx/$(Signed_Enclave_Name)
 endif
 
 run: all
 ifneq ($(Build_Mode), HW_RELEASE)
 	@$(CURDIR)/$(App_Name_Service)
 	@echo "RUN  =>  $(App_Name_Service) [$(SGX_MODE)|$(SGX_ARCH), OK]"
+endif
+
+ifeq ($(Build_Mode), HW_RELEASE)
+test-all: $(App_Name) $(Test_Enclave_Name)
+	@echo "The project has been built in release hardware mode."
+	@echo "Please sign the $(Test_Enclave_Name) first with your signing key before you run the $(App_Name) to launch and access the enclave."
+	@echo "To sign the enclave use the command:"
+	@echo "   $(SGX_ENCLAVE_SIGNER) sign -key <your key> -enclave $(Test_Enclave_Name) -out <$(Signed_Test_Enclave_Name)> -config $(Enclave_Config_File)"
+	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
+	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
+else
+test-all: pre test/bin/$(App_Name_Test) sgx/$(Signed_Test_Enclave_Name)
+endif
+
+test-run: test-all
+ifneq ($(Build_Mode), HW_RELEASE)
+	@$(CURDIR)/$(App_Name_Test)
+	@echo "RUN  =>  $(App_Name_Test) [$(SGX_MODE)|$(SGX_ARCH), OK]"
 endif
 
 ######## Common Objects ########
@@ -304,22 +324,34 @@ sgx/ecdh_ocall.o: kmyth/sgx/untrusted/src/ocall/ecdh_ocall.c
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl \
 				  --search-path . \
-				  --search-path include \
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted \
-			  	  --search-path ../test/include	  
+				  --search-path ../kmyth/sgx/trusted
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
+sgx/pelz_test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
+	@cd test/include && $(SGX_EDGER8R) --untrusted test_enclave.edl \
+                                           --search-path . \
+                                  	   --search-path $(SGX_SDK)/include \
+                                  	   --search-path $(SGX_SSL_INCLUDE_PATH) \
+                                  	   --search-path ../../include \
+                                  	   --search-path ../../kmyth/sgx/trusted \
+					   --search-path ../../sgx
+	@echo "GEN  =>  $@"
+
+sgx/pelz_test_enclave_u.o: sgx/pelz_test_enclave_u.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Files) \
 			   $(App_Cpp_Kmyth_Files) \
-                           sgx/pelz_enclave_u.o \
+                           sgx/pelz_test_enclave_u.o \
                            sgx/ec_key_cert_unmarshal.o \
                            sgx/log_ocall.o \
                            sgx/ecdh_ocall.o \
@@ -385,8 +417,7 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted \
-                                  --search-path ../test/include 
+				  --search-path ../kmyth/sgx/trusted 
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
@@ -453,10 +484,6 @@ sgx/util.o: src/util/util.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
 	@echo "CXX  <= $<"
 
-sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
-	@echo "CXX  <= $<"
-
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
@@ -474,8 +501,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/sgx_retrieve_key_impl.o \
 		     sgx/aes_gcm.o \
 		     sgx/memory_util.o \
-		     sgx/kmip_util.o \
-		     sgx/enclave_helper_functions.o
+		     sgx/kmip_util.o 
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
 	@echo "LINK =>  $@"
 
@@ -487,6 +513,55 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 				    -enclave sgx/$(Enclave_Name) \
 				    -out $@ \
 				    -config $(Enclave_Config_File)
+	@echo "SIGN =>  $@"
+
+######## Test Enclave Objects ########
+
+sgx/pelz_test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
+	@cd test/include && $(SGX_EDGER8R) --trusted test_enclave.edl \
+                                  --search-path . \
+                                  --search-path $(SGX_SDK)/include \
+                                  --search-path $(SGX_SSL_INCLUDE_PATH) \
+                                  --search-path ../../include \
+                                  --search-path ../../kmyth/sgx/trusted \
+                                  --search-path ../sgx 
+	@echo "GEN => $@"
+
+sgx/pelz_test_enclave_t.o: sgx/pelz_test_enclave_t.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
+	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@echo "CXX  <= $<"
+
+sgx/$(Test_Enclave_Name): sgx/pelz_enclave_t.o \
+                     sgx/common_table.o \
+                     sgx/key_table.o \
+                     sgx/server_table.o \
+                     sgx/aes_keywrap_3394nopad.o \
+                     sgx/pelz_request_handler.o \
+                     sgx/charbuf.o \
+                     sgx/util.o \
+                     sgx/kmyth_enclave_seal.o \
+                     sgx/kmyth_enclave_unseal.o \
+                     sgx/kmyth_enclave_memory_util.o \
+                     sgx/kmyth_enclave_retrieve_key.o \
+                     sgx/ec_key_cert_unmarshal.o \
+                     sgx/ecdh_util.o \
+                     sgx/sgx_retrieve_key_impl.o \
+                     sgx/aes_gcm.o \
+                     sgx/memory_util.o \
+                     sgx/kmip_util.o \
+                     sgx/enclave_helper_functions.o
+	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
+	@echo "LINK =>  $@"
+
+sgx/$(Signed_Test_Enclave_Name): sgx/$(Test_Enclave_Name) sgx/$(Enclave_Signing_Key)
+	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) \
+                                    -enclave sgx/$(Test_Enclave_Name) \
+                                    -out $@ \
+                                    -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
 .PHONY: pre
@@ -505,7 +580,7 @@ pre:
 
 .PHONY: test
 
-test: all
+test: test-all
 	@cd test/data && ./gen_test_keys_certs.bash
 	@openssl x509 -in test/data/client_cert_test.pem -inform pem -out test/data/client_cert_test.der -outform der
 	@openssl x509 -in test/data/server_cert_test.pem -inform pem -out test/data/server_cert_test.der -outform der
