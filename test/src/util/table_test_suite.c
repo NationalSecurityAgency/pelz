@@ -25,7 +25,6 @@
 // Adds all table tests to main test runner.
 int table_suite_add_tests(CU_pSuite suite)
 {
-
   if (NULL == CU_add_test(suite, "Test Table Destruction", test_table_destroy))
   {
     return (1);
@@ -64,15 +63,16 @@ void test_table_add(void)
   TableResponseStatus status;
   charbuf tmp;
   charbuf key;
-  charbuf server_id;
-  charbuf server_key_id;
+  const char *server_id = "localhost";
+  unsigned char *server_key_id;
+  size_t server_key_id_len = 12;
   uint8_t *data = NULL;
   size_t data_len = 0;
   uint64_t handle = 0;
   const char *prefix = "file:";
 
   const char *valid_id[5] =
-    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "/test/data/key2.txt", "test/data/server_cert_test.der.nkl",
+    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "fake_key_id", "test/data/server_cert_test.der.nkl",
     "test/data/client_priv_test.der.nkl"
   };
   const char *key_str = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
@@ -87,7 +87,7 @@ void test_table_add(void)
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
   secure_free_charbuf(&key);
-  pelz_log(LOG_INFO, "Key Table add Key success");
+  pelz_log(LOG_INFO, "Key Table add Key complete");
 
   tmp = copy_CWD_to_id(prefix, valid_id[1]);
   key_table_add_from_handle(eid, &status, tmp, handle);
@@ -106,7 +106,7 @@ void test_table_add(void)
   key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
-  pelz_log(LOG_INFO, "Key Table add from Handle success");
+  pelz_log(LOG_INFO, "Key Table add from Handle complete");
 
   //Testing the server table add
   server_table_add(eid, &status, handle);
@@ -124,7 +124,7 @@ void test_table_add(void)
 
   server_table_add(eid, &status, handle);
   CU_ASSERT(status == OK);
-  pelz_log(LOG_INFO, "Server Table add success");
+  pelz_log(LOG_INFO, "Server Table add complete");
 
   //Testing the private pkey add
   private_pkey_init(eid, &status);
@@ -147,16 +147,12 @@ void test_table_add(void)
   pelz_log(LOG_INFO, "Private Pkey add success");
 
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
-  server_id = new_charbuf(strlen("TestServer"));
-  memcpy(server_id.chars, "TestServer", server_id.len);
-  server_key_id = new_charbuf(strlen(valid_id[2]));
-  memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
-  key_table_add_from_server(eid, &status, tmp, server_id, server_key_id);
+  server_key_id = (unsigned char *) calloc(server_key_id_len, sizeof(char));
+  memcpy(server_key_id, valid_id[2], (server_key_id_len - 1));
+  key_table_add_from_server(eid, &status, tmp, (strlen(server_id) + 1), server_id, 7000, server_key_id_len, server_key_id);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
-  free_charbuf(&server_id);
-  free_charbuf(&server_key_id);
-  pelz_log(LOG_INFO, "Key Table add from Server success");
+  pelz_log(LOG_INFO, "Key Table add from Server complete");
 
   private_pkey_free(eid, &status);
   CU_ASSERT(status == OK);
@@ -256,8 +252,8 @@ void test_table_lookup(void)
   free_charbuf(&tmp);
   index = 0;
 
-  tmp = new_charbuf(strlen("TestServer"));
-  memcpy(tmp.chars, "TestServer", tmp.len);
+  tmp = new_charbuf(strlen("localhost"));
+  memcpy(tmp.chars, "localhost", tmp.len);
   test_table_lookup(eid, &status, SERVER, tmp, &index);
   CU_ASSERT(status == OK);
   CU_ASSERT(index == 1);
@@ -393,8 +389,8 @@ void test_table_delete(void)
   CU_ASSERT(status == NO_MATCH);
   free_charbuf(&tmp);
 
-  tmp = new_charbuf(strlen("TestServer"));
-  memcpy(tmp.chars, "TestServer", tmp.len);
+  tmp = new_charbuf(strlen("localhost"));
+  memcpy(tmp.chars, "localhost", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);

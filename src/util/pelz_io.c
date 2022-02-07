@@ -179,13 +179,13 @@ int key_load(charbuf key_id)
         }
       case ERR_MEM:
         {
-          pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+          pelz_log(LOG_ERR, "Key Table memory allocation greater than specified limit.");
           return_value = 1;
           break;
         }
       case RET_FAIL:
         {
-          pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+          pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
           return_value = 1;
           break;
         }
@@ -218,19 +218,39 @@ int key_load(charbuf key_id)
   case PELZ_URI:
     {
       pelz_log(LOG_DEBUG, "Pelz Scheme Start");
-      charbuf *common_name = NULL;
-      charbuf *server_key_id = NULL;
+      unsigned char *common_name;
+      size_t common_name_len = 0;
+      unsigned char *server_key_id;
+      size_t server_key_id_len = 0;
       int port;
 
-      if (get_pelz_uri_parts(key_id_data, common_name, &port, server_key_id, NULL) != 0)
+      if (get_pelz_uri_hostname(key_id_data, &common_name, &common_name_len) != 0)
       {
-        pelz_log(LOG_ERR, "Failed to extract data from pelz uri");
+        pelz_log(LOG_ERR, "Failed to extract hostname from pelz uri");
         break;
       }
 
-      key_table_add_from_server(eid, &status, key_id, *common_name, *server_key_id);
-      free_charbuf(common_name);
-      free_charbuf(server_key_id);
+      if (get_pelz_uri_port(key_id_data, &port) != 0)
+      {
+        pelz_log(LOG_ERR, "Failed to extract port from pelz uri");
+        free(common_name);
+        break;
+      }
+
+      if (get_pelz_uri_key_UID(key_id_data, &server_key_id, &server_key_id_len) != 0)
+      {
+        pelz_log(LOG_ERR, "Failed to extract key UID from pelz uri");
+        free(common_name);
+        break;
+      }
+
+      pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", common_name_len, common_name, common_name_len);
+      pelz_log(LOG_DEBUG, "Port Number: %d", port);
+      pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id, server_key_id);
+      key_table_add_from_server(eid, &status, key_id, common_name_len, (const char *) common_name, port,
+        server_key_id_len, server_key_id);
+      free(common_name);
+      free(server_key_id);
       switch (status)
       {
       case ERR:
@@ -241,7 +261,7 @@ int key_load(charbuf key_id)
         }
       case ERR_MEM:
         {
-          pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
+          pelz_log(LOG_ERR, "Key Table memory allocation greater than specified limit.");
           return_value = 1;
           break;
         }
@@ -251,6 +271,18 @@ int key_load(charbuf key_id)
           return_value = 1;
           break;
         }
+      case NO_MATCH:
+	{
+	  pelz_log(LOG_ERR, "Certificate or Private Key not matched");
+          return_value = 1;
+          break;
+	}
+      case RET_FAIL:
+	{
+	  pelz_log(LOG_ERR, "Key Retrieve Failure");
+	  return_value = 1;
+          break;
+	}
       case OK:
         {
           pelz_log(LOG_DEBUG, "Key added to table.");
@@ -581,7 +613,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 
     if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      pelz_log(LOG_INFO, "Invaild extention for load cert call");
+      pelz_log(LOG_INFO, "Invalid extension for load cert call");
       pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
       return INVALID_EXT_CERT;
     }
@@ -601,7 +633,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         pelz_log(LOG_ERR, "X509 allocation error.");
 	return X509_FAIL;
       case RET_FAIL:
-        pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
         break;
       case NO_MATCH:
         pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
@@ -622,7 +654,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     if (pelz_load_file_to_enclave(tokens[2], &handle))
     {
-      pelz_log(LOG_INFO, "Invaild extention for load private call");
+      pelz_log(LOG_INFO, "Invaild extension for load private call");
       pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
       return INVALID_EXT_PRIV;
     }
