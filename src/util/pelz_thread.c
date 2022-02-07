@@ -86,7 +86,6 @@ void *pelz_listener(void *args)
     int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
 
     pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
-    printf("%.*s\n", bytes_read, msg);
   }
   close(fd);
   close(poll);
