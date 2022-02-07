@@ -38,11 +38,11 @@ SGX_SSL_UNTRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_TRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_INCLUDE_PATH ?= /opt/intel/sgxssl/include/
 
-ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
-ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
+#ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
+#ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
 
-#ENCLAVE_HEADER_TRUSTED ?= '"test_enclave_t.h"'
-#ENCLAVE_HEADER_UNTRUSTED ?= '"test_enclave_u.h"'
+ENCLAVE_HEADER_TRUSTED ?= '"test_enclave_t.h"'
+ENCLAVE_HEADER_UNTRUSTED ?= '"test_enclave_u.h"'
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
@@ -195,6 +195,7 @@ Enclave_Include_Paths += -Ikmyth/include
 Enclave_Include_Paths += -Ikmyth/include/protocol
 Enclave_Include_Paths += -Ikmyth/include/cipher
 Enclave_Include_Paths += -Ikmyth/utils/include/kmyth
+Enclave_Include_Paths += -Itest/include
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) 
 Enclave_C_Flags += -nostdinc 
@@ -431,6 +432,20 @@ sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
+test/include/test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
+	@cd test/include && $(SGX_EDGER8R) --trusted test_enclave.edl \
+                                           --search-path . \
+                                           --search-path $(SGX_SDK)/include \
+                                           --search-path $(SGX_SSL_INCLUDE_PATH) \
+                                           --search-path ../../include \
+                                           --search-path ../../kmyth/sgx/trusted \
+                                           --search-path ../../sgx 
+	@echo "GEN => $@"
+
+sgx/test_enclave_t.o: test/include/test_enclave_t.c
+	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/kmyth_enclave_seal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_seal.cpp
 	@$(CC) $(Enclave_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -521,22 +536,6 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 				    -out $@ \
 				    -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
-
-######## Test Enclave Objects ########
-
-test/include/test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
-	@cd test/include && $(SGX_EDGER8R) --trusted test_enclave.edl \
-					   --search-path . \
-					   --search-path $(SGX_SDK)/include \
-	 				   --search-path $(SGX_SSL_INCLUDE_PATH) \
-	 				   --search-path ../../include \
-	 				   --search-path ../../kmyth/sgx/trusted \
-	 				   --search-path ../sgx 
-	@echo "GEN => $@"
-
-sgx/test_enclave_t.o: test/include/test_enclave_t.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
-	@echo "CC   <=  $<"
 
 sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
 	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
