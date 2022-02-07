@@ -125,7 +125,7 @@ void *fifo_thread_process(void *arg)
       "Key Table Init Failure",
       "All keys removed",
       "Charbuf creation error.",
-      "DER to 509 Failure"
+      "Unable to load file. Files must originally be in the DER format prior to sealing."
   };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
