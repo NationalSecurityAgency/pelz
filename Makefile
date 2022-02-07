@@ -38,11 +38,13 @@ SGX_SSL_UNTRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_TRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_INCLUDE_PATH ?= /opt/intel/sgxssl/include/
 
-#ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
-#ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
-
-ENCLAVE_HEADER_TRUSTED ?= '"test_enclave_t.h"'
-ENCLAVE_HEADER_UNTRUSTED ?= '"test_enclave_u.h"'
+ifeq ($(TEST),"TRUE")
+	ENCLAVE_HEADER_TRUSTED ?= '"test_enclave_t.h"'
+	ENCLAVE_HEADER_UNTRUSTED ?= '"test_enclave_u.h"'
+else
+	ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
+	ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
+endif
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
