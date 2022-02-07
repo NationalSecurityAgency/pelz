@@ -336,11 +336,11 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 
 sgx/pelz_test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --untrusted test_enclave.edl \
-                                           --search-path . \
-                                  	   --search-path $(SGX_SDK)/include \
-                                  	   --search-path $(SGX_SSL_INCLUDE_PATH) \
-                                  	   --search-path ../../include \
-                                  	   --search-path ../../kmyth/sgx/trusted \
+					   --search-path . \
+					   --search-path $(SGX_SDK)/include \
+					   --search-path $(SGX_SSL_INCLUDE_PATH) \
+					   --search-path ../../include \
+					   --search-path ../../kmyth/sgx/trusted \
 					   --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
