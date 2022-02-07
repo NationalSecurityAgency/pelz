@@ -537,7 +537,7 @@ int main(int argc, char **argv)
       free(outPath);
       return 1;
     }
-    printf("Successfully sealed contents to file: %s\n", outPath);
+    fprintf(stdout, "Successfully sealed contents to file: %s\n", outPath);
   }
   else
   {
