@@ -148,15 +148,13 @@ TableResponseStatus private_pkey_add(uint64_t handle)
 {
   uint8_t *data;
   size_t data_size = 0;
-
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
     pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
     return RET_FAIL;
   }
-
-  if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) == 1)
+  if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) != EXIT_SUCCESS)
   {
     pelz_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
     free(data);
