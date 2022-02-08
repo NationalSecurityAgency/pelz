@@ -85,7 +85,7 @@ void *pelz_listener(void *args)
   {
     int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
 
-    pelz_log(LOG_INFO, "%.*s", bytes_read, msg);
+    pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
   }
   close(fd);
   close(poll);
@@ -103,11 +103,28 @@ void *fifo_thread_process(void *arg)
   int ret = 0;
 
   const char *resp_str[22] =
-    { "Pipe command invalid", "Exit pelz-service", "Unable to read file", "TPM unseal failed", "SGX unseal failed",
-    "Failure to add cert", "Load cert", "Invalid extention for load cert call", "Failure to add private", "Load private",
-    "Invalid extention for load private call", "Failure to remove cert", "Remove cert", "Server Table Destroy Failure",
-    "All certs removed", "Failure to remove key", "Removed key", "Key Table Destroy Failure", "Key Table Init Failure",
-    "All keys removed", "Charbuf creation error.", "DER to X509 Failure"
+    { "Invalid pipe command received by pelz-service.",
+      "Successfully initiated termination of pelz-service.",
+      "Unable to read file",
+      "TPM unseal failed",
+      "SGX unseal failed",
+      "Failure to add cert",
+      "Successfully loaded certificate file into pelz-service.",
+      "Invalid certificate file, unable to load.",
+      "Failure to add private",
+      "Successfully loaded private key into pelz-service.",
+      "Invalid private key file, unable to load.",
+      "Failure to remove cert",
+      "Remove cert",
+      "Server Table Destroy Failure",
+      "All certs removed",
+      "Failure to remove key",
+      "Removed key",
+      "Key Table Destroy Failure",
+      "Key Table Init Failure",
+      "All keys removed",
+      "Charbuf creation error.",
+      "Unable to load file. Files must originally be in the DER format prior to sealing."
   };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
