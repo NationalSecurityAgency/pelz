@@ -514,7 +514,7 @@ test: all
 	@./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
 	@./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
 	@echo "GEN => Test Key/Cert Files"
-	@cd kmyth/sgx/demo && make pre bin/ecdh-server
+	@cd kmyth/sgx && make demo-pre demo/bin/ecdh-server --eval="Demo_App_C_Flags += -DDEMO_LOG_LEVEL=LOG_WARNING"
 	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/server_priv_test.pem -u test/data/client_cert_test.pem -p 7000 2> /dev/null &
 	@sleep 1
 	@./test/bin/pelz-test 2> /dev/null
@@ -549,5 +549,5 @@ clean:
 	@rm -f test/data/*.der
 	@rm -f test/data/*.nkl
 	@rm -f test/data/*.txt
-	@cd kmyth/sgx/demo && make clean
+	@cd kmyth/sgx && make clean
 
