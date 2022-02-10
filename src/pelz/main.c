@@ -24,57 +24,68 @@ sgx_enclave_id_t eid = 0;
 
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
-static void load_usage()
+static void pki_usage()
 {
   fprintf(stdout,
-    "load <type> <path>              Loads a value of type <type> (currently either cert or private)\n"
-    "                                into the pelz-service enclave. These files must be formatted as\n"
-    "                                a .ski or .nkl file.\n"
-    "load cert <path/to/file>        Loads a server certificate into the pelz-service enclave\n"
-    "load private <path/to/file>     Loads a private key for connections to key servers into the\n"
-    "                                pelz-service enclave. This will fail if a key is already\n"
-    "                                loaded.\n");
+    "pki commands:\n\n"
+    "  pki <action> <type> <path>        This is used to load or remove certificates and keys used for\n"
+    "                                    communicating with key servers.\n\n"
+    "  pki load <type> <path>            Loads a client's private key or server's public certificate into\n"
+    "                                    the pelz-service enclave. These files must be sealed by the\n"
+    "                                    enclave prior to loading. The load command only accepts .nkl or\n"
+    "                                    .ski files. Additionally, the original keys and certs must be\n"
+    "                                    in the DER format prior to sealing.\n\n"
+    "  pki load cert <path/to/file>      Loads a server certificate into the pelz-service enclave\n\n"
+    "  pki load private <path/to/file>   Loads a private key for connections to key servers into the\n"
+    "                                    pelz-service enclave. This will fail if a private key is already\n"
+    "                                    loaded.\n\n"
+    "  pki cert list                     Provides the Common Names of the certificates currently loaded\n"
+    "                                    in the pelz-service.\n\n"
+    "  pki remove <CN|private>           Removes the server certificate with Common Name (CN) from the\n"
+    "                                    pelz-service. If the 'private' keyword is used, the private key\n"
+    "                                    will be removed from the pelz-service.\n\n"
+    "    -a, --all                       If -a or --all is selected, all server certificates will be\n"
+    "                                    removed. The private key will not be removed.\n");
 }
 
-static void remove_usage()
+static void keytable_usage()
 {
   fprintf(stdout,
-    "remove <target> <id> [options]  Removes a value of type <target> (currently either cert or key)\n"
-    "                                from memory within the pelz-service enclave. The -a option may\n"
-    "                                be used to drop all server certificates or all keys.\n"
-    "remove key <id> [options]       Removes a key with a specified id from the pelz-service enclave if it\n"
-    "                                exists. If -a is given, no id is required.\n"
-    "remove cert <path> [options]    Removes the server cert at the specified path from the pelz-service\n"
-    "                                loaded certificates. If -a is given, no path is required.\n"
-    "-a or --all                     Used only with remove to indicate removing all server certificates or\n"
-    "                                keys from the pelz-service key table.\n");
+    "keytable commands:\n\n"
+    "  keytable remove <id>              Removes a data key from the pelz-service enclave's key table.\n\n"
+    "    -a, --all                       If -a or --all is selected, all keys in the key table will be\n"
+    "                                    removed.\n\n"
+    "  keytable list                     Lists the keys currently loaded by their id. This command does\n"
+    "                                    not provide the actual key values of keys within the key table.\n");
 }
 
 static void seal_usage()
 {
   fprintf(stdout,
-    "seal <path> [options]           Seals the input file to the pelz-service enclave. This creates a .nkl\n"
-    "                                file. This can also be used in conjunction with the TPM to double\n"
-    "                                seal a file and create a .ski file as output.\n"
-    "-t or --tpm                     Use the TPM as well when sealing. This requires the TPM to be enabled.\n"
-    "-o or --output <output path>    By default, seal will output a new file with the same name but the\n"
-    "                                .nkl or .ski extension. Using -o allows the user to specify their\n"
-    "                                output file destination.\n");
+    "seal <path> [options]               Seals the input file to the pelz-service enclave. This creates\n"
+    "                                    a .nkl file.\n\n"
+    "  -t or --tpm                       Use the TPM along with the enclave when sealing. The TPM must\n"
+    "                                    be enabled. If the TPM is used in conjunction with the enclave,\n"
+    "                                    the .nkl file contents will be sealed and output as a .ski file.\n\n"
+    "  -o or --output <output path>      Seal defaults to outputting a new file with the same name as the\n"
+    "                                    input file, but with a .nkl or .ski extension appended. Using\n"
+    "                                    the -o option allows the user to specify the output file name.\n");
 }
 
 static void usage(const char *prog)
 {
   fprintf(stdout,
     "usage: %s <keywords> [options] \n\n"
-    "keywords are: \n\n"
-    "-d or --debug                   Enable debug messaging and logging.\n"
-    "-h or --help                    Help (displays this usage).\n\n"
-    "exit                            Terminate running pelz-service\n\n", prog);
-  load_usage();
-  fprintf(stdout, "\n");
-  remove_usage();
-  fprintf(stdout, "\n");
+    "keywords and options are: \n\n"
+    "options:\n"
+    "  -d or --debug                     Enable debug messaging and logging.\n"
+    "  -h or --help                      Help (displays this usage).\n\n"
+    "exit                                Terminate running pelz-service\n\n", prog);
   seal_usage();
+  fprintf(stdout, "\n");
+  pki_usage();
+  fprintf(stdout, "\n");
+  keytable_usage();
   fprintf(stdout, "\n");
 }
 
@@ -197,7 +208,7 @@ int main(int argc, char **argv)
       }
       else
       {
-        load_usage();
+        pki_usage();
         free(outPath);
         return 1;
       }
@@ -233,14 +244,14 @@ int main(int argc, char **argv)
       }
       else
       {
-        load_usage();
+        pki_usage();
         free(outPath);
         return 1;
       }
     }
     else
     {
-      load_usage();
+      pki_usage();
       free(outPath);
       return 1;
     }
@@ -281,7 +292,7 @@ int main(int argc, char **argv)
       }
       else
       {
-        remove_usage();
+        keytable_usage();
         free(outPath);
         return 1;
       }
@@ -319,14 +330,14 @@ int main(int argc, char **argv)
       }
       else
       {
-        remove_usage();
+        keytable_usage();
         free(outPath);
         return 1;
       }
     }
     else
     {
-      remove_usage();
+      keytable_usage();
       free(outPath);
       return 1;
     }
