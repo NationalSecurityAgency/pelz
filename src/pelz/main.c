@@ -16,6 +16,7 @@
 
 #include "pelz_log.h"
 #include "pelz_io.h"
+#include "charbuf.h"
 
 #include "pelz_enclave.h"
 #include "sgx_seal_unseal_impl.h"
@@ -232,9 +233,9 @@ int main(int argc, char **argv)
       pelz_log(LOG_DEBUG, "keytable list option");
       if (argv[arg_index + 3] == NULL)
       {
-	//Create message to be sent to service through pipe
-        msg = (char *) calloc(7, sizeof(char));
-        memcpy(msg, "pelz 4", 6);
+        //Create message to be sent to service through pipe
+        msg = (char *) calloc(8, sizeof(char));
+        memcpy(msg, "pelz 4", 7);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         pelz_send_command(msg);
         free(msg);
@@ -361,12 +362,12 @@ int main(int argc, char **argv)
         if (argv[arg_index + 4] == NULL)
         {
           //Create message to be sent to service through pipe
-          msg = (char *) calloc(7, sizeof(char));
-          memcpy(msg, "pelz 7", 6);
+          msg = (char *) calloc(8, sizeof(char));
+          memcpy(msg, "pelz 7", 7);
           pelz_log(LOG_DEBUG, "Message: %s", msg);
           pelz_send_command(msg);
           free(msg);
-        }
+	}
 
 	//If keytable command is invalid then print keytable usage for user
         else

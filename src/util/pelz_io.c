@@ -577,6 +577,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   charbuf key_id;
   charbuf server_id;
   uint64_t handle;
+  size_t count;
 
   pelz_log(LOG_DEBUG, "Token num: %d", num_tokens);
   if (num_tokens < 2)
@@ -588,10 +589,10 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
  *  -1    exit                      Terminate running pelz-service
  *  -2    keytable remove key       Removes a key with a specified id
  *  -3    keytable remove all keys  Removes all keys
- *  -4    keytable list             Output to user list of key <id>
+ *  -4    keytable list             Outputs a list of key <id> in Key Table
  *  -5    pki load cert             Loads a server certificate
  *  -6    pki load private          Loads a private key for connections to key servers
- *  -7    pki cert list             Output to user list of cert <CN>
+ *  -7    pki cert list             Outputs a list of certificate <CN> in Server Table
  *  -8    pki remove cert           Removes a server certificate   
  *  -9    pki remove all certs      Removes all server certificates
  *  -10   pki remove cert           Removes the private key   
@@ -651,7 +652,23 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     pelz_log(LOG_INFO, "Key Table Destroyed and Re-Initialize");
     return RM_KEK_ALL;
   case 4:
-    pelz_log(LOG_INFO, "Printing of key list not implemented.");
+    //Get the number of key table entries
+    table_id_count(eid, &ret, KEY, &count);
+    if (count == 0)
+    {
+      pelz_log(LOG_INFO, "No entries in Key Table.");
+    }
+    else
+    {
+      //Output the keytable list to user
+      pelz_log(LOG_INFO, "Key Table List:");
+      for (size_t i = 0; i < count; i++)
+      {
+        table_id(eid, &ret, KEY, i, &key_id);
+        pelz_log(LOG_INFO, "%.*s", key_id.len, key_id.chars);
+        free_charbuf(&key_id);
+      }
+    }
     return INVALID;
   case 5:
     if (num_tokens != 3)
@@ -725,7 +742,23 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return LOAD_PRIV;
   case 7:
-    pelz_log(LOG_INFO, "Printing of cert list not implemented.");
+    //Get the number of server table entries
+    table_id_count(eid, &ret, SERVER, &count);
+    if (count == 0)
+    {
+      pelz_log(LOG_INFO, "No entries in Server Table.");
+    }
+    else
+    {
+      //Output the pki cert list to user
+      pelz_log(LOG_INFO, "PKI Certificate List:");
+      for (size_t j = 0; j < count; j++)
+      {
+        table_id(eid, &ret, SERVER, j, &server_id);
+        pelz_log(LOG_INFO, "%.*s", server_id.len, server_id.chars);
+        free_charbuf(&server_id);
+      }
+    }
     return INVALID;
   case 8:
     if (num_tokens != 3)

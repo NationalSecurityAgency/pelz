@@ -39,6 +39,34 @@ public TableResponseStatus table_delete(TableType type, charbuf id);
 
 /**
  * <pre>
+ * This function outputs the number of entries of the TableType specificed by type.
+ * <pre>
+ *
+ * @param[in] type The table type
+ * @param[out] count Table number of entries
+ *
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public TableResponseStatus table_id_count(TableType type, [out] size_t *count);
+
+/**
+ * <pre>
+ * This function outputs the <id> at index value of the TableType specificed by type.
+ * <pre>
+ *
+ * @param[in] type The table type
+ * @param[in] index The index value indicating the location of <id> in TableType
+ * @param[out] id.chars Table value identifier
+ * @param[out] id.len The length of the identifier
+ *
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public TableResponseStatus table_id(TableType type, int index, [out] charbuf* id);
+
+/**
+ * <pre>
  * This function to add values into the server hash table.
  * </pre>
  *
