@@ -657,6 +657,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     if (count == 0)
     {
       pelz_log(LOG_INFO, "No entries in Key Table.");
+      return NO_KEY_LIST;
     }
     else
     {
@@ -669,7 +670,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         free_charbuf(&key_id);
       }
     }
-    return INVALID;
+    return KEY_LIST;
   case 5:
     if (num_tokens != 3)
     {
@@ -747,6 +748,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     if (count == 0)
     {
       pelz_log(LOG_INFO, "No entries in Server Table.");
+      return NO_SERVER_LIST;
     }
     else
     {
@@ -759,7 +761,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         free_charbuf(&server_id);
       }
     }
-    return INVALID;
+    return SERVER_LIST;
   case 8:
     if (num_tokens != 3)
     {

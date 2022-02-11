@@ -102,7 +102,7 @@ void *fifo_thread_process(void *arg)
   size_t num_tokens = 0;
   int ret = 0;
 
-  const char *resp_str[23] =
+  const char *resp_str[27] =
     { "Invalid pipe command received by pelz-service.",
       "Successfully initiated termination of pelz-service.",
       "Unable to read file",
@@ -125,7 +125,11 @@ void *fifo_thread_process(void *arg)
       "Charbuf creation error.",
       "Unable to load file. Files must originally be in the DER format prior to sealing.",
       "Failure to remove private pkey",
-      "Removed private pkey"
+      "Removed private pkey",
+      "No entries in Key Table.",
+      "Key Table List:",
+      "No entries in Server Table.",
+      "PKI Certificate List:"
   };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)

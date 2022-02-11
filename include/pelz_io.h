@@ -30,7 +30,11 @@ typedef enum
   ERR_CHARBUF,         //Charbuf creation error.
   X509_FAIL,           //Unable to load file. Files must originally be in the DER format prior to sealing.
   RM_PRIV_FAIL,        //Failure to remove private pkey
-  RM_PRIV              //Removed private pkey
+  RM_PRIV,             //Removed private pkey
+  NO_KEY_LIST,         //No entries in Key Table.
+  KEY_LIST,            //
+  NO_SERVER_LIST,      //No entries in Server Table.
+  SERVER_LIST          //
 } ParseResponseStatus;
 
 typedef enum
