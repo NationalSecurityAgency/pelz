@@ -585,13 +585,16 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   }
 
 /*
- *  -1    exit              Terminate running pelz-service
- *  -2    load cert         Loads a server certificate
- *  -3    load private      Loads a private key for connections to key servers
- *  -4    remove cert       Removes a server certificate    
- *  -5    remove all certs  Removes all server certificates
- *  -6    remove key        Removes a key with a specified id
- *  -7    remove all keys   Removes all keys
+ *  -1    exit                      Terminate running pelz-service
+ *  -2    keytable remove key       Removes a key with a specified id
+ *  -3    keytable remove all keys  Removes all keys
+ *  -4    keytable list             Output to user list of key <id>
+ *  -5    pki load cert             Loads a server certificate
+ *  -6    pki load private          Loads a private key for connections to key servers
+ *  -7    pki cert list             Output to user list of cert <CN>
+ *  -8    pki remove cert           Removes a server certificate   
+ *  -9    pki remove all certs      Removes all server certificates
+ *  -10   pki remove cert           Removes the private key   
  */
   switch (atoi(tokens[1]))
   {
@@ -606,120 +609,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return EXIT;
   case 2:
-    if (num_tokens != 3)
-    {
-      return INVALID;
-    }
-
-    if (pelz_load_file_to_enclave(tokens[2], &handle))
-    {
-      pelz_log(LOG_INFO, "Invalid extension for load cert call");
-      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
-      return INVALID_EXT_CERT;
-    }
-    server_table_add(eid, &ret, handle);
-    if (ret != OK)
-    {
-      pelz_log(LOG_ERR, "Add cert call failed");
-      switch (ret)
-      {
-      case ERR_REALLOC:
-        pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
-        break;
-      case ERR_BUF:
-        pelz_log(LOG_ERR, "Charbuf creation error.");
-        break;
-      case ERR_X509:
-        pelz_log(LOG_ERR, "X509 allocation error.");
-	return X509_FAIL;
-      case RET_FAIL:
-        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
-        break;
-      case NO_MATCH:
-        pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
-        break;
-      case MEM_ALLOC_FAIL:
-        pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
-        break;
-      default:
-        pelz_log(LOG_ERR, "Server return not defined");
-      }
-      return ADD_CERT_FAIL;
-    }
-    return LOAD_CERT;
-  case 3:
-    if (num_tokens != 3)
-    {
-      return INVALID;
-    }
-    if (pelz_load_file_to_enclave(tokens[2], &handle))
-    {
-      pelz_log(LOG_INFO, "Invaild extension for load private call");
-      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
-      return INVALID_EXT_PRIV;
-    }
-    private_pkey_add(eid, &ret, handle);
-    if (ret != OK)
-    {
-      pelz_log(LOG_ERR, "Add private pkey failure");
-      switch (ret)
-      {
-      case ERR_X509:
-        pelz_log(LOG_ERR, "X509 allocation error.");
-        return X509_FAIL;
-      case RET_FAIL:
-        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
-        break;
-      default:
-        pelz_log(LOG_ERR, "Private PKey Add return not defined");
-      }
-      return ADD_PRIV_FAIL;
-    }
-    return LOAD_PRIV;
-  case 4:
-    if (num_tokens != 3)
-    {
-      return INVALID;
-    }
-    server_id = new_charbuf(strlen(tokens[2]));
-    if (server_id.len != strlen(tokens[2]))
-    {
-      pelz_log(LOG_ERR, "Charbuf creation error.");
-      return ERR_CHARBUF;
-    }
-    memcpy(server_id.chars, tokens[2], server_id.len);
-    table_delete(eid, &ret, SERVER, server_id);
-    if (ret == NO_MATCH)
-    {
-      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
-      pelz_log(LOG_ERR, "Server ID not found");
-      free_charbuf(&server_id);
-      return RM_CERT_FAIL;
-    }
-    else if (ret == ERR_REALLOC)
-    {
-      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
-      pelz_log(LOG_ERR, "Server Table reallocation failure");
-      free_charbuf(&server_id);
-      return RM_CERT_FAIL;
-    }
-    else
-    {
-      pelz_log(LOG_INFO, "Delete Server ID form Server Table: %.*s", (int) server_id.len, server_id.chars);
-      free_charbuf(&server_id);
-      return RM_CERT;
-    }
-
-  case 5:
-    table_destroy(eid, &ret, SERVER);
-    if (ret != OK)
-    {
-      pelz_log(LOG_ERR, "Server Table Destroy Failure");
-      return CERT_TAB_DEST_FAIL;
-    }
-    pelz_log(LOG_INFO, "Server Table Destroyed and Re-Initialized");
-    return RM_ALL_CERT;
-  case 6:
     if (num_tokens != 3)
     {
       return INVALID;
@@ -752,8 +641,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       free_charbuf(&key_id);
       return RM_KEK;
     }
-
-  case 7:
+  case 3:
     table_destroy(eid, &ret, KEY);
     if (ret != OK)
     {
@@ -762,6 +650,142 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     pelz_log(LOG_INFO, "Key Table Destroyed and Re-Initialize");
     return RM_KEK_ALL;
+  case 4:
+    pelz_log(LOG_INFO, "Printing of key list not implemented.");
+    return INVALID;
+  case 5:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+
+    if (pelz_load_file_to_enclave(tokens[2], &handle))
+    {
+      pelz_log(LOG_INFO, "Invalid extension for load cert call");
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      return INVALID_EXT_CERT;
+    }
+    server_table_add(eid, &ret, handle);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "Add cert failure");
+      switch (ret)
+      {
+      case ERR_REALLOC:
+        pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
+        break;
+      case ERR_BUF:
+        pelz_log(LOG_ERR, "Charbuf creation error.");
+        break;
+      case ERR_X509:
+        pelz_log(LOG_ERR, "X509 allocation error.");
+	return X509_FAIL;
+      case RET_FAIL:
+        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
+        break;
+      case NO_MATCH:
+        pelz_log(LOG_ERR, "Cert entry and Server ID lookup do not match.");
+        break;
+      case MEM_ALLOC_FAIL:
+        pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+        break;
+      default:
+        pelz_log(LOG_ERR, "Server return not defined");
+      }
+      return ADD_CERT_FAIL;
+    }
+    return LOAD_CERT;
+  case 6:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+    if (pelz_load_file_to_enclave(tokens[2], &handle))
+    {
+      pelz_log(LOG_INFO, "Invalid extension for load private call");
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      return INVALID_EXT_PRIV;
+    }
+    private_pkey_add(eid, &ret, handle);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "Add private pkey failure");
+      switch (ret)
+      {
+      case ERR_X509:
+        pelz_log(LOG_ERR, "X509 allocation error.");
+        return X509_FAIL;
+      case RET_FAIL:
+        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
+        break;
+      default:
+        pelz_log(LOG_ERR, "Private pkey add return not defined");
+      }
+      return ADD_PRIV_FAIL;
+    }
+    return LOAD_PRIV;
+  case 7:
+    pelz_log(LOG_INFO, "Printing of cert list not implemented.");
+    return INVALID;
+  case 8:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+    server_id = new_charbuf(strlen(tokens[2]));
+    if (server_id.len != strlen(tokens[2]))
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return ERR_CHARBUF;
+    }
+    memcpy(server_id.chars, tokens[2], server_id.len);
+    table_delete(eid, &ret, SERVER, server_id);
+    if (ret == NO_MATCH)
+    {
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Server ID not found");
+      free_charbuf(&server_id);
+      return RM_CERT_FAIL;
+    }
+    else if (ret == ERR_REALLOC)
+    {
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Server Table reallocation failure");
+      free_charbuf(&server_id);
+      return RM_CERT_FAIL;
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Delete Server ID form Server Table: %.*s", (int) server_id.len, server_id.chars);
+      free_charbuf(&server_id);
+      return RM_CERT;
+    }
+  case 9:
+    table_destroy(eid, &ret, SERVER);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "Server Table Destroy Failure");
+      return CERT_TAB_DEST_FAIL;
+    }
+    pelz_log(LOG_INFO, "Server Table Destroyed and Re-Initialized");
+    return RM_ALL_CERT;
+  case 10:
+    //Free private pkey to remove pkey
+    private_pkey_free(eid, &ret);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "PKEY Free Failure");
+      return RM_PRIV_FAIL;
+    }
+
+    //Re-initializing pkey so new pkey can be loaded
+    private_pkey_init(eid, &ret);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "PKEY Re-init Failure");
+      return RM_PRIV_FAIL;
+    }
+    return RM_PRIV;
   default:
     pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);
     return INVALID;

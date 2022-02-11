@@ -85,7 +85,7 @@ void *pelz_listener(void *args)
   {
     int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
 
-    pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
+    pelz_log(LOG_INFO, "%.*s", bytes_read, msg);
   }
   close(fd);
   close(poll);
@@ -102,7 +102,7 @@ void *fifo_thread_process(void *arg)
   size_t num_tokens = 0;
   int ret = 0;
 
-  const char *resp_str[22] =
+  const char *resp_str[23] =
     { "Invalid pipe command received by pelz-service.",
       "Successfully initiated termination of pelz-service.",
       "Unable to read file",
@@ -115,16 +115,17 @@ void *fifo_thread_process(void *arg)
       "Successfully loaded private key into pelz-service.",
       "Invalid private key file, unable to load.",
       "Failure to remove cert",
-      "Remove cert",
+      "Removed cert",
       "Server Table Destroy Failure",
       "All certs removed",
       "Failure to remove key",
       "Removed key",
       "Key Table Destroy Failure",
-      "Key Table Init Failure",
       "All keys removed",
       "Charbuf creation error.",
-      "Unable to load file. Files must originally be in the DER format prior to sealing."
+      "Unable to load file. Files must originally be in the DER format prior to sealing.",
+      "Failure to remove private pkey",
+      "Removed private pkey"
   };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
@@ -190,7 +191,7 @@ void *fifo_thread_process(void *arg)
     }
     free(tokens);
     pthread_mutex_unlock(&lock);
-    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == KEK_TAB_INIT_FAIL || ret == CERT_TAB_DEST_FAIL)
+    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == CERT_TAB_DEST_FAIL)
     {
       break;
     }
