@@ -32,9 +32,9 @@ typedef enum
   RM_PRIV_FAIL,        //Failure to remove private pkey
   RM_PRIV,             //Removed private pkey
   NO_KEY_LIST,         //No entries in Key Table.
-  KEY_LIST,            //
+  KEY_LIST,            //Key Table List: list
   NO_SERVER_LIST,      //No entries in Server Table.
-  SERVER_LIST          //
+  SERVER_LIST          //PKI Certificate List: list
 } ParseResponseStatus;
 
 typedef enum
