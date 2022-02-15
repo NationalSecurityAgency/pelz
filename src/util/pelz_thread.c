@@ -100,8 +100,11 @@ void *pelz_listener(void *args)
       else
       {
         bytes_read = read(msg_events[0].data.fd, msg, BUFSIZE);
-      	pelz_log(LOG_INFO, "%.*s", bytes_read, msg);
-	msg_count -= 1;
+	if (bytes_read != 0)
+	{
+      	  pelz_log(LOG_INFO, "%.*s", bytes_read, msg);
+	  msg_count -= 1;
+	}
       }
     }
   }
