@@ -92,22 +92,24 @@ void *pelz_listener(void *args)
 
     while (msg_count > 0)
     {
-      event_count = epoll_wait(poll, msg_events, 1, 15000);
+      event_count = epoll_wait(poll, msg_events, msg_count, 1000);
       if (event_count == 0) 
       {
         pelz_log(LOG_DEBUG, "No response received from pelz-service.");
 	fprintf(stdout, "No response received from pelz-service.\n");
 	thread_args->return_value = 1;
-	break;
       }
       else
       {
-        bytes_read = read(msg_events[0].data.fd, msg, BUFSIZE);
-	if (bytes_read > 0)
-	{
-      	  pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
-	  fprintf(stdout, "%.*s\n", bytes_read, msg);
-	  msg_count -= 1;
+        for (int i = 0; i < event_count; i++)
+	{	
+          bytes_read = read(msg_events[i].data.fd, msg, BUFSIZE);
+	  if (bytes_read > 0)
+	  {
+      	    pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
+	    fprintf(stdout, "%.*s\n", bytes_read, msg);
+	    msg_count -= 1;
+	  }
 	}
       }
     }
