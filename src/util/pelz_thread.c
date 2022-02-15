@@ -90,7 +90,7 @@ void *pelz_listener(void *args)
 
     struct epoll_event msg_events[msg_count];
 
-    while (msg_count > 0 && event_count > 0)
+    while (msg_count > 0)
     {
       event_count = epoll_wait(poll, msg_events, 1, 15000);
       if (event_count == 0) 
@@ -98,11 +98,12 @@ void *pelz_listener(void *args)
         pelz_log(LOG_DEBUG, "No response received from pelz-service.");
 	fprintf(stdout, "No response received from pelz-service.\n");
 	thread_args->return_value = 1;
+	break;
       }
       else
       {
         bytes_read = read(msg_events[0].data.fd, msg, BUFSIZE);
-	if (bytes_read != 0)
+	if (bytes_read > 0)
 	{
       	  pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
 	  fprintf(stdout, "%.*s\n", bytes_read, msg);
