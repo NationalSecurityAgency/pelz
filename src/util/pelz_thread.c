@@ -83,6 +83,12 @@ void *pelz_listener(void *args)
     fprintf(stdout, "No response received from pelz-service.\n");
     thread_args->return_value = 1;
   }
+  else if (event_count == -1)
+  {
+    pelz_log(LOG_DEBUG, "Error in poll of pipe.");
+    fprintf(stdout, "Error in poll of pipe.\n");
+    thread_args->return_value = 1;
+  }
   else
   {
     int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
@@ -93,10 +99,17 @@ void *pelz_listener(void *args)
     while (msg_count > 0)
     {
       event_count = epoll_wait(poll, msg_events, msg_count, 1000);
+
       if (event_count == 0) 
       {
         pelz_log(LOG_DEBUG, "No response received from pelz-service.");
 	fprintf(stdout, "No response received from pelz-service.\n");
+	thread_args->return_value = 1;
+      }
+      else if (event_count == -1)
+      {
+        pelz_log(LOG_DEBUG, "Error in poll of pipe.");
+	fprintf(stdout, "Error in poll of pipe.\n");
 	thread_args->return_value = 1;
       }
       else
