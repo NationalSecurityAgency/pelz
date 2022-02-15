@@ -79,7 +79,8 @@ void *pelz_listener(void *args)
 
   if (event_count == 0)
   {
-    pelz_log(LOG_INFO, "No response received from pelz-service.");
+    pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+    fprintf(stdout, "No response received from pelz-service.\n");
     thread_args->return_value = 1;
   }
   else
@@ -94,7 +95,8 @@ void *pelz_listener(void *args)
       event_count = epoll_wait(poll, msg_events, 1, 15000);
       if (event_count == 0) 
       {
-        pelz_log(LOG_INFO, "No response received from pelz-service.");
+        pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+	fprintf(stdout, "No response received from pelz-service.\n");
 	thread_args->return_value = 1;
       }
       else
@@ -102,7 +104,8 @@ void *pelz_listener(void *args)
         bytes_read = read(msg_events[0].data.fd, msg, BUFSIZE);
 	if (bytes_read != 0)
 	{
-      	  pelz_log(LOG_INFO, "%.*s", bytes_read, msg);
+      	  pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
+	  fprintf(stdout, "%.*s\n", bytes_read, msg);
 	  msg_count -= 1;
 	}
       }
@@ -128,51 +131,51 @@ void *fifo_thread_process(void *arg)
   charbuf id;
 
   const char *resp_str[27] =
-    { "Invalid pipe command received by pelz-service.\n",
-      "Successfully initiated termination of pelz-service.\n",
-      "Unable to read file\n",
-      "TPM unseal failed\n",
-      "SGX unseal failed\n",
-      "Failure to add cert\n",
-      "Successfully loaded certificate file into pelz-service.\n",
-      "Invalid certificate file, unable to load.\n",
-      "Failure to add private\n",
-      "Successfully loaded private key into pelz-service.\n",
-      "Invalid private key file, unable to load.\n",
-      "Failure to remove cert\n",
-      "Removed cert\n",
-      "Server Table Destroy Failure\n",
-      "All certs removed\n",
-      "Failure to remove key\n",
-      "Removed key\n",
-      "Key Table Destroy Failure\n",
-      "All keys removed\n",
-      "Charbuf creation error.\n",
-      "Unable to load file. Files must originally be in the DER format prior to sealing.\n",
-      "Failure to remove private pkey\n",
-      "Removed private pkey\n",
-      "No entries in Key Table.\n",
-      "Key Table List:\n",
-      "No entries in Server Table.\n",
-      "PKI Certificate List:\n"
+    { "Invalid pipe command received by pelz-service.",
+      "Successfully initiated termination of pelz-service.",
+      "Unable to read file",
+      "TPM unseal failed",
+      "SGX unseal failed",
+      "Failure to add cert",
+      "Successfully loaded certificate file into pelz-service.",
+      "Invalid certificate file, unable to load.",
+      "Failure to add private",
+      "Successfully loaded private key into pelz-service.",
+      "Invalid private key file, unable to load.",
+      "Failure to remove cert",
+      "Removed cert",
+      "Server Table Destroy Failure",
+      "All certs removed",
+      "Failure to remove key",
+      "Removed key",
+      "Key Table Destroy Failure",
+      "All keys removed",
+      "Charbuf creation error.",
+      "Unable to load file. Files must originally be in the DER format prior to sealing.",
+      "Failure to remove private pkey",
+      "Removed private pkey",
+      "No entries in Key Table.",
+      "Key Table List:",
+      "No entries in Server Table.",
+      "PKI Certificate List:"
   };
 
   if (mkfifo(PELZSERVICEIN, MODE) == 0)
   {
-    pelz_log(LOG_INFO, "Pipe created successfully");
+    pelz_log(LOG_DEBUG, "Pipe created successfully");
   }
   else
   {
-    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+    pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
 
   if (mkfifo(PELZSERVICEOUT, MODE) == 0)
   {
-    pelz_log(LOG_INFO, "Second pipe created successfully");
+    pelz_log(LOG_DEBUG, "Second pipe created successfully");
   }
   else
   {
-    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+    pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
 
   do
@@ -223,7 +226,7 @@ void *fifo_thread_process(void *arg)
 
 	msg = (char *) calloc(10, sizeof(char));
 	sprintf(msg, "%d", (int) (list_num + 1));
-	pelz_log(LOG_INFO, "%s", msg);
+	pelz_log(LOG_DEBUG, "%s", msg);
 	if (write_to_pipe((char *) PELZSERVICEOUT, msg))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
@@ -234,7 +237,7 @@ void *fifo_thread_process(void *arg)
         }
 	free(msg);
 
-	pelz_log(LOG_INFO, "%s", resp_str[ret]);
+	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
 	if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
@@ -263,7 +266,7 @@ void *fifo_thread_process(void *arg)
 
           if (write_to_pipe((char *) PELZSERVICEOUT, msg))
           {
-            pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
           free(msg);
         }
@@ -278,7 +281,7 @@ void *fifo_thread_process(void *arg)
 
 	msg = (char *) calloc(10, sizeof(char));
 	sprintf(msg, "%d", (int) (list_num + 1));
-	pelz_log(LOG_INFO, "%s", msg);
+	pelz_log(LOG_DEBUG, "%s", msg);
         if (write_to_pipe((char *) PELZSERVICEOUT, msg))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
@@ -289,7 +292,7 @@ void *fifo_thread_process(void *arg)
         }
         free(msg);
 
-	pelz_log(LOG_INFO, "%s", resp_str[ret]);
+	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
         if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
@@ -318,13 +321,13 @@ void *fifo_thread_process(void *arg)
 
           if (write_to_pipe((char *) PELZSERVICEOUT, msg))
           {
-            pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
+            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
           free(msg);
         }
 	break;
       default:
-	if (write_to_pipe((char *) PELZSERVICEOUT, (char *) "1\n"))
+	if (write_to_pipe((char *) PELZSERVICEOUT, (char *) "1"))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }

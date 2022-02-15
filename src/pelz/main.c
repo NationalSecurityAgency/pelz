@@ -281,7 +281,7 @@ int main(int argc, char **argv)
 	  //Checking if <path> points to an existing file 
           if (file_check(argv[arg_index + 4]))
           {
-            pelz_log(LOG_INFO, "File %s is invalid.", argv[arg_index + 4]);
+            pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
             free(outPath);
             return 1;
           }
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
           //Checking if <path> points to an existing file 
           if (file_check(argv[arg_index + 4]))
           {
-            pelz_log(LOG_INFO, "File %s is invalid.", argv[arg_index + 4]);
+            pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
             free(outPath);
             return 1;
           }
