@@ -27,7 +27,7 @@ void *pelz_listener(void *args)
 
   thread_args->return_value = 0;
 
-  if (file_check((char *) PELZSERVICEOUT))
+  if (file_check(thread_args->pipe))
   {
     pelz_log(LOG_ERR, "Pipe not found");
     thread_args->return_value = 1;
@@ -35,7 +35,7 @@ void *pelz_listener(void *args)
     return NULL;
   }
 
-  int fd = open((char *) PELZSERVICEOUT, O_RDONLY | O_NONBLOCK);
+  int fd = open(thread_args->pipe, O_RDONLY | O_NONBLOCK);
 
   if (fd == -1)
   {
@@ -185,15 +185,6 @@ void *fifo_thread_process(void *arg)
     pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
 
-  if (mkfifo(PELZSERVICEOUT, MODE) == 0)
-  {
-    pelz_log(LOG_DEBUG, "Second pipe created successfully");
-  }
-  else
-  {
-    pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
-  }
-
   do
   {
     pthread_mutex_lock(&lock);
@@ -224,12 +215,6 @@ void *fifo_thread_process(void *arg)
     free(msg);
 
     ret = parse_pipe_message(tokens, num_tokens);
-    for (size_t i = 0; i < num_tokens; i++)
-    {
-      free(tokens[i]);
-    }
-    free(tokens);
-
     switch (ret)
     {
       case KEY_LIST:
@@ -243,7 +228,7 @@ void *fifo_thread_process(void *arg)
 	msg = (char *) calloc(10, sizeof(char));
 	sprintf(msg, "%d", (int) (list_num + 1));
 	pelz_log(LOG_DEBUG, "%s", msg);
-	if (write_to_pipe((char *) PELZSERVICEOUT, msg))
+	if (write_to_pipe(tokens[2], msg))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -254,7 +239,7 @@ void *fifo_thread_process(void *arg)
 	free(msg);
 
 	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
-	if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
+	if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -280,7 +265,7 @@ void *fifo_thread_process(void *arg)
           }
           memcpy(msg, id.chars, id.len);
 
-          if (write_to_pipe((char *) PELZSERVICEOUT, msg))
+          if (write_to_pipe(tokens[2], msg))
           {
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
@@ -298,7 +283,7 @@ void *fifo_thread_process(void *arg)
 	msg = (char *) calloc(10, sizeof(char));
 	sprintf(msg, "%d", (int) (list_num + 1));
 	pelz_log(LOG_DEBUG, "%s", msg);
-        if (write_to_pipe((char *) PELZSERVICEOUT, msg))
+        if (write_to_pipe(tokens[2], msg))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -309,7 +294,7 @@ void *fifo_thread_process(void *arg)
         free(msg);
 
 	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
-        if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
+        if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -335,7 +320,7 @@ void *fifo_thread_process(void *arg)
           }
           memcpy(msg, id.chars, id.len);
 
-          if (write_to_pipe((char *) PELZSERVICEOUT, msg))
+          if (write_to_pipe(tokens[2], msg))
           {
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
@@ -343,7 +328,7 @@ void *fifo_thread_process(void *arg)
         }
 	break;
       default:
-	if (write_to_pipe((char *) PELZSERVICEOUT, (char *) "1"))
+	if (write_to_pipe(tokens[2], (char *) "1"))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -351,7 +336,7 @@ void *fifo_thread_process(void *arg)
         {
           pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
         }
-       	if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
+       	if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -360,6 +345,13 @@ void *fifo_thread_process(void *arg)
           pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
         }
     }
+
+    //Free the tokens
+    for (size_t i = 0; i < num_tokens; i++)
+    {
+      free(tokens[i]);
+    }
+    free(tokens);
     pthread_mutex_unlock(&lock);
     
     if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == CERT_TAB_DEST_FAIL)

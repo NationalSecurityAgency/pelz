@@ -361,7 +361,7 @@ int write_to_pipe(char *pipe, char *msg)
   return 0;
 }
 
-int pelz_send_command(char *msg)
+int pelz_send_command(char *msg, char *pipe)
 {
   if (msg == NULL)
   {
@@ -383,6 +383,7 @@ int pelz_send_command(char *msg)
 
   args.listener_mutex = &listener_mutex;
   args.return_value = 0;
+  args.pipe = pipe;
 
   if (pthread_create(&listener_thread, NULL, pelz_listener, (void *) &args))
   {
@@ -580,7 +581,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   size_t count;
 
   pelz_log(LOG_DEBUG, "Token num: %d", num_tokens);
-  if (num_tokens < 2)
+  if (num_tokens < 3)
   {
     return INVALID;
   }
@@ -610,17 +611,18 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return EXIT;
   case 2:
-    if (num_tokens != 3)
+    if (num_tokens != 4)
     {
       return INVALID;
     }
-    key_id = new_charbuf(strlen(tokens[2]));
-    if (key_id.len != strlen(tokens[2]))
+
+    key_id = new_charbuf(strlen(tokens[3]));
+    if (key_id.len != strlen(tokens[3]))
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
       return ERR_CHARBUF;
     }
-    memcpy(key_id.chars, tokens[2], key_id.len);
+    memcpy(key_id.chars, tokens[3], key_id.len);
     table_delete(eid, &ret, KEY, key_id);
     if (ret == NO_MATCH)
     {
@@ -672,15 +674,15 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return KEY_LIST;
   case 5:
-    if (num_tokens != 3)
+    if (num_tokens != 4)
     {
       return INVALID;
     }
 
-    if (pelz_load_file_to_enclave(tokens[2], &handle))
+    if (pelz_load_file_to_enclave(tokens[3], &handle))
     {
       pelz_log(LOG_INFO, "Invalid extension for load cert call");
-      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[3]);
       return INVALID_EXT_CERT;
     }
     server_table_add(eid, &ret, handle);
@@ -714,14 +716,14 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return LOAD_CERT;
   case 6:
-    if (num_tokens != 3)
+    if (num_tokens != 4)
     {
       return INVALID;
     }
-    if (pelz_load_file_to_enclave(tokens[2], &handle))
+    if (pelz_load_file_to_enclave(tokens[3], &handle))
     {
       pelz_log(LOG_INFO, "Invalid extension for load private call");
-      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[3]);
       return INVALID_EXT_PRIV;
     }
     private_pkey_add(eid, &ret, handle);
@@ -763,17 +765,17 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return SERVER_LIST;
   case 8:
-    if (num_tokens != 3)
+    if (num_tokens != 4)
     {
       return INVALID;
     }
-    server_id = new_charbuf(strlen(tokens[2]));
-    if (server_id.len != strlen(tokens[2]))
+    server_id = new_charbuf(strlen(tokens[3]));
+    if (server_id.len != strlen(tokens[3]))
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
       return ERR_CHARBUF;
     }
-    memcpy(server_id.chars, tokens[2], server_id.len);
+    memcpy(server_id.chars, tokens[3], server_id.len);
     table_delete(eid, &ret, SERVER, server_id);
     if (ret == NO_MATCH)
     {

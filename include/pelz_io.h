@@ -5,7 +5,7 @@
 #include "pelz_request_handler.h"
 
 #define PELZSERVICEIN "/tmp/pelzServiceIn"
-#define PELZSERVICEOUT "/tmp/pelzServiceOut"
+#define PELZSERVICEOUT "/tmp/pelzInterface"
 
 typedef enum
 { INVALID,             //Invalid pipe command received by pelz-service.
@@ -137,10 +137,11 @@ extern "C"
  * </pre>
  *
  * @param[in] msg          Null-terminated message to send.
+ * @param[in] pipe         Name of Named Pipe to listen to.
  *
  * @return 0 on success, 1 on error
  */
-  int pelz_send_command(char *msg);
+  int pelz_send_command(char *msg, char *pipe);
 #ifdef __cplusplus
 }
 #endif

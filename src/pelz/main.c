@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 
@@ -24,6 +25,8 @@
 sgx_enclave_id_t eid = 0;
 
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
+#define BUFSIZE 1024
+#define MODE 0600
 
 static void pki_usage()
 {
@@ -159,25 +162,35 @@ int main(int argc, char **argv)
     }
   }
 
+  char fifo_name[BUFSIZE];
+  size_t fifo_name_len = 0;
+  int pid_t = getpid();
+  
+  //Creating fifo name for pipe creations and use
+  sprintf(fifo_name, "%s%d", PELZSERVICEOUT, pid_t);
+  fifo_name_len = strlen(fifo_name);
+  pelz_log(LOG_DEBUG, "FIFO Name: %.*s, %d", fifo_name_len, fifo_name, fifo_name_len );
+  //Creating name pipe (FIFO)
+  if (mkfifo(fifo_name, MODE) == 0)
+  {
+    pelz_log(LOG_DEBUG, "Pipe created successfully");
+  }
+  else
+  {
+    pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
+  }
+
   //Start of command line option checks and execution
   //Checking for exit command then execution
   if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "exit", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
   {
     //Create message to be sent to service through pipe
-    msg = (char *) calloc(7, sizeof(char));
-    memcpy(msg, "pelz 1", 6);
+    msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
+    memcpy(msg, "pelz 1 ", 7);
+    memcpy(&msg[7], fifo_name, fifo_name_len);
     pelz_log(LOG_DEBUG, "Message: %s", msg);
-    pelz_send_command(msg);
+    pelz_send_command(msg, fifo_name);
     free(msg);
-    //Exit and remove FIFO
-    if (unlink(PELZSERVICEOUT) == 0)
-    {
-      pelz_log(LOG_DEBUG, "Second pipe deleted successfully");
-    }
-    else
-    {
-      pelz_log(LOG_DEBUG, "Failed to delete the second pipe");
-    }
   }
 
   //Checking for keytable command
@@ -196,10 +209,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "keytable remove --all option");
 
 	//Create message to be sent to service through pipe
-        msg = (char *) calloc(7, sizeof(char));
-	memcpy(msg, "pelz 3", 6);
+        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
+	memcpy(msg, "pelz 3 ", 7);
+	memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg);
+        pelz_send_command(msg, fifo_name);
         free(msg);
       }
 
@@ -209,11 +223,13 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "keytable remove <id> option");
 
 	//Create message to be sent to service through pipe
-        msg = (char *) calloc((8 + strlen(argv[arg_index + 3])), sizeof(char));
+        msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
         memcpy(msg, "pelz 2 ", 7);
-        memcpy(&msg[7], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
+	memcpy(&msg[7], fifo_name, fifo_name_len);
+	memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+        memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg);
+        pelz_send_command(msg, fifo_name);
         free(msg);
       }
 
@@ -234,10 +250,11 @@ int main(int argc, char **argv)
       if (argv[arg_index + 3] == NULL)
       {
         //Create message to be sent to service through pipe
-        msg = (char *) calloc(8, sizeof(char));
-        memcpy(msg, "pelz 4", 7);
+        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
+        memcpy(msg, "pelz 4 ", 7);
+	memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg);
+        pelz_send_command(msg, fifo_name);
         free(msg);
       }
 
@@ -287,11 +304,13 @@ int main(int argc, char **argv)
           }
 
 	  //Create message to be sent to service through pipe
-          msg = (char *) calloc((8 + strlen(argv[arg_index + 4])), sizeof(char));
+          msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
           memcpy(msg, "pelz 5 ", 7);
-          memcpy(&msg[7], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
+	  memcpy(&msg[7], fifo_name, fifo_name_len);
+	  memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+          memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-          pelz_send_command(msg);
+          pelz_send_command(msg, fifo_name);
           free(msg);
         }
 
@@ -322,11 +341,13 @@ int main(int argc, char **argv)
           }
 
           //Create message to be sent to service through pipe
-          msg = (char *) calloc((8 + strlen(argv[arg_index + 4])), sizeof(char));
+          msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
           memcpy(msg, "pelz 6 ", 7);
-          memcpy(&msg[7], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
+	  memcpy(&msg[7], fifo_name, fifo_name_len);
+	  memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+          memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-          pelz_send_command(msg);
+          pelz_send_command(msg, fifo_name);
           free(msg);
         }
 
@@ -362,10 +383,11 @@ int main(int argc, char **argv)
         if (argv[arg_index + 4] == NULL)
         {
           //Create message to be sent to service through pipe
-          msg = (char *) calloc(8, sizeof(char));
-          memcpy(msg, "pelz 7", 7);
+          msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
+          memcpy(msg, "pelz 7 ", 7);
+	  memcpy(&msg[7], fifo_name, fifo_name_len);
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-          pelz_send_command(msg);
+          pelz_send_command(msg, fifo_name);
           free(msg);
 	}
 
@@ -399,10 +421,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "pki remove --all option");
 
         //Create message to be sent to service through pipe
-        msg = (char *) calloc(7, sizeof(char));
-        memcpy(msg, "pelz 9", 6);
+        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
+        memcpy(msg, "pelz 9 ", 7);
+	memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg);
+        pelz_send_command(msg, fifo_name);
         free(msg);
       }
 
@@ -413,10 +436,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "pki remove <private> option");
 
         //Create message to be sent to service through pipe
-        msg = (char *) calloc(8, sizeof(char));
-        memcpy(msg, "pelz 10", 7);
+        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
+        memcpy(msg, "pelz 10 ", 7);
+	memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg);
+        pelz_send_command(msg, fifo_name);
         free(msg);
       }
 
@@ -426,11 +450,13 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "pki remove <CN> option");
 
         //Create message to be sent to service through pipe
-        msg = (char *) calloc((8 + strlen(argv[arg_index + 3])), sizeof(char));
+        msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
         memcpy(msg, "pelz 8 ", 7);
-        memcpy(&msg[7], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
+	memcpy(&msg[7], fifo_name, fifo_name_len);
+	memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+        memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg);
+        pelz_send_command(msg, fifo_name);
         free(msg);
       }
 
@@ -649,5 +675,14 @@ int main(int argc, char **argv)
   }
 
   free(outPath);
+  //Exit and remove FIFO
+  if (unlink(fifo_name) == 0)
+  {
+    pelz_log(LOG_DEBUG, "Pipe deleted successfully");
+  }
+  else
+  {
+    pelz_log(LOG_DEBUG, "Failed to delete the pipe");
+  }
   return 0;
 }

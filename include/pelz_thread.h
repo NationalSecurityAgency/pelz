@@ -15,6 +15,7 @@ typedef struct
 {
   pthread_mutex_t *listener_mutex;
   int return_value;
+  char *pipe;
 } ListenerThreadArgs;
 
 /**
