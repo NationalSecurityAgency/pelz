@@ -134,14 +134,7 @@ void *fifo_thread_process(void *arg)
             continue;
           }
 
-          msg = (char *) calloc((id.len), sizeof(char));
-          if (!msg)
-          {
-            pelz_log(LOG_ERR, "Unable to allocate memory.");
-            continue;
-          }
-          memcpy(msg, id.chars, id.len);
-
+	  sprintf(msg, "%.*s", (int) id.len, id.chars);
           if (write_to_pipe(tokens[2], msg))
           {
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
@@ -177,14 +170,7 @@ void *fifo_thread_process(void *arg)
             continue;
           }
 
-          msg = (char *) calloc((id.len), sizeof(char));
-          if (!msg)
-          {
-            pelz_log(LOG_ERR, "Unable to allocate memory.");
-            continue;
-          }
-          memcpy(msg, id.chars, id.len);
-
+	  sprintf(msg, "%.*s", (int) id.len, id.chars);
           if (write_to_pipe(tokens[2], msg))
           {
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");

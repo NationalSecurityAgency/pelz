@@ -695,17 +695,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       pelz_log(LOG_INFO, "No entries in Key Table.");
       return NO_KEY_LIST;
     }
-    else
-    {
-      //Output the keytable list to user
-      pelz_log(LOG_INFO, "Key Table List:");
-      for (size_t i = 0; i < count; i++)
-      {
-        table_id(eid, &ret, KEY, i, &key_id);
-        pelz_log(LOG_INFO, "%.*s", key_id.len, key_id.chars);
-        free_charbuf(&key_id);
-      }
-    }
     return KEY_LIST;
   case 5:
     if (num_tokens != 4)
@@ -785,17 +774,6 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     {
       pelz_log(LOG_INFO, "No entries in Server Table.");
       return NO_SERVER_LIST;
-    }
-    else
-    {
-      //Output the pki cert list to user
-      pelz_log(LOG_INFO, "PKI Certificate List:");
-      for (size_t j = 0; j < count; j++)
-      {
-        table_id(eid, &ret, SERVER, j, &server_id);
-        pelz_log(LOG_INFO, "%.*s", server_id.len, server_id.chars);
-        free_charbuf(&server_id);
-      }
     }
     return SERVER_LIST;
   case 8:
