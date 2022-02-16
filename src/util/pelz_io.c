@@ -842,3 +842,17 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 
   return INVALID;
 }
+
+int remove_pipe (char *name)
+{
+  //Exit and remove FIFO
+  if (unlink(name) == 0)
+  {
+    pelz_log(LOG_DEBUG, "Pipe deleted successfully");
+  }
+  else
+  {
+    pelz_log(LOG_DEBUG, "Failed to delete the pipe");
+  }
+  return 0;
+}

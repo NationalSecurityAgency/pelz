@@ -112,6 +112,7 @@ extern "C"
  * @return 0 if success, 1 if error
  */
   int read_listener(char *pipe);
+
 /**
  * <pre>
  * Splits a message on the pelz pipe into tokens. Assumes a delimiter of ' '
@@ -139,6 +140,17 @@ extern "C"
  * @return ParseResponseStatus status message indicating the outcome of parse
  */
   ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
+
+/**
+ * <pre>
+ * Removes a FIFO pipe
+ * </pre>
+ *
+ * @param[in] name The FIFO pipe name
+ *
+ * @return 0 if success, 1 if error
+ */
+  int remove_pipe(char *name);
 
 #ifdef __cplusplus
 }

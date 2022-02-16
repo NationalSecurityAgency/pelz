@@ -253,6 +253,7 @@ int main(int argc, char **argv)
       {
         keytable_usage();
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -290,6 +291,7 @@ int main(int argc, char **argv)
       {
         keytable_usage();
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -299,6 +301,7 @@ int main(int argc, char **argv)
     {
       keytable_usage();
       free(outPath);
+      remove_pipe(fifo_name);
       return 1;
     }
   }
@@ -327,6 +330,7 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
             free(outPath);
+	    remove_pipe(fifo_name);
             return 1;
           }
 
@@ -351,6 +355,7 @@ int main(int argc, char **argv)
         {
           pki_usage();
           free(outPath);
+	  remove_pipe(fifo_name);
           return 1;
         }
       }
@@ -369,6 +374,7 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
             free(outPath);
+	    remove_pipe(fifo_name);
             return 1;
           }
 
@@ -393,6 +399,7 @@ int main(int argc, char **argv)
         {
           pki_usage();
           free(outPath);
+	  remove_pipe(fifo_name);
           return 1;
         }
       }
@@ -402,6 +409,7 @@ int main(int argc, char **argv)
       {
         pki_usage();
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -445,6 +453,7 @@ int main(int argc, char **argv)
         {
           pki_usage();
           free(outPath);
+	  remove_pipe(fifo_name);
           return 1;
         }
       }
@@ -454,6 +463,7 @@ int main(int argc, char **argv)
       {
         pki_usage();
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -529,6 +539,7 @@ int main(int argc, char **argv)
       {
         pki_usage();
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -538,6 +549,7 @@ int main(int argc, char **argv)
     {
       pki_usage();
       free(outPath);
+      remove_pipe(fifo_name);
       return 1;
     }
   }
@@ -555,6 +567,7 @@ int main(int argc, char **argv)
       {
         pelz_log(LOG_ERR, "input path (%s) is not valid ... exiting", argv[arg_index + 2]);
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
 
@@ -566,6 +579,7 @@ int main(int argc, char **argv)
         pelz_log(LOG_ERR, "seal input data file read error ... exiting");
         free(data);
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
       pelz_log(LOG_DEBUG, "read in %d bytes of data to be wrapped", data_len);
@@ -576,6 +590,7 @@ int main(int argc, char **argv)
         pelz_log(LOG_ERR, "no input data ... exiting");
         free(data);
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
 
@@ -595,6 +610,7 @@ int main(int argc, char **argv)
         sgx_destroy_enclave(eid);
         free(data);
         free(outPath);
+	remove_pipe(fifo_name);
         return 1;
       }
 
@@ -622,6 +638,7 @@ int main(int argc, char **argv)
           free(sgx_seal);
           free(outPath);
           free(tpm_seal);
+	  remove_pipe(fifo_name);
           return 1;
         }
         free(pcrs);
@@ -637,6 +654,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
             free(outPath);
             free(tpm_seal);
+	    remove_pipe(fifo_name);
             return 1;
           }
           free(tpm_seal);
@@ -648,6 +666,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
             free(outPath);
             free(sgx_seal);
+	    remove_pipe(fifo_name);
             return 1;
           }
           free(sgx_seal);
@@ -679,6 +698,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
           free(outPath);
+	  remove_pipe(fifo_name);
           return 1;
         }
 
@@ -693,6 +713,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", outPath);
           free(outPath);
+	  remove_pipe(fifo_name);
           return 1;
         }
 
@@ -704,6 +725,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
             free(outPath);
             free(tpm_seal);
+	    remove_pipe(fifo_name);
             return 1;
           }
           free(tpm_seal);
@@ -715,6 +737,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
             free(outPath);
             free(sgx_seal);
+	    remove_pipe(fifo_name);
             return 1;
           }
           free(sgx_seal);
@@ -726,6 +749,7 @@ int main(int argc, char **argv)
     {
       seal_usage();
       free(outPath);
+      remove_pipe(fifo_name);
       return 1;
     }
     fprintf(stdout, "Successfully sealed contents to file: %s\n", outPath);
@@ -735,18 +759,11 @@ int main(int argc, char **argv)
   {
     usage(argv[0]);
     free(outPath);
+    remove_pipe(fifo_name);
     return 1;
   }
 
   free(outPath);
-  //Exit and remove FIFO
-  if (unlink(fifo_name) == 0)
-  {
-    pelz_log(LOG_DEBUG, "Pipe deleted successfully");
-  }
-  else
-  {
-    pelz_log(LOG_DEBUG, "Failed to delete the pipe");
-  }
+  remove_pipe(fifo_name);  
   return 0;
 }
