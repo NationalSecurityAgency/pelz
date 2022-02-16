@@ -4,8 +4,8 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 
-#define PELZSERVICEIN "/tmp/pelzServiceIn"
-#define PELZSERVICEOUT "/tmp/pelzInterface"
+#define PELZSERVICE "/tmp/pelzService"
+#define PELZINTERFACE "/tmp/pelzInterface"
 
 typedef enum
 { INVALID,             //Invalid pipe command received by pelz-service.
@@ -104,6 +104,16 @@ extern "C"
 
 /**
  * <pre>
+ * Reads a message from the interface FIFO pipe
+ * </pre>
+ *
+ * @param[in] pipe The FIFO pipe name
+ *
+ * @return 0 if success, 1 if error
+ */
+  int read_listener(char *pipe);
+/**
+ * <pre>
  * Splits a message on the pelz pipe into tokens. Assumes a delimiter of ' '
  * </pre>
  *
@@ -130,18 +140,6 @@ extern "C"
  */
   ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
 
-/**
- * <pre>
- * Send the specified command msg over send_pipe and waits to receive a
- * response on receive_pipe.
- * </pre>
- *
- * @param[in] msg          Null-terminated message to send.
- * @param[in] pipe         Name of Named Pipe to listen to.
- *
- * @return 0 on success, 1 on error
- */
-  int pelz_send_command(char *msg, char *pipe);
 #ifdef __cplusplus
 }
 #endif

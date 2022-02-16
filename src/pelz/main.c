@@ -119,7 +119,7 @@ int main(int argc, char **argv)
   bool tpm = false;
   char *outPath = NULL;
   size_t outPath_size = 0;
-  char *msg;
+  char *msg = NULL;
 
   if (argc == 1)
   {
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
   int pid_t = getpid();
   
   //Creating fifo name for pipe creations and use
-  sprintf(fifo_name, "%s%d", PELZSERVICEOUT, pid_t);
+  sprintf(fifo_name, "%s%d", PELZINTERFACE, pid_t);
   fifo_name_len = strlen(fifo_name);
   pelz_log(LOG_DEBUG, "FIFO Name: %.*s, %d", fifo_name_len, fifo_name, fifo_name_len );
   //Creating name pipe (FIFO)
@@ -189,7 +189,11 @@ int main(int argc, char **argv)
     memcpy(msg, "pelz 1 ", 7);
     memcpy(&msg[7], fifo_name, fifo_name_len);
     pelz_log(LOG_DEBUG, "Message: %s", msg);
-    pelz_send_command(msg, fifo_name);
+    write_to_pipe((char*) PELZSERVICE, msg);
+    free(msg);
+    read_from_pipe(fifo_name, &msg);
+    pelz_log(LOG_DEBUG, "%s", msg);
+    fprintf(stdout, "%s\n", msg);
     free(msg);
   }
 
@@ -213,8 +217,12 @@ int main(int argc, char **argv)
 	memcpy(msg, "pelz 3 ", 7);
 	memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg, fifo_name);
+	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
+	read_from_pipe(fifo_name, &msg);
+	pelz_log(LOG_DEBUG, "%s", msg);
+	fprintf(stdout, "%s\n", msg);
+	free(msg);			
       }
 
       //Checking for keytable remove <id> command
@@ -229,8 +237,12 @@ int main(int argc, char **argv)
 	memcpy(&msg[(7 + fifo_name_len)], " ", 1);
         memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg, fifo_name);
+	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
+	read_from_pipe(fifo_name, &msg);
+	pelz_log(LOG_DEBUG, "%s", msg);
+	fprintf(stdout, "%s\n", msg);
+	free(msg);
       }
 
       //If keytable command is invalid then print keytable usage for user
@@ -254,8 +266,20 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 4 ", 7);
 	memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg, fifo_name);
+	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
+	if (read_listener(fifo_name))
+	{
+	  pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+      	  fprintf(stdout, "No response received from pelz-service.\n");
+	}
+	do
+	{
+   	  if (read_listener(fifo_name))
+	  {
+            break;
+	  }
+	} while (1);
       }
 
       //If keytable command is invalid then print keytable usage for user
@@ -310,7 +334,11 @@ int main(int argc, char **argv)
 	  memcpy(&msg[(7 + fifo_name_len)], " ", 1);
           memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-          pelz_send_command(msg, fifo_name);
+	  write_to_pipe((char*) PELZSERVICE, msg);
+          free(msg);
+	  read_from_pipe(fifo_name, &msg);
+          pelz_log(LOG_DEBUG, "%s", msg);
+          fprintf(stdout, "%s\n", msg);
           free(msg);
         }
 
@@ -347,8 +375,12 @@ int main(int argc, char **argv)
 	  memcpy(&msg[(7 + fifo_name_len)], " ", 1);
           memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-          pelz_send_command(msg, fifo_name);
+	  write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
+	  read_from_pipe(fifo_name, &msg);
+	  pelz_log(LOG_DEBUG, "%s", msg);
+	  fprintf(stdout, "%s\n", msg);
+	  free(msg);
         }
 
 	//If pki command is invalid then print pki usage for user
@@ -387,11 +419,23 @@ int main(int argc, char **argv)
           memcpy(msg, "pelz 7 ", 7);
 	  memcpy(&msg[7], fifo_name, fifo_name_len);
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-          pelz_send_command(msg, fifo_name);
+	  write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
+	  if (read_listener(fifo_name))
+  	  {
+            pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+            fprintf(stdout, "No response received from pelz-service.\n");	  
+          }
+	  do
+	  {
+	    if(read_listener(fifo_name))
+	    {
+              break;
+            }
+	  } while (1);	    
 	}
 
-	//If keytable command is invalid then print keytable usage for user
+	//If pki command is invalid then print pki usage for user
         else
         {
           pki_usage();
@@ -400,7 +444,7 @@ int main(int argc, char **argv)
         }
       }
 
-      //If keytable command is invalid then print keytable usage for user
+      //If pki command is invalid then print pki usage for user
       else
       {
         pki_usage();
@@ -425,8 +469,12 @@ int main(int argc, char **argv)
         memcpy(msg, "pelz 9 ", 7);
 	memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg, fifo_name);
+	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
+	read_from_pipe(fifo_name, &msg);
+	pelz_log(LOG_DEBUG, "%s", msg);
+	fprintf(stdout, "%s\n", msg);
+	free(msg);
       }
 
       //Checking for pki remove <private> command
@@ -436,12 +484,16 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "pki remove <private> option");
 
         //Create message to be sent to service through pipe
-        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-        memcpy(msg, "pelz 10 ", 7);
-	memcpy(&msg[7], fifo_name, fifo_name_len);
+        msg = (char *) calloc((9 + fifo_name_len), sizeof(char));
+        memcpy(msg, "pelz 10 ", 8);
+	memcpy(&msg[8], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg, fifo_name);
+	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
+	read_from_pipe(fifo_name, &msg);
+	pelz_log(LOG_DEBUG, "%s", msg);
+	fprintf(stdout, "%s\n", msg);
+	free(msg);
       }
 
       //Checking for pki remove <CN> command
@@ -456,8 +508,12 @@ int main(int argc, char **argv)
 	memcpy(&msg[(7 + fifo_name_len)], " ", 1);
         memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-        pelz_send_command(msg, fifo_name);
+	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
+	read_from_pipe(fifo_name, &msg);
+	pelz_log(LOG_DEBUG, "%s", msg);
+	fprintf(stdout, "%s\n", msg);
+	free(msg);
       }
 
       //If pki command is invalid then print pki usage for user

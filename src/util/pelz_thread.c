@@ -21,117 +21,6 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
-void *pelz_listener(void *args)
-{
-  ListenerThreadArgs *thread_args = (ListenerThreadArgs *) args;
-
-  thread_args->return_value = 0;
-
-  if (file_check(thread_args->pipe))
-  {
-    pelz_log(LOG_ERR, "Pipe not found");
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    return NULL;
-  }
-
-  int fd = open(thread_args->pipe, O_RDONLY | O_NONBLOCK);
-
-  if (fd == -1)
-  {
-    pelz_log(LOG_ERR, "Error opening pipe for reading");
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    return NULL;
-  }
-
-  int poll = epoll_create1(0);
-
-  if (poll == -1)
-  {
-    pelz_log(LOG_ERR, "Unable to create epoll file descriptor.");
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    close(fd);
-    return NULL;
-  }
-
-  char msg[BUFSIZE];
-  int msg_count;
-  struct epoll_event listener;
-  struct epoll_event listener_events[1];
-
-  listener.events = EPOLLIN;
-  listener.data.fd = fd;
-
-  if (epoll_ctl(poll, EPOLL_CTL_ADD, fd, &listener))
-  {
-    pelz_log(LOG_ERR, "Failed to poll pipe.");
-    close(fd);
-    close(poll);
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    return NULL;
-  }
-
-  pthread_mutex_unlock(thread_args->listener_mutex);
-  int event_count = epoll_wait(poll, listener_events, 1, 15000);
-
-  if (event_count == 0)
-  {
-    pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-    fprintf(stdout, "No response received from pelz-service.\n");
-    thread_args->return_value = 1;
-  }
-  else if (event_count == -1)
-  {
-    pelz_log(LOG_DEBUG, "Error in poll of pipe.");
-    fprintf(stdout, "Error in poll of pipe.\n");
-    thread_args->return_value = 1;
-  }
-  else
-  {
-    int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
-    msg_count = atoi(msg);
-
-    struct epoll_event msg_events[msg_count];
-
-    while (msg_count > 0)
-    {
-      event_count = epoll_wait(poll, msg_events, msg_count, 1000);
-
-      if (event_count == 0) 
-      {
-        pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-	fprintf(stdout, "No response received from pelz-service.\n");
-	thread_args->return_value = 1;
-      }
-      else if (event_count == -1)
-      {
-        pelz_log(LOG_DEBUG, "Error in poll of pipe.");
-	fprintf(stdout, "Error in poll of pipe.\n");
-	thread_args->return_value = 1;
-      }
-      else
-      {
-        for (int i = 0; i < event_count; i++)
-	{	
-          bytes_read = read(msg_events[i].data.fd, msg, BUFSIZE);
-	  if (bytes_read > 0)
-	  {
-      	    pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
-	    fprintf(stdout, "%.*s\n", bytes_read, msg);
-	    msg_count -= 1;
-	  }
-	}
-      }
-    }
-  }
-  close(fd);
-  close(poll);
-  return NULL;
-}
-
 void *fifo_thread_process(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
@@ -176,7 +65,7 @@ void *fifo_thread_process(void *arg)
       "PKI Certificate List:"
   };
 
-  if (mkfifo(PELZSERVICEIN, MODE) == 0)
+  if (mkfifo(PELZSERVICE, MODE) == 0)
   {
     pelz_log(LOG_DEBUG, "Pipe created successfully");
   }
@@ -188,7 +77,7 @@ void *fifo_thread_process(void *arg)
   do
   {
     pthread_mutex_lock(&lock);
-    if (read_from_pipe((char *) PELZSERVICEIN, &msg))
+    if (read_from_pipe((char *) PELZSERVICE, &msg))
     {
       break;
     }
@@ -224,19 +113,6 @@ void *fifo_thread_process(void *arg)
           pelz_log(LOG_DEBUG, "Error retrieving Key Table count.");
           break;
         }
-
-	msg = (char *) calloc(10, sizeof(char));
-	sprintf(msg, "%d", (int) (list_num + 1));
-	pelz_log(LOG_DEBUG, "%s", msg);
-	if (write_to_pipe(tokens[2], msg))
-        {
-           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
-        }
-        else
-        {
-          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
-        }
-	free(msg);
 
 	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
 	if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
@@ -280,19 +156,6 @@ void *fifo_thread_process(void *arg)
           break;
         }
 
-	msg = (char *) calloc(10, sizeof(char));
-	sprintf(msg, "%d", (int) (list_num + 1));
-	pelz_log(LOG_DEBUG, "%s", msg);
-        if (write_to_pipe(tokens[2], msg))
-        {
-           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
-        }
-        else
-        {
-          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
-        }
-        free(msg);
-
 	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
         if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
         {
@@ -328,14 +191,6 @@ void *fifo_thread_process(void *arg)
         }
 	break;
       default:
-	if (write_to_pipe(tokens[2], (char *) "1"))
-        {
-           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
-        }
-        else
-        {
-          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
-        }
        	if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
