@@ -33,6 +33,7 @@ void *fifo_thread_process(void *arg)
   int ret = 0;
   size_t count;
   size_t list_num = 0;
+  char resp[BUFSIZE];
   charbuf id;
 
   const char *resp_str[27] =
@@ -114,8 +115,8 @@ void *fifo_thread_process(void *arg)
           break;
         }
 
-	sprintf(msg, "%s (%d)", resp_str[ret], (int) list_num);
-	if (write_to_pipe(tokens[2], msg))
+	sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
+	if (write_to_pipe(tokens[2], resp))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -123,10 +124,10 @@ void *fifo_thread_process(void *arg)
         {
           pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
         }
-	free(msg);	
 
         for (count = 0; count < list_num; count++)
         {
+	  sleep(0.02);
           table_id(eid, &status, KEY, count, &id);
           if (status != OK)
           {
@@ -134,12 +135,11 @@ void *fifo_thread_process(void *arg)
             continue;
           }
 
-	  sprintf(msg, "%.*s", (int) id.len, id.chars);
-          if (write_to_pipe(tokens[2], msg))
+	  sprintf(resp, "%.*s", (int) id.len, id.chars);
+          if (write_to_pipe(tokens[2], resp))
           {
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
-          free(msg);
         }
         break;
       case SERVER_LIST:
@@ -150,8 +150,8 @@ void *fifo_thread_process(void *arg)
           break;
         }
 
-	sprintf(msg, "%s (%d)", resp_str[ret], (int) list_num);
-        if (write_to_pipe(tokens[2], msg))
+	sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
+        if (write_to_pipe(tokens[2], resp))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -159,10 +159,10 @@ void *fifo_thread_process(void *arg)
         {
           pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
         }
-	free(msg);
 
         for (count = 0; count < list_num; count++)
         {
+	  sleep(0.02);
           table_id(eid, &status, SERVER, count, &id);
           if (status != OK)
           {
@@ -170,12 +170,11 @@ void *fifo_thread_process(void *arg)
             continue;
           }
 
-	  sprintf(msg, "%.*s", (int) id.len, id.chars);
-          if (write_to_pipe(tokens[2], msg))
+	  sprintf(resp, "%.*s", (int) id.len, id.chars);
+          if (write_to_pipe(tokens[2], resp))
           {
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
-          free(msg);
         }
 	break;
       default:

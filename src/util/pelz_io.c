@@ -451,7 +451,7 @@ int read_listener(char *pipe)
     return 1;
   }
 
-  int event_count = epoll_wait(poll, listener_events, 1, 1000);
+  int event_count = epoll_wait(poll, listener_events, 1, 500);
 
   if (event_count == 0)
   {
