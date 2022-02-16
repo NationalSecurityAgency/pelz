@@ -114,8 +114,8 @@ void *fifo_thread_process(void *arg)
           break;
         }
 
-	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
-	if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
+	sprintf(msg, "%s (%d)", resp_str[ret], (int) list_num);
+	if (write_to_pipe(tokens[2], msg))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -123,6 +123,7 @@ void *fifo_thread_process(void *arg)
         {
           pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
         }
+	free(msg);	
 
         for (count = 0; count < list_num; count++)
         {
@@ -156,8 +157,8 @@ void *fifo_thread_process(void *arg)
           break;
         }
 
-	pelz_log(LOG_DEBUG, "%s", resp_str[ret]);
-        if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
+	sprintf(msg, "%s (%d)", resp_str[ret], (int) list_num);
+        if (write_to_pipe(tokens[2], msg))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
@@ -165,6 +166,7 @@ void *fifo_thread_process(void *arg)
         {
           pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
         }
+	free(msg);
 
         for (count = 0; count < list_num; count++)
         {

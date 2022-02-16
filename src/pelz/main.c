@@ -191,10 +191,11 @@ int main(int argc, char **argv)
     pelz_log(LOG_DEBUG, "Message: %s", msg);
     write_to_pipe((char*) PELZSERVICE, msg);
     free(msg);
-    read_from_pipe(fifo_name, &msg);
-    pelz_log(LOG_DEBUG, "%s", msg);
-    fprintf(stdout, "%s\n", msg);
-    free(msg);
+    if (read_listener(fifo_name))
+    {
+      pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+      fprintf(stdout, "No response received from pelz-service.\n");
+    }
   }
 
   //Checking for keytable command
@@ -219,10 +220,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "Message: %s", msg);
 	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	read_from_pipe(fifo_name, &msg);
-	pelz_log(LOG_DEBUG, "%s", msg);
-	fprintf(stdout, "%s\n", msg);
-	free(msg);			
+	if (read_listener(fifo_name))
+    	{
+	  pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+    	  fprintf(stdout, "No response received from pelz-service.\n");
+    	}
       }
 
       //Checking for keytable remove <id> command
@@ -239,10 +241,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "Message: %s", msg);
 	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	read_from_pipe(fifo_name, &msg);
-	pelz_log(LOG_DEBUG, "%s", msg);
-	fprintf(stdout, "%s\n", msg);
-	free(msg);
+	if (read_listener(fifo_name))
+        {
+          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+          fprintf(stdout, "No response received from pelz-service.\n");
+        }
       }
 
       //If keytable command is invalid then print keytable usage for user
@@ -336,10 +339,11 @@ int main(int argc, char **argv)
           pelz_log(LOG_DEBUG, "Message: %s", msg);
 	  write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
-	  read_from_pipe(fifo_name, &msg);
-          pelz_log(LOG_DEBUG, "%s", msg);
-          fprintf(stdout, "%s\n", msg);
-          free(msg);
+	  if (read_listener(fifo_name))
+  	  {
+            pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+            fprintf(stdout, "No response received from pelz-service.\n");
+       	  }
         }
 
 	//If pki command is invalid then print pki usage for user
@@ -377,10 +381,11 @@ int main(int argc, char **argv)
           pelz_log(LOG_DEBUG, "Message: %s", msg);
 	  write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
-	  read_from_pipe(fifo_name, &msg);
-	  pelz_log(LOG_DEBUG, "%s", msg);
-	  fprintf(stdout, "%s\n", msg);
-	  free(msg);
+	  if (read_listener(fifo_name))
+          {
+            pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+            fprintf(stdout, "No response received from pelz-service.\n");
+          }
         }
 
 	//If pki command is invalid then print pki usage for user
@@ -471,10 +476,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "Message: %s", msg);
 	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	read_from_pipe(fifo_name, &msg);
-	pelz_log(LOG_DEBUG, "%s", msg);
-	fprintf(stdout, "%s\n", msg);
-	free(msg);
+	if (read_listener(fifo_name))
+        {
+          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+          fprintf(stdout, "No response received from pelz-service.\n");
+        }
       }
 
       //Checking for pki remove <private> command
@@ -490,10 +496,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "Message: %s", msg);
 	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	read_from_pipe(fifo_name, &msg);
-	pelz_log(LOG_DEBUG, "%s", msg);
-	fprintf(stdout, "%s\n", msg);
-	free(msg);
+	if (read_listener(fifo_name))
+        {
+          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+          fprintf(stdout, "No response received from pelz-service.\n");
+        }
       }
 
       //Checking for pki remove <CN> command
@@ -510,10 +517,11 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "Message: %s", msg);
 	write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	read_from_pipe(fifo_name, &msg);
-	pelz_log(LOG_DEBUG, "%s", msg);
-	fprintf(stdout, "%s\n", msg);
-	free(msg);
+	if (read_listener(fifo_name))
+        {
+          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+          fprintf(stdout, "No response received from pelz-service.\n");
+        }
       }
 
       //If pki command is invalid then print pki usage for user
