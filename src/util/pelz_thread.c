@@ -108,49 +108,14 @@ void *fifo_thread_process(void *arg)
     switch (ret)
     {
       case KEY_LIST:
-	table_id_count(eid, &status, KEY, &list_num);
+        table_id_count(eid, &status, KEY, &list_num);
         if (status != OK)
         {
           pelz_log(LOG_DEBUG, "Error retrieving Key Table count.");
           break;
         }
 
-	sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
-	if (write_to_pipe(tokens[2], resp))
-        {
-           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
-        }
-        else
-        {
-          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
-        }
-
-        for (count = 0; count < list_num; count++)
-        {
-	  sleep(0.02);
-          table_id(eid, &status, KEY, count, &id);
-          if (status != OK)
-          {
-            pelz_log(LOG_DEBUG, "Error retrieving Key Table <ID> from index %d.", count);
-            continue;
-          }
-
-	  sprintf(resp, "%.*s", (int) id.len, id.chars);
-          if (write_to_pipe(tokens[2], resp))
-          {
-            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
-          }
-        }
-        break;
-      case SERVER_LIST:
-	table_id_count(eid, &status, SERVER, &list_num);
-        if (status != OK)
-        {
-          pelz_log(LOG_DEBUG, "Error retrieving Server Table count.");
-          break;
-        }
-
-	sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
+        sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
         if (write_to_pipe(tokens[2], resp))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
@@ -162,7 +127,42 @@ void *fifo_thread_process(void *arg)
 
         for (count = 0; count < list_num; count++)
         {
-	  sleep(0.02);
+          sleep(0.02);
+          table_id(eid, &status, KEY, count, &id);
+          if (status != OK)
+          {
+            pelz_log(LOG_DEBUG, "Error retrieving Key Table <ID> from index %d.", count);
+            continue;
+          }
+
+          sprintf(resp, "%.*s", (int) id.len, id.chars);
+          if (write_to_pipe(tokens[2], resp))
+          {
+            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+          }
+        }
+        break;
+      case SERVER_LIST:
+        table_id_count(eid, &status, SERVER, &list_num);
+        if (status != OK)
+        {
+          pelz_log(LOG_DEBUG, "Error retrieving Server Table count.");
+          break;
+        }
+
+        sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
+        if (write_to_pipe(tokens[2], resp))
+        {
+           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
+
+        for (count = 0; count < list_num; count++)
+        {
+          sleep(0.02);
           table_id(eid, &status, SERVER, count, &id);
           if (status != OK)
           {
@@ -170,15 +170,15 @@ void *fifo_thread_process(void *arg)
             continue;
           }
 
-	  sprintf(resp, "%.*s", (int) id.len, id.chars);
+          sprintf(resp, "%.*s", (int) id.len, id.chars);
           if (write_to_pipe(tokens[2], resp))
           {
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
         }
-	break;
+        break;
       default:
-       	if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
+        if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }

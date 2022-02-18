@@ -213,18 +213,18 @@ int main(int argc, char **argv)
       {
         pelz_log(LOG_DEBUG, "keytable remove --all option");
 
-	//Create message to be sent to service through pipe
+        //Create message to be sent to service through pipe
         msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-	memcpy(msg, "pelz 3 ", 7);
-	memcpy(&msg[7], fifo_name, fifo_name_len);
+        memcpy(msg, "pelz 3 ", 7);
+        memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe((char*) PELZSERVICE, msg);
+        write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	if (read_listener(fifo_name))
-    	{
-	  pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-    	  fprintf(stdout, "No response received from pelz-service.\n");
-    	}
+        if (read_listener(fifo_name))
+        {
+          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+          fprintf(stdout, "No response received from pelz-service.\n");
+        }
       }
 
       //Checking for keytable remove <id> command
@@ -232,16 +232,16 @@ int main(int argc, char **argv)
       {
         pelz_log(LOG_DEBUG, "keytable remove <id> option");
 
-	//Create message to be sent to service through pipe
+        //Create message to be sent to service through pipe
         msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
         memcpy(msg, "pelz 2 ", 7);
-	memcpy(&msg[7], fifo_name, fifo_name_len);
-	memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+        memcpy(&msg[7], fifo_name, fifo_name_len);
+        memcpy(&msg[(7 + fifo_name_len)], " ", 1);
         memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe((char*) PELZSERVICE, msg);
+        write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	if (read_listener(fifo_name))
+        if (read_listener(fifo_name))
         {
           pelz_log(LOG_DEBUG, "No response received from pelz-service.");
           fprintf(stdout, "No response received from pelz-service.\n");
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
       {
         keytable_usage();
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -268,22 +268,22 @@ int main(int argc, char **argv)
         //Create message to be sent to service through pipe
         msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
         memcpy(msg, "pelz 4 ", 7);
-	memcpy(&msg[7], fifo_name, fifo_name_len);
+        memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe((char*) PELZSERVICE, msg);
+        write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	if (read_listener(fifo_name))
-	{
-	  pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-      	  fprintf(stdout, "No response received from pelz-service.\n");
-	}
-	do
-	{
-   	  if (read_listener(fifo_name))
-	  {
+        if (read_listener(fifo_name))
+        {
+          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+          fprintf(stdout, "No response received from pelz-service.\n");
+        }
+        do
+        {
+          if (read_listener(fifo_name))
+          {
             break;
-	  }
-	} while (1);
+          }
+        } while (1);
       }
 
       //If keytable command is invalid then print keytable usage for user
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
       {
         keytable_usage();
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -324,45 +324,45 @@ int main(int argc, char **argv)
 
         //Checking for pki load cert <path> command
         if (argv[arg_index + 4] != NULL)
-        {
-	  //Checking if <path> points to an existing file 
+        {      
+          //Checking if <path> points to an existing file 
           if (file_check(argv[arg_index + 4]))
           {
             pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
             free(outPath);
-	    remove_pipe(fifo_name);
+            remove_pipe(fifo_name);
             return 1;
           }
 
-	  //Create message to be sent to service through pipe
+          //Create message to be sent to service through pipe
           msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
           memcpy(msg, "pelz 5 ", 7);
-	  memcpy(&msg[7], fifo_name, fifo_name_len);
-	  memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+          memcpy(&msg[7], fifo_name, fifo_name_len);
+          memcpy(&msg[(7 + fifo_name_len)], " ", 1);
           memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-	  write_to_pipe((char*) PELZSERVICE, msg);
+          write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
-	  if (read_listener(fifo_name))
-  	  {
+          if (read_listener(fifo_name))
+          {
             pelz_log(LOG_DEBUG, "No response received from pelz-service.");
             fprintf(stdout, "No response received from pelz-service.\n");
-       	  }
+          }
         }
 
-	//If pki command is invalid then print pki usage for user
-	else
+        //If pki command is invalid then print pki usage for user
+        else
         {
           pki_usage();
           free(outPath);
-	  remove_pipe(fifo_name);
+          remove_pipe(fifo_name);
           return 1;
         }
       }
 
       //Checking for pki load private command
       else if ((argv[arg_index + 3] != NULL) && (memcmp(argv[arg_index + 3], "private", 7) == 0) 
-	      && (strlen(argv[arg_index + 3]) == 7))
+                && (strlen(argv[arg_index + 3]) == 7))
       {
         pelz_log(LOG_DEBUG, "pki load private option");
 
@@ -374,32 +374,32 @@ int main(int argc, char **argv)
           {
             pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
             free(outPath);
-	    remove_pipe(fifo_name);
+            remove_pipe(fifo_name);
             return 1;
           }
 
           //Create message to be sent to service through pipe
           msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
           memcpy(msg, "pelz 6 ", 7);
-	  memcpy(&msg[7], fifo_name, fifo_name_len);
-	  memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+          memcpy(&msg[7], fifo_name, fifo_name_len);
+          memcpy(&msg[(7 + fifo_name_len)], " ", 1);
           memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-	  write_to_pipe((char*) PELZSERVICE, msg);
+          write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
-	  if (read_listener(fifo_name))
+          if (read_listener(fifo_name))
           {
             pelz_log(LOG_DEBUG, "No response received from pelz-service.");
             fprintf(stdout, "No response received from pelz-service.\n");
           }
         }
 
-	//If pki command is invalid then print pki usage for user
+        //If pki command is invalid then print pki usage for user
         else
         {
           pki_usage();
           free(outPath);
-	  remove_pipe(fifo_name);
+          remove_pipe(fifo_name);
           return 1;
         }
       }
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
       {
         pki_usage();
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -430,30 +430,30 @@ int main(int argc, char **argv)
           //Create message to be sent to service through pipe
           msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
           memcpy(msg, "pelz 7 ", 7);
-	  memcpy(&msg[7], fifo_name, fifo_name_len);
+          memcpy(&msg[7], fifo_name, fifo_name_len);
           pelz_log(LOG_DEBUG, "Message: %s", msg);
-	  write_to_pipe((char*) PELZSERVICE, msg);
+          write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
-	  if (read_listener(fifo_name))
-  	  {
+          if (read_listener(fifo_name))
+          {
             pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-            fprintf(stdout, "No response received from pelz-service.\n");	  
+            fprintf(stdout, "No response received from pelz-service.\n");
           }
-	  do
-	  {
-	    if(read_listener(fifo_name))
-	    {
+          do
+          {
+            if(read_listener(fifo_name))
+            {
               break;
             }
-	  } while (1);	    
-	}
+          } while (1);
+        }
 
-	//If pki command is invalid then print pki usage for user
+        //If pki command is invalid then print pki usage for user
         else
         {
           pki_usage();
           free(outPath);
-	  remove_pipe(fifo_name);
+          remove_pipe(fifo_name);
           return 1;
         }
       }
@@ -463,7 +463,7 @@ int main(int argc, char **argv)
       {
         pki_usage();
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -482,11 +482,11 @@ int main(int argc, char **argv)
         //Create message to be sent to service through pipe
         msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
         memcpy(msg, "pelz 9 ", 7);
-	memcpy(&msg[7], fifo_name, fifo_name_len);
+        memcpy(&msg[7], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe((char*) PELZSERVICE, msg);
+        write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	if (read_listener(fifo_name))
+        if (read_listener(fifo_name))
         {
           pelz_log(LOG_DEBUG, "No response received from pelz-service.");
           fprintf(stdout, "No response received from pelz-service.\n");
@@ -502,11 +502,11 @@ int main(int argc, char **argv)
         //Create message to be sent to service through pipe
         msg = (char *) calloc((9 + fifo_name_len), sizeof(char));
         memcpy(msg, "pelz 10 ", 8);
-	memcpy(&msg[8], fifo_name, fifo_name_len);
+        memcpy(&msg[8], fifo_name, fifo_name_len);
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe((char*) PELZSERVICE, msg);
+        write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	if (read_listener(fifo_name))
+        if (read_listener(fifo_name))
         {
           pelz_log(LOG_DEBUG, "No response received from pelz-service.");
           fprintf(stdout, "No response received from pelz-service.\n");
@@ -521,13 +521,13 @@ int main(int argc, char **argv)
         //Create message to be sent to service through pipe
         msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
         memcpy(msg, "pelz 8 ", 7);
-	memcpy(&msg[7], fifo_name, fifo_name_len);
-	memcpy(&msg[(7 + fifo_name_len)], " ", 1);
+        memcpy(&msg[7], fifo_name, fifo_name_len);
+        memcpy(&msg[(7 + fifo_name_len)], " ", 1);
         memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
         pelz_log(LOG_DEBUG, "Message: %s", msg);
-	write_to_pipe((char*) PELZSERVICE, msg);
+        write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-	if (read_listener(fifo_name))
+        if (read_listener(fifo_name))
         {
           pelz_log(LOG_DEBUG, "No response received from pelz-service.");
           fprintf(stdout, "No response received from pelz-service.\n");
@@ -539,7 +539,7 @@ int main(int argc, char **argv)
       {
         pki_usage();
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
     }
@@ -567,7 +567,7 @@ int main(int argc, char **argv)
       {
         pelz_log(LOG_ERR, "input path (%s) is not valid ... exiting", argv[arg_index + 2]);
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
 
@@ -579,7 +579,7 @@ int main(int argc, char **argv)
         pelz_log(LOG_ERR, "seal input data file read error ... exiting");
         free(data);
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
       pelz_log(LOG_DEBUG, "read in %d bytes of data to be wrapped", data_len);
@@ -590,7 +590,7 @@ int main(int argc, char **argv)
         pelz_log(LOG_ERR, "no input data ... exiting");
         free(data);
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
 
@@ -610,7 +610,7 @@ int main(int argc, char **argv)
         sgx_destroy_enclave(eid);
         free(data);
         free(outPath);
-	remove_pipe(fifo_name);
+        remove_pipe(fifo_name);
         return 1;
       }
 
@@ -638,7 +638,7 @@ int main(int argc, char **argv)
           free(sgx_seal);
           free(outPath);
           free(tpm_seal);
-	  remove_pipe(fifo_name);
+          remove_pipe(fifo_name);
           return 1;
         }
         free(pcrs);
@@ -654,7 +654,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
             free(outPath);
             free(tpm_seal);
-	    remove_pipe(fifo_name);
+            remove_pipe(fifo_name);
             return 1;
           }
           free(tpm_seal);
@@ -666,7 +666,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
             free(outPath);
             free(sgx_seal);
-	    remove_pipe(fifo_name);
+            remove_pipe(fifo_name);
             return 1;
           }
           free(sgx_seal);
@@ -698,7 +698,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
           free(outPath);
-	  remove_pipe(fifo_name);
+          remove_pipe(fifo_name);
           return 1;
         }
 
@@ -713,7 +713,7 @@ int main(int argc, char **argv)
         {
           pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", outPath);
           free(outPath);
-	  remove_pipe(fifo_name);
+          remove_pipe(fifo_name);
           return 1;
         }
 
@@ -725,7 +725,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
             free(outPath);
             free(tpm_seal);
-	    remove_pipe(fifo_name);
+            remove_pipe(fifo_name);
             return 1;
           }
           free(tpm_seal);
@@ -737,7 +737,7 @@ int main(int argc, char **argv)
             pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
             free(outPath);
             free(sgx_seal);
-	    remove_pipe(fifo_name);
+            remove_pipe(fifo_name);
             return 1;
           }
           free(sgx_seal);

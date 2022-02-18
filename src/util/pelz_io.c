@@ -273,17 +273,17 @@ int key_load(charbuf key_id)
           break;
         }
       case NO_MATCH:
-	{
-	  pelz_log(LOG_ERR, "Certificate or Private Key not matched");
+        {
+           pelz_log(LOG_ERR, "Certificate or Private Key not matched");
           return_value = 1;
           break;
-	}
+        }
       case RET_FAIL:
-	{
-	  pelz_log(LOG_ERR, "Key Retrieve Failure");
-	  return_value = 1;
+        {
+          pelz_log(LOG_ERR, "Key Retrieve Failure");
+          return_value = 1;
           break;
-	}
+        }
       case OK:
         {
           pelz_log(LOG_DEBUG, "Key added to table.");
@@ -470,7 +470,7 @@ int read_listener(char *pipe)
   else
   {
     int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
-	  
+
     if (bytes_read > 0)
     {
       pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
@@ -722,7 +722,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
         break;
       case ERR_X509:
         pelz_log(LOG_ERR, "X509 allocation error.");
-	return X509_FAIL;
+        return X509_FAIL;
       case RET_FAIL:
         pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
         break;
