@@ -73,8 +73,7 @@ Once the dependencies are in place, building pelz is done by:
     
 The unit test suite can be run via:
 
-    make
-    make test TEST='"TRUE"'
+    make test
     
 All build artifacts and binaries can be removed by running:
 

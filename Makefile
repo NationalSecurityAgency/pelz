@@ -38,13 +38,13 @@ SGX_SSL_UNTRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_TRUSTED_LIB_PATH ?= /opt/intel/sgxssl/lib64/
 SGX_SSL_INCLUDE_PATH ?= /opt/intel/sgxssl/include/
 
-ifeq ($(TEST),"TRUE")
-	ENCLAVE_HEADER_TRUSTED ?= '"test_enclave_t.h"'
-	ENCLAVE_HEADER_UNTRUSTED ?= '"test_enclave_u.h"'
-else
-	ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
-	ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
-endif
+
+TEST_ENCLAVE_HEADER_TRUSTED ?= '"test_enclave_t.h"'
+TEST_ENCLAVE_HEADER_UNTRUSTED ?= '"test_enclave_u.h"'
+
+ENCLAVE_HEADER_TRUSTED ?= '"pelz_enclave_t.h"'
+ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
+
 
 ifeq ($(shell getconf LONG_BIT), 32)
 	SGX_ARCH := x86
@@ -124,6 +124,7 @@ App_Include_Paths += -Ikmyth/sgx/untrusted/include/util
 App_Include_Paths += -Ikmyth/sgx/common/include
 App_Include_Paths += -Ikmyth/include/network
 App_Include_Paths += -Ikmyth/include/protocol
+App_Include_Paths += -Itest/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) 
 App_C_Flags += -fPIC 
@@ -131,7 +132,6 @@ App_C_Flags += -Wno-attributes
 App_C_Flags += $(App_Include_Paths) 
 App_C_Flags += -DPELZ_SGX_UNTRUSTED
 App_C_Flags += -Wall
-App_C_Flags += -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
 
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -208,7 +208,6 @@ Enclave_C_Flags += $(Enclave_Include_Paths)
 Enclave_C_Flags += -DPELZ_SGX_TRUSTED
 Enclave_C_Flags += -Wall 
 Enclave_C_Flags += -DKMYTH_SGX
-Enclave_C_Flags += -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED)
 
 Enclave_Cpp_Flags := $(Enclave_C_Flags) 
 Enclave_Cpp_Flags += -std=c++03 
@@ -275,7 +274,8 @@ all: $(App_Name) $(Enclave_Name)
 	@echo "   $(SGX_ENCLAVE_SIGNER) sign -key <your key> -enclave $(Enclave_Name) -out <$(Signed_Enclave_Name)> -config $(Enclave_Config_File)"
 	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
 	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
-else
+else			
+all: override ENCLAVE_HEADERS = -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED) -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)	
 all: pre bin/$(App_Name_Service) bin/$(App_Name_Pipe) sgx/$(Signed_Enclave_Name)
 endif
 
@@ -294,6 +294,7 @@ test-all: $(App_Name) $(Test_Enclave_Name)
 	@echo "You can also sign the enclave using an external signing tool. See User's Guide for more details."
 	@echo "To build the project in simulation mode set SGX_MODE=SIM. To build the project in prerelease mode set SGX_PRERELEASE=1 and SGX_MODE=HW."
 else
+test-all: override ENCLAVE_HEADERS = -DENCLAVE_HEADER_TRUSTED=$(TEST_ENCLAVE_HEADER_TRUSTED) -DENCLAVE_HEADER_UNTRUSTED=$(TEST_ENCLAVE_HEADER_UNTRUSTED)
 test-all: pre test/bin/$(App_Name_Test) sgx/$(Signed_Test_Enclave_Name)
 endif
 
@@ -306,25 +307,25 @@ endif
 ######## Common Objects ########
 
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ecdh_util.o: kmyth/sgx/common/src/ecdh_util.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 ######## App Objects ########
 
 sgx/log_ocall.o: kmyth/sgx/untrusted/src/ocall/log_ocall.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/memory_ocall.o: kmyth/sgx/untrusted/src/ocall/memory_ocall.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ecdh_ocall.o: kmyth/sgx/untrusted/src/ocall/ecdh_ocall.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
@@ -337,7 +338,7 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 test/include/test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
@@ -351,7 +352,7 @@ test/include/test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@echo "GEN  =>  $@"
 
 sgx/test_enclave_u.o: test/include/test_enclave_u.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 
@@ -369,7 +370,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
                          -Isgx \
 			 -Itest/include \
 			 $(App_C_Flags) \
-			 $(App_C_Flags_Test) \
+			 $(ENCLAVE_HEADERS) \
 			 $(App_Link_Flags) \
 			 -lcrypto \
 			 -lcjson \
@@ -390,7 +391,7 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 $(App_Include_Paths) \
 			 -Isgx \
 			 $(App_C_Flags) \
-			 $(App_C_Flags_Pelz) \
+			 $(ENCLAVE_HEADERS) \
 			 $(App_Link_Flags) \
 			 -Lsgx \
 			 -lcrypto \
@@ -411,7 +412,7 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 			 $(App_Include_Paths) \
 			 -Isgx \
 			 $(App_C_Flags) \
-			 $(App_C_Flages_Pelz) \
+			 $(ENCLAVE_HEADERS) \
 			 $(App_Link_Flags) \
 			 -Lsgx \
 			 -lcrypto \
@@ -431,7 +432,7 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 test/include/test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
@@ -445,67 +446,67 @@ test/include/test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@echo "GEN => $@"
 
 sgx/test_enclave_t.o: test/include/test_enclave_t.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/kmyth_enclave_seal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_seal.cpp
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/kmyth_enclave_unseal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_unseal.cpp
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/kmyth_enclave_memory_util.o: kmyth/sgx/trusted/src/util/kmyth_enclave_memory_util.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/kmyth_enclave_retrieve_key.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_retrieve_key.cpp
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/sgx_retrieve_key_impl.o: kmyth/sgx/trusted/src/wrapper/sgx_retrieve_key_impl.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/aes_gcm.o: kmyth/src/cipher/aes_gcm.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/memory_util.o: kmyth/utils/src/memory_util.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/kmip_util.o: kmyth/src/protocol/kmip_util.c
-	@$(CC) $(Enclave_C_Flags) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/common_table.o: src/util/common_table.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <=  $<"
 
 sgx/key_table.o: src/util/key_table.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <=  $<"
 
 sgx/server_table.o: src/util/server_table.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <=  $<"
 
 sgx/aes_keywrap_3394nopad.o: src/util/aes_keywrap_3394nopad.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <=  $<"
 
 sgx/pelz_request_handler.o: src/util/pelz_request_handler.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <=  $<"
 
 sgx/charbuf.o: src/util/charbuf.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <=  $<"
 
 sgx/util.o: src/util/util.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <= $<"
 
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
@@ -526,7 +527,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/aes_gcm.o \
 		     sgx/memory_util.o \
 		     sgx/kmip_util.o 
-	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
+	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 
 sgx/$(Enclave_Signing_Key):
@@ -540,7 +541,7 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@echo "SIGN =>  $@"
 
 sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
-	@$(CXX) $(Enclave_Cpp_Flags) -c $< -o $@
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CXX  <= $<"
 
 sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
@@ -562,7 +563,7 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
      			  sgx/memory_util.o \
      			  sgx/kmip_util.o \
      			  sgx/enclave_helper_functions.o
-	@$(CXX) $^ -o $@ $(Enclave_Link_Flags)
+	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 
 sgx/$(Signed_Test_Enclave_Name): sgx/$(Test_Enclave_Name) sgx/$(Enclave_Signing_Key)
@@ -587,7 +588,7 @@ pre:
 
 .PHONY: test
 
-test: test-all
+test: all test-all
 	@cd test/data && ./gen_test_keys_certs.bash
 	@openssl x509 -in test/data/client_cert_test.pem -inform pem -out test/data/client_cert_test.der -outform der
 	@openssl x509 -in test/data/server_cert_test.pem -inform pem -out test/data/server_cert_test.der -outform der
@@ -623,8 +624,7 @@ clean:
 	@rm -f bin/pelz
 	@rm -f bin/pelz-service
 	@rm -f test/bin/pelz-test
-	@rm -f sgx/pelz_enclave.signed.so
-	@rm -f sgx/pelz_enclave.so
+	@rm -f sgx/*.so
 	@rm -f sgx/*_u.*
 	@rm -f sgx/*_t.*
 	@rm -f sgx/*.o
