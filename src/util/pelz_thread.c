@@ -141,6 +141,15 @@ void *fifo_thread_process(void *arg)
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
         }
+        sleep (0.02);
+        if (write_to_pipe(tokens[2], (char *) "END"))
+        {
+          pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
         break;
       case SERVER_LIST:
         table_id_count(eid, &status, SERVER, &list_num);
@@ -176,11 +185,29 @@ void *fifo_thread_process(void *arg)
             pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
           }
         }
+        sleep (0.02);
+        if (write_to_pipe(tokens[2], (char *) "END"))
+        {
+          pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
         break;
       default:
         if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
         {
            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
+        sleep (0.02);
+        if (write_to_pipe(tokens[2], (char *) "END"))
+        {
+          pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
         else
         {

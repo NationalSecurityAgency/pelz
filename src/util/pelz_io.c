@@ -8,9 +8,10 @@
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
 #include <sys/epoll.h>
-#include <uriparser/Uri.h>
+#include <sys/stat.h>
+#include <sys/select.h>
 #include <fcntl.h>
-#include <stdint.h>
+#include <uriparser/Uri.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 
@@ -419,6 +420,11 @@ int read_listener(char *pipe)
     return 1;
   }
 
+  fd_set set;
+  struct timeval timeout;
+  int rv;
+  char msg[BUFSIZE];
+
   int fd = open(pipe, O_RDONLY | O_NONBLOCK);
 
   if (fd == -1)
@@ -427,60 +433,48 @@ int read_listener(char *pipe)
     return 1;
   }
 
-  int poll = epoll_create1(0);
+  FD_ZERO(&set);            // clear the set
+  FD_SET(fd, &set);   // add file descriptor to the set
 
-  if (poll == -1)
+  timeout.tv_sec = 5;
+  timeout.tv_usec = 0;
+
+  rv = select(fd + 1, &set, NULL, NULL, &timeout);
+  if(rv == -1)
   {
-    pelz_log(LOG_ERR, "Unable to create epoll file descriptor.");
+    pelz_log(LOG_DEBUG, "Error in timeout of pipe.");
+    fprintf(stdout, "Error in timeout of pipe.\n");
     close(fd);
-    return 1;
+    return 1;    
   }
-
-  char msg[BUFSIZE];
-  struct epoll_event listener;
-  struct epoll_event listener_events[1];
-
-  listener.events = EPOLLIN;
-  listener.data.fd = fd;
-
-  if (epoll_ctl(poll, EPOLL_CTL_ADD, fd, &listener))
+  else if(rv == 0)
   {
-    pelz_log(LOG_ERR, "Failed to poll pipe.");
+    pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+    fprintf(stdout, "No response received from pelz-service.\n");
     close(fd);
-    close(poll);
-    return 1;
-  }
-
-  int event_count = epoll_wait(poll, listener_events, 1, 500);
-
-  if (event_count == 0)
-  {
-    close(fd);
-    close(poll);
-    return 1;
-  }
-  else if (event_count == -1)
-  {
-    pelz_log(LOG_DEBUG, "Error in poll of pipe.");
-    fprintf(stdout, "Error in poll of pipe.\n");
-    close(fd);
-    close(poll);
     return 1;
   }
   else
   {
-    int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
+    int bytes_read = read(fd, msg, BUFSIZE);
 
     if (bytes_read > 0)
     {
-      pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
-      fprintf(stdout, "%.*s\n", bytes_read, msg);
+      if (bytes_read == 3 && memcmp(msg, "END", 3) == 0)
+      {
+        close(fd);
+        return 1;
+      }
+      else
+      {
+        pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
+        fprintf(stdout, "%.*s\n", bytes_read, msg);
+      }
     }
     else if (bytes_read < 0)
     {
       pelz_log(LOG_ERR, "Pipe read failed");
-      close(fd);      
-      close(poll);
+      close(fd);
       return 1;
     }
     else
@@ -489,7 +483,6 @@ int read_listener(char *pipe)
     }
   }
   close(fd);
-  close(poll);
   return 0;
 }
 

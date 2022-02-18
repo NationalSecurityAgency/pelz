@@ -193,8 +193,7 @@ int main(int argc, char **argv)
     free(msg);
     if (read_listener(fifo_name))
     {
-      pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-      fprintf(stdout, "No response received from pelz-service.\n");
+      pelz_log(LOG_DEBUG, "Error read from pipe.");
     }
   }
 
@@ -222,8 +221,7 @@ int main(int argc, char **argv)
         free(msg);
         if (read_listener(fifo_name))
         {
-          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-          fprintf(stdout, "No response received from pelz-service.\n");
+          pelz_log(LOG_DEBUG, "Error read from pipe.");
         }
       }
 
@@ -243,8 +241,7 @@ int main(int argc, char **argv)
         free(msg);
         if (read_listener(fifo_name))
         {
-          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-          fprintf(stdout, "No response received from pelz-service.\n");
+          pelz_log(LOG_DEBUG, "Error read from pipe.");
         }
       }
 
@@ -272,11 +269,6 @@ int main(int argc, char **argv)
         pelz_log(LOG_DEBUG, "Message: %s", msg);
         write_to_pipe((char*) PELZSERVICE, msg);
         free(msg);
-        if (read_listener(fifo_name))
-        {
-          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-          fprintf(stdout, "No response received from pelz-service.\n");
-        }
         do
         {
           if (read_listener(fifo_name))
@@ -345,8 +337,7 @@ int main(int argc, char **argv)
           free(msg);
           if (read_listener(fifo_name))
           {
-            pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-            fprintf(stdout, "No response received from pelz-service.\n");
+            pelz_log(LOG_DEBUG, "Error read from pipe.");
           }
         }
 
@@ -389,8 +380,7 @@ int main(int argc, char **argv)
           free(msg);
           if (read_listener(fifo_name))
           {
-            pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-            fprintf(stdout, "No response received from pelz-service.\n");
+            pelz_log(LOG_DEBUG, "Error read from pipe.");
           }
         }
 
@@ -434,11 +424,6 @@ int main(int argc, char **argv)
           pelz_log(LOG_DEBUG, "Message: %s", msg);
           write_to_pipe((char*) PELZSERVICE, msg);
           free(msg);
-          if (read_listener(fifo_name))
-          {
-            pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-            fprintf(stdout, "No response received from pelz-service.\n");
-          }
           do
           {
             if(read_listener(fifo_name))
@@ -488,8 +473,7 @@ int main(int argc, char **argv)
         free(msg);
         if (read_listener(fifo_name))
         {
-          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-          fprintf(stdout, "No response received from pelz-service.\n");
+          pelz_log(LOG_DEBUG, "Error read from pipe.");
         }
       }
 
@@ -508,8 +492,7 @@ int main(int argc, char **argv)
         free(msg);
         if (read_listener(fifo_name))
         {
-          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-          fprintf(stdout, "No response received from pelz-service.\n");
+          pelz_log(LOG_DEBUG, "Error read from pipe.");
         }
       }
 
@@ -529,8 +512,7 @@ int main(int argc, char **argv)
         free(msg);
         if (read_listener(fifo_name))
         {
-          pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-          fprintf(stdout, "No response received from pelz-service.\n");
+          pelz_log(LOG_DEBUG, "Error read from pipe.");
         }
       }
 
