@@ -208,7 +208,6 @@ Enclave_Cpp_Flags := $(Enclave_C_Flags)
 Enclave_Cpp_Flags += -std=c++03 
 Enclave_Cpp_Flags += -nostdinc++ 
 Enclave_Cpp_Flags += --include "tsgxsslio.h" 
-Enclave_Cpp_Flags += -Wall
 
 Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) 
 Enclave_Link_Flags += -Wl,--no-undefined 

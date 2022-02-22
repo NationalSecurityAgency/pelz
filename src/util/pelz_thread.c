@@ -21,88 +21,22 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
-void *pelz_listener(void *args)
-{
-  ListenerThreadArgs *thread_args = (ListenerThreadArgs *) args;
-
-  thread_args->return_value = 0;
-
-  if (file_check((char *) PELZSERVICEOUT))
-  {
-    pelz_log(LOG_ERR, "Pipe not found");
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    return NULL;
-  }
-
-  int fd = open((char *) PELZSERVICEOUT, O_RDONLY | O_NONBLOCK);
-
-  if (fd == -1)
-  {
-    pelz_log(LOG_ERR, "Error opening pipe for reading");
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    return NULL;
-  }
-
-  int poll = epoll_create1(0);
-
-  if (poll == -1)
-  {
-    pelz_log(LOG_ERR, "Unable to create epoll file descriptor.");
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    close(fd);
-    return NULL;
-  }
-
-  char msg[BUFSIZE];
-  struct epoll_event listener;
-  struct epoll_event listener_events[1];
-
-  listener.events = EPOLLIN;
-  listener.data.fd = fd;
-
-  if (epoll_ctl(poll, EPOLL_CTL_ADD, fd, &listener))
-  {
-    pelz_log(LOG_ERR, "Failed to poll pipe.");
-    close(fd);
-    close(poll);
-    thread_args->return_value = 1;
-    pthread_mutex_unlock(thread_args->listener_mutex);
-    return NULL;
-  }
-
-  pthread_mutex_unlock(thread_args->listener_mutex);
-  int event_count = epoll_wait(poll, listener_events, 1, 15000);
-
-  if (event_count == 0)
-  {
-    pelz_log(LOG_INFO, "No response received from pelz-service.");
-    thread_args->return_value = 1;
-  }
-  else
-  {
-    int bytes_read = read(listener_events[0].data.fd, msg, BUFSIZE);
-
-    pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
-  }
-  close(fd);
-  close(poll);
-  return NULL;
-}
-
 void *fifo_thread_process(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
   pthread_mutex_t lock = threadArgs->lock;
 
+  TableResponseStatus status;
   char *msg = NULL;
   char **tokens;
   size_t num_tokens = 0;
   int ret = 0;
+  size_t count;
+  size_t list_num = 0;
+  char resp[BUFSIZE];
+  charbuf id;
 
-  const char *resp_str[22] =
+  const char *resp_str[27] =
     { "Invalid pipe command received by pelz-service.",
       "Successfully initiated termination of pelz-service.",
       "Unable to read file",
@@ -115,40 +49,36 @@ void *fifo_thread_process(void *arg)
       "Successfully loaded private key into pelz-service.",
       "Invalid private key file, unable to load.",
       "Failure to remove cert",
-      "Remove cert",
+      "Removed cert",
       "Server Table Destroy Failure",
       "All certs removed",
       "Failure to remove key",
       "Removed key",
       "Key Table Destroy Failure",
-      "Key Table Init Failure",
       "All keys removed",
       "Charbuf creation error.",
-      "Unable to load file. Files must originally be in the DER format prior to sealing."
+      "Unable to load file. Files must originally be in the DER format prior to sealing.",
+      "Failure to remove private pkey",
+      "Removed private pkey",
+      "No entries in Key Table.",
+      "Key Table List:",
+      "No entries in Server Table.",
+      "PKI Certificate List:"
   };
 
-  if (mkfifo(PELZSERVICEIN, MODE) == 0)
+  if (mkfifo(PELZSERVICE, MODE) == 0)
   {
-    pelz_log(LOG_INFO, "Pipe created successfully");
+    pelz_log(LOG_DEBUG, "Pipe created successfully");
   }
   else
   {
-    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
-  }
-
-  if (mkfifo(PELZSERVICEOUT, MODE) == 0)
-  {
-    pelz_log(LOG_INFO, "Second pipe created successfully");
-  }
-  else
-  {
-    pelz_log(LOG_INFO, "Error: %s", strerror(errno));
+    pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
 
   do
   {
     pthread_mutex_lock(&lock);
-    if (read_from_pipe((char *) PELZSERVICEIN, &msg))
+    if (read_from_pipe((char *) PELZSERVICE, &msg))
     {
       break;
     }
@@ -175,22 +105,125 @@ void *fifo_thread_process(void *arg)
     free(msg);
 
     ret = parse_pipe_message(tokens, num_tokens);
-    if (write_to_pipe((char *) PELZSERVICEOUT, (char *) resp_str[ret]))
+    switch (ret)
     {
-      pelz_log(LOG_INFO, "Unable to send response to pelz cmd.");
-    }
-    else
-    {
-      pelz_log(LOG_INFO, "Pelz-service responses sent to pelz cmd");
+      case KEY_LIST:
+        table_id_count(eid, &status, KEY, &list_num);
+        if (status != OK)
+        {
+          pelz_log(LOG_DEBUG, "Error retrieving Key Table count.");
+          break;
+        }
+
+        sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
+        if (write_to_pipe(tokens[2], resp))
+        {
+           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
+
+        for (count = 0; count < list_num; count++)
+        {
+          sleep(0.02);
+          table_id(eid, &status, KEY, count, &id);
+          if (status != OK)
+          {
+            pelz_log(LOG_DEBUG, "Error retrieving Key Table <ID> from index %d.", count);
+            continue;
+          }
+
+          sprintf(resp, "%.*s", (int) id.len, id.chars);
+          if (write_to_pipe(tokens[2], resp))
+          {
+            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+          }
+        }
+        sleep (0.02);
+        if (write_to_pipe(tokens[2], (char *) "END"))
+        {
+          pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
+        break;
+      case SERVER_LIST:
+        table_id_count(eid, &status, SERVER, &list_num);
+        if (status != OK)
+        {
+          pelz_log(LOG_DEBUG, "Error retrieving Server Table count.");
+          break;
+        }
+
+        sprintf(resp, "%s (%d)", resp_str[ret], (int) list_num);
+        if (write_to_pipe(tokens[2], resp))
+        {
+           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
+
+        for (count = 0; count < list_num; count++)
+        {
+          sleep(0.02);
+          table_id(eid, &status, SERVER, count, &id);
+          if (status != OK)
+          {
+            pelz_log(LOG_DEBUG, "Error retrieving Server Table <ID> from index %d.", count);
+            continue;
+          }
+
+          sprintf(resp, "%.*s", (int) id.len, id.chars);
+          if (write_to_pipe(tokens[2], resp))
+          {
+            pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+          }
+        }
+        sleep (0.02);
+        if (write_to_pipe(tokens[2], (char *) "END"))
+        {
+          pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
+        break;
+      default:
+        if (write_to_pipe(tokens[2], (char *) resp_str[ret]))
+        {
+           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
+        sleep (0.02);
+        if (write_to_pipe(tokens[2], (char *) "END"))
+        {
+          pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
+        }
     }
 
+    //Free the tokens
     for (size_t i = 0; i < num_tokens; i++)
     {
       free(tokens[i]);
     }
     free(tokens);
     pthread_mutex_unlock(&lock);
-    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == KEK_TAB_INIT_FAIL || ret == CERT_TAB_DEST_FAIL)
+    
+    if (ret == EXIT || ret == KEK_TAB_DEST_FAIL || ret == CERT_TAB_DEST_FAIL)
     {
       break;
     }

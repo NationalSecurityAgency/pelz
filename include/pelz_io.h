@@ -4,13 +4,37 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 
-#define PELZSERVICEIN "/tmp/pelzServiceIn"
-#define PELZSERVICEOUT "/tmp/pelzServiceOut"
+#define PELZSERVICE "/tmp/pelzService"
+#define PELZINTERFACE "/tmp/pelzInterface"
 
 typedef enum
-{ INVALID, EXIT, UNABLE_RD_F, TPM_UNSEAL_FAIL, SGX_UNSEAL_FAIL, ADD_CERT_FAIL, LOAD_CERT, INVALID_EXT_CERT,
-  ADD_PRIV_FAIL, LOAD_PRIV, INVALID_EXT_PRIV, RM_CERT_FAIL, RM_CERT, CERT_TAB_DEST_FAIL, RM_ALL_CERT, RM_KEK_FAIL,
-  RM_KEK, KEK_TAB_DEST_FAIL, KEK_TAB_INIT_FAIL, RM_KEK_ALL, ERR_CHARBUF, X509_FAIL
+{ INVALID,             //Invalid pipe command received by pelz-service.
+  EXIT,                //Successfully initiated termination of pelz-service.
+  UNABLE_RD_F,         //Unable to read file
+  TPM_UNSEAL_FAIL,     //TPM unseal faile
+  SGX_UNSEAL_FAIL,     //SGX unseal failed
+  ADD_CERT_FAIL,       //Failure to add cert
+  LOAD_CERT,           //Successfully loaded certificate file into pelz-service.
+  INVALID_EXT_CERT,    //Invalid certificate file, unable to load.
+  ADD_PRIV_FAIL,       //Failure to add private
+  LOAD_PRIV,           //Successfully loaded private key into pelz-service.
+  INVALID_EXT_PRIV,    //Invalid private key file, unable to load.
+  RM_CERT_FAIL,        //Failure to remove cert
+  RM_CERT,             //Removed cert
+  CERT_TAB_DEST_FAIL,  //Server Table Destroy Failure
+  RM_ALL_CERT,         //All certs removed
+  RM_KEK_FAIL,         //Failure to remove key
+  RM_KEK,              //Removed key
+  KEK_TAB_DEST_FAIL,   //Key Table Destroy Failure
+  RM_KEK_ALL,          //All keys removed
+  ERR_CHARBUF,         //Charbuf creation error.
+  X509_FAIL,           //Unable to load file. Files must originally be in the DER format prior to sealing.
+  RM_PRIV_FAIL,        //Failure to remove private pkey
+  RM_PRIV,             //Removed private pkey
+  NO_KEY_LIST,         //No entries in Key Table.
+  KEY_LIST,            //Key Table List: list
+  NO_SERVER_LIST,      //No entries in Server Table.
+  SERVER_LIST          //PKI Certificate List: list
 } ParseResponseStatus;
 
 typedef enum
@@ -80,6 +104,17 @@ extern "C"
 
 /**
  * <pre>
+ * Reads a message from the interface FIFO pipe
+ * </pre>
+ *
+ * @param[in] pipe The FIFO pipe name
+ *
+ * @return 0 if success, 1 if error
+ */
+  int read_listener(char *pipe);
+
+/**
+ * <pre>
  * Splits a message on the pelz pipe into tokens. Assumes a delimiter of ' '
  * </pre>
  *
@@ -108,15 +143,15 @@ extern "C"
 
 /**
  * <pre>
- * Send the specified command msg over send_pipe and waits to receive a
- * response on receive_pipe.
+ * Removes a FIFO pipe
  * </pre>
  *
- * @param[in] msg          Null-terminated message to send.
+ * @param[in] name The FIFO pipe name
  *
- * @return 0 on success, 1 on error
+ * @return 0 if success, 1 if error
  */
-  int pelz_send_command(char *msg);
+  int remove_pipe(char *name);
+
 #ifdef __cplusplus
 }
 #endif
