@@ -183,3 +183,46 @@ TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
   }
   return NO_MATCH;
 }
+
+TableResponseStatus table_id_count(TableType type, size_t *count)
+{
+  Table *table;
+
+  switch (type)
+  {
+  case KEY:
+    table = &key_table;
+    break;
+  case SERVER:
+    table = &server_table;
+    break;
+  default:
+    return ERR;
+  }
+
+  *count = table->num_entries;
+  return OK;
+}
+
+TableResponseStatus table_id(TableType type, int index, charbuf *id)
+{
+  Table *table;
+
+  switch (type)
+  {
+  case KEY:
+    table = &key_table;
+    break;
+  case SERVER:
+    table = &server_table;
+    break;
+  default:
+    return ERR;
+  }
+
+  id->len = table->entries[index].id.len;
+  ocall_malloc(id->len, &id->chars);
+  memcpy(id->chars, table->entries[index].id.chars, id->len);
+  return OK;
+}
+
