@@ -182,12 +182,10 @@ endif
 Crypto_Library_Name := sgx_tcrypto
 
 Enclave_Include_Paths := -Iinclude 
-Enclave_Include_Paths += -Isgx/include 
+Enclave_Include_Paths += -Isgx 
 Enclave_Include_Paths += -I$(SGX_SDK)/include 
 Enclave_Include_Paths += -I$(SGX_SDK)/include/tlibc 
-Enclave_Include_Paths += -I$(SGX_SDK)/include/stlport 
 Enclave_Include_Paths += -I$(SGX_SSL_INCLUDE_PATH) 
-Enclave_Include_Paths += -Isgx 
 Enclave_Include_Paths += -I/usr/local/include
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/util
@@ -358,11 +356,11 @@ sgx/test_enclave_u.o: test/include/test_enclave_u.c
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Files) \
 			   $(App_Cpp_Kmyth_Files) \
-                           sgx/test_enclave_u.o \
-                           sgx/ec_key_cert_unmarshal.o \
-                           sgx/log_ocall.o \
-                           sgx/ecdh_ocall.o \
-                           sgx/ecdh_util.o \
+				 sgx/test_enclave_u.o \
+				 sgx/ec_key_cert_unmarshal.o \
+				 sgx/log_ocall.o \
+				 sgx/ecdh_ocall.o \
+				 sgx/ecdh_util.o \
 			   sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
@@ -449,20 +447,20 @@ sgx/test_enclave_t.o: test/include/test_enclave_t.c
 	@echo "CC   <=  $<"
 
 sgx/kmyth_enclave_seal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_seal.cpp
-	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CC   <=  $<"
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CXX   <=  $<"
 
 sgx/kmyth_enclave_unseal.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_unseal.cpp
-	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CC   <=  $<"
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CXX   <=  $<"
 
 sgx/kmyth_enclave_memory_util.o: kmyth/sgx/trusted/src/util/kmyth_enclave_memory_util.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/kmyth_enclave_retrieve_key.o: kmyth/sgx/trusted/src/ecall/kmyth_enclave_retrieve_key.cpp
-	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CC   <=  $<"
+	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CXX   <=  $<"
 
 sgx/sgx_retrieve_key_impl.o: kmyth/sgx/trusted/src/wrapper/sgx_retrieve_key_impl.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
@@ -481,32 +479,28 @@ sgx/kmip_util.o: kmyth/src/protocol/kmip_util.c
 	@echo "CC   <=  $<"
 
 sgx/common_table.o: src/util/common_table.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <=  $<"
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
 
 sgx/key_table.o: src/util/key_table.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <=  $<"
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
 
 sgx/server_table.o: src/util/server_table.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <=  $<"
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
 
 sgx/aes_keywrap_3394nopad.o: src/util/aes_keywrap_3394nopad.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <=  $<"
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
 
 sgx/pelz_request_handler.o: src/util/pelz_request_handler.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <=  $<"
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
 
 sgx/charbuf.o: src/util/charbuf.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <=  $<"
-
-sgx/util.o: src/util/util.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <= $<"
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
 
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
@@ -515,9 +509,8 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/aes_keywrap_3394nopad.o \
 		     sgx/pelz_request_handler.o \
 		     sgx/charbuf.o \
-		     sgx/util.o \
 		     sgx/kmyth_enclave_seal.o \
-	     	     sgx/kmyth_enclave_unseal.o \
+				 sgx/kmyth_enclave_unseal.o \
 		     sgx/kmyth_enclave_memory_util.o \
 		     sgx/kmyth_enclave_retrieve_key.o \
 		     sgx/ec_key_cert_unmarshal.o \
@@ -540,17 +533,16 @@ sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@echo "SIGN =>  $@"
 
 sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
-	@$(CXX) $(Enclave_Cpp_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CXX  <= $<"
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <= $<"
 
 sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
-			  sgx/common_table.o \
+						sgx/common_table.o \
      			  sgx/key_table.o \
      			  sgx/server_table.o \
      			  sgx/aes_keywrap_3394nopad.o \
      			  sgx/pelz_request_handler.o \
      			  sgx/charbuf.o \
-     			  sgx/util.o \
      			  sgx/kmyth_enclave_seal.o \
      			  sgx/kmyth_enclave_unseal.o \
      			  sgx/kmyth_enclave_memory_util.o \
