@@ -18,13 +18,14 @@
 #include "pelz_log.h"
 #include "pelz_io.h"
 #include "charbuf.h"
+#include "seal.h"
+#include "cmd_interface.h"
 
 #include "pelz_enclave.h"
 #include "sgx_seal_unseal_impl.h"
 
 sgx_enclave_id_t eid = 0;
 
-#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 #define BUFSIZE 1024
 #define MODE 0600
 
@@ -117,6 +118,7 @@ int main(int argc, char **argv)
   int arg_index = 0;
   bool all = false;
   bool tpm = false;
+  bool out = false;
   char *outPath = NULL;
   size_t outPath_size = 0;
   char *msg = NULL;
@@ -147,7 +149,8 @@ int main(int argc, char **argv)
       all = true;
       arg_index = arg_index + 1;
       break;
-    case 'o':
+    case 'o':      
+      out = true;
       outPath_size = strlen(optarg) + 1;
       if (outPath_size > 1)
       {
@@ -249,7 +252,6 @@ int main(int argc, char **argv)
       else
       {
         keytable_usage();
-        free(outPath);
         remove_pipe(fifo_name);
         return 1;
       }
@@ -282,7 +284,6 @@ int main(int argc, char **argv)
       else
       {
         keytable_usage();
-        free(outPath);
         remove_pipe(fifo_name);
         return 1;
       }
@@ -292,7 +293,6 @@ int main(int argc, char **argv)
     else
     {
       keytable_usage();
-      free(outPath);
       remove_pipe(fifo_name);
       return 1;
     }
@@ -321,7 +321,6 @@ int main(int argc, char **argv)
           if (file_check(argv[arg_index + 4]))
           {
             pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
-            free(outPath);
             remove_pipe(fifo_name);
             return 1;
           }
@@ -345,7 +344,6 @@ int main(int argc, char **argv)
         else
         {
           pki_usage();
-          free(outPath);
           remove_pipe(fifo_name);
           return 1;
         }
@@ -364,7 +362,6 @@ int main(int argc, char **argv)
           if (file_check(argv[arg_index + 4]))
           {
             pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
-            free(outPath);
             remove_pipe(fifo_name);
             return 1;
           }
@@ -388,7 +385,6 @@ int main(int argc, char **argv)
         else
         {
           pki_usage();
-          free(outPath);
           remove_pipe(fifo_name);
           return 1;
         }
@@ -398,7 +394,6 @@ int main(int argc, char **argv)
       else
       {
         pki_usage();
-        free(outPath);
         remove_pipe(fifo_name);
         return 1;
       }
@@ -437,7 +432,6 @@ int main(int argc, char **argv)
         else
         {
           pki_usage();
-          free(outPath);
           remove_pipe(fifo_name);
           return 1;
         }
@@ -447,7 +441,6 @@ int main(int argc, char **argv)
       else
       {
         pki_usage();
-        free(outPath);
         remove_pipe(fifo_name);
         return 1;
       }
@@ -520,7 +513,6 @@ int main(int argc, char **argv)
       else
       {
         pki_usage();
-        free(outPath);
         remove_pipe(fifo_name);
         return 1;
       }
@@ -530,7 +522,6 @@ int main(int argc, char **argv)
     else
     {
       pki_usage();
-      free(outPath);
       remove_pipe(fifo_name);
       return 1;
     }
@@ -544,208 +535,32 @@ int main(int argc, char **argv)
     {
       pelz_log(LOG_DEBUG, "Seal <path> option");
 
-      // Verify input path exists with read permissions
-      if (verifyInputFilePath(argv[arg_index + 2]))
+      if (seal(argv[arg_index + 2], &outPath, outPath_size, tpm))
       {
-        pelz_log(LOG_ERR, "input path (%s) is not valid ... exiting", argv[arg_index + 2]);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-
-      uint8_t *data = NULL;
-      size_t data_len = 0;
-
-      if (read_bytes_from_file(argv[arg_index + 2], &data, &data_len))
-      {
-        pelz_log(LOG_ERR, "seal input data file read error ... exiting");
-        free(data);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-      pelz_log(LOG_DEBUG, "read in %d bytes of data to be wrapped", data_len);
-
-      // validate non-empty plaintext buffer specified
-      if (data_len == 0 || data == NULL)
-      {
-        pelz_log(LOG_ERR, "no input data ... exiting");
-        free(data);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-
-      sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
-
-      uint8_t *sgx_seal = NULL;
-      size_t sgx_seal_len = 0;
-      uint16_t key_policy = SGX_KEYPOLICY_MRSIGNER;
-      sgx_attributes_t attribute_mask;
-
-      attribute_mask.flags = 0;
-      attribute_mask.xfrm = 0;
-
-      if (kmyth_sgx_seal_nkl(eid, data, data_len, &sgx_seal, &sgx_seal_len, key_policy, attribute_mask))
-      {
-        pelz_log(LOG_ERR, "SGX seal failed");
-        sgx_destroy_enclave(eid);
-        free(data);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-
-      sgx_destroy_enclave(eid);
-      free(data);
-
-      uint8_t *tpm_seal = NULL;
-      size_t tpm_seal_len = 0;
-
-      if (tpm)
-      {
-        char *authString = NULL;
-        size_t auth_string_len = 0;
-        const char *ownerAuthPasswd = "";
-        size_t oa_passwd_len = 0;
-        char *cipherString = NULL;
-        int *pcrs = NULL;
-        int pcrs_len = 0;
-
-        if (tpm2_kmyth_seal(sgx_seal, sgx_seal_len, &tpm_seal, &tpm_seal_len, (uint8_t *) authString, auth_string_len,
-            (uint8_t *) ownerAuthPasswd, oa_passwd_len, pcrs, pcrs_len, cipherString))
+        pelz_log(LOG_ERR, "Error seal function");
+        if(outPath != NULL && outPath_size == 0)
         {
-          pelz_log(LOG_ERR, "Kmyth TPM seal failed");
-          free(pcrs);
-          free(sgx_seal);
           free(outPath);
-          free(tpm_seal);
-          remove_pipe(fifo_name);
-          return 1;
         }
-        free(pcrs);
-        free(sgx_seal);
+        return 1;
       }
-
-      if ((outPath != NULL) && (outPath_size != 0))
-      {
-        if (tpm)
-        {
-          if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
-            free(outPath);
-            free(tpm_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(tpm_seal);
-        }
-        else
-        {
-          if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
-            free(outPath);
-            free(sgx_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(sgx_seal);
-        }
-      }
-      else
-      {
-        char *ext;
-        const char *TPM_EXT = ".ski";
-        const char *NKL_EXT = ".nkl";
-
-        if (tpm)
-        {
-          ext = (char *) TPM_EXT;
-        }
-        else
-        {
-          ext = (char *) NKL_EXT;
-        }
-
-        // If output file not specified, set output path to basename(inPath) with
-        // a .nkl extension in the directory that the application is being run from.
-        char *original_fn = basename(argv[arg_index + 2]);
-
-        outPath = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
-
-        // Make sure resultant default file name does not have empty basename
-        if (outPath == NULL)
-        {
-          pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
-          free(outPath);
-          remove_pipe(fifo_name);
-          return 1;
-        }
-
-        memcpy(outPath, original_fn, strlen(original_fn));
-        memcpy(&outPath[strlen(original_fn)], ext, (strlen(ext) + 1));
-
-        // Make sure default filename we constructed doesn't already exist
-        struct stat st = {
-          0
-        };
-        if (!stat(outPath, &st))
-        {
-          pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", outPath);
-          free(outPath);
-          remove_pipe(fifo_name);
-          return 1;
-        }
-
-        pelz_log(LOG_DEBUG, "output file not specified, default = %s", outPath);
-        if (tpm)
-        {
-          if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
-            free(outPath);
-            free(tpm_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(tpm_seal);
-        }
-        else
-        {
-          if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
-            free(outPath);
-            free(sgx_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(sgx_seal);
-        }
-      }
+      fprintf(stdout, "Successfully sealed contents to file: %s\n", outPath);
+      free(outPath);
     }
-    //If seal command is invalid then print seal usage for user
     else
     {
       seal_usage();
-      free(outPath);
       remove_pipe(fifo_name);
       return 1;
     }
-    fprintf(stdout, "Successfully sealed contents to file: %s\n", outPath);
   }
   //If command invalid then print usage for user
   else
   {
     usage(argv[0]);
-    free(outPath);
     remove_pipe(fifo_name);
     return 1;
   }
-
-  free(outPath);
   remove_pipe(fifo_name);  
   return 0;
 }
