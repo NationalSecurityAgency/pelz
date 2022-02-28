@@ -1,18 +1,27 @@
 #ifndef _CMD_INTERFACE_PELZ_H_
 #define _CMD_INTERFACE_PELZ_H_
 
+typedef enum
+{ EMPTY,    //NULL value
+  SEAL,     
+  EX,       //Exit     
+  KEYTABLE, 
+  PKI,      
+  REMOVE,   
+  LIST,     
+  LOAD,     
+  CERT,     
+  PRIVATE,  
+  OTHER     //Non-null vlue other then the ones listed above
+}CmdArgValue;
+
 /**
- * @brief Loads a .nkl or .ski file into the enclave data table. Based on the file
- * type the function will call pelz_unseal_ski and/or pelz_unseal_nkl to unseal the
- * data and load it into the enclave data table at location based on handle value.
+ * @brief Checks the command line argument for valid command entry
  *
- * @param[in]   filename  The filename in a null-terminated string
- * @param[out]  handle    The handle value for the data location in the kmyth unseal data table
+ * @param[in]   arg  The command line argument to be validated
  *
- * @returns 0 on success, 1 on error
+ * @returns CmdArgValue
  */
-  //int pelz_load_file_to_enclave(char *filename, uint64_t * handle);
+  CmdArgValue check_arg(char *arg);
 
-int parse_interface_cmd();
 #endif
-
