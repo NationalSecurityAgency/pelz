@@ -24,4 +24,39 @@ typedef enum
  */
   CmdArgValue check_arg(char *arg);
 
+/**
+ * @brief Creates and sends message then listens for reponce on pipe provided.
+ *
+ * @param[in]   pipe      The pipe to receive a responce on
+ * @param[in]   pipe_len  The charater length of the pipe value
+ * @param[in]   cmd       The value of the command to be sent on the pipe
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int msg_simple(char *pipe, int pipe_len, int cmd);
+
+/**
+ * @brief Creates and sends message then listens for reponce on pipe provided.
+ *        Message includes an agrument to be passed to the service.
+ *
+ * @param[in]   pipe      The pipe to receive a responce on
+ * @param[in]   pipe_len  The charater length of the pipe value
+ * @param[in]   cmd       The value of the command to be sent on the pipe
+ * @param[in]   arg       The command line argument to sent on the pipe
+ * @param[in]   arg_len   The charater length of the arguemnt to be sent
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len);
+
+/**
+ * @brief Creates and sends message then listens for a list of reponces on pipe provided.
+ *
+ * @param[in]   pipe      The pipe to receive a responce on
+ * @param[in]   pipe_len  The charater length of the pipe value
+ * @param[in]   cmd       The value of the command to be sent on the pipe
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int msg_list(char *pipe, int pipe_len, int cmd);
 #endif

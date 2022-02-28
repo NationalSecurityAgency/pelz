@@ -3,9 +3,12 @@
  */
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
+#include <stdio.h>
 
-#include "pelz_log.h"
 #include "cmd_interface.h"
+#include "pelz_log.h"
+#include "pelz_io.h"
 
 CmdArgValue check_arg(char *arg)
 {
@@ -70,4 +73,54 @@ CmdArgValue check_arg(char *arg)
   }
 
   return OTHER;        
+}
+
+int msg_simple(char *pipe, int pipe_len, int cmd)
+{
+  //Create message to be sent to service through pipe
+  char *msg = (char *) calloc((8 + pipe_len), sizeof(char));    
+  sprintf(msg, "pelz %d %.*s", cmd, pipe_len, pipe);      
+  pelz_log(LOG_DEBUG, "Message: %s", msg);      
+  write_to_pipe((char*) PELZSERVICE, msg);      
+  free(msg);      
+  if (read_listener(pipe))      
+  {
+    pelz_log(LOG_DEBUG, "Error read from pipe.");    
+    return 1;     
+  }      
+  return 0;
+}
+
+int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
+{
+  //Create message to be sent to service through pipe
+  char *msg = (char *) calloc((8 + pipe_len + arg_len), sizeof(char));
+  sprintf(msg, "pelz %d %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg);
+  pelz_log(LOG_DEBUG, "Message: %s", msg);
+  write_to_pipe((char*) PELZSERVICE, msg);
+  free(msg);
+  if (read_listener(pipe))
+  {
+    pelz_log(LOG_DEBUG, "Error read from pipe.");
+    return 1;
+  }
+  return 0;
+}
+
+int msg_list(char *pipe, int pipe_len, int cmd)
+{
+  //Create message to be sent to service through pipe
+  char *msg = (char *) calloc((8 + pipe_len), sizeof(char));
+  sprintf(msg, "pelz %d %.*s", cmd, pipe_len, pipe);
+  pelz_log(LOG_DEBUG, "Message: %s", msg);
+  write_to_pipe((char*) PELZSERVICE, msg);
+  free(msg);
+  do
+  {
+    if (read_listener(pipe))
+    {
+      break;
+    }
+  } while (1);
+  return 0;
 }

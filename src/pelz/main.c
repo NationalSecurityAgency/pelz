@@ -116,14 +116,12 @@ int main(int argc, char **argv)
   int options;
   int option_index;
   int arg_index = 0;
-  int cmd;
-  CmdArgValue cmd_arg[5] = { EMPTY, EMPTY, EMPTY, EMPTY, EMPTY };
+  int cmd; CmdArgValue cmd_arg[5] = { EMPTY, EMPTY, EMPTY, EMPTY, EMPTY };
   bool all = false;
   bool tpm = false;
   bool out = false;
   char *outPath = NULL;
   size_t outPath_size = 0;
-  char *msg = NULL;
 
   if (argc == 1)
   {
@@ -348,139 +346,43 @@ int main(int argc, char **argv)
       break;
     case 1:
       //Execute the exit command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-      sprintf(msg, "pelz %d %.*s", cmd, (int) fifo_name_len, fifo_name);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_simple(fifo_name, fifo_name_len, cmd);
       break;
     case 2:
       //Execute the keytable remove <ID> command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
-      sprintf(msg, "pelz %d %.*s %.*s", cmd, (int) fifo_name_len, fifo_name, (int) strlen(argv[arg_index + 3]), argv[arg_index + 3]);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
       break;
     case 3:
       //Execute the keytable remove all command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-      sprintf(msg, "pelz %d %.*s", cmd, (int) fifo_name_len, fifo_name);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_simple(fifo_name, fifo_name_len, cmd);
       break;
     case 4:
       //Execute the keytable list command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-      sprintf(msg, "pelz %d %.*s", cmd, (int) fifo_name_len, fifo_name);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      do
-      {
-        if (read_listener(fifo_name))
-        {
-          break;
-        }
-      } while (1);
+      msg_list(fifo_name, fifo_name_len, cmd);
       break;
     case 5:
       //Execute the pki load cert <path> command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
-      sprintf(msg, "pelz %d %.*s %.*s", cmd, (int) fifo_name_len, fifo_name, (int) strlen(argv[arg_index + 4]), argv[arg_index + 4]);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 4], (int) strlen(argv[arg_index + 4]));
       break;
     case 6:
       //Execute the pki load private <path> command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
-      sprintf(msg, "pelz %d %.*s %.*s", cmd, (int) fifo_name_len, fifo_name, (int) strlen(argv[arg_index + 4]), argv[arg_index + 4]);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 4], (int) strlen(argv[arg_index + 4]));
       break;
     case 7:
       //Execute the pki cert list command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-      sprintf(msg, "pelz %d %.*s", cmd, (int) fifo_name_len, fifo_name);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      do
-      {
-        if (read_listener(fifo_name))
-        {
-          break;
-        }
-      } while (1);
+      msg_list(fifo_name, fifo_name_len, cmd);
       break;
     case 8:
       //Execute the pki remove cert <CN> command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
-      sprintf(msg, "pelz %d %.*s %.*s", cmd, (int) fifo_name_len, fifo_name, (int) strlen(argv[arg_index + 3]), argv[arg_index + 3]);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
       break;
     case 9:
       //Execute the pki remove cert all command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-      sprintf(msg, "pelz %d %.*s", cmd, (int) fifo_name_len, fifo_name);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_simple(fifo_name, fifo_name_len, cmd);
       break;
     case 10:
       //Execute the pki remove private command
-      //Create message to be sent to service through pipe
-      msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-      sprintf(msg, "pelz %d %.*s", cmd, (int) fifo_name_len, fifo_name);
-      pelz_log(LOG_DEBUG, "Message: %s", msg);
-      write_to_pipe((char*) PELZSERVICE, msg);
-      free(msg);
-      if (read_listener(fifo_name))
-      {
-        pelz_log(LOG_DEBUG, "Error read from pipe.");
-      }
+      msg_simple(fifo_name, fifo_name_len, cmd);
       break;
     default:
       usage(argv[0]);
