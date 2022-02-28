@@ -116,7 +116,8 @@ int main(int argc, char **argv)
   int options;
   int option_index;
   int arg_index = 0;
-  int cmd; CmdArgValue cmd_arg[5] = { EMPTY, EMPTY, EMPTY, EMPTY, EMPTY };
+  int cmd; 
+  CmdArgValue cmd_arg[5] = { EMPTY, EMPTY, EMPTY, EMPTY, EMPTY };
   bool all = false;
   bool tpm = false;
   bool out = false;
