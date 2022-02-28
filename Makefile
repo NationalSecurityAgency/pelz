@@ -323,7 +323,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 				 sgx/log_ocall.o \
 				 sgx/ecdh_ocall.o \
 				 sgx/ecdh_util.o \
-			   sgx/memory_ocall.o
+				 sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
