@@ -318,12 +318,12 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Files) \
 			   $(App_Cpp_Kmyth_Files) \
-				 sgx/pelz_enclave_u.o \
-				 sgx/ec_key_cert_unmarshal.o \
-				 sgx/log_ocall.o \
-				 sgx/ecdh_ocall.o \
-				 sgx/ecdh_util.o \
-				 sgx/memory_ocall.o
+			   sgx/pelz_enclave_u.o \
+			   sgx/ec_key_cert_unmarshal.o \
+			   sgx/log_ocall.o \
+			   sgx/ecdh_ocall.o \
+			   sgx/ecdh_util.o \
+			   sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -358,15 +358,15 @@ bin/$(App_Name_Service): $(App_Service_File) \
 
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      $(App_Cpp_Files) \
-					src/util/cmd_interface.c \
-					src/util/seal.c \
+		      src/util/cmd_interface.c \
+		      src/util/seal.c \
 		      $(App_Cpp_Kmyth_Files) \
 		      sgx/pelz_enclave_u.o \
 		      sgx/ec_key_cert_unmarshal.o \
 		      sgx/log_ocall.o \
 		      sgx/ecdh_ocall.o \
-					sgx/ecdh_util.o \
-					sgx/memory_ocall.o 
+		      sgx/ecdh_util.o \
+		      sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -387,7 +387,7 @@ sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
 				  --search-path ../kmyth/sgx/trusted \
-					--search-path ../test/include 
+				  --search-path ../test/include 
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
@@ -467,7 +467,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/charbuf.o \
 		     sgx/util.o \
 		     sgx/kmyth_enclave_seal.o \
-				 sgx/kmyth_enclave_unseal.o \
+		     sgx/kmyth_enclave_unseal.o \
 		     sgx/kmyth_enclave_memory_util.o \
 		     sgx/kmyth_enclave_retrieve_key.o \
 		     sgx/ec_key_cert_unmarshal.o \
