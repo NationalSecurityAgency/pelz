@@ -8,7 +8,7 @@
  *
  * @param[in]   filename     The filename in a null-terminated string
  * @param[in]   outpath      The filename for the written output sealed data
- * @param[in]   outpath_size The outpath charater size
+ * @param[in]   outpath_size The outpath character size
  * @param[in]   tpm          The boolen to determine to use seal_ski
  * @param[out]  outpath      The determined default filename for the written output sealed data
  *
@@ -56,7 +56,7 @@
  *
  * @param[in]   filename      The input path of the sealed data
  * @param[in]   outpath       The specified path for writing the output 
- * @param[in]   outpath_size  The lenght size of the output path charaters
+ * @param[in]   outpath_size  The lenght size of the output path characters
  * @param[in]   tpm           The boolen to determine to use ski extention
  * @param[out]  outpath       The determined default specified path for writing the output
  *

@@ -12,7 +12,7 @@ typedef enum
   LOAD,     
   CERT,     
   PRIVATE,  
-  OTHER     //Non-null vlue other then the ones listed above
+  OTHER     //Non-null value other then the ones listed above
 }CmdArgValue;
 
 /**
@@ -27,8 +27,8 @@ typedef enum
 /**
  * @brief Creates and sends message then listens for reponce on pipe provided.
  *
- * @param[in]   pipe      The pipe to receive a responce on
- * @param[in]   pipe_len  The charater length of the pipe value
+ * @param[in]   pipe      The pipe to receive a response on
+ * @param[in]   pipe_len  The character length of the pipe value
  * @param[in]   cmd       The value of the command to be sent on the pipe
  *
  * @returns 0 on success, 1 on error
@@ -39,11 +39,11 @@ typedef enum
  * @brief Creates and sends message then listens for reponce on pipe provided.
  *        Message includes an agrument to be passed to the service.
  *
- * @param[in]   pipe      The pipe to receive a responce on
- * @param[in]   pipe_len  The charater length of the pipe value
+ * @param[in]   pipe      The pipe to receive a response on
+ * @param[in]   pipe_len  The character length of the pipe value
  * @param[in]   cmd       The value of the command to be sent on the pipe
  * @param[in]   arg       The command line argument to sent on the pipe
- * @param[in]   arg_len   The charater length of the arguemnt to be sent
+ * @param[in]   arg_len   The character length of the arguemnt to be sent
  *
  * @returns 0 on success, 1 on error
  */
@@ -52,8 +52,8 @@ typedef enum
 /**
  * @brief Creates and sends message then listens for a list of reponces on pipe provided.
  *
- * @param[in]   pipe      The pipe to receive a responce on
- * @param[in]   pipe_len  The charater length of the pipe value
+ * @param[in]   pipe      The pipe to receive a response on
+ * @param[in]   pipe_len  The character length of the pipe value
  * @param[in]   cmd       The value of the command to be sent on the pipe
  *
  * @returns 0 on success, 1 on error
