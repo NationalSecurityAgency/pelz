@@ -52,7 +52,7 @@ int seal(char *filename, char **outpath, size_t outpath_size, bool tpm)
     free(sgx_seal);
   }
 
-  //Checking and/or seting output path
+  //Checking and/or setting output path
   if (outpath_validate(filename, outpath, outpath_size, tpm))
   {
     return 1;
@@ -194,7 +194,7 @@ int outpath_create(char *filename, char **outpath, bool tpm)
     ext = (char *) NKL_EXT;
   }
 
-  // If output file not specified, set output path to basename(inPath) with
+  // If output file not specified, set output path to basename(filename) with
   // a extension in the directory that the application is being run from.
   char *original_fn = basename(filename);
 

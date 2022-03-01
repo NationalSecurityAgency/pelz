@@ -103,7 +103,7 @@ const struct option longopts[] = {
   {0, 0, 0, 0}
 };
 
-//Main function for the Pelz Service application
+//Main function for the pelz command interface application
 int main(int argc, char **argv)
 {
   set_app_name("pelz");
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  //While function to options from command line
+  //While function to go thru options from command line
   while ((options = getopt_long(argc, argv, "hdato:", longopts, &option_index)) != -1)
   {
     switch (options)
@@ -315,16 +315,16 @@ int main(int argc, char **argv)
 
 /*
  *  0   seal                      Seal file at <path> provided
- *  1   exit                      Terminate running pelz-service
- *  2   keytable remove key       Removes a key with a specified id
+ *  1   exit                      Terminate running of pelz-service
+ *  2   keytable remove key       Removes a key with a specified <id>
  *  3   keytable remove all keys  Removes all keys
- *  4   keytable list             Outputs a list of key <id> in Key Table
+ *  4   keytable list             Outputs a list of keys <id> in Key Table
  *  5   pki load cert             Loads a server certificate
- *  6   pki load private          Loads a private key for connections to key servers
- *  7   pki cert list             Outputs a list of certificate <CN> in Server Table
+ *  6   pki load private          Loads a private pkey for connections to the key server
+ *  7   pki cert list             Outputs a list of certificates <CN> in Server Table
  *  8   pki remove cert           Removes a server certificate   
  *  9   pki remove all certs      Removes all server certificates
- *  10  pki remove cert           Removes the private key
+ *  10  pki remove cert           Removes the private pkey
  */
 
   switch (cmd)

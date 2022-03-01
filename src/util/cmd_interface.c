@@ -24,7 +24,7 @@ CmdArgValue check_arg(char *arg)
     return SEAL;
   }
 
-  //Checking for exit command then execution
+  //Checking for exit command
   if ((memcmp(arg, "exit", 4) == 0) && (strlen(arg) == 4))
   {
     return EX;
@@ -48,19 +48,19 @@ CmdArgValue check_arg(char *arg)
     return REMOVE;
   }
 
-  //Checking for keytable list command
+  //Checking for list command
   if ((memcmp(arg, "list", 4) == 0) && (strlen(arg) == 4))
   {
     return LIST;
   }
 
-  //Checking for pki load command
+  //Checking for load command
   if ((memcmp(arg, "load", 4) == 0) && (strlen(arg) == 4))
   {
     return LOAD;
   }
 
-  //Checking for pki cert command
+  //Checking for cert command
   if ((memcmp(arg, "cert", 4) == 0) && (strlen(arg) == 4))
   {
     return CERT;
@@ -77,7 +77,6 @@ CmdArgValue check_arg(char *arg)
 
 int msg_simple(char *pipe, int pipe_len, int cmd)
 {
-  //Create message to be sent to service through pipe
   char *msg = (char *) calloc((8 + pipe_len), sizeof(char));    
   sprintf(msg, "pelz %d %.*s", cmd, pipe_len, pipe);      
   pelz_log(LOG_DEBUG, "Message: %s", msg);      
@@ -93,7 +92,6 @@ int msg_simple(char *pipe, int pipe_len, int cmd)
 
 int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
 {
-  //Create message to be sent to service through pipe
   char *msg = (char *) calloc((8 + pipe_len + arg_len), sizeof(char));
   sprintf(msg, "pelz %d %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg);
   pelz_log(LOG_DEBUG, "Message: %s", msg);
@@ -109,7 +107,6 @@ int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
 
 int msg_list(char *pipe, int pipe_len, int cmd)
 {
-  //Create message to be sent to service through pipe
   char *msg = (char *) calloc((8 + pipe_len), sizeof(char));
   sprintf(msg, "pelz %d %.*s", cmd, pipe_len, pipe);
   pelz_log(LOG_DEBUG, "Message: %s", msg);
