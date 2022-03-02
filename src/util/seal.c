@@ -65,10 +65,6 @@ int seal(char *filename, char **outpath, size_t outpath_size, bool tpm)
     {
       pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
       free(tpm_seal);
-      if (*outpath != NULL && outpath_size == 0)
-      {
-        free(*outpath);
-      }
       return 1;
     }
     free(tpm_seal);
@@ -79,10 +75,6 @@ int seal(char *filename, char **outpath, size_t outpath_size, bool tpm)
     {
       pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
       free(sgx_seal);
-      if (*outpath != NULL && outpath_size == 0)
-      {
-        free(*outpath);
-      }
       return 1;
     }
     free(sgx_seal);
