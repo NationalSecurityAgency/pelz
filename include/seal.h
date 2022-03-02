@@ -3,7 +3,7 @@
 
 /**
  * @brief Reads a file then will call seal_ski and/or seal_nkl to seal the
- * data.  The sealed data will be written to a new file with the extention type
+ * data.  The sealed data will be written to a new file with the extension type
  * ski or nkl based on the final seal function called.
  *
  * @param[in]   filename     The filename in a null-terminated string
@@ -57,7 +57,7 @@
  * @param[in]   filename      The input path of the sealed data
  * @param[in]   outpath       The specified path for writing the output 
  * @param[in]   outpath_size  The character length of the output path
- * @param[in]   tpm           The boolen to determine if to use ski extention
+ * @param[in]   tpm           The boolen to determine if to use ski extension
  * @param[out]  outpath       The determined default or provided specified path for writing the output
  *
  * @returns 0 on success, 1 on error
@@ -68,7 +68,7 @@
  * @brief With no output path specified, determines the output path based on the input path.
  *
  * @param[in]   filename The input path of the sealed data
- * @param[in]   tpm      The boolen to determine to use ski extention
+ * @param[in]   tpm      The boolen to determine to use ski extension
  * @param[out]  outpath  The determined default specified path for writing the output
  *
  * @returns 0 on success, 1 on error
