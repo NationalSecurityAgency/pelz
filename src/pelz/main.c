@@ -347,7 +347,7 @@ int main(int argc, char **argv)
       break;
     case 1:
       //Execute the exit command
-      msg_simple(fifo_name, fifo_name_len, cmd);
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
     case 2:
       //Execute the keytable remove <ID> command
@@ -355,7 +355,7 @@ int main(int argc, char **argv)
       break;
     case 3:
       //Execute the keytable remove all command
-      msg_simple(fifo_name, fifo_name_len, cmd);
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
     case 4:
       //Execute the keytable list command
@@ -379,11 +379,11 @@ int main(int argc, char **argv)
       break;
     case 9:
       //Execute the pki remove cert all command
-      msg_simple(fifo_name, fifo_name_len, cmd);
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
     case 10:
       //Execute the pki remove private command
-      msg_simple(fifo_name, fifo_name_len, cmd);
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
     default:
       usage(argv[0]);

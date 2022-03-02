@@ -18,22 +18,11 @@ typedef enum
 /**
  * @brief Checks the command line argument for valid command entry
  *
- * @param[in]   arg  The command line argument to be validated
+ * @param[in]   arg  The null-terminated command line argument to be validated
  *
  * @returns CmdArgValue
  */
   CmdArgValue check_arg(char *arg);
-
-/**
- * @brief Creates and sends message then listens for response on the pipe provided.
- *
- * @param[in]   pipe      The pipe to receive a response on
- * @param[in]   pipe_len  The character length of the pipe value
- * @param[in]   cmd       The value of the command to be sent on the pipe
- *
- * @returns 0 on success, 1 on error
- */
-  int msg_simple(char *pipe, int pipe_len, int cmd);
 
 /**
  * @brief Creates and sends message then listens for response on the pipe provided.
