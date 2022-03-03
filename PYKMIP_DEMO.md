@@ -37,12 +37,12 @@ Installation of pelz (follow the installing and building pelz instruction to hav
 ### Certificate and PKey Creation/Installation Steps
 1.  Start in pelz directory after Proxy Server Setup
 
-    openssl x509 -in kmyth/sgx/demo/data/server_cert_test.pem -inform pem -out server_cert_test.der -outform der
-    openssl pkey -in kmyth/sgx/demo/data/client_priv_test.pem -inform pem -out client_priv_test.der -outform der
-    ./bin/pelz seal server_cert_test.der -o server_cert_test.der.nkl
-    ./bin/pelz seal client_priv_test.der -o client_priv_test.der.nkl
-    ./bin/pelz pki load cert server_cert_test.der.nkl
-    ./bin/pelz pki load private client_priv_test.der.nkl
+		openssl x509 -in kmyth/sgx/demo/data/server_cert_test.pem -inform pem -out server_cert_test.der -outform der
+		openssl pkey -in kmyth/sgx/demo/data/client_priv_test.pem -inform pem -out client_priv_test.der -outform der
+		./bin/pelz seal server_cert_test.der -o server_cert_test.der.nkl
+		./bin/pelz seal client_priv_test.der -o client_priv_test.der.nkl
+		./bin/pelz pki load cert server_cert_test.der.nkl
+		./bin/pelz pki load private client_priv_test.der.nkl
 
 ### End to End Demo Step
 1. Start test by running Accumulo
