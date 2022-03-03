@@ -84,23 +84,12 @@ int seal(char *filename, char **outpath, size_t outpath_size, bool tpm)
 
 int seal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len)
 {
-  char *authString = NULL;
-  size_t auth_string_len = 0;
-  const char *ownerAuthPasswd = "";
-  size_t oa_passwd_len = 0;
-  char *cipherString = NULL;
-  int *pcrs = NULL;
-  int pcrs_len = 0;
-
   pelz_log(LOG_DEBUG, "Seal_ski function");
-  if (tpm2_kmyth_seal(data, data_len, data_out, data_out_len, (uint8_t *) authString, auth_string_len,
-      (uint8_t *) ownerAuthPasswd, oa_passwd_len, pcrs, pcrs_len, cipherString))
+  if (tpm2_kmyth_seal(data, data_len, data_out, data_out_len, NULL, 0, (uint8_t *) "", 0, NULL, 0, NULL))
   {
     pelz_log(LOG_ERR, "Kmyth TPM seal failed");
-    free(pcrs);
     return 1;
   }
-  free(pcrs);
   return (0);
 }
 
