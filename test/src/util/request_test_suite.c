@@ -18,7 +18,7 @@
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include ENCLAVE_HEADER_UNTRUSTED
+#include "test_enclave_u.h"
 
 // Adds all request handler tests to main test runner.
 int request_suite_add_tests(CU_pSuite suite)

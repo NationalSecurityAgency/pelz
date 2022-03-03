@@ -22,7 +22,8 @@
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include ENCLAVE_HEADER_UNTRUSTED
+#include "test_enclave_u.h"
+
 sgx_enclave_id_t eid = 0;
 
 #define ENCLAVE_PATH "sgx/pelz_test_enclave.signed.so"
