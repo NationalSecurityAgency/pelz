@@ -17,15 +17,13 @@ Installation of pelz (follow the installing and building pelz instruction to hav
 ### Certificate and PKey Creation/Installation Steps
 1.  Start in pelz directory
 
-		cd test/data/
-    ./gen_test_keys_certs.bash
-    cd ../..
-    openssl x509 -in test/data/server_cert_test.pem -inform pem -out test/data/server_cert_test.der -outform der
-    openssl pkey -in test/data/client_priv_test.pem -inform pem -out test/data/client_priv_test.der -outform der
-    ./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
-    ./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
-    ./bin/pelz pki load cert test/data/server_cert_test.der.nkl
-    ./bin/pelz pki load private test/data/client_priv_test.der.nkl
+		cd ./test/data/gen_test_keys_certs.bash
+		openssl x509 -in server_cert_test.pem -inform pem -out server_cert_test.der -outform der
+		openssl pkey -in client_priv_test.pem -inform pem -out client_priv_test.der -outform der
+		./bin/pelz seal server_cert_test.der -o server_cert_test.der.nkl
+		./bin/pelz seal client_priv_test.der -o client_priv_test.der.nkl
+		./bin/pelz pki load cert server_cert_test.der.nkl
+		./bin/pelz pki load private client_priv_test.der.nkl
 
 ### PyKMIP Server Installaiton/Setep Steps
 
