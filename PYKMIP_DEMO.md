@@ -1,15 +1,14 @@
-#MyKMIP Usage Demo
+# MyKMIP Usage Demo
 
-##Steps for End to End demo of MyKMIP, Accumulo, and pelz. 
+## Steps for End to End demo of MyKMIP, Accumulo, and pelz. 
 
-###Introduction
+### Introduction
 Starting, with Accumulo, sending pelz a FEK to be encrypted by a KEK from a MyKMIP key server.  Pelz gets the FEK and the UID for the KEK.  
 
 ### Pelz Installation Steps
 Installation of pelz (follow the installing and building pelz instruction to have pelz installed as a service from the INSTALL.md).
  * Ensure pelz is set to handle the expected socket connections. (Pelz default is 100 and Accumulo test does more then that)
  * Load the needed certs and pkeys. (See create and load cert steps)
-
 
 ### Accumulo and Accumulo Plugin Installation Steps 
 1. Download the Accumulo source code.
