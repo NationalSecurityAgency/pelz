@@ -37,8 +37,8 @@ cd ../..
 cd pelz/kmyth
 git submodule init
 git submodule update
-make libs
-sudo make install libs
+make 
+sudo make install
 make clean
 cd ..
 
