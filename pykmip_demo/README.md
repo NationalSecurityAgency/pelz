@@ -1,4 +1,4 @@
-# MyKMIP Usage Demo
+# PyKMIP Usage Demo
 
 ## Introduction
 Starting, with Accumulo, sending pelz a FEK to be encrypted by a KEK from a MyKMIP key server.  Pelz gets the FEK and the UID for the KEK.
@@ -26,15 +26,15 @@ SGX and TPM assumed to already be installed and working.
 ### PyKMIP Server Installaiton/Setep Steps
 4.  Run PyKMIP Script in a separate terminal
 
-    ./PyKMIP_setup.sh
+		./PyKMIP_setup.sh
 
 5.  Run the server in a separate terminal
 
-    pykmip-server
+		pykmip-server
 
 6.  Register keys with the server
 
-    ./register_keys_pykmip.sh
+		./register_keys_pykmip.sh
 
 
 ### Certificate and PKey Creation/Installation Steps
@@ -52,13 +52,13 @@ SGX and TPM assumed to already be installed and working.
 
 		./bin/pelz-service -m 200
 
-10.	Seal then load server certificate and client PKey
+9.	Seal then load server certificate and client PKey
 
 		./bin/pelz pki load cert test/data/server_cert_test.der.nkl
 		./bin/pelz pki load private test/data/client_priv_test.der.nkl
 
 ### Proxy Server Setep Steps
-11.	Build the proxy server in a separate terminal
+10.	Build the proxy server in a separate terminal
 
 		cd pelz/kmyth/sgx
 		make clean demo-all
@@ -66,7 +66,7 @@ SGX and TPM assumed to already be installed and working.
 		./kmyth/sgx/demo/bin/tls-proxy -r test/data/server_priv_test.pem -u test/data/client_cert_test.pem -p 7000 -I localhost -P 5696 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/client_key_john_doe.pem -U /etc/pykmip/certs/client_certificate_john_doe.pem
 
 ### End to End Demo Step
-12. Run Accumulo Test
+11. Run Accumulo Test
 
 		cd ../accumulo
 		mvn clean
