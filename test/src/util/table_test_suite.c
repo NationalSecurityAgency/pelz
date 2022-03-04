@@ -19,7 +19,7 @@
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include "test_enclave_u.h"
 #include "sgx_seal_unseal_impl.h"
 
 // Adds all table tests to main test runner.

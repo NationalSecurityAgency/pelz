@@ -11,7 +11,7 @@
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include ENCLAVE_HEADER_UNTRUSTED
 
 int pelz_load_key_from_file(char *filename, charbuf * key)
 {

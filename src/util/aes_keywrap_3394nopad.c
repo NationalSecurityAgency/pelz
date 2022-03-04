@@ -10,7 +10,7 @@
 #include <openssl/evp.h>
 
 #include "sgx_trts.h"
-#include "pelz_enclave_t.h"
+#include ENCLAVE_HEADER_TRUSTED
 
 //############################################################################
 // aes_keywrap_3394nopad_encrypt()
