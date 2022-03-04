@@ -43,4 +43,5 @@ make clean
 cd ..
 
 #Make pelz
+openssl genrsa -out sgx/pelz_enclave_private.pem -3 3072
 make
