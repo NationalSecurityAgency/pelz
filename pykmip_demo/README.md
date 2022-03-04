@@ -35,7 +35,7 @@ Installation of pelz (follow the installing and building pelz instruction to hav
 ### PyKMIP Server Installaiton/Setep Steps
 1.  Run PyKMIP Script (sudo based on your permissions) in a separate terminal
 
-		./PyKMIP_setup.sh
+		./pelz/pykmip/PyKMIP_setup.sh
 
 2.	Run the server in a separate terminal (sudo based on your permissions)
 
@@ -43,7 +43,7 @@ Installation of pelz (follow the installing and building pelz instruction to hav
 
 3.	Register keys with the server
 
-		./register_keys_pykmip.sh
+		./pelz/pykmip/register_keys_pykmip.sh
 
 ### Proxy Server Setep Steps
 1. Build the kmyth programs in a separate terminal

@@ -6,11 +6,11 @@ sudo apt-get upgrade
 sudo apt-get install python-dev python-pip python3-dev python3-pip libffi-dev libssl-dev libsqlite3-dev
 
 # Create PyKMIP directories
-sudo mkdir /var/log/pykmip /etc/pykmip/certs /etc/pykmip/policies
+sudo mkdir /var/log/pykmip /etc/pykmip /etc/pykmip/certs /etc/pykmip/policies
 sudo chown -R "${USER}" /var/log/pykmip /etc/pykmip
 
 # Install PyKMIP
-pip3 install pykmip
+sudo pip3 install pykmip
 
 # Generate certificates
 cd /etc/pykmip/certs
