@@ -16,7 +16,7 @@
 #include <pelz_log.h>
 
 #include "sgx_trts.h"
-#include "pelz_enclave_t.h"
+#include ENCLAVE_HEADER_TRUSTED
 #include "sgx_retrieve_key_impl.h"
 
 TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)

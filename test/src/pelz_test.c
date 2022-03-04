@@ -22,10 +22,11 @@
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include "test_enclave_u.h"
+
 sgx_enclave_id_t eid = 0;
 
-#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
+#define ENCLAVE_PATH "sgx/pelz_test_enclave.signed.so"
 
 // Blank Suite's init and cleanup code
 int init_suite(void)
