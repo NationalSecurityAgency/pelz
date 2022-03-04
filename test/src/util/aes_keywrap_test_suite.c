@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <CUnit/CUnit.h>
 
-#include "aes_keywrap_test.h"
+#include "aes_keywrap_test_suite.h"
 #include <pelz_log.h>
 
 #include "sgx_urts.h"
