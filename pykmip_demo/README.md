@@ -38,7 +38,7 @@ SGX and TPM assumed to already be installed and working.
 
 
 ### Certificate and PKey Creation/Installation Steps
-7.	Generate Certificates and PKeys for server and client
+7.	Generate Certificates and PKeys for server and client then seal
 
 		cd ../test/data
 		./gen_test_keys_certs.bash
@@ -46,13 +46,13 @@ SGX and TPM assumed to already be installed and working.
 		openssl pkey -in client_priv_test.pem -inform pem -out client_priv_test.der -outform der
 		cd ../..
 		./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
-		./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nk
+		./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
 
 8.	Run the pelz-service in a separate terminal
 
 		./bin/pelz-service -m 200
 
-9.	Seal then load server certificate and client PKey
+9.	Load server certificate and client PKey
 
 		./bin/pelz pki load cert test/data/server_cert_test.der.nkl
 		./bin/pelz pki load private test/data/client_priv_test.der.nkl
