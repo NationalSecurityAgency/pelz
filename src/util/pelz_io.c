@@ -360,6 +360,7 @@ int write_to_pipe(char *pipe, char *msg)
     pelz_log(LOG_DEBUG, "Error writing to pipe");
     return 1;
   }
+  pelz_log(LOG_DEBUG, "Wrote: %.*s", strlen(msg), msg);
   return 0;
 }
 
@@ -424,6 +425,8 @@ int read_listener(char *pipe)
   struct timeval timeout;
   int rv;
   char msg[BUFSIZE];
+  int line_start, line_len, i;
+  int bytes_read;
 
   int fd = open(pipe, O_RDONLY | O_NONBLOCK);
 
@@ -439,51 +442,65 @@ int read_listener(char *pipe)
   timeout.tv_sec = 5;
   timeout.tv_usec = 0;
 
-  rv = select(fd + 1, &set, NULL, NULL, &timeout);
-  if(rv == -1)
+  // Read from the pipe until we see an END terminator, get an error, or time out
+  while (true)
   {
-    pelz_log(LOG_DEBUG, "Error in timeout of pipe.");
-    fprintf(stdout, "Error in timeout of pipe.\n");
-    close(fd);
-    return 1;    
-  }
-  else if(rv == 0)
-  {
-    pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-    fprintf(stdout, "No response received from pelz-service.\n");
-    close(fd);
-    return 1;
-  }
-  else
-  {
-    int bytes_read = read(fd, msg, BUFSIZE);
-
-    if (bytes_read > 0)
+    rv = select(fd + 1, &set, NULL, NULL, &timeout);
+    if (rv == -1)
     {
-      if (bytes_read == 3 && memcmp(msg, "END", 3) == 0)
-      {
-        close(fd);
-        return 1;
-      }
-      else
-      {
-        pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
-        fprintf(stdout, "%.*s\n", bytes_read, msg);
-      }
-    }
-    else if (bytes_read < 0)
-    {
-      pelz_log(LOG_ERR, "Pipe read failed");
+      pelz_log(LOG_DEBUG, "Error in timeout of pipe.");
+      fprintf(stdout, "Error in timeout of pipe.\n");
       close(fd);
       return 1;
     }
-    else
+    else if (rv == 0)
     {
-      pelz_log(LOG_DEBUG, "No read of pipe");
+      pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+      fprintf(stdout, "No response received from pelz-service.\n");
+      close(fd);
+      return 1;
+    }
+
+    bytes_read = read(fd, msg, BUFSIZE);
+    if (bytes_read < 0)
+    {
+      pelz_log(LOG_ERR, "Pipe read failed");
+      perror("read");
+      close(fd);
+      return 1;
+    }
+
+    // The received data can contain multiple message components separated by newlines
+    line_start = 0;
+    for (i=0; i<bytes_read; i++)
+    {
+      if (msg[i] == '\n')
+      {
+        line_len = i - line_start;
+
+        if (line_len == 3 && memcmp(&msg[line_start], "END", 3) == 0)
+        {
+          pelz_log(LOG_DEBUG, "Got END message");
+          close(fd);
+          return 0;
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "%.*s", line_len, &msg[line_start]);
+          fprintf(stdout, "%.*s\n", line_len, &msg[line_start]);
+        }
+
+        line_start = i + 1;
+      }
+      else if (i == bytes_read - 1)
+      {
+        line_len = i - line_start;
+        pelz_log(LOG_ERR, "Incomplete response message - missing newline: %.*s.", line_len, &msg[line_start]);
+        close(fd);
+        return 1;
+      }
     }
   }
-  close(fd);
-  return 0;
 }
 
 int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, size_t message_length)

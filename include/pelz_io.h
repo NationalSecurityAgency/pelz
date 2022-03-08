@@ -104,7 +104,7 @@ extern "C"
 
 /**
  * <pre>
- * Reads a message from the interface FIFO pipe
+ * Reads a complete message from the interface FIFO pipe
  * </pre>
  *
  * @param[in] pipe The FIFO pipe name

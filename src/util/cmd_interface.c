@@ -82,12 +82,7 @@ int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
   pelz_log(LOG_DEBUG, "Message: %s", msg);
   write_to_pipe((char*) PELZSERVICE, msg);
   free(msg);
-  if (read_listener(pipe))
-  {
-    pelz_log(LOG_DEBUG, "Error read from pipe.");
-    return 1;
-  }
-  return 0;
+  return read_listener(pipe);
 }
 
 int msg_list(char *pipe, int pipe_len, int cmd)
@@ -97,12 +92,5 @@ int msg_list(char *pipe, int pipe_len, int cmd)
   pelz_log(LOG_DEBUG, "Message: %s", msg);
   write_to_pipe((char*) PELZSERVICE, msg);
   free(msg);
-  do
-  {
-    if (read_listener(pipe))
-    {
-      break;
-    }
-  } while (1);
-  return 0;
+  return read_listener(pipe);
 }
