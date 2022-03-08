@@ -413,28 +413,14 @@ int read_from_pipe(char *pipe, char **msg)
   return 0;
 }
 
-int read_listener(char *pipe)
+int read_listener(int fd)
 {
-  if (file_check(pipe))
-  {
-    pelz_log(LOG_ERR, "Pipe not found");
-    return 1;
-  }
-
   fd_set set;
   struct timeval timeout;
   int rv;
   char msg[BUFSIZE];
   int line_start, line_len, i;
   int bytes_read;
-
-  int fd = open(pipe, O_RDONLY | O_NONBLOCK);
-
-  if (fd == -1)
-  {
-    pelz_log(LOG_ERR, "Error opening pipe for reading");
-    return 1;
-  }
 
   FD_ZERO(&set);            // clear the set
   FD_SET(fd, &set);   // add file descriptor to the set
@@ -853,7 +839,18 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   return INVALID;
 }
 
-int remove_pipe (char *name)
+int open_read_pipe(char *name)
+{
+  if (file_check(name))
+  {
+    pelz_log(LOG_ERR, "Pipe not found");
+    return -1;
+  }
+
+  return open(name, O_RDONLY | O_NONBLOCK);
+}
+
+int remove_pipe(char *name)
 {
   //Exit and remove FIFO
   if (unlink(name) == 0)

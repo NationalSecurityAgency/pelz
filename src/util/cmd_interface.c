@@ -75,22 +75,48 @@ CmdArgValue check_arg(char *arg)
   return OTHER;        
 }
 
+static int msg_cmd(char *pipe, char *msg)
+{
+  int ret;
+
+  // Ensure the read side of the pipe is opened before the write side.
+  // Otherwise, the write side open would fail because it uses nonblocking mode.
+  int fd = open_read_pipe(pipe);
+  if (fd == -1)
+  {
+    pelz_log(LOG_ERR, "Error opening pipe for reading");
+    perror("open");
+    return 1;
+  }
+
+  pelz_log(LOG_DEBUG, "Message: %s", msg);
+  ret = write_to_pipe((char*) PELZSERVICE, msg);
+  if (ret) {
+    return ret;
+  }
+
+  ret = read_listener(fd);
+  return ret;
+}
+
 int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
 {
+  int ret;
   char *msg = (char *) calloc((10 + pipe_len + arg_len), sizeof(char));
+
   sprintf(msg, "pelz %d %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg);
-  pelz_log(LOG_DEBUG, "Message: %s", msg);
-  write_to_pipe((char*) PELZSERVICE, msg);
+  ret = msg_cmd(pipe, msg);
   free(msg);
-  return read_listener(pipe);
+  return ret;
 }
 
 int msg_list(char *pipe, int pipe_len, int cmd)
 {
+  int ret;
   char *msg = (char *) calloc((10 + pipe_len), sizeof(char));
+
   sprintf(msg, "pelz %d %.*s", cmd, pipe_len, pipe);
-  pelz_log(LOG_DEBUG, "Message: %s", msg);
-  write_to_pipe((char*) PELZSERVICE, msg);
+  ret = msg_cmd(pipe, msg);
   free(msg);
-  return read_listener(pipe);
+  return ret;
 }
