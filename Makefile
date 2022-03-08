@@ -100,12 +100,13 @@ App_Cpp_Files := src/util/charbuf.c \
 
 App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/util_test_suite.c \
-		 test/src/util/aes_keywrap_test.c \
+		 test/src/util/aes_keywrap_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
 		 test/src/util/test_helper_functions.c \
 		 test/src/util/test_pelz_uri_helpers.c \
 		 test/src/util/table_test_suite.c \
-		 test/src/util/request_test_suite.c
+		 test/src/util/request_test_suite.c \
+		 test/src/util/cmd_interface_test_suite.c
 
 App_Cpp_Files_for_Test := src/util/common_table.c \
 		 src/util/key_table.c \
@@ -355,6 +356,7 @@ sgx/test_enclave_u.o: test/include/test_enclave_u.c
 
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Files) \
+				 src/util/cmd_interface.c \
 			   $(App_Cpp_Kmyth_Files) \
 				 sgx/test_enclave_u.o \
 				 sgx/ec_key_cert_unmarshal.o \
@@ -364,7 +366,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
-                         -Isgx \
+			 -Isgx \
 			 -Itest/include \
 			 $(App_C_Flags) \
 			 $(ENCLAVE_HEADERS) \
@@ -382,8 +384,8 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 sgx/ec_key_cert_unmarshal.o \
 			 sgx/log_ocall.o \
 			 sgx/ecdh_ocall.o \
-                         sgx/ecdh_util.o \
-                         sgx/memory_ocall.o 
+			 sgx/ecdh_util.o \
+			 sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -398,13 +400,15 @@ bin/$(App_Name_Service): $(App_Service_File) \
 
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      $(App_Cpp_Files) \
+		      src/util/cmd_interface.c \
+		      src/util/seal.c \
 		      $(App_Cpp_Kmyth_Files) \
 		      sgx/pelz_enclave_u.o \
 		      sgx/ec_key_cert_unmarshal.o \
 		      sgx/log_ocall.o \
 		      sgx/ecdh_ocall.o \
-                      sgx/ecdh_util.o \
-                      sgx/memory_ocall.o 
+		      sgx/ecdh_util.o \
+		      sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
