@@ -18,13 +18,14 @@
 #include "pelz_log.h"
 #include "pelz_io.h"
 #include "charbuf.h"
+#include "seal.h"
+#include "cmd_interface.h"
 
 #include "pelz_enclave.h"
 #include "sgx_seal_unseal_impl.h"
 
 sgx_enclave_id_t eid = 0;
 
-#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 #define BUFSIZE 1024
 #define MODE 0600
 
@@ -102,7 +103,7 @@ const struct option longopts[] = {
   {0, 0, 0, 0}
 };
 
-//Main function for the Pelz Service application
+//Main function for the pelz command interface application
 int main(int argc, char **argv)
 {
   set_app_name("pelz");
@@ -115,11 +116,13 @@ int main(int argc, char **argv)
   int options;
   int option_index;
   int arg_index = 0;
+  int cmd; 
+  CmdArgValue cmd_arg[5] = { EMPTY, EMPTY, EMPTY, EMPTY, EMPTY };
   bool all = false;
   bool tpm = false;
+  bool out = false;
   char *outPath = NULL;
   size_t outPath_size = 0;
-  char *msg = NULL;
 
   if (argc == 1)
   {
@@ -127,7 +130,7 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  //While function to options from command line
+  //While function to go thru options from command line
   while ((options = getopt_long(argc, argv, "hdato:", longopts, &option_index)) != -1)
   {
     switch (options)
@@ -147,7 +150,8 @@ int main(int argc, char **argv)
       all = true;
       arg_index = arg_index + 1;
       break;
-    case 'o':
+    case 'o':      
+      out = true;
       outPath_size = strlen(optarg) + 1;
       if (outPath_size > 1)
       {
@@ -162,6 +166,134 @@ int main(int argc, char **argv)
     }
   }
 
+  //Determine the command arguments
+  for (int i = 0; i < 5; i++)
+  {
+    cmd_arg[i] = check_arg(argv[arg_index + 1 + i]);
+    if (cmd_arg[i] == 0)
+    {
+      break;
+    }
+  }
+
+  //Check for valid use of OutPath option 
+  if (out == true && cmd_arg[0] != SEAL)
+  {
+    usage(argv[0]);
+    free(outPath);
+    return 1;
+  }
+
+  //Check command arguments
+  switch (cmd_arg[0])
+  {
+    case EMPTY:
+      usage(argv[0]);
+      return 1;
+    case OTHER:
+      usage(argv[0]);
+      return 1;
+    case SEAL:
+      if (cmd_arg[1] == OTHER && cmd_arg[2] == EMPTY)
+      {
+        cmd = 0;
+      }
+      else
+      {
+        seal_usage();
+        return 1;
+      }
+      break;
+    case EX:
+      if (cmd_arg[1] == EMPTY)
+      {
+        cmd = 1;
+      }
+      else
+      {
+        usage(argv[0]);
+        return 1;
+      }
+      break;
+    case KEYTABLE:
+      if (cmd_arg[1] == REMOVE)
+      {
+        if (all == true)
+        {
+          cmd = 3;
+        }
+        else if (cmd_arg[2] == OTHER && cmd_arg[3] == EMPTY)
+        {
+          cmd = 2;
+        }
+        else
+        {
+          keytable_usage();
+          return 1;
+        }
+      }
+      else if (cmd_arg[1] == LIST && cmd_arg[2] == EMPTY)
+      {
+        cmd = 4;
+      }
+      else
+      {
+        keytable_usage();
+        return 1;
+      }
+      break;
+    case PKI:
+      if (cmd_arg[1] == LOAD)
+      {
+        if (cmd_arg[2] == CERT && cmd_arg[3] == OTHER && cmd_arg[4] == EMPTY)
+        {
+          cmd = 5;
+        }
+        else if (cmd_arg[2] == PRIVATE  && cmd_arg[3] == OTHER && cmd_arg[4] == EMPTY)
+        {
+          cmd = 6;
+        }
+        else
+        {
+          pki_usage();
+          return 1;
+        }
+      }
+      else if (cmd_arg[1] == CERT && cmd_arg[2] == LIST && cmd_arg[3] == EMPTY)
+      {
+        cmd = 7;
+      }
+      else if (cmd_arg[1] == REMOVE)
+      {
+        if (all == true)
+        {
+          cmd = 9;
+        }
+        else if (cmd_arg[2] == PRIVATE  && cmd_arg[3] == EMPTY)
+        {
+          cmd = 10;
+        }
+        else if (cmd_arg[2] == OTHER && cmd_arg[3] == EMPTY)
+        {
+          cmd = 8;
+        }
+        else
+        {
+          pki_usage();
+          return 1;
+        }
+      }
+      else
+      {
+        pki_usage();
+        return 1;
+      }
+      break;
+    default:
+      usage(argv[0]);
+      return 1;
+  }
+
   char fifo_name[BUFSIZE];
   size_t fifo_name_len = 0;
   int pid_t = getpid();
@@ -170,6 +302,7 @@ int main(int argc, char **argv)
   sprintf(fifo_name, "%s%d", PELZINTERFACE, pid_t);
   fifo_name_len = strlen(fifo_name);
   pelz_log(LOG_DEBUG, "FIFO Name: %.*s, %d", fifo_name_len, fifo_name, fifo_name_len );
+  
   //Creating name pipe (FIFO)
   if (mkfifo(fifo_name, MODE) == 0)
   {
@@ -180,572 +313,83 @@ int main(int argc, char **argv)
     pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
 
-  //Start of command line option checks and execution
-  //Checking for exit command then execution
-  if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "exit", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
+/*
+ *  0   seal                      Seal file at <path> provided
+ *  1   exit                      Terminate running of pelz-service
+ *  2   keytable remove key       Removes a key with a specified <id>
+ *  3   keytable remove all keys  Removes all keys
+ *  4   keytable list             Outputs a list of keys <id> in Key Table
+ *  5   pki load cert             Loads a server certificate
+ *  6   pki load private          Loads a private pkey for connections to the key server
+ *  7   pki cert list             Outputs a list of certificates <CN> in Server Table
+ *  8   pki remove cert           Removes a server certificate   
+ *  9   pki remove all certs      Removes all server certificates
+ *  10  pki remove cert           Removes the private pkey
+ */
+
+  switch (cmd)
   {
-    //Create message to be sent to service through pipe
-    msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-    memcpy(msg, "pelz 1 ", 7);
-    memcpy(&msg[7], fifo_name, fifo_name_len);
-    pelz_log(LOG_DEBUG, "Message: %s", msg);
-    write_to_pipe((char*) PELZSERVICE, msg);
-    free(msg);
-    if (read_listener(fifo_name))
-    {
-      pelz_log(LOG_DEBUG, "Error read from pipe.");
-    }
-  }
-
-  //Checking for keytable command
-  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "keytable", 8) == 0) && (strlen(argv[arg_index + 1]) == 8))
-  {
-    pelz_log(LOG_DEBUG, "keytable options");
-
-    //Checking for keytable remove command
-    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "remove", 6) == 0) && (strlen(argv[arg_index + 2]) == 6))
-    {
-      pelz_log(LOG_DEBUG, "keytable remove options");
-
-      //Checking for keytable remove all command
-      if (all)
-      {
-        pelz_log(LOG_DEBUG, "keytable remove --all option");
-
-        //Create message to be sent to service through pipe
-        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-        memcpy(msg, "pelz 3 ", 7);
-        memcpy(&msg[7], fifo_name, fifo_name_len);
-        pelz_log(LOG_DEBUG, "Message: %s", msg);
-        write_to_pipe((char*) PELZSERVICE, msg);
-        free(msg);
-        if (read_listener(fifo_name))
-        {
-          pelz_log(LOG_DEBUG, "Error read from pipe.");
-        }
-      }
-
-      //Checking for keytable remove <id> command
-      else if (argv[arg_index + 3] != NULL)
-      {
-        pelz_log(LOG_DEBUG, "keytable remove <id> option");
-
-        //Create message to be sent to service through pipe
-        msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
-        memcpy(msg, "pelz 2 ", 7);
-        memcpy(&msg[7], fifo_name, fifo_name_len);
-        memcpy(&msg[(7 + fifo_name_len)], " ", 1);
-        memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
-        pelz_log(LOG_DEBUG, "Message: %s", msg);
-        write_to_pipe((char*) PELZSERVICE, msg);
-        free(msg);
-        if (read_listener(fifo_name))
-        {
-          pelz_log(LOG_DEBUG, "Error read from pipe.");
-        }
-      }
-
-      //If keytable command is invalid then print keytable usage for user
-      else
-      {
-        keytable_usage();
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-    }
-
-    //Checking for keytable list command
-    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "list", 4) == 0)
-      && (strlen(argv[arg_index + 2]) == 4))
-    {
-      pelz_log(LOG_DEBUG, "keytable list option");
-      if (argv[arg_index + 3] == NULL)
-      {
-        //Create message to be sent to service through pipe
-        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-        memcpy(msg, "pelz 4 ", 7);
-        memcpy(&msg[7], fifo_name, fifo_name_len);
-        pelz_log(LOG_DEBUG, "Message: %s", msg);
-        write_to_pipe((char*) PELZSERVICE, msg);
-        free(msg);
-        do
-        {
-          if (read_listener(fifo_name))
-          {
-            break;
-          }
-        } while (1);
-      }
-
-      //If keytable command is invalid then print keytable usage for user
-      else
-      {
-        keytable_usage();
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-    }
-
-    //If keytable command is invalid then print keytable usage for user
-    else
-    {
-      keytable_usage();
-      free(outPath);
-      remove_pipe(fifo_name);
-      return 1;
-    }
-  }
-
-  //Checking for pki command
-  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "pki", 3) == 0)
-    && (strlen(argv[arg_index + 1]) == 3))
-  {
-    pelz_log(LOG_DEBUG, "pki options");
-
-    //Checking for pki load command
-    if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "load", 4) == 0) && (strlen(argv[arg_index + 2]) == 4))
-    {
-      pelz_log(LOG_DEBUG, "pki load options");
-
-      //Checking for pki load cert command
-      if ((argv[arg_index + 3] != NULL) && (memcmp(argv[arg_index + 3], "cert", 4) == 0) && (strlen(argv[arg_index + 3]) == 4))
-      {
-        pelz_log(LOG_DEBUG, "pki load cert option");
-
-        //Checking for pki load cert <path> command
-        if (argv[arg_index + 4] != NULL)
-        {      
-          //Checking if <path> points to an existing file 
-          if (file_check(argv[arg_index + 4]))
-          {
-            pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
-            free(outPath);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-
-          //Create message to be sent to service through pipe
-          msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
-          memcpy(msg, "pelz 5 ", 7);
-          memcpy(&msg[7], fifo_name, fifo_name_len);
-          memcpy(&msg[(7 + fifo_name_len)], " ", 1);
-          memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
-          pelz_log(LOG_DEBUG, "Message: %s", msg);
-          write_to_pipe((char*) PELZSERVICE, msg);
-          free(msg);
-          if (read_listener(fifo_name))
-          {
-            pelz_log(LOG_DEBUG, "Error read from pipe.");
-          }
-        }
-
-        //If pki command is invalid then print pki usage for user
-        else
-        {
-          pki_usage();
-          free(outPath);
-          remove_pipe(fifo_name);
-          return 1;
-        }
-      }
-
-      //Checking for pki load private command
-      else if ((argv[arg_index + 3] != NULL) && (memcmp(argv[arg_index + 3], "private", 7) == 0) 
-                && (strlen(argv[arg_index + 3]) == 7))
-      {
-        pelz_log(LOG_DEBUG, "pki load private option");
-
-        //Checking for pki load private <path> command
-        if (argv[arg_index + 4] != NULL)
-        {
-          //Checking if <path> points to an existing file 
-          if (file_check(argv[arg_index + 4]))
-          {
-            pelz_log(LOG_DEBUG, "File %s is invalid.", argv[arg_index + 4]);
-            free(outPath);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-
-          //Create message to be sent to service through pipe
-          msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 4])), sizeof(char));
-          memcpy(msg, "pelz 6 ", 7);
-          memcpy(&msg[7], fifo_name, fifo_name_len);
-          memcpy(&msg[(7 + fifo_name_len)], " ", 1);
-          memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 4], (strlen(argv[arg_index + 4]) + 1));
-          pelz_log(LOG_DEBUG, "Message: %s", msg);
-          write_to_pipe((char*) PELZSERVICE, msg);
-          free(msg);
-          if (read_listener(fifo_name))
-          {
-            pelz_log(LOG_DEBUG, "Error read from pipe.");
-          }
-        }
-
-        //If pki command is invalid then print pki usage for user
-        else
-        {
-          pki_usage();
-          free(outPath);
-          remove_pipe(fifo_name);
-          return 1;
-        }
-      }
-
-      //If pki command is invalid then print pki usage for user
-      else
-      {
-        pki_usage();
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-    }
-
-    //Checking for pki cert command
-    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "cert", 4) == 0)
-      && (strlen(argv[arg_index + 2]) == 4))
-    {
-      pelz_log(LOG_DEBUG, "pki cert option");
-
-      //Checking for pki cert list command
-      if (argv[arg_index + 3] != NULL && (memcmp(argv[arg_index + 3], "list", 4) == 0)
-      && (strlen(argv[arg_index + 3]) == 4))
-      {
-        pelz_log(LOG_DEBUG, "pki cert list option");
-        if (argv[arg_index + 4] == NULL)
-        {
-          //Create message to be sent to service through pipe
-          msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-          memcpy(msg, "pelz 7 ", 7);
-          memcpy(&msg[7], fifo_name, fifo_name_len);
-          pelz_log(LOG_DEBUG, "Message: %s", msg);
-          write_to_pipe((char*) PELZSERVICE, msg);
-          free(msg);
-          do
-          {
-            if(read_listener(fifo_name))
-            {
-              break;
-            }
-          } while (1);
-        }
-
-        //If pki command is invalid then print pki usage for user
-        else
-        {
-          pki_usage();
-          free(outPath);
-          remove_pipe(fifo_name);
-          return 1;
-        }
-      }
-
-      //If pki command is invalid then print pki usage for user
-      else
-      {
-        pki_usage();
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-    }
-
-    //Checking for pki remove command
-    else if ((argv[arg_index + 2] != NULL) && (memcmp(argv[arg_index + 2], "remove", 6) == 0)
-    && (strlen(argv[arg_index + 2]) == 6))
-    {
-      pelz_log(LOG_DEBUG, "pki remove options");
-
-      //Checking for pki remove all command
-      if (all)
-      {
-        pelz_log(LOG_DEBUG, "pki remove --all option");
-
-        //Create message to be sent to service through pipe
-        msg = (char *) calloc((8 + fifo_name_len), sizeof(char));
-        memcpy(msg, "pelz 9 ", 7);
-        memcpy(&msg[7], fifo_name, fifo_name_len);
-        pelz_log(LOG_DEBUG, "Message: %s", msg);
-        write_to_pipe((char*) PELZSERVICE, msg);
-        free(msg);
-        if (read_listener(fifo_name))
-        {
-          pelz_log(LOG_DEBUG, "Error read from pipe.");
-        }
-      }
-
-      //Checking for pki remove <private> command
-      else if ((argv[arg_index + 3] != NULL) && (memcmp(argv[arg_index + 3], "private", 7) == 0)
-      && (strlen(argv[arg_index + 3]) == 7))
-      {
-        pelz_log(LOG_DEBUG, "pki remove <private> option");
-
-        //Create message to be sent to service through pipe
-        msg = (char *) calloc((9 + fifo_name_len), sizeof(char));
-        memcpy(msg, "pelz 10 ", 8);
-        memcpy(&msg[8], fifo_name, fifo_name_len);
-        pelz_log(LOG_DEBUG, "Message: %s", msg);
-        write_to_pipe((char*) PELZSERVICE, msg);
-        free(msg);
-        if (read_listener(fifo_name))
-        {
-          pelz_log(LOG_DEBUG, "Error read from pipe.");
-        }
-      }
-
-      //Checking for pki remove <CN> command
-      else if (argv[arg_index + 3] != NULL)
-      {
-        pelz_log(LOG_DEBUG, "pki remove <CN> option");
-
-        //Create message to be sent to service through pipe
-        msg = (char *) calloc((9 + fifo_name_len + strlen(argv[arg_index + 3])), sizeof(char));
-        memcpy(msg, "pelz 8 ", 7);
-        memcpy(&msg[7], fifo_name, fifo_name_len);
-        memcpy(&msg[(7 + fifo_name_len)], " ", 1);
-        memcpy(&msg[(8 + fifo_name_len)], argv[arg_index + 3], (strlen(argv[arg_index + 3]) + 1));
-        pelz_log(LOG_DEBUG, "Message: %s", msg);
-        write_to_pipe((char*) PELZSERVICE, msg);
-        free(msg);
-        if (read_listener(fifo_name))
-        {
-          pelz_log(LOG_DEBUG, "Error read from pipe.");
-        }
-      }
-
-      //If pki command is invalid then print pki usage for user
-      else
-      {
-        pki_usage();
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-    }
-
-    //If pki command is invalid then print pki usage for user
-    else
-    {
-      pki_usage();
-      free(outPath);
-      remove_pipe(fifo_name);
-      return 1;
-    }
-  }
-
-  //Checking for seal command
-  else if ((argv[arg_index + 1] != NULL) && (memcmp(argv[arg_index + 1], "seal", 4) == 0) && (strlen(argv[arg_index + 1]) == 4))
-  {
-    pelz_log(LOG_DEBUG, "Seal option");
-    if (argv[arg_index + 2] != NULL)
-    {
+    case 0:
+      //Execute the seal command
       pelz_log(LOG_DEBUG, "Seal <path> option");
-
-      // Verify input path exists with read permissions
-      if (verifyInputFilePath(argv[arg_index + 2]))
+      if (seal(argv[arg_index + 2], &outPath, outPath_size, tpm))
       {
-        pelz_log(LOG_ERR, "input path (%s) is not valid ... exiting", argv[arg_index + 2]);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-
-      uint8_t *data = NULL;
-      size_t data_len = 0;
-
-      if (read_bytes_from_file(argv[arg_index + 2], &data, &data_len))
-      {
-        pelz_log(LOG_ERR, "seal input data file read error ... exiting");
-        free(data);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-      pelz_log(LOG_DEBUG, "read in %d bytes of data to be wrapped", data_len);
-
-      // validate non-empty plaintext buffer specified
-      if (data_len == 0 || data == NULL)
-      {
-        pelz_log(LOG_ERR, "no input data ... exiting");
-        free(data);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-
-      sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
-
-      uint8_t *sgx_seal = NULL;
-      size_t sgx_seal_len = 0;
-      uint16_t key_policy = SGX_KEYPOLICY_MRSIGNER;
-      sgx_attributes_t attribute_mask;
-
-      attribute_mask.flags = 0;
-      attribute_mask.xfrm = 0;
-
-      if (kmyth_sgx_seal_nkl(eid, data, data_len, &sgx_seal, &sgx_seal_len, key_policy, attribute_mask))
-      {
-        pelz_log(LOG_ERR, "SGX seal failed");
-        sgx_destroy_enclave(eid);
-        free(data);
-        free(outPath);
-        remove_pipe(fifo_name);
-        return 1;
-      }
-
-      sgx_destroy_enclave(eid);
-      free(data);
-
-      uint8_t *tpm_seal = NULL;
-      size_t tpm_seal_len = 0;
-
-      if (tpm)
-      {
-        char *authString = NULL;
-        size_t auth_string_len = 0;
-        const char *ownerAuthPasswd = "";
-        size_t oa_passwd_len = 0;
-        char *cipherString = NULL;
-        int *pcrs = NULL;
-        int pcrs_len = 0;
-
-        if (tpm2_kmyth_seal(sgx_seal, sgx_seal_len, &tpm_seal, &tpm_seal_len, (uint8_t *) authString, auth_string_len,
-            (uint8_t *) ownerAuthPasswd, oa_passwd_len, pcrs, pcrs_len, cipherString))
+        pelz_log(LOG_ERR, "Error seal function");
+        if(outPath != NULL && outPath_size == 0)
         {
-          pelz_log(LOG_ERR, "Kmyth TPM seal failed");
-          free(pcrs);
-          free(sgx_seal);
           free(outPath);
-          free(tpm_seal);
-          remove_pipe(fifo_name);
-          return 1;
         }
-        free(pcrs);
-        free(sgx_seal);
+        remove_pipe(fifo_name);
+        return 1;
       }
-
-      if ((outPath != NULL) && (outPath_size != 0))
-      {
-        if (tpm)
-        {
-          if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
-            free(outPath);
-            free(tpm_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(tpm_seal);
-        }
-        else
-        {
-          if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
-            free(outPath);
-            free(sgx_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(sgx_seal);
-        }
-      }
-      else
-      {
-        char *ext;
-        const char *TPM_EXT = ".ski";
-        const char *NKL_EXT = ".nkl";
-
-        if (tpm)
-        {
-          ext = (char *) TPM_EXT;
-        }
-        else
-        {
-          ext = (char *) NKL_EXT;
-        }
-
-        // If output file not specified, set output path to basename(inPath) with
-        // a .nkl extension in the directory that the application is being run from.
-        char *original_fn = basename(argv[arg_index + 2]);
-
-        outPath = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
-
-        // Make sure resultant default file name does not have empty basename
-        if (outPath == NULL)
-        {
-          pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
-          free(outPath);
-          remove_pipe(fifo_name);
-          return 1;
-        }
-
-        memcpy(outPath, original_fn, strlen(original_fn));
-        memcpy(&outPath[strlen(original_fn)], ext, (strlen(ext) + 1));
-
-        // Make sure default filename we constructed doesn't already exist
-        struct stat st = {
-          0
-        };
-        if (!stat(outPath, &st))
-        {
-          pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", outPath);
-          free(outPath);
-          remove_pipe(fifo_name);
-          return 1;
-        }
-
-        pelz_log(LOG_DEBUG, "output file not specified, default = %s", outPath);
-        if (tpm)
-        {
-          if (write_bytes_to_file(outPath, tpm_seal, tpm_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
-            free(outPath);
-            free(tpm_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(tpm_seal);
-        }
-        else
-        {
-          if (write_bytes_to_file(outPath, sgx_seal, sgx_seal_len))
-          {
-            pelz_log(LOG_ERR, "error writing data to .nkl file ... exiting");
-            free(outPath);
-            free(sgx_seal);
-            remove_pipe(fifo_name);
-            return 1;
-          }
-          free(sgx_seal);
-        }
-      }
-    }
-    //If seal command is invalid then print seal usage for user
-    else
-    {
-      seal_usage();
+      fprintf(stdout, "Successfully sealed contents to file: %s\n", outPath);
       free(outPath);
+      break;
+    case 1:
+      //Execute the exit command
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
+      break;
+    case 2:
+      //Execute the keytable remove <ID> command
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
+      break;
+    case 3:
+      //Execute the keytable remove all command
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
+      break;
+    case 4:
+      //Execute the keytable list command
+      msg_list(fifo_name, fifo_name_len, cmd);
+      break;
+    case 5:
+      //Execute the pki load cert <path> command
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 4], (int) strlen(argv[arg_index + 4]));
+      break;
+    case 6:
+      //Execute the pki load private <path> command
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 4], (int) strlen(argv[arg_index + 4]));
+      break;
+    case 7:
+      //Execute the pki cert list command
+      msg_list(fifo_name, fifo_name_len, cmd);
+      break;
+    case 8:
+      //Execute the pki remove cert <CN> command
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
+      break;
+    case 9:
+      //Execute the pki remove cert all command
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
+      break;
+    case 10:
+      //Execute the pki remove private command
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
+      break;
+    default:
+      usage(argv[0]);
       remove_pipe(fifo_name);
       return 1;
-    }
-    fprintf(stdout, "Successfully sealed contents to file: %s\n", outPath);
   }
-  //If command invalid then print usage for user
-  else
-  {
-    usage(argv[0]);
-    free(outPath);
-    remove_pipe(fifo_name);
-    return 1;
-  }
-
-  free(outPath);
   remove_pipe(fifo_name);  
   return 0;
 }

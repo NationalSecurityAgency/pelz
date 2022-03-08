@@ -9,12 +9,12 @@
 #include <stdlib.h>
 #include <CUnit/CUnit.h>
 
-#include "aes_keywrap_test.h"
+#include "aes_keywrap_test_suite.h"
 #include <pelz_log.h>
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include "test_enclave_u.h"
 
 #define AES_KW_VECTOR_PATH "test/data/kwtestvectors"
 

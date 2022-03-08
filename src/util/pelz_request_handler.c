@@ -5,7 +5,7 @@
 #include "aes_keywrap_3394nopad.h"
 
 #include "sgx_trts.h"
-#include "pelz_enclave_t.h"
+#include ENCLAVE_HEADER_TRUSTED
 
 RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
 {

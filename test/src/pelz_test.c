@@ -10,11 +10,12 @@
 #include <unistd.h>
 
 #include "util_test_suite.h"
-#include "aes_keywrap_test.h"
+#include "aes_keywrap_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
-#include "test_pelz_uri_helpers.h"
 #include "table_test_suite.h"
 #include "request_test_suite.h"
+#include "cmd_interface_test_suite.h"
+#include "test_pelz_uri_helpers.h"
 #include "pelz_log.h"
 
 #include <CUnit/CUnit.h>
@@ -22,10 +23,11 @@
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include "test_enclave_u.h"
+
 sgx_enclave_id_t eid = 0;
 
-#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
+#define ENCLAVE_PATH "sgx/pelz_test_enclave.signed.so"
 
 // Blank Suite's init and cleanup code
 int init_suite(void)
@@ -172,6 +174,21 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
   if (request_suite_add_tests(request_Suite))
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+
+  // Add cmd interface suite ---- tests cmd_interface functions
+  CU_pSuite cmd_interface_Suite = NULL;
+
+  cmd_interface_Suite = CU_add_suite("Cmd Interface Suite", init_suite, clean_suite);
+  if (NULL == cmd_interface_Suite)
+  {
+    CU_cleanup_registry();
+    return CU_get_error();
+  }
+  if (cmd_interface_suite_add_tests(cmd_interface_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();

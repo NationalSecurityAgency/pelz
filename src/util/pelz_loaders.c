@@ -11,7 +11,7 @@
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
 #include "pelz_enclave.h"
-#include "pelz_enclave_u.h"
+#include ENCLAVE_HEADER_UNTRUSTED
 
 int pelz_load_key_from_file(char *filename, charbuf * key)
 {
@@ -103,13 +103,7 @@ int pelz_load_file_to_enclave(char *filename, uint64_t * handle)
 
 int pelz_unseal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len)
 {
-  char *authString = NULL;
-  size_t auth_string_len = 0;
-  const char *ownerAuthPasswd = "";
-  size_t oa_passwd_len = 0;
-
-  if (tpm2_kmyth_unseal(data, data_len, data_out, data_out_len, (uint8_t *) authString, auth_string_len,
-      (uint8_t *) ownerAuthPasswd, oa_passwd_len))
+  if (tpm2_kmyth_unseal(data, data_len, data_out, data_out_len, NULL, 0, NULL, 0))
   {
     pelz_log(LOG_ERR, "TPM unseal failed");
     return (1);
