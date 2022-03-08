@@ -1,6 +1,5 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
-#include "pelz_log.h"
 #include "common_table.h"
 #include "aes_keywrap_3394nopad.h"
 

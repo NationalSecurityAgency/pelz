@@ -2,12 +2,12 @@ enclave {
 	from "sgx_tsgxssl.edl" import *;
 	from "sgx_pthread.edl" import *;
 	from "kmyth_enclave.edl" import *;
-        include "aes_keywrap_3394nopad.h"
+	include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "common_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
-        include "util.h"
+	include "util.h"
 	trusted {
 
 /**
