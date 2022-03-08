@@ -77,7 +77,7 @@ CmdArgValue check_arg(char *arg)
 
 int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
 {
-  char *msg = (char *) calloc((8 + pipe_len + arg_len), sizeof(char));
+  char *msg = (char *) calloc((10 + pipe_len + arg_len), sizeof(char));
   sprintf(msg, "pelz %d %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg);
   pelz_log(LOG_DEBUG, "Message: %s", msg);
   write_to_pipe((char*) PELZSERVICE, msg);
@@ -92,7 +92,7 @@ int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
 
 int msg_list(char *pipe, int pipe_len, int cmd)
 {
-  char *msg = (char *) calloc((8 + pipe_len), sizeof(char));
+  char *msg = (char *) calloc((10 + pipe_len), sizeof(char));
   sprintf(msg, "pelz %d %.*s", cmd, pipe_len, pipe);
   pelz_log(LOG_DEBUG, "Message: %s", msg);
   write_to_pipe((char*) PELZSERVICE, msg);
