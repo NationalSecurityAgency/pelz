@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -347,6 +348,7 @@ int write_to_pipe(char *pipe, char *msg)
   if (fd == -1)
   {
     pelz_log(LOG_INFO, "Error opening pipe");
+    perror("open");
     return 1;
   }
 
@@ -381,6 +383,7 @@ int read_from_pipe(char *pipe, char **msg)
   if (fd == -1)
   {
     pelz_log(LOG_ERR, "Error opening pipe");
+    perror("open");
     return 1;
   }
 
@@ -422,7 +425,7 @@ int read_listener(int fd)
   int line_start, line_len, i;
   int bytes_read;
 
-  FD_ZERO(&set);            // clear the set
+  FD_ZERO(&set);      // clear the set
   FD_SET(fd, &set);   // add file descriptor to the set
 
   timeout.tv_sec = 5;
@@ -450,6 +453,10 @@ int read_listener(int fd)
     bytes_read = read(fd, msg, BUFSIZE);
     if (bytes_read < 0)
     {
+      if (errno == EWOULDBLOCK) {
+        // This happens occasionally because select is sometimes wrong
+        continue;
+      }
       pelz_log(LOG_ERR, "Pipe read failed");
       perror("read");
       close(fd);
