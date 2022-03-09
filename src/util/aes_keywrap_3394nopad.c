@@ -21,7 +21,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // validate non-NULL and non-empty encryption key specified
   if (key == NULL || key_len == 0)
   {
-    pelz_sgx_log(LOG_ERR, "no key data ... exiting");
+    pelz_log(LOG_ERR, "no key data ... exiting");
     return 1;
   }
 
@@ -29,12 +29,12 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // a multiple of eight (8) bytes greater than or equal to 16 was specified
   if (inData == NULL || inData_len == 0)
   {
-    pelz_sgx_log(LOG_ERR, "no input data ... exiting");
+    pelz_log(LOG_ERR, "no input data ... exiting");
     return 1;
   }
   if (inData_len < 16 || inData_len % 8 != 0)
   {
-    pelz_sgx_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
+    pelz_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
     return 1;
   }
 
@@ -46,7 +46,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   *outData = (unsigned char *) malloc(*outData_len);
   if (*outData == NULL)
   {
-    pelz_sgx_log(LOG_ERR, "malloc error for output ciphertext ... exiting");
+    pelz_log(LOG_ERR, "malloc error for output ciphertext ... exiting");
     return 1;
   }
 
@@ -57,7 +57,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
 
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
-    pelz_sgx_log(LOG_ERR, "error creating AES Key Wrap cipher context ... exiting");
+    pelz_log(LOG_ERR, "error creating AES Key Wrap cipher context ... exiting");
     free(*outData);
     return 1;
   }
@@ -76,11 +76,11 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
     init_result = EVP_EncryptInit_ex(ctx, EVP_aes_256_wrap(), NULL, NULL, NULL);
     break;
   default:
-    pelz_sgx_log(LOG_ERR, "invalid key size");
+    pelz_log(LOG_ERR, "invalid key size");
   }
   if (!init_result)
   {
-    pelz_sgx_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
+    pelz_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -89,7 +89,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // set the encryption key in the cipher context
   if (!EVP_EncryptInit_ex(ctx, NULL, NULL, key, NULL))
   {
-    pelz_sgx_log(LOG_ERR, "error setting key ... exiting");
+    pelz_log(LOG_ERR, "error setting key ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -106,18 +106,18 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // encrypt (wrap) the input PT, put result in the output CT buffer
   if (!EVP_EncryptUpdate(ctx, *outData, &tmp_len, inData, inData_len))
   {
-    pelz_sgx_log(LOG_ERR, "error wrapping key ... exiting");
+    pelz_log(LOG_ERR, "error wrapping key ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
   ciphertext_len = tmp_len;
-  pelz_sgx_log(LOG_DEBUG, "key wrap produced output CT bytes");
+  pelz_log(LOG_DEBUG, "key wrap produced output CT bytes");
 
   // OpenSSL requires a "finalize" operation
   if (!EVP_EncryptFinal_ex(ctx, (*outData) + ciphertext_len, &tmp_len))
   {
-    pelz_sgx_log(LOG_ERR, "finalization error ... exiting");
+    pelz_log(LOG_ERR, "finalization error ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -128,7 +128,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // eight bytes for prepended integrity check value)
   if (ciphertext_len != *outData_len)
   {
-    pelz_sgx_log(LOG_ERR, "CT length error between expected and  actual bytes ... exiting");
+    pelz_log(LOG_ERR, "CT length error between expected and  actual bytes ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -149,7 +149,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   // validate non-NULL and non-empty decryption key specified
   if (key == NULL || key_len == 0)
   {
-    pelz_sgx_log(LOG_ERR, "no key data ... exiting");
+    pelz_log(LOG_ERR, "no key data ... exiting");
     return 1;
   }
 
@@ -161,17 +161,17 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   //       requires the plaintext consist of an integer number of semiblocks.
   if (inData == NULL || inData_len == 0)
   {
-    pelz_sgx_log(LOG_ERR, "no input data ... exiting");
+    pelz_log(LOG_ERR, "no input data ... exiting");
     return 1;
   }
   if (inData_len < 24)
   {
-    pelz_sgx_log(LOG_ERR, "input data must be >= 24 bytes) ... exiting");
+    pelz_log(LOG_ERR, "input data must be >= 24 bytes) ... exiting");
     return 1;
   }
   if (inData_len % 8 != 0)
   {
-    pelz_sgx_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
+    pelz_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
     return 1;
   }
 
@@ -182,7 +182,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   *outData = (unsigned char *) malloc(inData_len);
   if (*outData == NULL)
   {
-    pelz_sgx_log(LOG_ERR, "malloc error for PT output ... exiting");
+    pelz_log(LOG_ERR, "malloc error for PT output ... exiting");
     return 1;
   }
 
@@ -193,7 +193,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
 
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
-    pelz_sgx_log(LOG_ERR, "error creating cipher context ... exiting");
+    pelz_log(LOG_ERR, "error creating cipher context ... exiting");
     free(*outData);
     return 1;
   }
@@ -212,21 +212,21 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
     init_result = EVP_DecryptInit_ex(ctx, EVP_aes_256_wrap(), NULL, NULL, NULL);
     break;
   default:
-    pelz_sgx_log(LOG_DEBUG, "invalid key length");
+    pelz_log(LOG_DEBUG, "invalid key length");
   }
   if (!init_result)
   {
-    pelz_sgx_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
+    pelz_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  pelz_sgx_log(LOG_DEBUG, "AES Key Wrap (RFC3394NoPadding) cipher context");
+  pelz_log(LOG_DEBUG, "AES Key Wrap (RFC3394NoPadding) cipher context");
 
   // set the decryption key in the cipher context
   if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, NULL))
   {
-    pelz_sgx_log(LOG_ERR, "error setting key ... exiting");
+    pelz_log(LOG_ERR, "error setting key ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -241,18 +241,18 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   // check value validated and removed) in the output plaintext buffer
   if (!EVP_DecryptUpdate(ctx, *outData, &tmp_len, inData, inData_len))
   {
-    pelz_sgx_log(LOG_ERR, "key unwrapping error ... exiting");
+    pelz_log(LOG_ERR, "key unwrapping error ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
   *outData_len = tmp_len;
-  pelz_sgx_log(LOG_DEBUG, "key unwrap produced PT bytes");
+  pelz_log(LOG_DEBUG, "key unwrap produced PT bytes");
 
   // "finalize" decryption
   if (!EVP_DecryptFinal_ex(ctx, *outData + *outData_len, &tmp_len))
   {
-    pelz_sgx_log(LOG_ERR, "key unwrap 'finalize' error ... exiting");
+    pelz_log(LOG_ERR, "key unwrap 'finalize' error ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -263,7 +263,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   // the length of the 8-byte integrity check value
   if (*outData_len != inData_len - 8)
   {
-    pelz_sgx_log(LOG_ERR, "unwrapped data length mis-matches expected ... exiting");
+    pelz_log(LOG_ERR, "unwrapped data length mis-matches expected ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;

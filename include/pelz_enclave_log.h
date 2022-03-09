@@ -49,7 +49,7 @@ extern "C"
 #endif
 
 // macro for generic logging call
-#define pelz_sgx_log(severity, message)\
+#define pelz_log(severity, message)\
 {\
   const char *src_file = __FILE__;\
   const char *src_func = __func__;\
