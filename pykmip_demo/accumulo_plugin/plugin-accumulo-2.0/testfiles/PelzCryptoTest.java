@@ -87,25 +87,8 @@ public class PelzCryptoTest {
   public static final String MARKER_STRING = "1 2 3 4 5 6 7 8 a b c d e f g h ";
   public static final String CRYPTO_ON_CONF = "ON";
   public static final String CRYPTO_OFF_CONF = "OFF";
-  public static final String keyPath =
-      "file:" + System.getProperty("user.dir") + "/target/CryptoTest-testkeyfile.key";
-  public static final String emptyKeyPath =
-      "file:" + System.getProperty("user.dir") + "/target/CryptoTest-emptykeyfile.key";
   public static final String serverKeyPath = "pelz://localhost/7000/fake_key_id";
   private static Configuration hadoopConf = new Configuration();
-
-  @BeforeClass
-  public static void setupKeyFiles() throws Exception {
-    FileSystem fs = FileSystem.getLocal(hadoopConf);
-    Path aesPath = new Path(serverKeyPath);
-    try (FSDataOutputStream out = fs.create(aesPath)) {
-      out.writeUTF("sixteenbytekey"); // 14 + 2 from writeUTF
-    }
-    try (FSDataOutputStream out = fs.create(new Path(emptyKeyPath))) {
-      // auto close after creating
-      assertNotNull(out);
-    }
-  }
 
   @Test
   public void simpleGCMTest() throws Exception {
