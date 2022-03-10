@@ -20,14 +20,15 @@ SGX and TPM assumed to already be installed and working.
 		cd ..
 		git clone https://github.com/apache/accumulo.git
 		sudo apt install maven openjdk-11-jdk libxml2-utils
-		cd pelz/pykmip_demo/accumulo_plugin
+		cd pelz/accumulo_plugin
 		./setup_plugin.sh -i -d ~/accumulo/
 		cd ..
+		cp pykmip_demo/PelzCryptoTest.java ~/accumulo/core/src/test/java/org/apache/accumulo/core/pelz/
 
 ### PyKMIP Server Installaiton/Setep Steps
 4.  Run PyKMIP Script in a separate terminal
 
-		./PyKMIP_setup.sh
+		./pykmip/PyKMIP_setup.sh
 
 5.  Run the server in a separate terminal
 
@@ -35,13 +36,13 @@ SGX and TPM assumed to already be installed and working.
 
 6.  Register keys with the server
 
-		./register_keys_pykmip.sh
+		./pykmip/register_keys_pykmip.sh
 
 
 ### Certificate and PKey Creation/Installation Steps
 7.	Generate Certificates and PKeys for server and client then seal
 
-		cd ../test/data
+		cd test/data
 		./gen_test_keys_certs.bash
 		openssl x509 -in server_cert_test.pem -inform pem -out server_cert_test.der -outform der
 		openssl pkey -in client_priv_test.pem -inform pem -out client_priv_test.der -outform der

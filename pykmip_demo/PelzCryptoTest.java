@@ -87,7 +87,7 @@ public class PelzCryptoTest {
   public static final String MARKER_STRING = "1 2 3 4 5 6 7 8 a b c d e f g h ";
   public static final String CRYPTO_ON_CONF = "ON";
   public static final String CRYPTO_OFF_CONF = "OFF";
-  public static final String serverKeyPath = "pelz://localhost/7000/fake_key_id";
+  public static final String serverKeyPath = "pelz://localhost/7000/5";
   private static Configuration hadoopConf = new Configuration();
 
   @Test
