@@ -19,7 +19,7 @@ SGX and TPM assumed to already be installed and working.
 
 		cd ..
 		git clone https://github.com/apache/accumulo.git
-		apt install maven openjdk-11-jdk libxml2-utils
+		sudo apt install maven openjdk-11-jdk libxml2-utils
 		cd pelz/pykmip_demo/accumulo_plugin
 		./setup_plugin.sh -i -d ~/accumulo/
 		cd ..
@@ -71,6 +71,6 @@ SGX and TPM assumed to already be installed and working.
 
 		cd ../accumulo
 		mvn clean
-		kdestroy -a
+		kdestroy -A
 		mvn test
 
