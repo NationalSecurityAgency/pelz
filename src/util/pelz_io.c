@@ -333,37 +333,45 @@ int file_check(char *file_path)
   return (0);
 }
 
+int write_to_pipe_fd(int fd, char *msg)
+{
+  int msg_len;
+  int bytes_written;
+
+  msg_len = strlen(msg);
+  bytes_written = write(fd, msg, msg_len);
+  if (bytes_written == msg_len)
+  {
+    pelz_log(LOG_DEBUG, "Wrote: %.*s", msg_len, msg);
+    return 0;
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "Error writing to pipe");
+    return 1;
+  }
+}
+
 int write_to_pipe(char *pipe, char *msg)
 {
   int fd;
   int ret;
 
-  if (file_check(pipe))
-  {
-    pelz_log(LOG_DEBUG, "Pipe not found, unable to communicate with pelz-service");
-    return 1;
-  }
-
-  fd = open(pipe, O_WRONLY | O_NONBLOCK);
+  fd = open_write_pipe(pipe);
   if (fd == -1)
   {
-    pelz_log(LOG_INFO, "Error opening pipe");
+    pelz_log(LOG_ERR, "Error opening pipe");
     perror("open");
     return 1;
   }
 
-  ret = write(fd, msg, strlen(msg));
+  ret = write_to_pipe_fd(fd, msg);
+
   if (close(fd) == -1)
   {
-    pelz_log(LOG_DEBUG, "Error closing pipe");
+    pelz_log(LOG_ERR, "Error closing pipe");
   }
-  if (ret == -1)
-  {
-    pelz_log(LOG_DEBUG, "Error writing to pipe");
-    return 1;
-  }
-  pelz_log(LOG_DEBUG, "Wrote: %.*s", strlen(msg), msg);
-  return 0;
+  return ret;
 }
 
 int read_from_pipe(char *pipe, char **msg)
@@ -855,6 +863,18 @@ int open_read_pipe(char *name)
   }
 
   return open(name, O_RDONLY | O_NONBLOCK);
+}
+
+int open_write_pipe(char *name)
+{
+  if (file_check(name))
+  {
+    pelz_log(LOG_ERR, "Pipe not found");
+    return -1;
+  }
+
+  // Opening in nonblocking mode will fail if the other end of the pipe is not yet open for reading.
+  return open(name, O_WRONLY | O_NONBLOCK);
 }
 
 int remove_pipe(char *name)

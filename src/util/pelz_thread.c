@@ -21,7 +21,7 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
-int send_table_id_list(char *pipe, TableType table_type, const char *resp_msg)
+int send_table_id_list(char *pipe_name, TableType table_type, const char *resp_msg)
 {
   int err = 0;
   char resp_buff[BUFSIZE];
@@ -29,19 +29,29 @@ int send_table_id_list(char *pipe, TableType table_type, const char *resp_msg)
   size_t list_num = 0;
   size_t count;
   charbuf id;
+  int fd = -1;
+
+  fd = open_write_pipe(pipe_name);
+  if (fd == -1)
+  {
+    pelz_log(LOG_ERR, "Error opening pipe");
+    return 1;
+  }
 
   table_id_count(eid, &status, table_type, &list_num);
   if (status != OK)
   {
-    pelz_log(LOG_DEBUG, "Error retrieving Key Table count.");
+    pelz_log(LOG_ERR, "Error retrieving Key Table count.");
+    close(fd);
     return 1;
   }
 
   sprintf(resp_buff, "%s (%zu)\n", resp_msg, list_num);
-  if (write_to_pipe(pipe, resp_buff))
+  if (write_to_pipe_fd(fd, resp_buff))
   {
-    pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
-    err = 1;
+    pelz_log(LOG_ERR, "Unable to send response to pelz cmd.");
+    close(fd);
+    return 1;
   }
   else
   {
@@ -53,21 +63,21 @@ int send_table_id_list(char *pipe, TableType table_type, const char *resp_msg)
     table_id(eid, &status, table_type, count, &id);
     if (status != OK)
     {
-      pelz_log(LOG_DEBUG, "Error retrieving Key Table <ID> from index %d.", count);
+      pelz_log(LOG_ERR, "Error retrieving Key Table <ID> from index %d.", count);
       err = 1;
       continue;
     }
 
     sprintf(resp_buff, "%.*s\n", (int) id.len, id.chars);
-    if (write_to_pipe(pipe, resp_buff))
+    if (write_to_pipe_fd(fd, resp_buff))
     {
-      pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+      pelz_log(LOG_ERR, "Unable to send response to pelz cmd.");
       err = 1;
     }
   }
-  if (write_to_pipe(pipe, (char *) "END\n"))
+  if (write_to_pipe_fd(fd, (char *) "END\n"))
   {
-    pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
+    pelz_log(LOG_ERR, "Unable to send response to pelz cmd.");
     err = 1;
   }
   else
@@ -75,6 +85,7 @@ int send_table_id_list(char *pipe, TableType table_type, const char *resp_msg)
     pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
   }
 
+  close(fd);
   return err;
 }
 
@@ -123,7 +134,7 @@ void *fifo_thread_process(void *arg)
   {
     pelz_log(LOG_DEBUG, "Pipe created successfully");
   }
-  else
+  else if (errno != EEXIST)
   {
     pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
@@ -167,16 +178,8 @@ void *fifo_thread_process(void *arg)
         send_table_id_list(tokens[2], SERVER, resp_str[ret]);
         break;
       default:
-        sprintf(resp, "%s\n", resp_str[ret]);
+        sprintf(resp, "%s\nEND\n", resp_str[ret]);
         if (write_to_pipe(tokens[2], resp))
-        {
-           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
-        }
-        else
-        {
-          pelz_log(LOG_DEBUG, "Pelz-service responses sent to pelz cmd.");
-        }
-        if (write_to_pipe(tokens[2], (char *) "END\n"))
         {
           pelz_log(LOG_DEBUG, "Unable to send response to pelz cmd.");
         }
