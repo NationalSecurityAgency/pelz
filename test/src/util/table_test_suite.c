@@ -72,8 +72,8 @@ void test_table_add(void)
   const char *prefix = "file:";
 
   const char *valid_id[5] =
-    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "fake_key_id", "test/data/server_cert_test.der.nkl",
-    "test/data/client_priv_test.der.nkl"
+    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "fake_key_id", "test/data/proxy_pub.der.nkl",
+    "test/data/node_priv.der.nkl"
   };
   const char *key_str = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
 
@@ -176,7 +176,7 @@ void test_table_lookup(void)
 
   const char *valid_id[8] = {
     "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt", "/test/data/key4.txt", "/test/data/key5.txt",
-    "/test/data/key6.txt", "test/data/client_cert_test.der.nkl", "test/data/server_cert_test.der.nkl"
+    "/test/data/key6.txt", "test/data/node_pub.der.nkl", "test/data/proxy_pub.der.nkl"
   };
   const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
@@ -286,7 +286,7 @@ void test_table_delete(void)
 
   const char *valid_id[8] = {
     "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt", "/test/data/key4.txt", "/test/data/key5.txt",
-    "/test/data/key6.txt", "test/data/client_cert_test.der.nkl", "test/data/server_cert_test.der.nkl"
+    "/test/data/key6.txt", "test/data/node_pub.der.nkl", "test/data/proxy_pub.der.nkl"
   };
   const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"

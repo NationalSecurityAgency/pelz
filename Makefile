@@ -585,15 +585,15 @@ pre:
 
 test: all test-all
 	@cd test/data && ./gen_test_keys_certs.bash
-	@openssl x509 -in test/data/client_cert_test.pem -inform pem -out test/data/client_cert_test.der -outform der
-	@openssl x509 -in test/data/server_cert_test.pem -inform pem -out test/data/server_cert_test.der -outform der
-	@openssl pkey -in test/data/client_priv_test.pem -inform pem -out test/data/client_priv_test.der -outform der
-	@./bin/pelz seal test/data/client_cert_test.der -o test/data/client_cert_test.der.nkl
-	@./bin/pelz seal test/data/server_cert_test.der -o test/data/server_cert_test.der.nkl
-	@./bin/pelz seal test/data/client_priv_test.der -o test/data/client_priv_test.der.nkl
+	@openssl x509 -in test/data/node_pub.pem -inform pem -out test/data/node_pub.der -outform der
+	@openssl x509 -in test/data/proxy_pub.pem -inform pem -out test/data/proxy_pub.der -outform der
+	@openssl pkey -in test/data/node_priv.pem -inform pem -out test/data/node_priv.der -outform der
+	@./bin/pelz seal test/data/node_pub.der -o test/data/node_pub.der.nkl
+	@./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
+	@./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
 	@echo "GEN => Test Key/Cert Files"
 	@cd kmyth/sgx && make demo-pre demo/bin/ecdh-server --eval="Demo_App_C_Flags += -DDEMO_LOG_LEVEL=LOG_WARNING"
-	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/server_priv_test.pem -u test/data/client_cert_test.pem -p 7000 2> /dev/null &
+	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 2> /dev/null &
 	@sleep 1
 	@./test/bin/pelz-test 2> /dev/null
 	@rm -f test/data/*.pem

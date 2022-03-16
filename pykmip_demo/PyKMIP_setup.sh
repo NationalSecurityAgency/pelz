@@ -17,14 +17,19 @@ cd /etc/pykmip/certs
 curl -O https://raw.githubusercontent.com/arp102/PyKMIP/improvement/cert-san/bin/create_certificates.py
 python3 create_certificates.py
 
+mv client_certificate_john_doe.pem proxy_pub.pem
+mv client_key_john_doe.pem proxy_priv.pem
+mv server_certificate.pem pykmip_pub.pem
+mv server_key.pem pykmip_priv.pem
+
 # Create server config file
 echo "
 [server]
 hostname=localhost
 port=5696
 ca_path=/etc/pykmip/certs/root_certificate.pem
-key_path=/etc/pykmip/certs/server_key.pem
-certificate_path=/etc/pykmip/certs/server_certificate.pem
+key_path=/etc/pykmip/certs/pykmip_priv.pem
+certificate_path=/etc/pykmip/certs/pykmip_pub.pem
 auth_suite=TLS1.2
 policy_path=/etc/pykmip/policies
 enable_tls_client_auth=True
@@ -45,8 +50,8 @@ echo "
 [client]
 host=localhost
 port=5696
-keyfile=/etc/pykmip/certs/client_key_john_doe.pem
-certfile=/etc/pykmip/certs/client_certificate_john_doe.pem
+keyfile=/etc/pykmip/certs/proxy_priv.pem
+certfile=/etc/pykmip/certs/proxy_pub.pem
 cert_reqs=CERT_REQUIRED
 ssl_version=PROTOCOL_SSLv23
 ca_certs=/etc/pykmip/certs/root_certificate.pem
