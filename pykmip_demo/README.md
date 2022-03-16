@@ -28,7 +28,7 @@ SGX and TPM assumed to already be installed and working.
 ### PyKMIP Server Installaiton/Setep Steps
 4.  Run PyKMIP Script in a separate terminal
 
-		./pykmip/PyKMIP_setup.sh
+		./pykmip_demo/PyKMIP_setup.sh
 
 5.  Run the server in a separate terminal
 
@@ -36,7 +36,7 @@ SGX and TPM assumed to already be installed and working.
 
 6.  Register keys with the server
 
-		./pykmip/register_keys_pykmip.sh
+		./pykmip_demo/register_keys_pykmip.sh
 
 
 ### Certificate and PKey Creation/Installation Steps
@@ -52,6 +52,7 @@ SGX and TPM assumed to already be installed and working.
 
 8.	Run the pelz-service in a separate terminal
 
+		cd pelz
 		./bin/pelz-service -m 200
 
 9.	Load server certificate and client PKey
