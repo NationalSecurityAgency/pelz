@@ -13,6 +13,7 @@ The source code comes with a script that establishes pelz as a Linux service run
 
 ## Running the pelz Accumulo plugin  
 The source code comes a script to install or uninstall the java files required to build the PelzCryptoService with Apache Accumulo. Instruction can be found in the [INSTALL](install.md).
+Pelz has been tested against Apache Accumulo commit 9650e3b.
 
 ## Installing Kmyth to run pelz
 Pelz has been tested against Kmyth commit f6743d3.
