@@ -44,7 +44,7 @@ SGX and TPM assumed to already be installed and working.
 
 		cd test/data
 		./gen_test_keys_certs.bash
-		openssl x509 -in /etc/pykmip/certs/proxy_pub.pem -inform pem -out proxy_pub.der -outform der
+		openssl x509 -in proxy_pub.pem -inform pem -out proxy_pub.der -outform der
 		openssl pkey -in node_priv.pem -inform pem -out node_priv.der -outform der
 		cd ../..
 		./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
@@ -66,7 +66,7 @@ SGX and TPM assumed to already be installed and working.
 		cd pelz/kmyth/sgx
 		make clean demo-all
 		cd ../..
-		./kmyth/sgx/demo/bin/tls-proxy -r /etc/pykmip/certs/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5696 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem
+		./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5696 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem
 
 ### End to End Demo Step
 11. Run Accumulo Test
