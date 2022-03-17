@@ -12,7 +12,7 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data)
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
   char *str = NULL;
@@ -37,7 +37,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   switch (*request_type)
   {
   case REQ_ENC:
-    if (encrypt_parser(json, key_id, data))
+    if (encrypt_parser(json, key_id, data, request_sig, requestor_cert))
     {
       pelz_log(LOG_ERR, "Encrypt Request Parser Error");
       cJSON_Delete(json);
@@ -45,7 +45,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     }
     break;
   case REQ_DEC:
-    if (decrypt_parser(json, key_id, data))
+    if (decrypt_parser(json, key_id, data, request_sig, requestor_cert))
     {
       pelz_log(LOG_ERR, "Decrypt Request Parser Error");
       cJSON_Delete(json);
@@ -82,7 +82,7 @@ int error_message_encoder(charbuf * message, const char *err_message)
   return (0);
 }
 
-int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf * message)
+int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf request_sig, charbuf requestor_cert, charbuf * message)
 {
   cJSON *root;
   char *tmp = NULL;
@@ -133,7 +133,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
   return (0);
 }
 
-int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
+int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   if (!cJSON_HasObjectItem(json, "key_id"))
   {
@@ -218,7 +218,7 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
   return (0);
 }
 
-int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
+int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   if (!cJSON_HasObjectItem(json, "key_id"))
   {

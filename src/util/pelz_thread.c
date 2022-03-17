@@ -265,12 +265,14 @@ void thread_process(void *arg)
     charbuf key_id;
     charbuf data_in;
     charbuf data_out;
+    charbuf request_sig;
+    charbuf requestor_cert;
 
     charbuf data;
     charbuf output;
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in))
+    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
@@ -336,7 +338,7 @@ void thread_process(void *arg)
       {
         data_out.chars[data_out.len] = 0;
       }
-      message_encoder(request_type, key_id, data_out, &message);
+      message_encoder(request_type, key_id, data_out, request_sig, requestor_cert, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
       pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     }
