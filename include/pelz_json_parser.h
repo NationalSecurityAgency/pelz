@@ -28,7 +28,7 @@
  * @return 0 on success, 1 on error
  *
  */
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data);
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
 
 /**
  * <pre>
@@ -61,7 +61,7 @@ int error_message_encoder(charbuf * message, const char *err_message);
  * @return 0 on success, 1 on error
  *
  */
-int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf * message);
+int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf request_sig, charbuf requestor_cert, charbuf * message);
 
 /**
  * <pre>
@@ -78,7 +78,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
  * @return 0 on success, 1 on error
  *
  */
-int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
+int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
 
 /**
  * <pre>
@@ -95,6 +95,6 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
  * @return 0 on success, 1 on error
  *
  */
-int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
+int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
 
 #endif /* INCLUDE_JSON_PARSER_H_ */
