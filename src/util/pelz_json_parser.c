@@ -57,6 +57,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     cJSON_Delete(json);
     return (1);
   }
+  ///
   cJSON_Delete(json);
   return (0);
 }
@@ -155,6 +156,30 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
     pelz_log(LOG_ERR, "Missing required JSON key: enc_data_len.");
     return (1);
   }
+  /*
+  else if (!cJSON_HasObjectItem(json, "request_sig_val"))
+  {
+    pelz_log(LOG_ERR, "Missing required JSON key: request_sig_val.");
+    return (1);
+  }
+  else if (!cJSON_HasObjectItem(json, "request_sig_val_len"))
+  {
+    pelz_log(LOG_ERR, "Missing required JSON key: request_sig_val_len.");
+    return (1);
+  }
+  else if (!cJSON_HasObjectItem(json, "requestor_cert_val"))
+  {
+    pelz_log(LOG_ERR, "Missing required JSON key: requestor_cert_val.");
+    return (1);
+  }
+  else if (!cJSON_HasObjectItem(json, "requestor_cert_val_len"))
+  {
+    pelz_log(LOG_ERR, "Missing required JSON key: requestor_cert_val_len.");
+    return (1);
+  }
+  */
+
+
   if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "key_id_len")))
   {
     pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: key_id_len. Data type should be integer.");
@@ -183,6 +208,7 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
     free_charbuf(key_id);
     return (1);
   }
+  ///
   if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "enc_data_len")))
   {
     pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: enc_data_len. Data type should be integer.");
@@ -215,6 +241,93 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
     free_charbuf(data);
     return (1);
   }
+  ///
+  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "request_sig_val_len")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: request_sig_val_len. Data type should be integer.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    printf("1");
+    return (1);
+  }
+  *request_sig = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "request_sig_val_len")->valueint);
+  if (!cJSON_IsString(cJSON_GetObjectItem(json, "request_sig_val")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: request_sig_val. Data type should be string.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    printf("2");
+    return (1);
+  }
+  if (cJSON_GetObjectItemCaseSensitive(json, "request_sig_val")->valuestring != NULL)
+  {
+    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "request_sig_val")->valuestring) != request_sig->len)
+    {
+      pelz_log(LOG_ERR, "Length of value in JSON key: request_sig_val does not match value in JSON key: request_sig_val_len.");
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      printf("3");
+      return (1);
+    }
+    memcpy(request_sig->chars, cJSON_GetObjectItemCaseSensitive(json, "request_sig_val")->valuestring, request_sig->len);
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "No value in JSON key: request_sig_val.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    printf("4");
+    return (1);
+  }
+  ///
+      if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "requestor_cert_val_len")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: requestor_cert_val_len. Data type should be integer.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    printf("5");
+    return (1);
+  }
+  *requestor_cert = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val_len")->valueint);
+  if (!cJSON_IsString(cJSON_GetObjectItem(json, "requestor_cert_val")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: requestor_cert_val. Data type should be string.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    free_charbuf(requestor_cert);
+    printf("6");
+    return (1);
+  }
+  if (cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val")->valuestring != NULL)
+  {
+    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val")->valuestring) != requestor_cert->len)
+    {
+      pelz_log(LOG_ERR, "Length of value in JSON key: requestor_cert_val does not match value in JSON key: requestor_cert_val_len.");
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      free_charbuf(requestor_cert);
+      printf("7");
+      return (1);
+    }
+    memcpy(requestor_cert->chars, cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val")->valuestring, requestor_cert->len);
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "No value in JSON key: requestor_cert_val.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    free_charbuf(requestor_cert);
+    printf("8");
+    return (1);
+  }
+  ///
   return (0);
 }
 
@@ -300,5 +413,92 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
     free_charbuf(data);
     return (1);
   }
+    ///
+  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "request_sig_val_len")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: request_sig_val_len. Data type should be integer.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    printf("a");
+    return (1);
+  }
+  *request_sig = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "request_sig_val_len")->valueint);
+  if (!cJSON_IsString(cJSON_GetObjectItem(json, "request_sig_val")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: request_sig_val. Data type should be string.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    printf("b");
+    return (1);
+  }
+  if (cJSON_GetObjectItemCaseSensitive(json, "request_sig_val")->valuestring != NULL)
+  {
+    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "request_sig_val")->valuestring) != request_sig->len)
+    {
+      pelz_log(LOG_ERR, "Length of value in JSON key: request_sig_val does not match value in JSON key: request_sig_val_len.");
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      printf("c");
+      return (1);
+    }
+    memcpy(request_sig->chars, cJSON_GetObjectItemCaseSensitive(json, "request_sig_val")->valuestring, request_sig->len);
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "No value in JSON key: request_sig_val.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    printf("d");
+    return (1);
+  }
+  ///
+      if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "requestor_cert_val_len")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: requestor_cert_val_len. Data type should be integer.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    printf("e");
+    return (1);
+  }
+  *requestor_cert = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val_len")->valueint);
+  if (!cJSON_IsString(cJSON_GetObjectItem(json, "requestor_cert_val")))
+  {
+    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: requestor_cert_val. Data type should be string.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    free_charbuf(requestor_cert);
+    printf("f");
+    return (1);
+  }
+  if (cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val")->valuestring != NULL)
+  {
+    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val")->valuestring) != requestor_cert->len)
+    {
+      pelz_log(LOG_ERR, "Length of value in JSON key: requestor_cert_val does not match value in JSON key: requestor_cert_val_len.");
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      free_charbuf(requestor_cert);
+      printf("g");
+      return (1);
+    }
+    memcpy(requestor_cert->chars, cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_val")->valuestring, requestor_cert->len);
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "No value in JSON key: requestor_cert_val.");
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    free_charbuf(requestor_cert);
+    printf("h");
+    return (1);
+  }
+  ///
   return (0);
 }

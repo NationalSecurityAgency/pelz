@@ -56,8 +56,8 @@ void test_encrypt_parser(void)
 
   const char *request_sig_val = "TestTestTest\n";
   unsigned int request_sig_val_len = 13;
-  const char * requestor_cert_val = "CertTestCertTest\n";
-  unsigned int requestor_cert_val_len = 17;
+  const char * requestor_cert_val = "TestTestTest\n";
+  unsigned int requestor_cert_val_len = 13;
 
   //Building of a standard valid JSON request
   json = cJSON_CreateObject();
@@ -68,10 +68,10 @@ void test_encrypt_parser(void)
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
-  cJSON_AddItemToObject(json, "request_sig", cJSON_CreateString(request_sig_val));
-  cJSON_AddItemToObject(json, "request_sig_len", cJSON_CreateNumber(request_sig_val_len));
-  cJSON_AddItemToObject(json, "requestor_cert", cJSON_CreateString(requestor_cert_val));
-  cJSON_AddItemToObject(json, "requestor_cert_len", cJSON_CreateNumber(request_sig_val_len));  
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(request_sig_val_len));  
                        
   //Test standard valid JSON request
   CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
@@ -177,6 +177,11 @@ void test_decrypt_parser(void)
   const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
   unsigned int dec_data_len = 57;
 
+  const char *request_sig_val = "TestTestTest\n";
+  unsigned int request_sig_val_len = 13;
+  const char * requestor_cert_val = "TestTestTest\n";
+  unsigned int requestor_cert_val_len = 13;
+
   //Building of a standard valid JSON request
   json = cJSON_CreateObject();
   cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(2));
@@ -186,6 +191,10 @@ void test_decrypt_parser(void)
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(request_sig_val_len));  
 
   //Test standard valid JSON request
   CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
@@ -195,6 +204,8 @@ void test_decrypt_parser(void)
   CU_ASSERT(memcmp(data.chars, dec_data, data.len) == 0);
   free_charbuf(&key_id);
   free_charbuf(&data);
+  //free_charbuf(&request);
+  //free_charbuf(&requestor);
 
   //Test check of JSON request hasObject
   cJSON_DeleteItemFromObject(json, "key_id");
@@ -307,6 +318,23 @@ void test_request_decoder(void)
   unsigned int dec_data_len[6] = {
     57, 57, 45, 45, 33, 33
   };
+  const char * request_sig_val[6] = {
+    "Request\n",
+    "Hello\n",
+    "FiniteState\n",
+    "TestFour\n",
+    "AnotherOne\n",
+    "ThereWeGo\n",
+  };
+  unsigned int request_sig_val_len[6] = {
+     8, 6, 12, 9, 11, 10
+  };
+  const char * requestor_cert_val[6] = {
+    "Cert1\n","Cert2\n","Cert3\n","Cert4\n","Cert5\n","Cert6\n"
+  };
+  unsigned int requestor_cert_val_len[6] = {
+     6, 6, 6, 6, 6, 6
+  };
 
   pelz_log(LOG_DEBUG, "Start Request Decoder Test");
   //Test Invalid Requests with bad request_types
@@ -351,6 +379,14 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec, "dec_data", cJSON_CreateString(dec_data[i]));
     cJSON_AddItemToObject(json_enc, "enc_data_len", cJSON_CreateNumber(enc_data_len[i]));
     cJSON_AddItemToObject(json_dec, "dec_data_len", cJSON_CreateNumber(dec_data_len[i]));
+    cJSON_AddItemToObject(json_enc, "request_sig_val", cJSON_CreateString(request_sig_val[i]));
+    cJSON_AddItemToObject(json_enc, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len[i]));
+    cJSON_AddItemToObject(json_enc, "requestor_cert_val", cJSON_CreateString(requestor_cert_val[i]));
+    cJSON_AddItemToObject(json_enc, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len[i])); 
+    cJSON_AddItemToObject(json_dec, "request_sig_val", cJSON_CreateString(request_sig_val[i]));
+    cJSON_AddItemToObject(json_dec, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len[i]));
+    cJSON_AddItemToObject(json_dec, "requestor_cert_val", cJSON_CreateString(requestor_cert_val[i]));
+    cJSON_AddItemToObject(json_dec, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len[i]));  
 
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
