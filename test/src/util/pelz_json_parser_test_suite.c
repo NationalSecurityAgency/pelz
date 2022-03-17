@@ -43,6 +43,8 @@ void test_encrypt_parser(void)
   cJSON *json;
   charbuf key_id;
   charbuf data;
+  charbuf request;
+  charbuf requestor;
 
   //Valid Test Values
   const char *json_key_id = "file:/test/key1.txt";
@@ -51,6 +53,11 @@ void test_encrypt_parser(void)
   unsigned int enc_data_len = 45;
   const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
   unsigned int dec_data_len = 57;
+
+  const char *request_sig = "TestTestTest\n";
+  unsigned int request_sig_len = 13;
+  const char * requestor_cert = "CertTestCertTest\n";
+  unsigned int requestor_cert_len = 17;
 
   //Building of a standard valid JSON request
   json = cJSON_CreateObject();
@@ -61,8 +68,10 @@ void test_encrypt_parser(void)
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
-
-  // Test Comment for Pushing Stuff :)
+  cJSON_AddItemToObject(json, "request_sig", cJSON_CreateString(request_sig));
+  cJSON_AddItemToObject(json, "request_sig_len", cJSON_CreateNumber(request_sig_len));
+  cJSON_AddItemToObject(json, "requestor_cert", cJSON_CreateString(requestor_cert));
+  cJSON_AddItemToObject(json, "requestor_cert_len", cJSON_CreateNumber(request_sig_len));  
 
   //Test standard valid JSON request
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
@@ -70,8 +79,15 @@ void test_encrypt_parser(void)
   CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
   CU_ASSERT(data.len == enc_data_len);
   CU_ASSERT(memcmp(data.chars, enc_data, data.len) == 0);
+  // These assertions will be correct (and produce no errors) once encrypt_parser() is adjusted properly)
+  CU_ASSERT(request.len == request_sig_len);
+  CU_ASSERT(memcmp(request.chars, request_sig, request.len) == 0);
+  CU_ASSERT(requestor.len == requestor_cert_len);
+  CU_ASSERT(memcmp(requestor.chars, requestor_cert, requestor.len) == 0);
   free_charbuf(&key_id);
   free_charbuf(&data);
+  free_charbuf(&request);
+  free_charbuf(&requestor);
 
   //Test check of JSON request hasObject
   cJSON_DeleteItemFromObject(json, "key_id");
