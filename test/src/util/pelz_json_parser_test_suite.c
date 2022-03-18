@@ -80,14 +80,14 @@ void test_encrypt_parser(void)
   CU_ASSERT(data.len == enc_data_len);
   CU_ASSERT(memcmp(data.chars, enc_data, data.len) == 0);
   // These assertions will be correct (and produce no errors) once encrypt_parser() is adjusted properly)
-  //CU_ASSERT(request.len == request_sig_len);
-  //CU_ASSERT(memcmp(request.chars, request_sig, request.len) == 0);
-  //CU_ASSERT(requestor.len == requestor_cert_len);
-  //CU_ASSERT(memcmp(requestor.chars, requestor_cert, requestor.len) == 0);
+  CU_ASSERT(request_sig.len == request_sig_val_len);
+  CU_ASSERT(memcmp(requestor_cert.chars, request_sig_val, requestor_cert.len) == 0);
+  CU_ASSERT(requestor_cert.len == requestor_cert_val_len);
+  CU_ASSERT(memcmp(requestor_cert.chars, requestor_cert_val, requestor_cert.len) == 0);
   free_charbuf(&key_id);
   free_charbuf(&data);
-  //free_charbuf(&request);
-  //free_charbuf(&requestor);
+  free_charbuf(&request_sig);
+  free_charbuf(&requestor_cert);
 
   //Test check of JSON request hasObject
   cJSON_DeleteItemFromObject(json, "key_id");
