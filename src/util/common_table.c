@@ -11,7 +11,7 @@
 #include <util.h>
 #include <pelz_request_handler.h>
 #include <charbuf.h>
-#include <pelz_log.h>
+#include <pelz_enclave_log.h>
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
