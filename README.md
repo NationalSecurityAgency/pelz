@@ -13,6 +13,7 @@ The source code comes with a script that establishes pelz as a Linux service run
 
 ## Running the pelz Accumulo plugin  
 The source code comes a script to install or uninstall the java files required to build the PelzCryptoService with Apache Accumulo. Instruction can be found in the [INSTALL](install.md).
+Pelz has been tested against Accumulo commit a1a1b72.
 
 ## Installing Kmyth to run pelz
 Pelz has been tested against Kmyth commit 28f80708.
@@ -32,16 +33,16 @@ The JSON objects can be in two forms: requests and responses.
 * request_type : int
     * 1 for AES Key Wrap
     * 2 for AES Key Unwrap
-* key_id : string of charaters
+* key_id : string of characters
      * URI for the key location - used as the key identifier.
      * URI syntax must currently comply with RFC 8089 and RFC 1738 Section 3.1.
 * key\_id_len : int
     * Integer specifying the length of the key_id URI.
-* enc_data : string of charaters
+* enc_data : string of characters
     * Base64 encoded version of the unencrypted key to be AES Key Wrapped.
 * enc\_data_len : int
     * Integer specifying the length of the base-64 encoded, unencrypted key.
-* dec_data : string of charaters
+* dec_data : string of characters
     * Base-64 encoded version of the encrypted key to be AES Key UnWrapped.
 * dec\_data_len : int
      * Integer specifying the length of the base-64 encoded, encrypted key.
@@ -57,26 +58,26 @@ JSON Request for AES Key Unwrap
 * {"key_id": "pelz://localhost/7000/fake_key_id", "request_type": 2, "dec_data_len": 45, "key_id_len": 33, "dec_data": "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n"}
 
 #### Response JSON Key and Values
-* key_id : string of charaters
+* key_id : string of characters
     * URI for the key location (key identifier).
     * The key_id specified in the JSON request will be included in the JSON response.
 * key\_id_len : int
     * Integer specifying the length of the key_id URI.
-* enc_out : string of charaters
+* enc_out : string of characters
     * Base-64 encoded, AES Key Wrapped key.
 * enc\_out_len : int
     * Integer specifying the length of the base-64 encoded, encrypted key.
-* dec_out : string of charaters
+* dec_out : string of characters
     * Base-64 encoded, AES Key UnWrapped key.
 * dec\_out_len : int
     * Integer specifying the length of the base-64 encoded, unencrypted key.
-* error : string of charaters
+* error : string of characters
     * Error message for the service user
 
 Examples:
-* {u'key_id': u'file:~/pelz/test/key1.txt', u'enc_out': u'BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n', u'key_id_len': 37, u'enc_out_len': 45}
-* {u'key_id': u'file:~/pelz/test/key1.txt', u'dec_out': u'YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n', u'key_id_len': 37, u'dec_out_len': 33}
-* {u'error': u'Key not added'}
+* {"key_id": "file:~/pelz/test/key1.txt", "enc_out": "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n", "key_id_len": 37, "enc_out_len": 45}
+* {"key_id": "file:~/pelz/test/key1.txt", "dec_out": "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n", "key_id_len": 37, "dec_out_len": 33}
+* {"error': "Key not added"}
 
 ### URI Schemes
 Although any URI scheme could be supported, we currently only support reading from a filesystem or FTP.
