@@ -8,7 +8,6 @@
 
 #include "charbuf.h"
 #include "util.h"
-#include "pelz_log.h"
 
 charbuf new_charbuf(size_t len)
 {
