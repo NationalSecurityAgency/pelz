@@ -53,7 +53,6 @@ void test_encrypt_parser(void)
   unsigned int enc_data_len = 45;
   const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
   unsigned int dec_data_len = 57;
-
   const char *request_sig_val = "TestTestTest\n";
   unsigned int request_sig_val_len = 13;
   const char * requestor_cert_val = "TestTestTest\n";
@@ -79,7 +78,6 @@ void test_encrypt_parser(void)
   CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
   CU_ASSERT(data.len == enc_data_len);
   CU_ASSERT(memcmp(data.chars, enc_data, data.len) == 0);
-  // These assertions will be correct (and produce no errors) once encrypt_parser() is adjusted properly)
   CU_ASSERT(request_sig.len == request_sig_val_len);
   CU_ASSERT(memcmp(requestor_cert.chars, request_sig_val, requestor_cert.len) == 0);
   CU_ASSERT(requestor_cert.len == requestor_cert_val_len);
@@ -108,15 +106,36 @@ void test_encrypt_parser(void)
 
   cJSON_DeleteItemFromObject(json, "dec_data");
   CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+  // Do we have to deallocate right here, every time we call encrypt_parser(), or just at the end of it all?
   free_charbuf(&key_id);
   free_charbuf(&data);
+  free_charbuf(&request_sig);
+  free_charbuf(&requestor_cert);
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
   cJSON_DeleteItemFromObject(json, "dec_data_len");
   CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
   free_charbuf(&key_id);
   free_charbuf(&data);
+  free_charbuf(&request_sig);
+  free_charbuf(&requestor_cert);
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
 
   //Test check of JSON request isNumber
   cJSON_DeleteItemFromObject(json, "key_id_len");
@@ -131,6 +150,18 @@ void test_encrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "enc_data_len");
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateString("20"));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateString("22"));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
+
   //Test check of JSON request isString
   cJSON_DeleteItemFromObject(json, "key_id");
   cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482));
@@ -144,6 +175,18 @@ void test_encrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "enc_data");
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
 
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateNumber(1738));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateNumber(8675));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+
   //Test check of JSON request string length match
   cJSON_DeleteItemFromObject(json, "key_id_len");
   cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(20));
@@ -156,6 +199,18 @@ void test_encrypt_parser(void)
   CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
   cJSON_DeleteItemFromObject(json, "enc_data_len");
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
+
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(35));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateNumber(99));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateNumber(requestor_cert_val_len));
 
   //Clean-up JSON
   cJSON_Delete(json);
@@ -194,7 +249,7 @@ void test_decrypt_parser(void)
   cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
   cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
   cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
-  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(request_sig_val_len));  
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));  
 
   //Test standard valid JSON request
   CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
@@ -202,10 +257,14 @@ void test_decrypt_parser(void)
   CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
   CU_ASSERT(data.len == dec_data_len);
   CU_ASSERT(memcmp(data.chars, dec_data, data.len) == 0);
+  CU_ASSERT(request_sig.len == request_sig_val_len);
+  CU_ASSERT(memcmp(request_sig.chars, request_sig_val, request_sig.len) == 0);
+  CU_ASSERT(requestor_cert.len == requestor_cert_val_len);
+  CU_ASSERT(memcmp(requestor_cert.chars, requestor_cert_val, requestor_cert.len) == 0);
   free_charbuf(&key_id);
   free_charbuf(&data);
-  //free_charbuf(&request);
-  //free_charbuf(&requestor);
+  free_charbuf(&request_sig);
+  free_charbuf(&requestor_cert);
 
   //Test check of JSON request hasObject
   cJSON_DeleteItemFromObject(json, "key_id");
@@ -236,6 +295,22 @@ void test_decrypt_parser(void)
   free_charbuf(&data);
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
+
   //Test check of JSON request isNumber
   cJSON_DeleteItemFromObject(json, "key_id_len");
   cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateString("19"));
@@ -248,6 +323,18 @@ void test_decrypt_parser(void)
   CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
   cJSON_DeleteItemFromObject(json, "dec_data_len");
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateString("20"));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateString("22"));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
 
   //Test check of JSON request isString
   cJSON_DeleteItemFromObject(json, "key_id");
@@ -262,6 +349,18 @@ void test_decrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "dec_data");
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateNumber(1738));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateNumber(8675));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+
   //Test check of JSON request string length match
   cJSON_DeleteItemFromObject(json, "key_id_len");
   cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(20));
@@ -274,6 +373,18 @@ void test_decrypt_parser(void)
   CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
   cJSON_DeleteItemFromObject(json, "dec_data_len");
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(35));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateNumber(99));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateNumber(requestor_cert_val_len));
 
   //Clean-up JSON
   cJSON_Delete(json);
