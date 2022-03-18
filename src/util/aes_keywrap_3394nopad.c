@@ -5,7 +5,7 @@
  */
 
 #include "aes_keywrap_3394nopad.h"
-#include "pelz_log.h"
+#include "pelz_enclave_log.h"
 
 #include <openssl/evp.h>
 
@@ -34,7 +34,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   }
   if (inData_len < 16 || inData_len % 8 != 0)
   {
-    pelz_log(LOG_ERR, "bad data size (%lu) - not div by 8/min 16 bytes ... exiting", inData_len);
+    pelz_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
     return 1;
   }
 
@@ -76,7 +76,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
     init_result = EVP_EncryptInit_ex(ctx, EVP_aes_256_wrap(), NULL, NULL, NULL);
     break;
   default:
-    pelz_log(LOG_ERR, "invalid key size (%d bytes)", key_len);
+    pelz_log(LOG_ERR, "invalid key size");
   }
   if (!init_result)
   {
@@ -112,7 +112,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
     return 1;
   }
   ciphertext_len = tmp_len;
-  pelz_log(LOG_DEBUG, "key wrap produced %d output CT bytes", ciphertext_len);
+  pelz_log(LOG_DEBUG, "key wrap produced output CT bytes");
 
   // OpenSSL requires a "finalize" operation
   if (!EVP_EncryptFinal_ex(ctx, (*outData) + ciphertext_len, &tmp_len))
@@ -128,7 +128,7 @@ int aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // eight bytes for prepended integrity check value)
   if (ciphertext_len != *outData_len)
   {
-    pelz_log(LOG_ERR, "CT length error (expected %lu, actual %d) bytes ... exiting", *outData_len, ciphertext_len);
+    pelz_log(LOG_ERR, "CT length error between expected and  actual bytes ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -166,12 +166,12 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   }
   if (inData_len < 24)
   {
-    pelz_log(LOG_ERR, "input data must be >= 24 bytes, only %lu bytes) ... exiting", inData_len);
+    pelz_log(LOG_ERR, "input data must be >= 24 bytes) ... exiting");
     return 1;
   }
   if (inData_len % 8 != 0)
   {
-    pelz_log(LOG_ERR, "bad (%lu) data size - not div by 8/min 16 bytes ... exiting", inData_len);
+    pelz_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
     return 1;
   }
 
@@ -182,7 +182,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   *outData = (unsigned char *) malloc(inData_len);
   if (*outData == NULL)
   {
-    pelz_log(LOG_ERR, "malloc error (%d bytes) for PT output ... exiting", inData_len);
+    pelz_log(LOG_ERR, "malloc error for PT output ... exiting");
     return 1;
   }
 
@@ -212,7 +212,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
     init_result = EVP_DecryptInit_ex(ctx, EVP_aes_256_wrap(), NULL, NULL, NULL);
     break;
   default:
-    pelz_log(LOG_DEBUG, "invalid key length (%d bytes) ", key_len);
+    pelz_log(LOG_DEBUG, "invalid key length");
   }
   if (!init_result)
   {
@@ -221,7 +221,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  pelz_log(LOG_DEBUG, "AES Key Wrap (RFC3394NoPadding/%d) cipher context", key_len * 8);
+  pelz_log(LOG_DEBUG, "AES Key Wrap (RFC3394NoPadding) cipher context");
 
   // set the decryption key in the cipher context
   if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, NULL))
@@ -247,7 +247,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
     return 1;
   }
   *outData_len = tmp_len;
-  pelz_log(LOG_DEBUG, "key unwrap produced  %d PT bytes", *outData_len);
+  pelz_log(LOG_DEBUG, "key unwrap produced PT bytes");
 
   // "finalize" decryption
   if (!EVP_DecryptFinal_ex(ctx, *outData + *outData_len, &tmp_len))
@@ -263,8 +263,7 @@ int aes_keywrap_3394nopad_decrypt(unsigned char *key,
   // the length of the 8-byte integrity check value
   if (*outData_len != inData_len - 8)
   {
-    pelz_log(LOG_ERR, "unwrapped data length (%d bytes) mis-matches expected "
-      "(%lu bytes) ... exiting", *outData_len, inData_len - 8);
+    pelz_log(LOG_ERR, "unwrapped data length mis-matches expected ... exiting");
     free(*outData);
     EVP_CIPHER_CTX_free(ctx);
     return 1;
