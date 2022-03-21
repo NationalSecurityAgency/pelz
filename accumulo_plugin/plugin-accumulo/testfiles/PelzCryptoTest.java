@@ -139,6 +139,10 @@ public class PelzCryptoTest {
     return "file:" + System.getProperty("user.dir") + "/target/CryptoTest-testkeyfile.key";
   }
 
+  public static String serverKeyPath(Class<?> testClass) {
+    return "pelz://localhost/7000/5";
+  }
+
   public static String emptyKeyPath(Class<?> testClass) {
     return "file:" + System.getProperty("user.dir") + "/target/CryptoTest-emptykeyfile.key";
   }
@@ -354,7 +358,8 @@ public class PelzCryptoTest {
   public void testPelzKeyUtilsWrapAndUnwrap()
       throws NoSuchAlgorithmException, NoSuchProviderException {
     java.security.Key fek = PelzKeyUtils.generateKey(random, 32);
-    String kekPath = "file:" + System.getProperty("user.dir") + "/target/CryptoTest-testkeyfile.key";
+    AccumuloConfiguration conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    String kekPath = conf.get(Property.INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri");
     byte[] wrapped = PelzKeyUtils.wrapKey(fek.getEncoded(), kekPath);
     assertFalse(Arrays.equals(fek.getEncoded(), wrapped));
     byte[] unwrapped = PelzKeyUtils.unwrapKey(wrapped, kekPath);
