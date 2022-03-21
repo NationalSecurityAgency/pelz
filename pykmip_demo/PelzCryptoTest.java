@@ -123,7 +123,7 @@ public class PelzCryptoTest {
       case CRYPTO_ON:
         cfg.set(Property.INSTANCE_CRYPTO_SERVICE,
             "org.apache.accumulo.core.pelz.PelzCryptoService");
-        cfg.set(INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri", PelzCryptoTest.keyPath(testClass));
+        cfg.set(INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri", PelzCryptoTest.serverKeyPath(testClass));
         break;
       case CRYPTO_OFF:
         break;
@@ -137,6 +137,10 @@ public class PelzCryptoTest {
 
   public static String keyPath(Class<?> testClass) {
     return "file:" + System.getProperty("user.dir") + "/target/CryptoTest-testkeyfile.key";
+  }
+
+  public static String serverKeyPath(Class<?> testClass) {
+    return "pelz://localhost/7000/5";
   }
 
   public static String emptyKeyPath(Class<?> testClass) {
