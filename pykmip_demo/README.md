@@ -24,7 +24,6 @@ SGX and TPM assumed to already be installed and working.
 		./setup_plugin.sh -i -d ~/accumulo/
 		cd ..
 		cp pykmip_demo/PelzCryptoTest.java ~/accumulo/core/src/test/java/org/apache/accumulo/core/pelz/
-		cp pykmip_demo/RFilePelzTest.java ~/accumulo/core/src/test/java/org/apache/accumulo/core/file/rfile/
 
 ### PyKMIP Server Installaiton/Setep Steps
 4.  Run PyKMIP Script in a separate terminal
