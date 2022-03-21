@@ -21,9 +21,8 @@ SGX and TPM assumed to already be installed and working.
 		git clone https://github.com/apache/accumulo.git
 		sudo apt install maven openjdk-11-jdk libxml2-utils
 		cd pelz/accumulo_plugin
-		./setup_plugin.sh -i -d ~/accumulo/
+		./setup_plugin.sh -i -d ~/accumulo/ -p
 		cd ..
-		cp pykmip_demo/PelzCryptoTest.java ~/accumulo/core/src/test/java/org/apache/accumulo/core/pelz/
 
 ### PyKMIP Server Installaiton/Setep Steps
 4.  Run PyKMIP Script in a separate terminal
