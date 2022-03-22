@@ -80,11 +80,23 @@ extern "C"
 
 /**
  * <pre>
- * Writes a message to the FIFO pipe
+ * Writes a message to an already-opened FIFO pipe
+ * </pre>
+ *
+ * @param[in] fd The FIFO pipe file descriptor
+ * @param[in] msg Message to be sent along the pipe, null-terminated
+ *
+ * @return 0 if success, 1 if error
+ */
+  int write_to_pipe_fd(int fd, char *msg);
+
+/**
+ * <pre>
+ * Writes a message to a FIFO pipe
  * </pre>
  *
  * @param[in] pipe The FIFO pipe name
- * @param[in] msg Message to be sent along the pipe
+ * @param[in] msg Message to be sent along the pipe, null-terminated
  *
  * @return 0 if success, 1 if error
  */
@@ -104,14 +116,14 @@ extern "C"
 
 /**
  * <pre>
- * Reads a message from the interface FIFO pipe
+ * Reads a complete message from the interface FIFO pipe
  * </pre>
  *
- * @param[in] pipe The FIFO pipe name
+ * @param[in] fd The FIFO pipe file descriptor number
  *
  * @return 0 if success, 1 if error
  */
-  int read_listener(char *pipe);
+  int read_listener(int fd);
 
 /**
  * <pre>
@@ -140,6 +152,28 @@ extern "C"
  * @return ParseResponseStatus status message indicating the outcome of parse
  */
   ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens);
+
+/**
+ * <pre>
+ * Opens a FIFO pipe for reading
+ * </pre>
+ *
+ * @param[in] name The FIFO pipe name
+ *
+ * @return the pipe's file descriptor number if success, -1 if error
+ */
+  int open_read_pipe(char *name);
+
+/**
+ * <pre>
+ * Opens a FIFO pipe for writing
+ * </pre>
+ *
+ * @param[in] name The FIFO pipe name
+ *
+ * @return the pipe's file descriptor number if success, -1 if error
+ */
+  int open_write_pipe(char *name);
 
 /**
  * <pre>
