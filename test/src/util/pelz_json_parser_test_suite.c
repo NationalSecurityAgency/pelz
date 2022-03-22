@@ -121,6 +121,7 @@ void test_encrypt_parser(void)
   free_charbuf(&requestor_cert);
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
+  /* In the future these values will be required for requests; For now, we accomodate by making them optional
   cJSON_DeleteItemFromObject(json, "request_sig_val");
   CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
   cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
@@ -136,6 +137,26 @@ void test_encrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
   CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
   cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
+  */
+
+  // We insert placeholders in the parser function; Therefore, we have to delete them before we add the original values
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
+  CU_ASSERT(encrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
 
   //Test check of JSON request isNumber
   cJSON_DeleteItemFromObject(json, "key_id_len");
@@ -295,6 +316,7 @@ void test_decrypt_parser(void)
   free_charbuf(&data);
   cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
+  /* In the future these values will be required for requests; For now, we accomodate by making them optional
   cJSON_DeleteItemFromObject(json, "request_sig_val");
   CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
   cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
@@ -310,6 +332,27 @@ void test_decrypt_parser(void)
   cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
   CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 1);
   cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
+  */
+
+  // We insert placeholders in the parser function; Therefore, we have to delete them before we add the original values
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+  cJSON_DeleteItemFromObject(json, "request_sig_val");
+  cJSON_DeleteItemFromObject(json, "request_sig_val_len");
+  cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(request_sig_val));
+  cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(request_sig_val_len));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val");
+  cJSON_DeleteItemFromObject(json, "requestor_cert_val_len");
+  cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(requestor_cert_val));
+  cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert_val_len));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data, &request_sig, &requestor_cert) == 0);
+
 
   //Test check of JSON request isNumber
   cJSON_DeleteItemFromObject(json, "key_id_len");

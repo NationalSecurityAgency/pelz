@@ -176,6 +176,7 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
     pelz_log(LOG_ERR, "Missing required JSON key: enc_data_len.");
     return (1);
   }
+  /* This will be re-instated when signatures and certificates are no longer optional in JSON requests
   else if (!cJSON_HasObjectItem(json, "request_sig_val"))
   {
     pelz_log(LOG_ERR, "Missing required JSON key: request_sig_val.");
@@ -195,6 +196,17 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
   {
     pelz_log(LOG_ERR, "Missing required JSON key: requestor_cert_val_len.");
     return (1);
+  }
+  */
+  else if (!cJSON_HasObjectItem(json, "request_sig_val"))
+  {
+    cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString("null\n"));
+    cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(5));
+  }
+  else if (!cJSON_HasObjectItem(json, "requestor_cert_val"))
+  {
+    cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString("null\n"));
+    cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(5));
   }
 
 
@@ -363,6 +375,7 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
     pelz_log(LOG_ERR, "Missing required JSON key: dec_data_len.");
     return (1);
   }
+  /* This will be re-instated when signatures and certificates are no longer optional in JSON requests
   else if (!cJSON_HasObjectItem(json, "request_sig_val"))
   {
     pelz_log(LOG_ERR, "Missing required JSON key: request_sig_val.");
@@ -382,6 +395,17 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
   {
     pelz_log(LOG_ERR, "Missing required JSON key: requestor_cert_val_len.");
     return (1);
+  }
+  */
+  else if (!cJSON_HasObjectItem(json, "request_sig_val"))
+  {
+    cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString("null\n"));
+    cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(5));
+  }
+  else if (!cJSON_HasObjectItem(json, "requestor_cert_val"))
+  {
+    cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString("null\n"));
+    cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(5));
   }
   if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "key_id_len")))
   {
