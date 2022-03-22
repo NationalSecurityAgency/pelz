@@ -305,25 +305,25 @@ endif
 ######## Common Objects ########
 
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
-	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ecdh_util.o: kmyth/sgx/common/src/ecdh_util.c
-	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
 ######## App Objects ########
 
 sgx/log_ocall.o: kmyth/sgx/untrusted/src/ocall/log_ocall.c
-	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/memory_ocall.o: kmyth/sgx/untrusted/src/ocall/memory_ocall.c
-	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ecdh_ocall.o: kmyth/sgx/untrusted/src/ocall/ecdh_ocall.c
-	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -332,35 +333,44 @@ int file_check(char *file_path)
   return (0);
 }
 
+int write_to_pipe_fd(int fd, char *msg)
+{
+  int msg_len;
+  int bytes_written;
+
+  msg_len = strlen(msg);
+  bytes_written = write(fd, msg, msg_len);
+  if (bytes_written == msg_len)
+  {
+    return 0;
+  }
+  else
+  {
+    pelz_log(LOG_ERR, "Error writing to pipe");
+    return 1;
+  }
+}
+
 int write_to_pipe(char *pipe, char *msg)
 {
   int fd;
   int ret;
 
-  if (file_check(pipe))
-  {
-    pelz_log(LOG_DEBUG, "Pipe not found, unable to communicate with pelz-service");
-    return 1;
-  }
-
-  fd = open(pipe, O_WRONLY | O_NONBLOCK);
+  fd = open_write_pipe(pipe);
   if (fd == -1)
   {
-    pelz_log(LOG_INFO, "Error opening pipe");
+    pelz_log(LOG_ERR, "Error opening pipe");
+    perror("open");
     return 1;
   }
 
-  ret = write(fd, msg, strlen(msg));
+  ret = write_to_pipe_fd(fd, msg);
+
   if (close(fd) == -1)
   {
-    pelz_log(LOG_DEBUG, "Error closing pipe");
+    pelz_log(LOG_ERR, "Error closing pipe");
   }
-  if (ret == -1)
-  {
-    pelz_log(LOG_DEBUG, "Error writing to pipe");
-    return 1;
-  }
-  return 0;
+  return ret;
 }
 
 int read_from_pipe(char *pipe, char **msg)
@@ -380,6 +390,7 @@ int read_from_pipe(char *pipe, char **msg)
   if (fd == -1)
   {
     pelz_log(LOG_ERR, "Error opening pipe");
+    perror("open");
     return 1;
   }
 
@@ -412,78 +423,84 @@ int read_from_pipe(char *pipe, char **msg)
   return 0;
 }
 
-int read_listener(char *pipe)
+int read_listener(int fd)
 {
-  if (file_check(pipe))
-  {
-    pelz_log(LOG_ERR, "Pipe not found");
-    return 1;
-  }
-
   fd_set set;
   struct timeval timeout;
   int rv;
   char msg[BUFSIZE];
+  int line_start, line_len, i;
+  int bytes_read;
 
-  int fd = open(pipe, O_RDONLY | O_NONBLOCK);
-
-  if (fd == -1)
-  {
-    pelz_log(LOG_ERR, "Error opening pipe for reading");
-    return 1;
-  }
-
-  FD_ZERO(&set);            // clear the set
+  FD_ZERO(&set);      // clear the set
   FD_SET(fd, &set);   // add file descriptor to the set
 
   timeout.tv_sec = 5;
   timeout.tv_usec = 0;
 
-  rv = select(fd + 1, &set, NULL, NULL, &timeout);
-  if(rv == -1)
+  // Read from the pipe until we see an END terminator, get an error, or time out
+  while (true)
   {
-    pelz_log(LOG_DEBUG, "Error in timeout of pipe.");
-    fprintf(stdout, "Error in timeout of pipe.\n");
-    close(fd);
-    return 1;    
-  }
-  else if(rv == 0)
-  {
-    pelz_log(LOG_DEBUG, "No response received from pelz-service.");
-    fprintf(stdout, "No response received from pelz-service.\n");
-    close(fd);
-    return 1;
-  }
-  else
-  {
-    int bytes_read = read(fd, msg, BUFSIZE);
-
-    if (bytes_read > 0)
+    rv = select(fd + 1, &set, NULL, NULL, &timeout);
+    if (rv == -1)
     {
-      if (bytes_read == 3 && memcmp(msg, "END", 3) == 0)
-      {
-        close(fd);
-        return 1;
-      }
-      else
-      {
-        pelz_log(LOG_DEBUG, "%.*s", bytes_read, msg);
-        fprintf(stdout, "%.*s\n", bytes_read, msg);
-      }
-    }
-    else if (bytes_read < 0)
-    {
-      pelz_log(LOG_ERR, "Pipe read failed");
+      pelz_log(LOG_DEBUG, "Error in timeout of pipe.");
+      fprintf(stdout, "Error in timeout of pipe.\n");
       close(fd);
       return 1;
     }
-    else
+    else if (rv == 0)
     {
-      pelz_log(LOG_DEBUG, "No read of pipe");
+      pelz_log(LOG_DEBUG, "No response received from pelz-service.");
+      fprintf(stdout, "No response received from pelz-service.\n");
+      close(fd);
+      return 1;
+    }
+
+    bytes_read = read(fd, msg, BUFSIZE);
+    if (bytes_read < 0)
+    {
+      if (errno == EWOULDBLOCK) {
+        // This happens occasionally because select is sometimes wrong
+        continue;
+      }
+      pelz_log(LOG_ERR, "Pipe read failed");
+      perror("read");
+      close(fd);
+      return 1;
+    }
+
+    // The received data can contain multiple message components separated by newlines
+    line_start = 0;
+    for (i=0; i<bytes_read; i++)
+    {
+      if (msg[i] == '\n')
+      {
+        line_len = i - line_start;
+
+        if (line_len == 3 && memcmp(&msg[line_start], "END", 3) == 0)
+        {
+          pelz_log(LOG_DEBUG, "Got END message");
+          close(fd);
+          return 0;
+        }
+        else
+        {
+          pelz_log(LOG_DEBUG, "%.*s", line_len, &msg[line_start]);
+          fprintf(stdout, "%.*s\n", line_len, &msg[line_start]);
+        }
+
+        line_start = i + 1;
+      }
+      else if (i == bytes_read - 1)
+      {
+        line_len = i - line_start;
+        pelz_log(LOG_ERR, "Incomplete response message - missing newline: %.*s.", line_len, &msg[line_start]);
+        close(fd);
+        return 1;
+      }
     }
   }
-  close(fd);
-  return 0;
 }
 
 int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, size_t message_length)
@@ -836,7 +853,30 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
   return INVALID;
 }
 
-int remove_pipe (char *name)
+int open_read_pipe(char *name)
+{
+  if (file_check(name))
+  {
+    pelz_log(LOG_ERR, "Pipe not found");
+    return -1;
+  }
+
+  return open(name, O_RDONLY | O_NONBLOCK);
+}
+
+int open_write_pipe(char *name)
+{
+  if (file_check(name))
+  {
+    pelz_log(LOG_ERR, "Pipe not found");
+    return -1;
+  }
+
+  // Opening in nonblocking mode will fail if the other end of the pipe is not yet open for reading.
+  return open(name, O_WRONLY | O_NONBLOCK);
+}
+
+int remove_pipe(char *name)
 {
   //Exit and remove FIFO
   if (unlink(name) == 0)
