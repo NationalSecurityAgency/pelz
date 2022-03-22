@@ -41,7 +41,7 @@ int send_table_id_list(char *pipe_name, TableType table_type, const char *resp_m
   table_id_count(eid, &status, table_type, &list_num);
   if (status != OK)
   {
-    pelz_log(LOG_ERR, "Error retrieving Key Table count.");
+    pelz_log(LOG_ERR, "Error retrieving table count.");
     close(fd);
     return 1;
   }
@@ -63,7 +63,7 @@ int send_table_id_list(char *pipe_name, TableType table_type, const char *resp_m
     table_id(eid, &status, table_type, count, &id);
     if (status != OK)
     {
-      pelz_log(LOG_ERR, "Error retrieving Key Table <ID> from index %d.", count);
+      pelz_log(LOG_ERR, "Error retrieving table <ID> from index %d.", count);
       err = 1;
       continue;
     }

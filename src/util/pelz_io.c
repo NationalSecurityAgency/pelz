@@ -342,7 +342,6 @@ int write_to_pipe_fd(int fd, char *msg)
   bytes_written = write(fd, msg, msg_len);
   if (bytes_written == msg_len)
   {
-    pelz_log(LOG_DEBUG, "Wrote: %.*s", msg_len, msg);
     return 0;
   }
   else

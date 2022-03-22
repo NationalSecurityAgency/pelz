@@ -91,7 +91,8 @@ static int msg_cmd(char *pipe, char *msg)
 
   pelz_log(LOG_DEBUG, "Message: %s", msg);
   ret = write_to_pipe((char*) PELZSERVICE, msg);
-  if (ret) {
+  if (ret)
+  {
     return ret;
   }
 
