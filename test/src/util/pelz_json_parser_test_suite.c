@@ -510,10 +510,13 @@ void test_request_decoder(void)
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
     CU_ASSERT(data.len == enc_data_len[i]);
     CU_ASSERT(memcmp(data.chars, enc_data[i], data.len) == 0);
+
     free_charbuf(&request);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
+    free_charbuf(&request_sig);
+    free_charbuf(&requestor_cert);
 
     //Creating the request charbuf for the JSON then testing request_decoder for decryption
     tmp = cJSON_PrintUnformatted(json_dec);
@@ -530,6 +533,8 @@ void test_request_decoder(void)
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
+    free_charbuf(&request_sig);
+    free_charbuf(&requestor_cert);
 
     //Free the cJSON Objects to allow the addition of the next Object per the loop
     cJSON_DeleteItemFromObject(json_dec, "dec_data");
@@ -540,6 +545,10 @@ void test_request_decoder(void)
     cJSON_DeleteItemFromObject(json_enc, "key_id_len");
     cJSON_DeleteItemFromObject(json_dec, "key_id");
     cJSON_DeleteItemFromObject(json_dec, "key_id_len");
+    cJSON_DeleteItemFromObject(json_dec, "request_sig_val");
+    cJSON_DeleteItemFromObject(json_dec, "request_sig_val_len");
+    cJSON_DeleteItemFromObject(json_dec, "requestor_cert_val");
+    cJSON_DeleteItemFromObject(json_dec, "requestor_cert_val_len");
   }
 
   cJSON_Delete(json_enc);
@@ -555,20 +564,20 @@ void test_message_encoder(void)
   charbuf message;
   const char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
   const char *valid_enc_message[5] =
-    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
-    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
-    "{\"key_id\":\"file\",\"key_id_len\":4,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
-    "{\"key_id\":\"anything\",\"key_id_len\":8,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
-    "{\"key_id\":\"\",\"key_id_len\":0,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}"
+    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"file\",\"key_id_len\":4,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"anything\",\"key_id_len\":8,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"\",\"key_id_len\":0,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}"
   };
   const char *valid_dec_message[5] =
-    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
-    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
-    "{\"key_id\":\"file\",\"key_id_len\":4,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
-    "{\"key_id\":\"anything\",\"key_id_len\":8,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
-    "{\"key_id\":\"\",\"key_id_len\":0,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}"
+    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"file\",\"key_id_len\":4,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"anything\",\"key_id_len\":8,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
+    "{\"key_id\":\"\",\"key_id_len\":0,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}"
   };
-
+  
   //Start Message Encoder Test
   pelz_log(LOG_DEBUG, "Start Message Encoder Test");
 
@@ -576,6 +585,12 @@ void test_message_encoder(void)
   memcpy(data.chars, "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", data.len);
   key_id = new_charbuf(strlen(test[0]));
   memcpy(key_id.chars, test[0], key_id.len);
+
+  request_sig = new_charbuf(11);
+  memcpy(request_sig.chars, "HelloWorld\n", request_sig.len);
+  requestor_cert = new_charbuf(11);
+  memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
+
   CU_ASSERT(message_encoder(REQ_UNK, key_id, data, request_sig, requestor_cert, &message) == 1);
   free_charbuf(&key_id);
 

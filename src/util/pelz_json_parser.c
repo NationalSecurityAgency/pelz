@@ -102,6 +102,16 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
     cJSON_AddItemToObject(root, "enc_out", cJSON_CreateString(tmp));
     free(tmp);
     cJSON_AddItemToObject(root, "enc_out_len", cJSON_CreateNumber(data.len));
+    tmp = (char *) calloc((request_sig.len + 1), sizeof(char));
+    memcpy(tmp, request_sig.chars, request_sig.len);
+    cJSON_AddItemToObject(root, "request_sig_val", cJSON_CreateString(tmp));
+    free(tmp);
+    cJSON_AddItemToObject(root, "request_sig_val_len", cJSON_CreateNumber(request_sig.len));
+    tmp = (char *) calloc((requestor_cert.len + 1), sizeof(char));
+    memcpy(tmp, requestor_cert.chars, requestor_cert.len);
+    cJSON_AddItemToObject(root, "requestor_cert_val", cJSON_CreateString(tmp));
+    free(tmp);
+    cJSON_AddItemToObject(root, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert.len));
     break;
   case REQ_DEC:
     tmp = (char *) calloc((key_id.len + 1), sizeof(char));
@@ -114,6 +124,16 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
     cJSON_AddItemToObject(root, "dec_out", cJSON_CreateString(tmp));
     free(tmp);
     cJSON_AddItemToObject(root, "dec_out_len", cJSON_CreateNumber(data.len));
+    tmp = (char *) calloc((request_sig.len + 1), sizeof(char));
+    memcpy(tmp, request_sig.chars, request_sig.len);
+    cJSON_AddItemToObject(root, "request_sig_val", cJSON_CreateString(tmp));
+    free(tmp);
+    cJSON_AddItemToObject(root, "request_sig_val_len", cJSON_CreateNumber(request_sig.len));
+    tmp = (char *) calloc((requestor_cert.len + 1), sizeof(char));
+    memcpy(tmp, requestor_cert.chars, requestor_cert.len);
+    cJSON_AddItemToObject(root, "requestor_cert_val", cJSON_CreateString(tmp));
+    free(tmp);
+    cJSON_AddItemToObject(root, "requestor_cert_val_len", cJSON_CreateNumber(requestor_cert.len));
     break;
   default:
     pelz_log(LOG_ERR, "Request Type not recognized.");
