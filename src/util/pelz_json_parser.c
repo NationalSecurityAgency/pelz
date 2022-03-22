@@ -297,7 +297,7 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
     return (1);
   }
   ///
-      if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "requestor_cert_val_len")))
+  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "requestor_cert_val_len")))
   {
     pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: requestor_cert_val_len. Data type should be integer.");
     free_charbuf(key_id);
