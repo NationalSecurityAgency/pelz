@@ -1,8 +1,6 @@
 #!/bin/bash
 
 # Install PyKMIP Dependancies
-sudo apt-get update
-sudo apt-get upgrade
 sudo apt-get install python-dev python-pip python3-dev python3-pip libffi-dev libssl-dev libsqlite3-dev
 
 # Create PyKMIP directories
@@ -17,6 +15,7 @@ cd /etc/pykmip/certs
 curl -O https://raw.githubusercontent.com/arp102/PyKMIP/improvement/cert-san/bin/create_certificates.py
 python3 create_certificates.py
 
+# Certificate names come from the create_certificates.py script
 mv client_certificate_john_doe.pem proxy_pub.pem
 mv client_key_john_doe.pem proxy_priv.pem
 mv server_certificate.pem pykmip_pub.pem
