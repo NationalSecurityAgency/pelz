@@ -44,8 +44,8 @@ then
 		cp $VERSION/PelzCryptoService.java $DIR_PELZ_PLUGIN
 		cp pelzPlugin/* $DIR_PELZ_PLUGIN
 		#Install plugin tests for Accumulo
-		mkdir -p $DIR_PELZ_TESTS/
-		cp $VERSION/testfiles/PelzCryptoTest.java $DIR_PELZ_TESTS/
+		mkdir -p $DIR_PELZ_TESTS
+		cp $VERSION/testfiles/PelzCryptoTest.java $DIR_PELZ_TESTS
 		cp testfiles/RFilePelzTest.java $DIR_ACCUMULO/core/src/test/java/org/apache/accumulo/core/file/rfile/
 		cp testfiles/WriteAheadLogPelzEncryptedIT.java $DIR_ACCUMULO/test/src/main/java/org/apache/accumulo/test/functional/
 		echo "Install Complete"
