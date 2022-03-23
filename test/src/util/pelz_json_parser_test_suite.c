@@ -655,8 +655,19 @@ void test_message_encoder(void)
   requestor_cert = new_charbuf(11);
   memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
 
+  // Testing unknown request
   CU_ASSERT(message_encoder(REQ_UNK, key_id, data, request_sig, requestor_cert, &message) == 1);
+
+  // Testing a request without signatures/certificates (This will be removed after they are required)
+  free_charbuf(&request_sig);
+  free_charbuf(&requestor_cert);
+  CU_ASSERT(message_encoder(REQ_ENC, key_id, data, request_sig, requestor_cert, &message) == 0);
   free_charbuf(&key_id);
+  // Restore values
+  request_sig = new_charbuf(11);
+  memcpy(request_sig.chars, "HelloWorld\n", request_sig.len);
+  requestor_cert = new_charbuf(11);
+  memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
 
   for (int i = 0; i < 5; i++)
   {
