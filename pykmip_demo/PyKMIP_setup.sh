@@ -1,4 +1,6 @@
 #!/bin/bash
+SOURCE_ROOT=~
+pushd $SOURCE_ROOT
 
 # Install PyKMIP Dependancies
 sudo apt-get install python-dev python-pip python3-dev python3-pip libffi-dev libssl-dev libsqlite3-dev
@@ -8,12 +10,12 @@ sudo mkdir /var/log/pykmip /etc/pykmip /etc/pykmip/certs /etc/pykmip/policies
 sudo chown -R "${USER}" /var/log/pykmip /etc/pykmip
 
 # Install PyKMIP
-sudo pip3 install pykmip
+git clone https://github.com/OpenKMIP/PyKMIP.git
+sudo python3 PyKMIP/setup.py install
 
 # Generate certificates
-cd /etc/pykmip/certs
-curl -O https://raw.githubusercontent.com/arp102/PyKMIP/improvement/cert-san/bin/create_certificates.py
-python3 create_certificates.py
+pushd /etc/pykmip/certs
+python3 $SOURCE_ROOT/PyKMIP/bin/create_certificates.py
 
 # Certificate names come from the create_certificates.py script
 mv client_certificate_john_doe.pem proxy_pub.pem

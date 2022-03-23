@@ -117,6 +117,5 @@ be done prior to executing the demo.
 
 		cd ../accumulo
 		mvn clean
-		kdestroy -A
 		mvn test
 
