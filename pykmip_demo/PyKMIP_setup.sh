@@ -11,7 +11,8 @@ sudo chown -R "${USER}" /var/log/pykmip /etc/pykmip
 
 # Install PyKMIP
 git clone https://github.com/OpenKMIP/PyKMIP.git
-sudo python3 PyKMIP/setup.py install
+pushd PyKMIP
+sudo python3 setup.py install
 
 # Generate certificates
 pushd /etc/pykmip/certs
