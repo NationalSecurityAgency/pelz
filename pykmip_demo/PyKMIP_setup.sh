@@ -2,7 +2,7 @@
 SOURCE_ROOT=~
 pushd $SOURCE_ROOT
 
-# Install PyKMIP Dependancies
+# Install PyKMIP Dependencies
 sudo apt-get install python-dev python-pip python3-dev python3-pip libffi-dev libssl-dev libsqlite3-dev
 
 # Create PyKMIP directories
