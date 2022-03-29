@@ -23,7 +23,7 @@ The process for key protections is outlined here:
 1. Accumulo generates a FEK for its internal file encryption
 2. Accumulo sends the FEK to pelz to be encrypted by the KEK. This request contains the KEK's
   Unique Identification (UID)
-3. Pelz connects othe proxy server from within the TEE using an ECDH key establishment
+3. Pelz connects to the proxy server from within the TEE using an ECDH key establishment
 4. The proxy server forwards the key request to the PyKMIP server using TLS
 5. PyKMIP verifies the request and sends the KEK back to the pelz enclave through the proxy server
 6. Pelz uses the KEK within the enclave to encrypt/decrypt FEKs as per Accumulo's requests
