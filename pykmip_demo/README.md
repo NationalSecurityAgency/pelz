@@ -105,7 +105,7 @@ be done prior to executing the demo.
 		./bin/pelz pki load private test/data/node_priv.der.nkl
 
 ### Proxy Server Setup Steps
-10.	Build the proxy server in a separate terminal
+10.	Build and run the proxy server in a separate terminal
 
 		cd pelz/kmyth/sgx
 		make clean demo-all
