@@ -19,7 +19,7 @@
 SOURCE_ROOT=~
 pushd $SOURCE_ROOT
 
-# As of 03/14/2022, these depdencies were required for Ubuntu to build pelz. Some of the projects
+# As of 03/14/2022, these dependencies were required for Ubuntu to build pelz. Some of the projects
 # built later might be eventually be packaged by Ubuntu.
 sudo apt install make cmake gcc openssl libssl-dev libffi-dev libcunit1 libcunit1-dev libcunit1-doc
 
