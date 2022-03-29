@@ -5,7 +5,7 @@
 #
 # This script has been tested on Ubuntu and successfully built pelz and its dependencies. It does
 # not build the required Intel SGX and TPM 2.0 SDKs or simulators. The build process for the 
-# software required to run Intel SGX and TPM 2.0 simultators changes more frequently than the other
+# software required to run Intel SGX and TPM 2.0 simulators changes more frequently than the other
 # tools built in this script, so we do not provide them. Instead, locations for install info for
 # those can be found in pelz's INSTALL.md. This script will fail if these SDKs are not installed.
 #
