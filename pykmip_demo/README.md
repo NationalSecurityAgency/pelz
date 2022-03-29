@@ -69,7 +69,7 @@ be done prior to executing the demo.
 		./setup_plugin.sh -i -d ~/accumulo/ -p
 		cd ..
 
-### PyKMIP Server Installaiton/Setep Steps
+### PyKMIP Server Installation/Setup Steps
 4.  Run PyKMIP Script in a separate terminal
 
 		./pykmip_demo/PyKMIP_setup.sh
