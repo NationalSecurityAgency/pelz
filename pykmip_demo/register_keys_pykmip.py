@@ -1,7 +1,5 @@
-#!/bin/bash
-
 # Register keys with the pykmip server
-python3 -c "
+#Import modules
 from kmip import enums
 from kmip.pie import client
 from kmip.pie import objects
@@ -23,4 +21,3 @@ with c:
     for i in range(10):
         key_id = c.register(symmetric_key)
         print(f'Registered new key with ID {key_id}')
-"

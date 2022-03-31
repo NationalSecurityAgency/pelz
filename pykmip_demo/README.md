@@ -30,7 +30,7 @@ The process for key protections is outlined here:
 
 ## Keys and Certificates
 
-The demostration has four cert/key pairs and two keys for encryption. The two encryption keys are:  
+The demonstration has four cert/key pairs and two keys for encryption. The two encryption keys are:  
 
  * The file-encryption-key (FEK)
  * The key-encryption-key (KEK) 
@@ -70,7 +70,7 @@ be done prior to executing the demo.
 		cd ..
 
 ### PyKMIP Server Installation/Setup Steps
-4.  Run PyKMIP Script in a separate terminal
+4.  Run PyKMIP Script
 
 		./pykmip_demo/PyKMIP_setup.sh
 
@@ -80,7 +80,7 @@ be done prior to executing the demo.
 
 6.  Register keys with the server
 
-		./pykmip_demo/register_keys_pykmip.sh
+		python3 pykmip_demo/register_keys_pykmip.py
 
 
 ### Certificate and PKey Creation/Installation Steps
@@ -97,7 +97,7 @@ be done prior to executing the demo.
 8.	Run the pelz-service in a separate terminal
 
 		cd pelz
-		./bin/pelz-service -m 200
+		./bin/pelz-service -m 200 -v
 
 9.	Load server certificate and client PKey
 
