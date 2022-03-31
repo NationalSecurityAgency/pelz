@@ -55,9 +55,9 @@ popd
 # Downloads, builds, and installs the Kmyth library. Kmyth makes using the TPM and SGX enclaves
 # easier, and it is built as a submodule for pelz.
 pushd pelz
-pushd kmyth
 git submodule init
 git submodule update
+pushd kmyth
 make 
 sudo make install
 make clean
