@@ -2,17 +2,19 @@
 
 install=false;
 uninstall=false;
+pykmip_demo=false;
 VERSION=plugin-accumulo;
 HELP=false;
 
-while getopts ihoud: flag
+while getopts d:iuohp flag
 do
 	case "${flag}" in
 		d) DIR_ACCUMULO=${OPTARG};;
 		i) install=true;;
 		u) uninstall=true;;
 		o) VERSION+=-2.0;;
-		h) HELP=true;
+		h) HELP=true;;
+		p) pykmip_demo=true;
 	esac
 done
 
@@ -47,6 +49,12 @@ then
 		cp testfiles/RFilePelzTest.java $DIR_ACCUMULO/core/src/test/java/org/apache/accumulo/core/file/rfile/
 		cp testfiles/WriteAheadLogPelzEncryptedIT.java $DIR_ACCUMULO/test/src/main/java/org/apache/accumulo/test/functional/
 		echo "Install Complete"
+    if $pykmip_demo
+    then
+      #Change PelzCryptoService.java to use serverKeyPath
+      sed -i 's/PelzCryptoTest.keyPath(testClass)/PelzCryptoTest.serverKeyPath(testClass)/' $DIR_PELZ_TESTS/PelzCryptoTest.java 
+      echo "Demo Setup"
+    fi           
 	elif $uninstall
 	then
 		rm -r $DIR_PELZ_PLUGIN
