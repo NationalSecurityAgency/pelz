@@ -28,7 +28,7 @@ mv server_key.pem pykmip_priv.pem
 echo "
 [server]
 hostname=localhost
-port=5696
+port=5690
 ca_path=/etc/pykmip/certs/root_certificate.pem
 key_path=/etc/pykmip/certs/pykmip_priv.pem
 certificate_path=/etc/pykmip/certs/pykmip_pub.pem
@@ -51,7 +51,7 @@ database_path=/etc/pykmip/pykmip.db
 echo "
 [client]
 host=localhost
-port=5696
+port=5690
 keyfile=/etc/pykmip/certs/proxy_priv.pem
 certfile=/etc/pykmip/certs/proxy_pub.pem
 cert_reqs=CERT_REQUIRED

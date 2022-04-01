@@ -110,7 +110,7 @@ be done prior to executing the demo.
 		cd pelz/kmyth/sgx
 		make clean demo-all
 		cd ../..
-		./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5696 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem
+		./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem
 
 ### End to End Demo Step
 11. Run Accumulo Test
