@@ -44,6 +44,14 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return (1);
     }
     break;
+  case REQ_ENC_SIGNED:
+    if (encrypt_parser(json, key_id, data, request_sig, requestor_cert) || validate_signature(request_sig, requestor_cert))
+    {
+      pelz_log(LOG_ERR, "Encrypt Request Parser Error");
+      cJSON_Delete(json);
+      return (1);
+    }
+    break;
   case REQ_DEC:
     if (decrypt_parser(json, key_id, data, request_sig, requestor_cert))
     {
@@ -52,6 +60,15 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return (1);
     }
     break;
+  case REQ_DEC_SIGNED:
+    if (decrypt_parser(json, key_id, data, request_sig, requestor_cert) || validate_signature(request_sig, requestor_cert))
+    {
+      pelz_log(LOG_ERR, "Decrypt Request Parser Error");
+      cJSON_Delete(json);
+      return (1);
+    }
+    break;
+  
   default:
     pelz_log(LOG_WARNING, "Invalid Request Type");
     cJSON_Delete(json);
@@ -529,4 +546,10 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
   }
   ///
   return (0);
+}
+
+int validate_signature(charbuf * request_sig, charbuf * requestor_cert)
+{
+  // Stub
+  return 0;
 }
