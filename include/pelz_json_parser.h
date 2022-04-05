@@ -78,7 +78,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
  * @return 0 on success, 1 on error
  *
  */
-int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
+int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
 
 /**
  * <pre>
@@ -95,7 +95,7 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
  * @return 0 on success, 1 on error
  *
  */
-int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
+int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
 
 /**
  * <pre>
