@@ -99,6 +99,23 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
 
 /**
  * <pre>
+ * JSON Parser for a signed message. Parser will separate client message associated variables from a JSON message.
+ * <pre>
+ *
+ * @param[in] json Parsed json string in cJSON format to be copied into request values
+ *
+ * @param[out] request_sig.chars The user-supplied key
+ * @param[out] request_sig.len The length of supplied key
+ * @param[out] requestor_cert.chars The certificate of the user
+ * @param[out] requestor_cert.len The length of certificate
+ *
+ * @return 0 on success, 1 on error
+ *
+ */
+int signed_parser(cJSON * json, charbuf * request_sig, charbuf * requestor_cert);
+
+/**
+ * <pre>
  * Validation function. The validation process will determine if the supplied signature and certificate match
  * <pre>
  *
