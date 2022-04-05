@@ -37,14 +37,17 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   switch (*request_type)
   {  
   case REQ_ENC_SIGNED:
+    printf("ENC SIGNED\n");
     if (validate_signature(data, request_sig, requestor_cert))
     {
+      printf("Enc sign validation fail\n");
       pelz_log(LOG_ERR, "Signature Validation Error");
       cJSON_Delete(json);
       return (1);
     }
     if (signed_parser(json, request_sig, requestor_cert))
     {
+      printf("Enc sign parse fail\n");
       pelz_log(LOG_ERR, "Signed Request Parser Error");
       cJSON_Delete(json);
       return (1);
@@ -58,6 +61,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     }
     break;
   case REQ_DEC_SIGNED:
+    printf("DEC SIGNED\n");
     if (validate_signature(data, request_sig, requestor_cert))
     {
       pelz_log(LOG_ERR, "Signature Validation Error");
@@ -370,7 +374,7 @@ int signed_parser(cJSON * json, charbuf * request_sig, charbuf * requestor_cert)
   if (cJSON_GetObjectItemCaseSensitive(json, "request_sig")->valuestring != NULL)
   {
     if (strlen(cJSON_GetObjectItemCaseSensitive(json, "request_sig")->valuestring) != request_sig->len)
-    {
+    {     
       pelz_log(LOG_ERR, "Length of value in JSON key: request_sig does not match value in JSON key: request_sig_len.");
       free_charbuf(request_sig);
       return (1);
