@@ -312,7 +312,7 @@ void thread_process(void *arg)
       {
         data_out.chars[data_out.len] = 0;
       }
-      message_encoder(request_type, key_id, data_out, request_sig, requestor_cert, &message);
+      message_encoder(request_type, key_id, data_out, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
       pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     }

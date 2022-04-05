@@ -61,7 +61,7 @@ int error_message_encoder(charbuf * message, const char *err_message);
  * @return 0 on success, 1 on error
  *
  */
-int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf request_sig, charbuf requestor_cert, charbuf * message);
+int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf * message);
 
 /**
  * <pre>

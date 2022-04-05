@@ -628,18 +628,18 @@ void test_message_encoder(void)
   charbuf message;
   const char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
   const char *valid_enc_message[5] =
-    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"file\",\"key_id_len\":4,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"anything\",\"key_id_len\":8,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"\",\"key_id_len\":0,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}"
+    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"file\",\"key_id_len\":4,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"anything\",\"key_id_len\":8,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}",
+    "{\"key_id\":\"\",\"key_id_len\":0,\"enc_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"enc_out_len\":57}"
   };
   const char *valid_dec_message[5] =
-    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"file\",\"key_id_len\":4,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"anything\",\"key_id_len\":8,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}",
-    "{\"key_id\":\"\",\"key_id_len\":0,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57,\"request_sig_val\":\"HelloWorld\\n\",\"request_sig_val_len\":11,\"requestor_cert_val\":\"PelzProject\",\"requestor_cert_val_len\":11}"
+    { "{\"key_id\":\"file:/test/key1.txt\",\"key_id_len\":19,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"test/key1.txt\",\"key_id_len\":13,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"file\",\"key_id_len\":4,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"anything\",\"key_id_len\":8,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}",
+    "{\"key_id\":\"\",\"key_id_len\":0,\"dec_out\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"dec_out_len\":57}"
   };
   
   //Start Message Encoder Test
@@ -656,12 +656,12 @@ void test_message_encoder(void)
   memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
 
   // Testing unknown request
-  CU_ASSERT(message_encoder(REQ_UNK, key_id, data, request_sig, requestor_cert, &message) == 1);
+  CU_ASSERT(message_encoder(REQ_UNK, key_id, data, &message) == 1);
 
   // Testing a request without signatures/certificates (This will be removed after they are required)
   free_charbuf(&request_sig);
   free_charbuf(&requestor_cert);
-  CU_ASSERT(message_encoder(REQ_ENC, key_id, data, request_sig, requestor_cert, &message) == 0);
+  CU_ASSERT(message_encoder(REQ_ENC, key_id, data, &message) == 0);
   free_charbuf(&key_id);
   // Restore values
   request_sig = new_charbuf(11);
@@ -673,10 +673,10 @@ void test_message_encoder(void)
   {
     key_id = new_charbuf(strlen(test[i]));
     memcpy(key_id.chars, test[i], key_id.len);
-    CU_ASSERT(message_encoder(REQ_ENC, key_id, data, request_sig, requestor_cert, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_ENC, key_id, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_enc_message[i], message.len) == 0);
     free_charbuf(&message);
-    CU_ASSERT(message_encoder(REQ_DEC, key_id, data, request_sig, requestor_cert, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_DEC, key_id, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_dec_message[i], message.len) == 0);
     free_charbuf(&message);
     free_charbuf(&key_id);
