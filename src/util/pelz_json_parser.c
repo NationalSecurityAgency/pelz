@@ -200,13 +200,15 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data, charbuf * req
   */
   else if (!cJSON_HasObjectItem(json, "request_sig_val"))
   {
-    cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString("null\n"));
-    cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(5));
+    char null[0];
+    cJSON_AddItemToObject(json, "request_sig_val", cJSON_CreateString(null));
+    cJSON_AddItemToObject(json, "request_sig_val_len", cJSON_CreateNumber(0));
   }
   else if (!cJSON_HasObjectItem(json, "requestor_cert_val"))
   {
-    cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString("null\n"));
-    cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(5));
+    char null[0];
+    cJSON_AddItemToObject(json, "requestor_cert_val", cJSON_CreateString(null));
+    cJSON_AddItemToObject(json, "requestor_cert_val_len", cJSON_CreateNumber(0));
   }
 
 
