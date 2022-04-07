@@ -35,24 +35,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   }
   *request_type = (RequestType) cJSON_GetObjectItemCaseSensitive(json, "request_type")->valueint;
   switch (*request_type)
-  {  
-  case REQ_ENC_SIGNED:
-    printf("ENC SIGNED\n");
-    if (validate_signature(data, request_sig, requestor_cert))
-    {
-      printf("Enc sign validation fail\n");
-      pelz_log(LOG_ERR, "Signature Validation Error");
-      cJSON_Delete(json);
-      return (1);
-    }
-    if (signed_parser(json, request_sig, requestor_cert))
-    {
-      printf("Enc sign parse fail\n");
-      pelz_log(LOG_ERR, "Signed Request Parser Error");
-      cJSON_Delete(json);
-      return (1);
-    }
+  {    
   case REQ_ENC:
+  case REQ_ENC_SIGNED:
     if (encrypt_parser(json, key_id, data))
     {
       pelz_log(LOG_ERR, "Encrypt Request Parser Error");
@@ -60,21 +45,8 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return (1);
     }
     break;
+  case REQ_DEC: 
   case REQ_DEC_SIGNED:
-    printf("DEC SIGNED\n");
-    if (validate_signature(data, request_sig, requestor_cert))
-    {
-      pelz_log(LOG_ERR, "Signature Validation Error");
-      cJSON_Delete(json);
-      return (1);
-    }
-    if (signed_parser(json, request_sig, requestor_cert))
-    {
-      pelz_log(LOG_ERR, "Signed Request Parser Error");
-      cJSON_Delete(json);
-      return (1);
-    }
-  case REQ_DEC:
     if (decrypt_parser(json, key_id, data))
     {
       pelz_log(LOG_ERR, "Decrypt Request Parser Error");
@@ -82,14 +54,26 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return (1);
     }
     break;
-
-  
   default:
     pelz_log(LOG_WARNING, "Invalid Request Type");
     cJSON_Delete(json);
     return (1);
   }
-  ///
+  if ( (*request_type == REQ_ENC_SIGNED) || (*request_type == REQ_DEC_SIGNED) )
+  {
+    if (signed_parser(json, request_sig, requestor_cert) )
+    {
+      pelz_log(LOG_ERR, "Encrypt/Decrypt Signed Parser Error");
+      cJSON_Delete(json);
+      return (1);
+    }
+    if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+    {
+      pelz_log(LOG_ERR, "Signature Validation Error");
+      cJSON_Delete(json);
+      return (1);
+    }
+  }
   cJSON_Delete(json);
   return (0);
 }
@@ -423,7 +407,7 @@ int signed_parser(cJSON * json, charbuf * request_sig, charbuf * requestor_cert)
 }
 
 // At some point this function will have to contain a concatenated string of the buffer fields to ensure order when comparing info
-int validate_signature(charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   // Stub
   return 0;

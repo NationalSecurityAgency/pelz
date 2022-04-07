@@ -128,6 +128,6 @@ int signed_parser(cJSON * json, charbuf * request_sig, charbuf * requestor_cert)
  * @return 0 on success, 1 on error
  *
  */
-int validate_signature(charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
+int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
 
 #endif /* INCLUDE_JSON_PARSER_H_ */
