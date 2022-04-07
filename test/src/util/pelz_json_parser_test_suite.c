@@ -267,7 +267,7 @@ void test_request_decoder(void)
 
   const char *invalid_request[4] = {
     "{\"key_id_len\": 28, \"key_id\": \"file:/test/testkeys/key2.txt\"}",
-    "{\"request_type\": \"one\"}", "{\"request_type\": 0}", "{\"request_type\": 3}"
+    "{\"request_type\": \"one\"}", "{\"request_type\": 0}", "{\"request_type\": 7}"
   };
   const char *json_key_id[6] = {
     "file:/test/key1.txt", "file:/test/key2.txt", "file:/test/key3.txt",
