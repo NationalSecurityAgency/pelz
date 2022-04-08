@@ -239,12 +239,14 @@ void thread_process(void *arg)
     charbuf key_id;
     charbuf data_in;
     charbuf data_out;
+    charbuf request_sig;
+    charbuf requestor_cert;
 
     charbuf data;
     charbuf output;
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in))
+    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
