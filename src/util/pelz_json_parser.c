@@ -409,6 +409,27 @@ int signed_parser(cJSON * json, charbuf * request_sig, charbuf * requestor_cert)
 // At some point this function will have to contain a concatenated string of the buffer fields to ensure order when comparing info
 int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
+
+  char my_buffer[1+key_id->len+data->len];
+  char a[key_id->len];
+  char b[data->len];
+  sprintf(a, "%zu", key_id->len);
+  sprintf(b, "%zu", data->len);
+  sprintf(my_buffer, "%d", *((int*)request_type));
+  strcat(my_buffer, (char*) key_id->chars);
+  strcat(my_buffer, a);
+  strcat(my_buffer, (char*) data->chars);
+  strcat(my_buffer, b);
+
+  // Extract the public key from requestor_cert
+
+  // sign_buffer() w/ my_buffer, request_sig, and respective lengths
+    // If failure, log error like the functions above, and return
+
+  // verify_buffer() function, similar logic to sign_buffer()
+
+  // At this point, we pass control to a certificate validating function inside the enclave
+
   // Stub
   return 0;
 }
