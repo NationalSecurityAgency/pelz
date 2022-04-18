@@ -220,22 +220,59 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
 // At some point this function will have to contain a concatenated string of the buffer fields to ensure order when comparing info
 int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
+  // How we get the lengths of the fields to allocate buffer space
+  int count_a = 0;
+  int a = key_id->len; 
+  do{ 
+    a = a / 10; 
+    ++count_a; 
+  }while (a != 0) ;
+  a = key_id->len;
+  int count_b = 0;
+  int b = data->len; 
+  do{ 
+    b = b / 10; 
+    ++count_b; 
+  }while (b != 0) ;
+  b = data->len;
 
-  char my_buffer[1+key_id->len+data->len];
-  char a[key_id->len];
-  char b[data->len];
-  sprintf(a, "%zu", key_id->len);
-  sprintf(b, "%zu", data->len);
-  sprintf(my_buffer, "%d", *((int*)request_type));
-  strcat(my_buffer, (char*) key_id->chars);
-  strcat(my_buffer, a);
-  strcat(my_buffer, (char*) data->chars);
-  strcat(my_buffer, b);
+  // Length: request_type + key_id->len length + data->len length + key_id length + data length
+  int length = 1 + key_id->len + data->len + count_a + count_b;
+
+  // Offset for memcpy()
+  int offset = 0;
+
+  unsigned char my_buffer[length+1];
+
+  // Request Type data
+  char request_buffer[2];
+  sprintf(request_buffer, "%d", *((int*)request_type));
+  
+  // Key_id length data
+  char key_buffer[count_a];
+  sprintf(key_buffer, "%d", a);
+
+  // 'Data' length data
+  char data_buffer[count_b];
+  sprintf(data_buffer, "%d", b);
+ 
+  // 'Concatenating' all of our data
+  memcpy(my_buffer + offset, request_buffer, 1);
+  offset += 1;
+  memcpy(my_buffer + offset, key_id->chars, key_id->len);
+  offset += key_id->len;
+  memcpy(my_buffer + offset, key_buffer, count_a);
+  offset += count_a;
+  memcpy(my_buffer + offset, data_buffer, count_b);
+  offset += count_b;
+  memcpy(my_buffer + offset, data->chars, data->len);
+  offset += data->len;
+  
+  // Add null terminator to the end of the array
+  my_buffer[length-1] = '\0';
+  //printf("%s\n", my_buffer);
 
   // Extract the public key from requestor_cert
-
-  // sign_buffer() w/ my_buffer, request_sig, and respective lengths
-    // If failure, log error like the functions above, and return
 
   // verify_buffer() function, similar logic to sign_buffer()
 
