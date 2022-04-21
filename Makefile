@@ -593,7 +593,7 @@ test: all test-all
 	@./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
 	@echo "GEN => Test Key/Cert Files"
 	@cd kmyth/sgx && make demo-pre demo/bin/ecdh-server --eval="Demo_App_C_Flags += -DDEMO_LOG_LEVEL=LOG_WARNING"
-	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 2> /dev/null &
+	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -m 1 2> /dev/null &
 	@sleep 1
 	@./test/bin/pelz-test 2> /dev/null
 	@rm -f test/data/*.pem
