@@ -5,41 +5,42 @@
 ### make, cmake, and gcc:
 
 #### For Ubuntu 18:
-		apt install make cmake gcc
+	apt install make cmake gcc
 
 #### For RHEL 8:
-		dnf install -y make cmake gcc glibc
+	dnf install -y make cmake gcc glibc
 
 ### Openssl:
 
 #### For Ubuntu 18:
-    apt install openssl libssl-dev libffi-dev
+   apt install openssl libssl-dev libffi-dev
 
 #### For RHEL 8:
-    dnf install -y openssl openssl-devel libffi-devel
+   dnf install -y openssl openssl-devel libffi-devel
 
 ### Cunit:
 
 #### For Ubuntu 18:
-		apt install libcunit1 libcunit1-dev libcunit1-doc
+	apt install libcunit1 libcunit1-dev libcunit1-doc
 
 #### For RHEL 8:
-    dnf install -y CUnit
+	dnf install -y CUnit
 
 ### cJSON:
 cJSON is required to build pelz. See their [build instructions](https://github.com/DaveGamble/cJSON#building).
 
 #### For RHEL 8:
-    dnf install -y cjson-devel
+	dnf install -y cjson-devel
 
 ### uriparser:
-[uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser#compilation). You may find it convenient to use the ```-DURIPARSER_BUILD_TESTS=OFF``` and ```-DURIPARSER_BUILD_DOCS=OFF``` flags.
+[uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser#compilation).
+You may find it convenient to use the ```-DURIPARSER_BUILD_TESTS=OFF``` and ```-DURIPARSER_BUILD_DOCS=OFF``` flags.
 
 #### For Ubuntu 18:
-		apt install liburiparser-dev
+	apt install liburiparser-dev
 
 ### For RHEL 8:
-		dnf install -y uriparser-devel
+	dnf install -y uriparser-devel
 
 #### libkmip:
 libkmip is required to build pelz. See their [installation instructions](https://libkmip.readthedocs.io/en/latest/installation.html).
