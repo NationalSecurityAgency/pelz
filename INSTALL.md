@@ -13,10 +13,10 @@
 ### Openssl:
 
 #### For Ubuntu 18:
-   apt install openssl libssl-dev libffi-dev
+	apt install openssl libssl-dev libffi-dev
 
 #### For RHEL 8:
-   dnf install -y openssl openssl-devel libffi-devel
+	dnf install -y openssl openssl-devel libffi-devel
 
 ### Cunit:
 
@@ -33,7 +33,7 @@ cJSON is required to build pelz. See their [build instructions](https://github.c
 	dnf install -y cjson-devel
 
 ### uriparser:
-[uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser#compilation).
+[uriparser](https://github.com/uriparser/uriparser) 0.9.0 or newer is required to build pelz. See their [build instructions](https://github.com/uriparser/uriparser#compilation).  
 You may find it convenient to use the ```-DURIPARSER_BUILD_TESTS=OFF``` and ```-DURIPARSER_BUILD_DOCS=OFF``` flags.
 
 #### For Ubuntu 18:
