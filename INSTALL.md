@@ -6,7 +6,7 @@
 ##### For Ubuntu 18:
 	apt install make cmake gcc
 ##### For RHEL 8:
-	dnf install -y make cmake gcc glibc
+	dnf install -y make cmake gcc glibc gcc-c++ libgcc
 
 ### Openssl:
 ##### For Ubuntu 18:
@@ -43,6 +43,9 @@ Pelz maintains its key table inside an SGX enclave. To support this functionalit
 You must also create an enclave signing key, for example by running ```openssl genrsa -out sgx/pelz_enclave_private.pem -3 3072``` before building pelz.
 
 The SGX SDK environment must be sourced before pelz can be run.
+
+### RHEL 8 Note:
+Red Hat does not have /usr/local/lib or lib64 as part of the standard ld search paths. User will need to add the linked directories to /etc/ld.so.conf.
 
 ### kmyth submodule:
 Pelz uses portions of the kmyth SGX enclave which it acquires by including kmyth as a git submodule and including the right files as part of its build process as described in the [kmyth SGX documentation](https://github.com/NationalSecurityAgency/kmyth/tree/main/sgx). Before attempting to build pelz you must initialize and update the kmyth submodule by:
