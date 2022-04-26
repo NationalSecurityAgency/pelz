@@ -61,8 +61,8 @@ as a git submodule and including the right files as part of its build process
 as described in the [kmyth SGX documentation](https://github.com/NationalSecurityAgency/kmyth/tree/main/sgx). 
 Before attempting to build pelz you must initialize and update the kmyth submodule by:
 
-		git submodule init
-		git submodule update
+    git submodule init
+    git submodule update
 
 ### kmyth logger and utils:
 Pelz needs the kmyth logger and utils libraries for the build and runtime. After 
