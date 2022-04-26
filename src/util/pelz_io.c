@@ -155,7 +155,6 @@ int key_load(charbuf key_id)
         if (pelz_load_key_from_file(filename, &key) != 0)
         {
           pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-          free(filename);
           break;
         }
         key_table_add_key(eid, &status, key_id, key);
@@ -166,7 +165,6 @@ int key_load(charbuf key_id)
         if (pelz_load_file_to_enclave(filename, &handle) != 0)
         {
           pelz_log(LOG_ERR, "Failed to read key file %s", filename);
-          free(filename);
           break;
         }
         key_table_add_from_handle(eid, &status, key_id, handle);
@@ -236,14 +234,12 @@ int key_load(charbuf key_id)
       if (get_pelz_uri_port(key_id_data, &port) != 0)
       {
         pelz_log(LOG_ERR, "Failed to extract port from pelz uri");
-        free(common_name);
         break;
       }
 
       if (get_pelz_uri_key_UID(key_id_data, &server_key_id, &server_key_id_len) != 0)
       {
         pelz_log(LOG_ERR, "Failed to extract key UID from pelz uri");
-        free(common_name);
         break;
       }
 
