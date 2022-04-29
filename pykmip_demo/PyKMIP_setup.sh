@@ -41,6 +41,7 @@ fi
 # Certificate names come from the create_certificates.py script
 test -f /etc/pykmip/certs/pykmip_priv.pem
 if [ $? -ne 0 ]; then 
+  pushd /etc/pykmip/certs
   mv client_certificate_john_doe.pem proxy_pub.pem
   mv client_key_john_doe.pem proxy_priv.pem
   mv server_certificate.pem pykmip_pub.pem
