@@ -3,29 +3,42 @@ SOURCE_ROOT=~
 pushd $SOURCE_ROOT
 
 # Install PyKMIP Dependencies
-sudo apt-get install python-dev python-pip python3-dev python3-pip libffi-dev libssl-dev libsqlite3-dev
+sudo apt-get install python3 libffi-dev libssl-dev libsqlite3-dev
 
 # Create PyKMIP directories
 sudo mkdir /var/log/pykmip /etc/pykmip /etc/pykmip/certs /etc/pykmip/policies
 sudo chown -R "${USER}" /var/log/pykmip /etc/pykmip
 
 # Install PyKMIP
-git clone https://github.com/OpenKMIP/PyKMIP.git
-pushd PyKMIP
-sudo python3 setup.py install
+if [ ! -d PyKMIP ]; then
+  git clone https://github.com/OpenKMIP/PyKMIP.git
+fi
+test -f /usr/local/bin/pykmip-server
+if [ $? -ne 0 ]; then
+  pushd PyKMIP
+  sudo python3 setup.py install
+fi
 
 # Generate certificates
-pushd /etc/pykmip/certs
-python3 $SOURCE_ROOT/PyKMIP/bin/create_certificates.py
+test -f /etc/pykmip/certs/root_key.pem
+if [ $? -ne 0 ]; then 
+  pushd /etc/pykmip/certs
+  python3 $SOURCE_ROOT/PyKMIP/bin/create_certificates.py
+fi
 
 # Certificate names come from the create_certificates.py script
-mv client_certificate_john_doe.pem proxy_pub.pem
-mv client_key_john_doe.pem proxy_priv.pem
-mv server_certificate.pem pykmip_pub.pem
-mv server_key.pem pykmip_priv.pem
+test -f /etc/pykmip/certs/pykmip_priv.pem
+if [ $? -ne 0 ]; then 
+  mv client_certificate_john_doe.pem proxy_pub.pem
+  mv client_key_john_doe.pem proxy_priv.pem
+  mv server_certificate.pem pykmip_pub.pem
+  mv server_key.pem pykmip_priv.pem
+fi
 
 # Create server config file
-echo "
+test -f /etc/pykmip/server.conf
+if [ $? -ne 0 ]; then 
+  echo "
 [server]
 hostname=localhost
 port=5690
@@ -46,9 +59,12 @@ tls_cipher_suites=
 logging_level=DEBUG
 database_path=/etc/pykmip/pykmip.db
 " > /etc/pykmip/server.conf
+fi
 
 # Create client config file
-echo "
+test -f /etc/pykmip/pykmip.conf
+if [ $? -ne 0 ]; then
+  echo "
 [client]
 host=localhost
 port=5690
@@ -62,3 +78,4 @@ suppress_ragged_eofs=True
 username=example_username
 password=example_password
 " > /etc/pykmip/pykmip.conf
+fi
