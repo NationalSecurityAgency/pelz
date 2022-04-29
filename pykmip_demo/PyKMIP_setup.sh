@@ -6,8 +6,20 @@ pushd $SOURCE_ROOT
 sudo apt-get install python3 libffi-dev libssl-dev libsqlite3-dev
 
 # Create PyKMIP directories
-sudo mkdir /var/log/pykmip /etc/pykmip /etc/pykmip/certs /etc/pykmip/policies
-sudo chown -R "${USER}" /var/log/pykmip /etc/pykmip
+if [ ! -d /var/log/pykmip ]; then
+  sudo mkdir /var/log/pykmip 
+  sudo chown -R "${USER}" /var/log/pykmip
+fi
+if [ ! -d /etc/pykmip ]; then
+  sudo mkdir /etc/pykmip 
+  sudo chown -R "${USER}" /etc/pykmip
+fi
+if [ ! -d /etc/pykmip/certs ]; then
+  sudo mkdir /etc/pykmip/certs 
+fi
+if [ ! -d /etc/pykmip/policies ]; then
+  sudo mkdir /etc/pykmip/policies
+fi
 
 # Install PyKMIP
 if [ ! -d PyKMIP ]; then
