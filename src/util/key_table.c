@@ -123,7 +123,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_name
 
   ret =
     enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, server_name,
-    server_name_len, port, server_key_id, (server_key_id_len - 1), &retrieved_key_id, &retrieved_key_id_len,
+    server_name_len, port, server_key_id, server_key_id_len, &retrieved_key_id, &retrieved_key_id_len,
     &data, &data_size);
   if (ret)
   {
@@ -131,7 +131,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_name
     return RET_FAIL;
   }
 
-  if ((server_key_id_len - 1) != retrieved_key_id_len || memcmp(retrieved_key_id, server_key_id, retrieved_key_id_len) != 0)
+  if (server_key_id_len != retrieved_key_id_len || memcmp(retrieved_key_id, server_key_id, retrieved_key_id_len) != 0)
   {	
     pelz_log(LOG_ERR, "Retrieved Key Invalid Key ID");
     return RET_FAIL;
