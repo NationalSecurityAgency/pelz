@@ -100,4 +100,15 @@ size_t get_index_for_char(charbuf buf, char c, size_t index, int direction);
  */
 charbuf copy_chars_from_charbuf(charbuf buf, size_t index);
 
+/**
+ * <pre>
+ * Takes a struct charbuf and allocates memory of len + 1 then copies chars to the allocated memory.
+ * </pre>
+ *
+ * @param[in] buf The charbuf to be turned into a null terminated sting
+ *
+ * @return the null terminated sting in buf.chars
+ */
+unsigned char * null_terminated_string(charbuf buf);
+
 #endif /* INCLUDE_CHARBUF_H_ */
