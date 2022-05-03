@@ -94,7 +94,6 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   int index = 0;
   int ret;
   unsigned char *common_name;
-  unsigned char *sent_key_id;
   unsigned char *retrieved_key_id = NULL;
   size_t retrieved_key_id_len = 0;
   uint8_t *retrieved_key;
@@ -119,9 +118,8 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   }
 
   common_name = null_terminated_string(server_name);
-  sent_key_id = null_terminated_string(server_key_id);
   ret = enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, (const char *) common_name, (server_name.len + 1), port, 
-    sent_key_id, strlen((const char *) sent_key_id), &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
+    server_key_id.chars, server_key_id.len, &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");
@@ -130,7 +128,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
     return RET_FAIL;
   }
 
-  if (strlen((const char *) sent_key_id) != retrieved_key_id_len || memcmp(retrieved_key_id, sent_key_id, retrieved_key_id_len) != 0)
+  if (server_key_id.len != retrieved_key_id_len || memcmp(retrieved_key_id, server_key_id.chars, retrieved_key_id_len) != 0)
   {	
     pelz_log(LOG_ERR, "Retrieved Key Invalid Key ID");
     free(retrieved_key_id);
