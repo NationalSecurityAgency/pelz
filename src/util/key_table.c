@@ -117,7 +117,9 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
     return NO_MATCH;
   }
 
+  //charbuf server_name is transformed into a null terminated string common_name because the socket calls require a null terminated string
   common_name = null_terminated_string(server_name);
+  //the +1 is used for the len of common_name to account for the null terminater added to server_name
   ret = enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, (const char *) common_name, (server_name.len + 1), port, 
     server_key_id.chars, server_key_id.len, &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
   if (ret)
