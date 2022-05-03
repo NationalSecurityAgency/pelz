@@ -123,24 +123,18 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   if (ret)
   {
     pelz_log(LOG_ERR, "Retrieve Key function failure");
-    free(retrieved_key_id);
-    free(retrieved_key);
     return RET_FAIL;
   }
 
   if (server_key_id.len != retrieved_key_id_len || memcmp(retrieved_key_id, server_key_id.chars, retrieved_key_id_len) != 0)
   {	
     pelz_log(LOG_ERR, "Retrieved Key Invalid Key ID");
-    free(retrieved_key_id);
-    free(retrieved_key);
     return RET_FAIL;
   }
 
   if (retrieved_key_len == 0  || retrieved_key == NULL)
   {
     pelz_log(LOG_ERR, "Retrieved Key Invalid");
-    free(retrieved_key_id);
-    free(retrieved_key);
     return RET_FAIL;
   }	  
 
@@ -148,13 +142,9 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   if (retrieved_key_len != key.len)
   {
     pelz_log(LOG_ERR, "Charbuf creation error.");
-    free(retrieved_key_id);
-    free(retrieved_key);
     return ERR_BUF;
   }
   memcpy(key.chars, retrieved_key, key.len);
-  free(retrieved_key_id);
-  free(retrieved_key);
   status = key_table_add_key(key_id, key);
   return status;
 }
