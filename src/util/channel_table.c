@@ -66,3 +66,8 @@ TableResponseStatus get_chan_key(int socket_id, charbuf key)
   return OK;
 }
 
+TableResponseStatus clear_chan_key(int socket_id)
+{
+  secure_free_charbuf(&chan_table.chan_key[socket_id]);
+  return OK;
+}

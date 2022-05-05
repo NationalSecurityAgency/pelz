@@ -26,7 +26,7 @@ extern "C"
 
 /**
  * <pre>
- * This function adds a channel key to the table at index specified by socket_id. Note the mutex needs to be unlocked by the function that calls this function.
+ * This function adds a channel key to the channal table at index specified by socket_id. Note the mutex needs to be unlocked by the function that calls this function.
  * </pre>
  *
  * @param[in] socket_id Index location for the channel key
@@ -40,7 +40,7 @@ extern "C"
 
 /**
  * <pre>
- * This function gets the channel key from a table. Note the mutex needs to be unlocked by the function that calls this function.
+ * This function gets the channel key from the channel table. Note the mutex needs to be unlocked by the function that calls this function.
  * </pre>
  *
  * @param[in]  socket_id Index location for the channel key
@@ -52,6 +52,17 @@ extern "C"
  */
   TableResponseStatus get_chan_key(int socket_id, charbuf key);
 
+/**
+ * <pre>
+ * This function clears the channel key from the channel table. Note the mutex needs to be unlocked by the function that calls this function.
+ * </pre>
+ *
+ * @param[in]  socket_id Index location for the channel key to clear
+ *
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+  TableResponseStatus clear_chan_key(int socket_id);
 
 #ifdef __cplusplus
 }
