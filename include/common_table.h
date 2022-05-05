@@ -38,7 +38,11 @@ typedef struct CommonTable
 } Table;
 
 typedef enum
-{ KEY, SERVER, TEST } TableType;
+{ 
+  KEY,      /**< Table to store KEKs*/
+  SERVER,   /**< Table to store server public certificates*/
+  TEST      /**< Testing value for table functions*/
+} TableType;
 
 /// Enum to provide a return response status for table related functions.
 typedef enum

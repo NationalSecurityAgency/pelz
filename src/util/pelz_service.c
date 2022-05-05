@@ -22,10 +22,16 @@ static void *thread_process_wrapper(void *arg)
   pthread_exit(NULL);
 }
 
-int pelz_service(int max_requests)
+int listen_thread()
+{
+  return 0;
+}
+
+int pelz_service(int max_requests, int port, bool secure)
 {
   int socket_id;
   int socket_listen_id;
+  int secure_socket_listen_id;
   pthread_t tid[max_requests];
   ThreadArgs threadArgs;
 
@@ -36,10 +42,19 @@ int pelz_service(int max_requests)
   pthread_mutex_init(&lock, NULL);
 
   //Initializing Socket for Pelz Key Service
-  if (pelz_key_socket_init(max_requests, &socket_listen_id))
+  if (pelz_key_socket_init(max_requests, (port + 1), &secure_socket_listen_id))
   {
     pelz_log(LOG_ERR, "Socket Initialization Error");
     return (1);
+  }
+
+  if (!secure)
+  {
+    if (pelz_key_socket_init(max_requests, port, &socket_listen_id))
+    {
+      pelz_log(LOG_ERR, "Socket Initialization Error");
+      return (1);
+    }
   }
 
   threadArgs.lock = lock;
@@ -88,6 +103,7 @@ int pelz_service(int max_requests)
 
   //Close and Teardown Socket before ending program
   pelz_key_socket_teardown(&socket_listen_id);
+  pelz_key_socket_teardown(&secure_socket_listen_id);
   pthread_mutex_destroy(&lock);
   return 0;
 }

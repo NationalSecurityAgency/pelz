@@ -23,12 +23,16 @@ static void usage(const char *prog)
     "options are: \n\n"
     " -h or --help          Help (displays this usage).\n"
     " -m or --max_requests  Maximum number of sockets pelz can make available at any given time, default: 100\n"
+    " -p or --port          Port number for socket connetion to receive request messages, default: 10600\n"
+    " -s or --secure        Only use the enclave attestation port to receive request messages.\n"
     " -v or --verbose       Enable detailed logging.\n", prog);
 }
 
 const struct option longopts[] = {
   {"help", no_argument, 0, 'h'},
   {"max_requests", required_argument, 0, 'm'},
+  {"port", required_argument, 0, 'p'},
+  {"secure", no_argument, 0, 's'},
   {"verbose", no_argument, 0, 'v'},
   {0, 0, 0, 0}
 };
@@ -43,11 +47,14 @@ int main(int argc, char **argv)
   set_applog_severity_threshold(LOG_WARNING);
 
   int max_requests = 100;
+  int port = 10600;
   int options;
   int option_index;
   long mr = 0;
+  long p = 0;
+  bool secure = false;
 
-  while ((options = getopt_long(argc, argv, "m:hv", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "m:p:hv", longopts, &option_index)) != -1)
   {
     switch (options)
     {
@@ -65,6 +72,20 @@ int main(int argc, char **argv)
         pelz_log(LOG_ERR, "max_request must be an integer. Received invalid option '%s'", optarg);
         return 1;
       }
+    case 'p':
+      if (optarg && (p = atol(optarg)) > 0)
+      {
+        port = (int) p;
+        break;
+      }
+      else
+      {
+        pelz_log(LOG_ERR, "Port must be an integer. Received invalid option '%s'", optarg);
+        return 1;
+      }
+    case 's':
+      secure = true;
+      break;
     case 'v':
       set_applog_severity_threshold(LOG_DEBUG);
       set_applog_output_mode(0);
@@ -106,7 +127,7 @@ int main(int argc, char **argv)
     return (1);
   }
 
-  pelz_service((const int) max_requests);
+  pelz_service((const int) max_requests, (const int) port, secure);
 
   pelz_log(LOG_INFO, "Shutdown Clean-up Start");
   private_pkey_free(eid, &status);

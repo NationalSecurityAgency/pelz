@@ -5,6 +5,7 @@ enclave {
 	include "aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "common_table.h"
+  include "channel_table.h"
 	include "pelz_io.h"
 	include "charbuf.h"
 	include "util.h"
@@ -167,6 +168,29 @@ public TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t ha
  */
 public TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_id_len, 
   [in, size=server_id_len] const char *server_id, int port, size_t server_key_id_len, [in, size=server_key_id_len] unsigned char *server_key_id);
+
+/**
+ * <pre>
+ * This function initializes the channel table.
+ * <pre>
+ *
+ * @param[in] entry_num  Number of charbuf slots allocated to the channel table.
+ *
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public TableResponseStatus chan_table_init(int entry_num);
+
+
+/**
+ * <pre>
+ * This function destroys the channel table.
+ * <pre>
+ *
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public TableResponseStatus chan_table_destroy();
 
 /**
  * <pre>
