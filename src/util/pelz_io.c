@@ -24,7 +24,7 @@
 #include "pelz_uri_helpers.h"
 #include "pelz_loaders.h"
 #include "util.h"
-#include "pelz_thread.h"
+#include "fifo_thread.h"
 
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"

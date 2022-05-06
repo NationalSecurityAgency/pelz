@@ -92,7 +92,9 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
-		 src/util/pelz_thread.c \
+		 src/util/fifo_thread.c \
+		 src/util/unsecure_socket_thread.c \
+		 src/util/secure_socket_thread.c \
 		 src/util/util.c \
 		 src/util/pelz_io.c \
 		 src/util/pelz_uri_helpers.c \

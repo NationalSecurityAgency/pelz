@@ -12,30 +12,29 @@
 #include "pelz_socket.h"
 #include "pelz_log.h"
 #include "pelz_io.h"
-#include "pelz_thread.h"
+#include "fifo_thread.h"
+#include "unsecure_socket_thread.h"
+#include "secure_socket_thread.h"
 
 bool global_pipe_reader_active = true;
 
-static void *thread_process_wrapper(void *arg)
+static void *unsecure_thread_wrapper(void *arg)
 {
-  thread_process(arg);
+  unsecure_socket_thread(arg);
   pthread_exit(NULL);
 }
 
-int listen_thread()
+static void *secure_thread_wrapper(void *arg)
 {
-  return 0;
+  secure_socket_thread(arg);
+  pthread_exit(NULL);
 }
 
 int pelz_service(int max_requests, int port, bool secure)
 {
-  int socket_id;
   int socket_listen_id;
   int secure_socket_listen_id;
-  pthread_t tid[max_requests];
   ThreadArgs threadArgs;
-
-  socket_id = 0;
 
   pthread_mutex_t lock;
 
@@ -66,38 +65,32 @@ int pelz_service(int max_requests, int port, bool secure)
     return 1;
   }
 
-  do
+  threadArgs.lock = lock;
+  threadArgs.socket_id = socket_listen_id;
+  threadArgs.max_requests = max_requests;
+  pthread_t unsecure_socket_thread;
+
+  if (pthread_create(&unsecure_socket_thread, NULL, unsecure_thread_wrapper, &threadArgs))
   {
-    if (pelz_key_socket_accept(socket_listen_id, &socket_id))
-    {
-      pelz_log(LOG_ERR, "Socket Client Connection Error");
-      continue;
-    }
-
-    if (socket_id == 0)         //This is to reset the while loop if select() times out
-    {
-      continue;
-    }
-
-    if (socket_id > max_requests)
-    {
-      pelz_log(LOG_WARNING, "%d::Over max socket requests.", socket_id);
-      pelz_key_socket_close(socket_id);
-      continue;
-    }
-
-    threadArgs.lock = lock;
-    threadArgs.socket_id = socket_id;
-    if (pthread_create(&tid[socket_id], NULL, thread_process_wrapper, &threadArgs) != 0)
-    {
-      pelz_log(LOG_WARNING, "%d::Failed to create thread.", socket_id);
-      pelz_key_socket_close(socket_id);
-      continue;
-    }
-
-    pelz_log(LOG_INFO, "Thread %d, %d", (int) tid[socket_id], socket_id);
+    pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
+    return 1;
   }
-  while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
+
+  threadArgs.lock = lock;
+  threadArgs.socket_id = secure_socket_listen_id;
+  threadArgs.max_requests = max_requests;
+  pthread_t secure_socket_thread;
+
+  if (pthread_create(&secure_socket_thread, NULL, secure_thread_wrapper, &threadArgs))
+  {
+    pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
+    return 1;
+  }
+
+  while (global_pipe_reader_active)
+  {
+    continue;
+  }
 
   pelz_log(LOG_INFO, "Exit Pelz Program");
 
