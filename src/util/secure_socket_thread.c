@@ -86,6 +86,8 @@ void secure_socket_process(void *arg)
   RequestResponseStatus status;
   const char *err_message;
 
+  //Attestation handshake function should be added here in the process flow
+
   while (!pelz_key_socket_check(new_socket))
   {
     //Receiving request and Error Checking
@@ -105,12 +107,12 @@ void secure_socket_process(void *arg)
     RequestType request_type = REQ_UNK;
 
     charbuf key_id;
-    charbuf data_in;
-    charbuf data_out;
+    charbuf data_in;        
+    charbuf data_out;       
     charbuf request_sig;
     charbuf requestor_cert;
 
-    charbuf data;
+    charbuf data;           //Remove this variable
     charbuf output;
 
     //Parse request for processing
@@ -126,10 +128,12 @@ void secure_socket_process(void *arg)
 
     free_charbuf(&request);
 
+    //Remove this function because this will be decrypted in the enclave
     decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
     free_charbuf(&data_in);
 
     pthread_mutex_lock(&lock);
+    //Change data to data_in
     pelz_request_handler(eid, &status, request_type, key_id, data, &output);
     if (status == KEK_NOT_LOADED)
     {
@@ -175,6 +179,7 @@ void secure_socket_process(void *arg)
     }
     else
     {
+      //Remove the encode function because the output will be encrypted in the enclave
       encodeBase64Data(output.chars, output.len, &data_out.chars, &data_out.len);
       if (strlen((char *) data_out.chars) != data_out.len)
       {
