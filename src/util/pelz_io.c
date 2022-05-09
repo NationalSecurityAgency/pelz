@@ -25,6 +25,7 @@
 #include "pelz_loaders.h"
 #include "util.h"
 #include "pelz_thread.h"
+#include "cmd_interface.h"
 
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
@@ -626,21 +627,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     return INVALID;
   }
 
-/*
- *  -1    exit                      Terminate running pelz-service
- *  -2    keytable remove key       Removes a key with a specified id
- *  -3    keytable remove all keys  Removes all keys
- *  -4    keytable list             Outputs a list of key <id> in Key Table
- *  -5    pki load cert             Loads a server certificate
- *  -6    pki load private          Loads a private key for connections to key servers
- *  -7    pki cert list             Outputs a list of certificate <CN> in Server Table
- *  -8    pki remove cert           Removes a server certificate   
- *  -9    pki remove all certs      Removes all server certificates
- *  -10   pki remove cert           Removes the private key   
- */
   switch (atoi(tokens[1]))
   {
-  case 1:
+  case CMD_EXIT:
     if (unlink(PELZSERVICE) == 0)
     {
       pelz_log(LOG_INFO, "Pipe deleted successfully");
@@ -650,7 +639,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       pelz_log(LOG_INFO, "Failed to delete the pipe");
     }
     return EXIT;
-  case 2:
+  case CMD_REMOVE_KEY:
     if (num_tokens != 4)
     {
       return INVALID;
@@ -684,7 +673,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       free_charbuf(&key_id);
       return RM_KEK;
     }
-  case 3:
+  case CMD_REMOVE_ALL_KEYS:
     table_destroy(eid, &ret, KEY);
     if (ret != OK)
     {
@@ -693,7 +682,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     pelz_log(LOG_INFO, "Key Table Destroyed and Re-Initialize");
     return RM_KEK_ALL;
-  case 4:
+  case CMD_LIST_KEYS:
     //Get the number of key table entries
     table_id_count(eid, &ret, KEY, &count);
     if (count == 0)
@@ -702,7 +691,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return NO_KEY_LIST;
     }
     return KEY_LIST;
-  case 5:
+  case CMD_LOAD_CERT:
     if (num_tokens != 4)
     {
       return INVALID;
@@ -744,7 +733,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ADD_CERT_FAIL;
     }
     return LOAD_CERT;
-  case 6:
+  case CMD_LOAD_PRIV:
     if (num_tokens != 4)
     {
       return INVALID;
@@ -773,7 +762,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ADD_PRIV_FAIL;
     }
     return LOAD_PRIV;
-  case 7:
+  case CMD_LIST_CERTS:
     //Get the number of server table entries
     table_id_count(eid, &ret, SERVER, &count);
     if (count == 0)
@@ -782,7 +771,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return NO_SERVER_LIST;
     }
     return SERVER_LIST;
-  case 8:
+  case CMD_REMOVE_CERT:
     if (num_tokens != 4)
     {
       return INVALID;
@@ -815,7 +804,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       free_charbuf(&server_id);
       return RM_CERT;
     }
-  case 9:
+  case CMD_REMOVE_ALL_CERTS:
     table_destroy(eid, &ret, SERVER);
     if (ret != OK)
     {
@@ -824,7 +813,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     pelz_log(LOG_INFO, "Server Table Destroyed and Re-Initialized");
     return RM_ALL_CERT;
-  case 10:
+  case CMD_REMOVE_PRIV:
     //Free private pkey to remove pkey
     private_pkey_free(eid, &ret);
     if (ret != OK)

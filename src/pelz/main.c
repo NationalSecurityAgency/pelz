@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     case SEAL:
       if (cmd_arg[1] == OTHER && cmd_arg[2] == EMPTY)
       {
-        cmd = 0;
+        cmd = CMD_SEAL;
       }
       else
       {
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
     case EX:
       if (cmd_arg[1] == EMPTY)
       {
-        cmd = 1;
+        cmd = CMD_EXIT;
       }
       else
       {
@@ -220,11 +220,11 @@ int main(int argc, char **argv)
       {
         if (all == true)
         {
-          cmd = 3;
+          cmd = CMD_REMOVE_ALL_KEYS;
         }
         else if (cmd_arg[2] == OTHER && cmd_arg[3] == EMPTY)
         {
-          cmd = 2;
+          cmd = CMD_REMOVE_KEY;
         }
         else
         {
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
       }
       else if (cmd_arg[1] == LIST && cmd_arg[2] == EMPTY)
       {
-        cmd = 4;
+        cmd = CMD_LIST_KEYS;
       }
       else
       {
@@ -247,11 +247,11 @@ int main(int argc, char **argv)
       {
         if (cmd_arg[2] == CERT && cmd_arg[3] == OTHER && cmd_arg[4] == EMPTY)
         {
-          cmd = 5;
+          cmd = CMD_LOAD_CERT;
         }
         else if (cmd_arg[2] == PRIVATE  && cmd_arg[3] == OTHER && cmd_arg[4] == EMPTY)
         {
-          cmd = 6;
+          cmd = CMD_LOAD_PRIV;
         }
         else
         {
@@ -261,21 +261,21 @@ int main(int argc, char **argv)
       }
       else if (cmd_arg[1] == CERT && cmd_arg[2] == LIST && cmd_arg[3] == EMPTY)
       {
-        cmd = 7;
+        cmd = CMD_LIST_CERTS;
       }
       else if (cmd_arg[1] == REMOVE)
       {
         if (all == true)
         {
-          cmd = 9;
+          cmd = CMD_REMOVE_ALL_CERTS;
         }
         else if (cmd_arg[2] == PRIVATE  && cmd_arg[3] == EMPTY)
         {
-          cmd = 10;
+          cmd = CMD_REMOVE_PRIV;
         }
         else if (cmd_arg[2] == OTHER && cmd_arg[3] == EMPTY)
         {
-          cmd = 8;
+          cmd = CMD_REMOVE_CERT;
         }
         else
         {
@@ -313,23 +313,9 @@ int main(int argc, char **argv)
     pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
 
-/*
- *  0   seal                      Seal file at <path> provided
- *  1   exit                      Terminate running of pelz-service
- *  2   keytable remove key       Removes a key with a specified <id>
- *  3   keytable remove all keys  Removes all keys
- *  4   keytable list             Outputs a list of keys <id> in Key Table
- *  5   pki load cert             Loads a server certificate
- *  6   pki load private          Loads a private pkey for connections to the key server
- *  7   pki cert list             Outputs a list of certificates <CN> in Server Table
- *  8   pki remove cert           Removes a server certificate   
- *  9   pki remove all certs      Removes all server certificates
- *  10  pki remove cert           Removes the private pkey
- */
-
   switch (cmd)
   {
-    case 0:
+    case CMD_SEAL:
       //Execute the seal command
       pelz_log(LOG_DEBUG, "Seal <path> option");
       if (seal(argv[arg_index + 2], &outPath, outPath_size, tpm))
@@ -345,43 +331,43 @@ int main(int argc, char **argv)
       fprintf(stdout, "Successfully sealed contents to file: %s\n", outPath);
       free(outPath);
       break;
-    case 1:
+    case CMD_EXIT:
       //Execute the exit command
       msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
-    case 2:
+    case CMD_REMOVE_KEY:
       //Execute the keytable remove <ID> command
       msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
       break;
-    case 3:
+    case CMD_REMOVE_ALL_KEYS:
       //Execute the keytable remove all command
       msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
-    case 4:
+    case CMD_LIST_KEYS:
       //Execute the keytable list command
       msg_list(fifo_name, fifo_name_len, cmd);
       break;
-    case 5:
+    case CMD_LOAD_CERT:
       //Execute the pki load cert <path> command
       msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 4], (int) strlen(argv[arg_index + 4]));
       break;
-    case 6:
+    case CMD_LOAD_PRIV:
       //Execute the pki load private <path> command
       msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 4], (int) strlen(argv[arg_index + 4]));
       break;
-    case 7:
+    case CMD_LIST_CERTS:
       //Execute the pki cert list command
       msg_list(fifo_name, fifo_name_len, cmd);
       break;
-    case 8:
+    case CMD_REMOVE_CERT:
       //Execute the pki remove cert <CN> command
       msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
       break;
-    case 9:
+    case CMD_REMOVE_ALL_CERTS:
       //Execute the pki remove cert all command
       msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
-    case 10:
+    case CMD_REMOVE_PRIV:
       //Execute the pki remove private command
       msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
