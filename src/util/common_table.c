@@ -29,24 +29,31 @@ Table server_table = {
   .mem_size = 0
 };
 
-//Destroy server table
-TableResponseStatus table_destroy(TableType type)
+
+Table *get_table_by_type(TableType type)
 {
-  Table *table;
-
-  pelz_log(LOG_DEBUG, "Table Destroy Function Starting");
-
   switch (type)
   {
   case KEY:
-    table = &key_table;
-    break;
+    return &key_table;
   case SERVER:
-    table = &server_table;
-    break;
+    return &server_table;
   default:
+    return NULL;
+  }
+}
+
+//Destroy server table
+TableResponseStatus table_destroy(TableType type)
+{
+  Table *table = get_table_by_type(type);
+
+  if (table == NULL)
+  {
     return ERR;
   }
+
+  pelz_log(LOG_DEBUG, "Table Destroy Function Starting");
 
   for (unsigned int i = 0; i < table->num_entries; i++)
   {
@@ -79,19 +86,12 @@ TableResponseStatus table_destroy(TableType type)
 
 TableResponseStatus table_delete(TableType type, charbuf id)
 {
-  Table *table;
   int index = 0;
   int data_size = 0;
+  Table *table = get_table_by_type(type);
 
-  switch (type)
+  if (table == NULL)
   {
-  case KEY:
-    table = &key_table;
-    break;
-  case SERVER:
-    table = &server_table;
-    break;
-  default:
     return ERR;
   }
 
@@ -159,17 +159,10 @@ TableResponseStatus table_delete(TableType type, charbuf id)
 
 TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
 {
-  Table *table;
+  Table *table = get_table_by_type(type);
 
-  switch (type)
+  if (table == NULL)
   {
-  case KEY:
-    table = &key_table;
-    break;
-  case SERVER:
-    table = &server_table;
-    break;
-  default:
     return ERR;
   }
 
@@ -186,17 +179,10 @@ TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
 
 TableResponseStatus table_id_count(TableType type, size_t *count)
 {
-  Table *table;
+  Table *table = get_table_by_type(type);
 
-  switch (type)
+  if (table == NULL)
   {
-  case KEY:
-    table = &key_table;
-    break;
-  case SERVER:
-    table = &server_table;
-    break;
-  default:
     return ERR;
   }
 
@@ -206,17 +192,10 @@ TableResponseStatus table_id_count(TableType type, size_t *count)
 
 TableResponseStatus table_id(TableType type, int index, charbuf *id)
 {
-  Table *table;
+  Table *table = get_table_by_type(type);
 
-  switch (type)
+  if (table == NULL)
   {
-  case KEY:
-    table = &key_table;
-    break;
-  case SERVER:
-    table = &server_table;
-    break;
-  default:
     return ERR;
   }
 
@@ -225,4 +204,3 @@ TableResponseStatus table_id(TableType type, int index, charbuf *id)
   memcpy(id->chars, table->entries[index].id.chars, id->len);
   return OK;
 }
-
