@@ -53,6 +53,20 @@ static void pki_usage()
     "                                    removed. The private key will not be removed.\n");
 }
 
+static void ca_usage()
+{
+  fprintf(stdout,
+    "ca commands:\n\n"
+    "  ca <action> <value>               These commands load or remove CA certificates\n"
+    "                                    used to validate signed requests.\n\n"
+    "  ca load <path/to/file>            Loads a sealed CA certificate into the pelz-service enclave.\n"
+    "                                    The certificate must be in .der.nkl or .der.ski format.\n\n"
+    "  ca list                           Lists the Common Names of all CA certificates currently loaded\n"
+    "                                    in the pelz-service.\n\n"
+    "  ca remove <CN>                    Removes the CA certificate with Common Name (CN) from the pelz-service.\n\n"
+    "    -a, --all                       If -a or --all is selected, all CA certificates will be removed.\n\n");
+}
+
 static void keytable_usage()
 {
   fprintf(stdout,
@@ -286,6 +300,37 @@ int main(int argc, char **argv)
       else
       {
         pki_usage();
+        return 1;
+      }
+      break;
+    case CA:
+      if (cmd_arg[1] == LOAD && cmd_arg[2] == OTHER && cmd_arg[3] == EMPTY)
+      {
+        cmd = CMD_LOAD_CA;
+      }
+      else if (cmd_arg[1] == LIST && cmd_arg[2] == EMPTY)
+      {
+        cmd = CMD_LIST_CA;
+      }
+      else if (cmd_arg[1] == REMOVE)
+      {
+        if (all == true)
+        {
+          cmd = CMD_REMOVE_ALL_CA;
+        }
+        else if (cmd_arg[2] == OTHER && cmd_arg[3] == EMPTY)
+        {
+          cmd = CMD_REMOVE_CA;
+        }
+        else
+        {
+          ca_usage();
+          return 1;
+        }
+      }
+      else
+      {
+        ca_usage();
         return 1;
       }
       break;

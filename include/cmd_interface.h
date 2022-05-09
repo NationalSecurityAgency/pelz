@@ -13,6 +13,10 @@
  *  8    pki remove <CN>           Removes a server certificate
  *  9    pki remove --all          Removes all server certificates
  *  10   pki remove private        Removes the private key
+ *  11   ca load <path>            Loads a CA certificate
+ *  12   ca list                   Outputs a list of certificate <CN> from the CA Table
+ *  13   ca remove <CN>            Removes a CA certificate
+ *  14   ca remove --all           Removes all CA certificates
  */
 typedef enum
 { CMD_SEAL = 0,
@@ -25,7 +29,11 @@ typedef enum
   CMD_LIST_CERTS,
   CMD_REMOVE_CERT,
   CMD_REMOVE_ALL_CERTS,
-  CMD_REMOVE_PRIV,
+  CMD_REMOVE_PRIV = 10,
+  CMD_LOAD_CA,
+  CMD_LIST_CA,
+  CMD_REMOVE_CA,
+  CMD_REMOVE_ALL_CA,
 } CmdType;
 
 typedef enum
@@ -39,6 +47,7 @@ typedef enum
   LOAD,     
   CERT,     
   PRIVATE,  
+  CA,
   OTHER     //Non-null value other then the ones listed above
 }CmdArgValue;
 

@@ -72,6 +72,12 @@ CmdArgValue check_arg(char *arg)
     return PRIVATE;
   }
 
+  //Checking for ca keyword
+  if ((memcmp(arg, "ca", 2) == 0) && (strlen(arg) == 2))
+  {
+    return CA;
+  }
+
   return OTHER;        
 }
 
