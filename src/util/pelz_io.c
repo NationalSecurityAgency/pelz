@@ -703,7 +703,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       pelz_log(LOG_DEBUG, "Path: %s", tokens[3]);
       return INVALID_EXT_CERT;
     }
-    server_table_add(eid, &ret, handle);
+    add_cert_to_table(eid, &ret, SERVER, handle);
     if (ret != OK)
     {
       pelz_log(LOG_ERR, "Add cert failure");
@@ -800,7 +800,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     else
     {
-      pelz_log(LOG_INFO, "Delete Server ID form Server Table: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_INFO, "Delete Server ID from Server Table: %.*s", (int) server_id.len, server_id.chars);
       free_charbuf(&server_id);
       return RM_CERT;
     }
@@ -830,6 +830,100 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return RM_PRIV_FAIL;
     }
     return RM_PRIV;
+  case CMD_LOAD_CA:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+
+    if (pelz_load_file_to_enclave(tokens[2], &handle))
+    {
+      pelz_log(LOG_INFO, "Invalid extension for ca load call");
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      return INVALID_EXT_CERT;
+    }
+
+    add_cert_to_table(eid, &ret, CA_TABLE, handle);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "Add cert failure");
+      switch (ret)
+      {
+      case ERR_REALLOC:
+        pelz_log(LOG_ERR, "CA Table memory allocation greater then specified limit.");
+        break;
+      case ERR_BUF:
+        pelz_log(LOG_ERR, "Charbuf creation error.");
+        break;
+      case ERR_X509:
+        pelz_log(LOG_ERR, "X509 allocation error.");
+        return X509_FAIL;
+      case RET_FAIL:
+        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
+        break;
+      case NO_MATCH:
+        pelz_log(LOG_ERR, "Cert entry and CA ID lookup do not match.");
+        break;
+      case MEM_ALLOC_FAIL:
+        pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+        break;
+      default:
+        pelz_log(LOG_ERR, "ca_table_add return not defined");
+      }
+      return LOAD_CA_FAIL;
+    }
+    return LOAD_CA;
+  case CMD_REMOVE_CA:
+    if (num_tokens != 3)
+    {
+      return INVALID;
+    }
+    server_id = new_charbuf(strlen(tokens[2]));
+    if (server_id.len != strlen(tokens[2]))
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return ERR_CHARBUF;
+    }
+    memcpy(server_id.chars, tokens[2], server_id.len);
+    table_delete(eid, &ret, CA_TABLE, server_id);
+    if (ret == NO_MATCH)
+    {
+      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "CA ID not found");
+      free_charbuf(&server_id);
+      return RM_CA_FAIL;
+    }
+    else if (ret == ERR_REALLOC)
+    {
+      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "CA Table reallocation failure");
+      free_charbuf(&server_id);
+      return RM_CA_FAIL;
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Delete CA ID from CA Table: %.*s", (int) server_id.len, server_id.chars);
+      free_charbuf(&server_id);
+      return RM_CA;
+    }
+  case CMD_REMOVE_ALL_CA:
+    table_destroy(eid, &ret, CA_TABLE);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "CA Table Destroy Failure");
+      return RM_CA_ALL_FAIL;
+    }
+    pelz_log(LOG_INFO, "CA Table Destroyed and Re-Initialized");
+    return RM_CA_ALL;
+  case CMD_LIST_CA:
+    //Get the number of CA table entries
+    table_id_count(eid, &ret, CA_TABLE, &count);
+    if (count == 0)
+    {
+      pelz_log(LOG_INFO, "No entries in CA Table.");
+      return NO_CA_LIST;
+    }
+    return CA_LIST;
   default:
     pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);
     return INVALID;

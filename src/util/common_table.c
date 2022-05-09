@@ -29,6 +29,12 @@ Table server_table = {
   .mem_size = 0
 };
 
+Table ca_table = {
+  .entries = NULL,
+  .num_entries = 0,
+  .mem_size = 0
+};
+
 
 Table *get_table_by_type(TableType type)
 {
@@ -38,6 +44,8 @@ Table *get_table_by_type(TableType type)
     return &key_table;
   case SERVER:
     return &server_table;
+  case CA_TABLE:
+    return &ca_table;
   default:
     return NULL;
   }

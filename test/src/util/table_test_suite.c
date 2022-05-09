@@ -109,7 +109,7 @@ void test_table_add(void)
   pelz_log(LOG_INFO, "Key Table add from Handle complete");
 
   //Testing the server table add
-  server_table_add(eid, &status, handle);
+  add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == RET_FAIL);
 
   if (read_bytes_from_file((char *) valid_id[3], &data, &data_len) == 0)
@@ -122,7 +122,7 @@ void test_table_add(void)
   }
   free(data);
 
-  server_table_add(eid, &status, handle);
+  add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
   pelz_log(LOG_INFO, "Server Table add complete");
 
@@ -206,7 +206,7 @@ void test_table_lookup(void)
     pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
   }
   free(data);
-  server_table_add(eid, &status, handle);
+  add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
   if (read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0)
@@ -218,7 +218,7 @@ void test_table_lookup(void)
     pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
   }
   free(data);
-  server_table_add(eid, &status, handle);
+  add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
   //Testing the look-up function for key table
@@ -317,7 +317,7 @@ void test_table_delete(void)
     pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
   }
   free(data);
-  server_table_add(eid, &status, handle);
+  add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
   if (read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0)
@@ -329,7 +329,7 @@ void test_table_delete(void)
     pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
   }
   free(data);
-  server_table_add(eid, &status, handle);
+  add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
   //Testing the delete function for key table

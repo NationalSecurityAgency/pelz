@@ -34,7 +34,15 @@ typedef enum
   NO_KEY_LIST,         //No entries in Key Table.
   KEY_LIST,            //Key Table List: list
   NO_SERVER_LIST,      //No entries in Server Table.
-  SERVER_LIST          //PKI Certificate List: list
+  SERVER_LIST,         //PKI Certificate List: list
+  LOAD_CA_FAIL,        //Failure to load CA cert
+  LOAD_CA,             //Loaded CA cert
+  RM_CA_FAIL,          //Failure to remove CA cert
+  RM_CA,               //Removed CA cert
+  RM_CA_ALL_FAIL,      //Removed all CA certs
+  RM_CA_ALL,           //Removed all CA certs
+  NO_CA_LIST,          //No entries in CA Table.
+  CA_LIST,             //CA Certificate List: list
 } ParseResponseStatus;
 
 typedef enum
