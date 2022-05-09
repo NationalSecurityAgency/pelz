@@ -30,7 +30,7 @@ static void *secure_thread_wrapper(void *arg)
   pthread_exit(NULL);
 }
 
-int pelz_service(int max_requests, int port, bool secure)
+int pelz_service(int max_requests, int port_open, int port_attested, bool secure)
 {
   int socket_listen_id;
   int secure_socket_listen_id;
@@ -41,7 +41,7 @@ int pelz_service(int max_requests, int port, bool secure)
   pthread_mutex_init(&lock, NULL);
 
   //Initializing Socket for Pelz Key Service
-  if (pelz_key_socket_init(max_requests, (port + 1), &secure_socket_listen_id))
+  if (pelz_key_socket_init(max_requests, port_attested, &secure_socket_listen_id))
   {
     pelz_log(LOG_ERR, "Socket Initialization Error");
     return (1);
@@ -49,7 +49,7 @@ int pelz_service(int max_requests, int port, bool secure)
 
   if (!secure)
   {
-    if (pelz_key_socket_init(max_requests, port, &socket_listen_id))
+    if (pelz_key_socket_init(max_requests, port_open, &socket_listen_id))
     {
       pelz_log(LOG_ERR, "Socket Initialization Error");
       return (1);
