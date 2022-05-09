@@ -109,6 +109,6 @@ charbuf copy_chars_from_charbuf(charbuf buf, size_t index);
  *
  * @return the null terminated sting in buf.chars
  */
-unsigned char * null_terminated_string(charbuf buf);
+unsigned char * null_terminated_string_from_charbuf(charbuf buf);
 
 #endif /* INCLUDE_CHARBUF_H_ */

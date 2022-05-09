@@ -137,11 +137,15 @@ charbuf copy_chars_from_charbuf(charbuf buf, size_t index)
   return new_charbuf(0);
 }
 
-unsigned char * null_terminated_string(charbuf buf)
-{
-  unsigned char *string;
- 
-  string = (unsigned char *) calloc(buf.len + 1, sizeof(char));
-  memcpy(string, buf.chars, buf.len);
-  return string;
+unsigned char * null_terminated_string_from_charbuf(charbuf buf)
+{ 
+  if (buf.len > 0 && buf.chars != NULL)
+  {
+    unsigned char *string;
+
+    string = (unsigned char *) calloc(buf.len + 1, sizeof(char));
+    memcpy(string, buf.chars, buf.len);
+    return string;
+  }
+  return NULL;
 }
