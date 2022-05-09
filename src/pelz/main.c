@@ -405,15 +405,31 @@ int main(int argc, char **argv)
       msg_list(fifo_name, fifo_name_len, cmd);
       break;
     case CMD_REMOVE_CERT:
-      //Execute the pki remove cert <CN> command
+      //Execute the pki remove <CN> command
       msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
       break;
     case CMD_REMOVE_ALL_CERTS:
-      //Execute the pki remove cert all command
+      //Execute the pki remove --all command
       msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
     case CMD_REMOVE_PRIV:
       //Execute the pki remove private command
+      msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
+      break;
+    case CMD_LOAD_CA:
+      //Execute the ca load <path> command
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
+      break;
+    case CMD_LIST_CA:
+      //Execute the ca list command
+      msg_list(fifo_name, fifo_name_len, cmd);
+      break;
+    case CMD_REMOVE_CA:
+      //Execute the ca remove <CN> command
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[arg_index + 3], (int) strlen(argv[arg_index + 3]));
+      break;
+    case CMD_REMOVE_ALL_CA:
+      //Execute the ca remove --all command
       msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
       break;
     default:

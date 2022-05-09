@@ -2,7 +2,7 @@
 #define _CMD_INTERFACE_PELZ_H_
 
 /*
- *  0    seal <path>                     Seals a file in .nkl format (pelz-service is not involved)
+ *  0    seal <path>               Seals a file in .nkl format (pelz-service is not involved)
  *  1    exit                      Terminates running pelz-service
  *  2    keytable remove <key>     Removes a key with a specified <id>
  *  3    keytable remove --all     Removes all keys
