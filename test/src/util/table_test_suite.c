@@ -37,7 +37,7 @@ int table_suite_add_tests(CU_pSuite suite)
   {
     return (1);
   }
-  if (NULL == CU_add_test(suite, "Test Table Deletation", test_table_delete))
+  if (NULL == CU_add_test(suite, "Test Table Deletion", test_table_delete))
   {
     return (1);
   }
@@ -71,6 +71,8 @@ void test_table_destroy(void)
   table_destroy(eid, &status, KEY);
   CU_ASSERT(status == OK);
   table_destroy(eid, &status, SERVER);
+  CU_ASSERT(status == OK);
+  table_destroy(eid, &status, CA_TABLE);
   CU_ASSERT(status == OK);
   table_destroy(eid, &status, TEST);
   CU_ASSERT(status == ERR);
@@ -125,6 +127,11 @@ void test_table_add(void)
   CU_ASSERT(status == OK);
   pelz_log(LOG_INFO, "Server Table add complete");
 
+  handle = get_file_handle(valid_id[3]);
+  add_cert_to_table(eid, &status, CA_TABLE, handle);
+  CU_ASSERT(status == OK);
+  pelz_log(LOG_INFO, "CA Table add complete");
+
   //Testing the private pkey add
   private_pkey_init(eid, &status);
   CU_ASSERT(status == OK);
@@ -149,6 +156,8 @@ void test_table_add(void)
   table_destroy(eid, &status, KEY);
   CU_ASSERT(status == OK);
   table_destroy(eid, &status, SERVER);
+  CU_ASSERT(status == OK);
+  table_destroy(eid, &status, CA_TABLE);
   CU_ASSERT(status == OK);
   pelz_log(LOG_DEBUG, "Test Table Add Function Finish");
 }
@@ -185,12 +194,20 @@ void test_table_lookup(void)
   }
 
   //Initial load of certs into the server table
- handle = get_file_handle(valid_id[6]);
+  handle = get_file_handle(valid_id[6]);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
   handle = get_file_handle(valid_id[7]);
   add_cert_to_table(eid, &status, SERVER, handle);
+  CU_ASSERT(status == OK);
+
+  handle = get_file_handle(valid_id[6]);
+  add_cert_to_table(eid, &status, CA_TABLE, handle);
+  CU_ASSERT(status == OK);
+
+  handle = get_file_handle(valid_id[7]);
+  add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
 
   //Testing the look-up function for key table
@@ -221,12 +238,18 @@ void test_table_lookup(void)
   test_table_lookup(eid, &status, SERVER, tmp, &index);
   CU_ASSERT(status == OK);
   CU_ASSERT(index == 0);
+  test_table_lookup(eid, &status, CA_TABLE, tmp, &index);
+  CU_ASSERT(status == OK);
+  CU_ASSERT(index == 0);
   free_charbuf(&tmp);
   index = 0;
 
   tmp = new_charbuf(strlen("localhost"));
   memcpy(tmp.chars, "localhost", tmp.len);
   test_table_lookup(eid, &status, SERVER, tmp, &index);
+  CU_ASSERT(status == OK);
+  CU_ASSERT(index == 1);
+  test_table_lookup(eid, &status, CA_TABLE, tmp, &index);
   CU_ASSERT(status == OK);
   CU_ASSERT(index == 1);
   free_charbuf(&tmp);
@@ -237,11 +260,15 @@ void test_table_lookup(void)
   memcpy(tmp.chars, "TestTestTest", tmp.len);
   test_table_lookup(eid, &status, SERVER, tmp, &index);
   CU_ASSERT(status == NO_MATCH);
+  test_table_lookup(eid, &status, CA_TABLE, tmp, &index);
+  CU_ASSERT(status == NO_MATCH);
   free_charbuf(&tmp);
 
   table_destroy(eid, &status, KEY);
   CU_ASSERT(status == OK);
   table_destroy(eid, &status, SERVER);
+  CU_ASSERT(status == OK);
+  table_destroy(eid, &status, CA_TABLE);
   CU_ASSERT(status == OK);
   pelz_log(LOG_DEBUG, "Test Table Look-up Function Finish");
 }
@@ -284,6 +311,14 @@ void test_table_delete(void)
 
   handle = get_file_handle(valid_id[7]);
   add_cert_to_table(eid, &status, SERVER, handle);
+  CU_ASSERT(status == OK);
+
+  handle = get_file_handle(valid_id[6]);
+  add_cert_to_table(eid, &status, CA_TABLE, handle);
+  CU_ASSERT(status == OK);
+
+  handle = get_file_handle(valid_id[7]);
+  add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
 
   //Testing the delete function for key table
@@ -329,11 +364,15 @@ void test_table_delete(void)
   memcpy(tmp.chars, "TestTestTest", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
   CU_ASSERT(status == NO_MATCH);
+  table_delete(eid, &status, CA_TABLE, tmp);
+  CU_ASSERT(status == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("TestClient"));
   memcpy(tmp.chars, "TestClient", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
+  CU_ASSERT(status == OK);
+  table_delete(eid, &status, CA_TABLE, tmp);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
 
@@ -341,17 +380,23 @@ void test_table_delete(void)
   memcpy(tmp.chars, "TestClient", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
   CU_ASSERT(status == NO_MATCH);
+  table_delete(eid, &status, CA_TABLE, tmp);
+  CU_ASSERT(status == NO_MATCH);
   free_charbuf(&tmp);
 
   tmp = new_charbuf(strlen("localhost"));
   memcpy(tmp.chars, "localhost", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
   CU_ASSERT(status == OK);
+  table_delete(eid, &status, CA_TABLE, tmp);
+  CU_ASSERT(status == OK);
   free_charbuf(&tmp);
 
   table_destroy(eid, &status, KEY);
   CU_ASSERT(status == OK);
   table_destroy(eid, &status, SERVER);
+  CU_ASSERT(status == OK);
+  table_destroy(eid, &status, CA_TABLE);
   CU_ASSERT(status == OK);
   pelz_log(LOG_DEBUG, "Test Table Delete Function Finish");
 }
