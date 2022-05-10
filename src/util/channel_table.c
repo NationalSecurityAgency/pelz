@@ -26,7 +26,7 @@ TableResponseStatus chan_table_init(int entry_num)
   
   charbuf *temp;
 
-  if ((temp = (charbuf *) realloc(chan_table.chan_key, entry_num * sizeof(charbuf))) == NULL)
+  if ((temp = (charbuf *) malloc(entry_num * sizeof(charbuf))) == NULL)
   {
     pelz_log(LOG_ERR, "Key List Space Reallocation Error");
     return ERR_REALLOC;
@@ -60,9 +60,9 @@ TableResponseStatus add_chan_key(int socket_id, charbuf key)
   return OK;
 }
 
-TableResponseStatus get_chan_key(int socket_id, charbuf key)
+TableResponseStatus get_chan_key(int socket_id, charbuf *key)
 {
-  key = copy_chars_from_charbuf(chan_table.chan_key[socket_id], 0);
+  *key = copy_chars_from_charbuf(chan_table.chan_key[socket_id], 0);
   return OK;
 }
 

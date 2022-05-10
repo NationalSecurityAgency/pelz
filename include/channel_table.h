@@ -50,7 +50,7 @@ extern "C"
  * @return OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-  TableResponseStatus get_chan_key(int socket_id, charbuf key);
+  TableResponseStatus get_chan_key(int socket_id, charbuf *key);
 
 /**
  * <pre>
