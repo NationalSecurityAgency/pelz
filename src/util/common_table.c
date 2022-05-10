@@ -76,7 +76,7 @@ TableResponseStatus table_destroy(TableType type)
         secure_free_charbuf(&table->entries[i].value.key);
       }
     }
-    if (type == SERVER)
+    if (type == SERVER || type == CA_TABLE)
     {
       X509_free(table->entries[i].value.cert);
     }
@@ -113,7 +113,7 @@ TableResponseStatus table_delete(TableType type, charbuf id)
           table->mem_size - ((table->entries[i].value.key.len * sizeof(char)) + (table->entries[i].id.len * sizeof(char)) +
           (2 * sizeof(size_t)));
       }
-      else if (type == SERVER)
+      else if (type == SERVER || type == CA_TABLE)
       {
         data_size = i2d_X509(table->entries[i].value.cert, NULL);
         table->mem_size = table->mem_size - ((table->entries[i].id.len * sizeof(char)) + sizeof(size_t) + data_size);
@@ -123,7 +123,7 @@ TableResponseStatus table_delete(TableType type, charbuf id)
       {
         secure_free_charbuf(&table->entries[i].value.key);
       }
-      if (type == SERVER)
+      if (type == SERVER || type == CA_TABLE)
       {
         X509_free(table->entries[i].value.cert);
       }

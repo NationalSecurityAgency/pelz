@@ -70,7 +70,7 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
-    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
     return RET_FAIL;
   }
 

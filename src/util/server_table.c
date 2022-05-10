@@ -26,7 +26,7 @@ EVP_PKEY *private_pkey;
 TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
 {
   Entry tmp_entry;
-  uint8_t *data;
+  uint8_t *data = NULL;
   size_t data_size = 0;
   int ret;
   int index = 0;
@@ -49,7 +49,7 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
-    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
     return RET_FAIL;
   }
 
@@ -63,14 +63,13 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
   free(data);
 
   X509_NAME *subj = X509_get_subject_name(tmp_entry.value.cert);
-
   if (subj == NULL)
   {
     pelz_log(LOG_ERR, "Could not parse certificate data");
     return ERR_X509;
   }
 
-  //extract the common name from the  X509 subject name by the index location
+  //extract the common name from the X509 subject name by the index location
   //by iterating over the subject name to the last position
   for (;;)
   {
@@ -95,7 +94,7 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
     return ERR_BUF;
   }
   memcpy(tmp_entry.id.chars, tmp_id, tmp_entry.id.len);
-  if (table_lookup(SERVER, tmp_entry.id, &index) == 0)
+  if (table_lookup(type, tmp_entry.id, &index) == 0)
   {
     if (X509_cmp(table->entries[index].value.cert, tmp_entry.value.cert) == 0)
     {
@@ -157,7 +156,7 @@ TableResponseStatus private_pkey_add(uint64_t handle)
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
-    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
     return RET_FAIL;
   }
   if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) != EXIT_SUCCESS)
