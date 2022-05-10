@@ -831,15 +831,15 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return RM_PRIV;
   case CMD_LOAD_CA:
-    if (num_tokens != 3)
+    if (num_tokens != 4)
     {
       return INVALID;
     }
 
-    if (pelz_load_file_to_enclave(tokens[2], &handle))
+    if (pelz_load_file_to_enclave(tokens[3], &handle))
     {
       pelz_log(LOG_INFO, "Invalid extension for ca load call");
-      pelz_log(LOG_DEBUG, "Path: %s", tokens[2]);
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[3]);
       return INVALID_EXT_CERT;
     }
 
@@ -874,17 +874,17 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return LOAD_CA;
   case CMD_REMOVE_CA:
-    if (num_tokens != 3)
+    if (num_tokens != 4)
     {
       return INVALID;
     }
-    server_id = new_charbuf(strlen(tokens[2]));
-    if (server_id.len != strlen(tokens[2]))
+    server_id = new_charbuf(strlen(tokens[3]));
+    if (server_id.len != strlen(tokens[3]))
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
       return ERR_CHARBUF;
     }
-    memcpy(server_id.chars, tokens[2], server_id.len);
+    memcpy(server_id.chars, tokens[3], server_id.len);
     table_delete(eid, &ret, CA_TABLE, server_id);
     if (ret == NO_MATCH)
     {
