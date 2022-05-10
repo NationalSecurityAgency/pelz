@@ -44,6 +44,25 @@ int table_suite_add_tests(CU_pSuite suite)
   return (0);
 }
 
+uint64_t get_file_handle(const char *path)
+{
+  uint8_t *data = NULL;
+  size_t data_len = 0;
+  uint64_t handle = 0;
+
+  if (read_bytes_from_file((char *) path, &data, &data_len))
+  {
+    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+  }
+  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle))
+  {
+    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+  }
+  free(data);
+
+  return handle;
+}
+
 void test_table_destroy(void)
 {
   TableResponseStatus status;
@@ -66,8 +85,6 @@ void test_table_add(void)
   const char *server_id = "localhost";
   unsigned char *server_key_id;
   size_t server_key_id_len = 12;
-  uint8_t *data = NULL;
-  size_t data_len = 0;
   uint64_t handle = 0;
   const char *prefix = "file:";
 
@@ -93,16 +110,7 @@ void test_table_add(void)
   key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  if (read_bytes_from_file((char *) valid_id[1], &data, &data_len) == 0)
-  {
-    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-  }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
-
+  handle = get_file_handle(valid_id[1]);
   key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
@@ -112,16 +120,7 @@ void test_table_add(void)
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  if (read_bytes_from_file((char *) valid_id[3], &data, &data_len) == 0)
-  {
-    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-  }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
-
+  handle = get_file_handle(valid_id[3]);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
   pelz_log(LOG_INFO, "Server Table add complete");
@@ -132,16 +131,7 @@ void test_table_add(void)
   private_pkey_add(eid, &status, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  if (read_bytes_from_file((char *) valid_id[4], &data, &data_len) == 0)
-  {
-    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-  }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
-
+  handle = get_file_handle(valid_id[4]);
   private_pkey_add(eid, &status, handle);
   CU_ASSERT(status == OK);
   pelz_log(LOG_INFO, "Private Pkey add success");
@@ -168,8 +158,6 @@ void test_table_lookup(void)
   TableResponseStatus status;
   charbuf tmp;
   charbuf key;
-  uint8_t *data = NULL;
-  size_t data_len = 0;
   uint64_t handle = 0;
   int index = 0;
   const char *prefix = "file:";
@@ -197,27 +185,11 @@ void test_table_lookup(void)
   }
 
   //Initial load of certs into the server table
-  if (read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0)
-  {
-    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-  }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
+ handle = get_file_handle(valid_id[6]);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
-  if (read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0)
-  {
-    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-  }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
+  handle = get_file_handle(valid_id[7]);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
@@ -279,8 +251,6 @@ void test_table_delete(void)
   TableResponseStatus status;
   charbuf tmp;
   charbuf key;
-  uint8_t *data = NULL;
-  size_t data_len = 0;
   uint64_t handle = 0;
   const char *prefix = "file:";
 
@@ -308,27 +278,11 @@ void test_table_delete(void)
   }
 
   //Initial load of certs into the server table
-  if (read_bytes_from_file((char *) valid_id[6], &data, &data_len) == 0)
-  {
-    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-  }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
+  handle = get_file_handle(valid_id[6]);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
-  if (read_bytes_from_file((char *) valid_id[7], &data, &data_len) == 0)
-  {
-    pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-  }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle) == 0)
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
+  handle = get_file_handle(valid_id[7]);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
