@@ -45,26 +45,24 @@ void test_scheme_extraction(void)
   CU_ASSERT(get_uri_scheme(uri) == PELZ_URI);
   pelz_log(LOG_DEBUG, "Finish URI functions");
 
-  unsigned char *common_name;
-  size_t common_name_len = 0;
+  charbuf common_name;
   int port = -1;
-  unsigned char *key_id;
-  size_t key_id_len = 0;
+  charbuf key_id;
   charbuf additional_data;
 
   pelz_log(LOG_DEBUG, "Start URI Helper functions");
-  get_pelz_uri_hostname(uri, &common_name, &common_name_len);
-  CU_ASSERT((common_name_len - 1) == strlen("common_name"));
-  CU_ASSERT(memcmp(common_name, "common_name", strlen("common_name")) == 0);
+  get_pelz_uri_hostname(uri, &common_name);
+  CU_ASSERT(common_name.len == strlen("common_name"));
+  CU_ASSERT(memcmp(common_name.chars, "common_name", strlen("common_name")) == 0);
   pelz_log(LOG_DEBUG, "Finish URI hostname");
 
   get_pelz_uri_port(uri, &port);
   CU_ASSERT(port == 0);
   pelz_log(LOG_DEBUG, "Finish URI port");
 
-  get_pelz_uri_key_UID(uri, &key_id, &key_id_len);
-  CU_ASSERT((key_id_len - 1) == strlen("key_uid"));
-  CU_ASSERT(memcmp(key_id, "key_uid", strlen("key_uid")) == 0);
+  get_pelz_uri_key_UID(uri, &key_id);
+  CU_ASSERT(key_id.len == strlen("key_uid"));
+  CU_ASSERT(memcmp(key_id.chars, "key_uid", strlen("key_uid")) == 0);
   pelz_log(LOG_DEBUG, "Finish URI key UID");
 
   get_pelz_uri_additional_data(uri, &additional_data);
@@ -72,8 +70,8 @@ void test_scheme_extraction(void)
   CU_ASSERT(memcmp(additional_data.chars, "other_data", strlen("other_data")) == 0);
   pelz_log(LOG_DEBUG, "Finish URI Helper functions");
 
-  free(common_name);
-  free(key_id);
+  free_charbuf(&common_name);
+  free_charbuf(&key_id);
   free_charbuf(&additional_data);
   uriFreeUriMembersA(&uri);
   return;

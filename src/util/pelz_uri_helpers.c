@@ -48,7 +48,7 @@ char *get_filename_from_key_id(UriUriA uri)
   return filename;
 }
 
-int get_pelz_uri_hostname(UriUriA uri, unsigned char **common_name, size_t *common_name_len)
+int get_pelz_uri_hostname(UriUriA uri, charbuf * common_name)
 {
   ptrdiff_t field_length;
 
@@ -60,11 +60,14 @@ int get_pelz_uri_hostname(UriUriA uri, unsigned char **common_name, size_t *comm
     return 1;
   }
 
-  // The extra 1 bytes here are to append a null byte.
-  *common_name_len = field_length + 1;
-  *common_name = (unsigned char *) calloc(*common_name_len, sizeof(char));
+  *common_name = new_charbuf((size_t) field_length);
+  if (common_name->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to initialize charbuf.");
+    return 1;
+  }
 
-  memcpy(*common_name, uri.hostText.first, field_length);
+  memcpy(common_name->chars, uri.hostText.first, field_length);
   return 0;
 }
 
@@ -99,7 +102,7 @@ int get_pelz_uri_port(UriUriA uri, int *port)
   return 0;
 }
 
-int get_pelz_uri_key_UID(UriUriA uri, unsigned char **key_id, size_t *key_id_len)
+int get_pelz_uri_key_UID(UriUriA uri, charbuf * key_id)
 {
   ptrdiff_t field_length;
 
@@ -111,11 +114,14 @@ int get_pelz_uri_key_UID(UriUriA uri, unsigned char **key_id, size_t *key_id_len
     return 1;
   }
 
-  // The extra 1 bytes here are to append a null byte.
-  *key_id_len = field_length + 1;
-  *key_id = (unsigned char *) calloc(*key_id_len, sizeof(char));
+  *key_id = new_charbuf((size_t) field_length);
+  if (key_id->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to initialize charbuf.");
+    return 1;
+  }
 
-  memcpy(*key_id, uri.pathHead->next->text.first, field_length);
+  memcpy(key_id->chars, uri.pathHead->next->text.first, field_length);
   return 0;
 }
 
