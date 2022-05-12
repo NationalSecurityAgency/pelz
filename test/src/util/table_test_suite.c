@@ -63,9 +63,8 @@ void test_table_add(void)
   TableResponseStatus status;
   charbuf tmp;
   charbuf key;
-  const char *server_id = "localhost";
-  unsigned char *server_key_id;
-  size_t server_key_id_len = 12;
+  charbuf server_id;
+  charbuf server_key_id;
   uint8_t *data = NULL;
   size_t data_len = 0;
   uint64_t handle = 0;
@@ -146,12 +145,16 @@ void test_table_add(void)
   CU_ASSERT(status == OK);
   pelz_log(LOG_INFO, "Private Pkey add success");
 
+  server_id = new_charbuf(strlen("localhost"));
+  memcpy(server_id.chars, "localhost", server_id.len);
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
-  server_key_id = (unsigned char *) calloc(server_key_id_len, sizeof(char));
-  memcpy(server_key_id, valid_id[2], (server_key_id_len - 1));
-  key_table_add_from_server(eid, &status, tmp, (strlen(server_id) + 1), server_id, 7000, server_key_id_len, server_key_id);
+  server_key_id = new_charbuf(strlen(valid_id[2]));
+  memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
+  key_table_add_from_server(eid, &status, tmp, server_id, 7000, server_key_id);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
+  free_charbuf(&server_id);
+  free_charbuf(&server_key_id);
   pelz_log(LOG_INFO, "Key Table add from Server complete");
 
   private_pkey_free(eid, &status);

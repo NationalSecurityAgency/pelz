@@ -219,13 +219,11 @@ int key_load(charbuf key_id)
   case PELZ_URI:
     {
       pelz_log(LOG_DEBUG, "Pelz Scheme Start");
-      unsigned char *common_name;
-      size_t common_name_len = 0;
-      unsigned char *server_key_id;
-      size_t server_key_id_len = 0;
+      charbuf common_name;
+      charbuf server_key_id;
       int port;
 
-      if (get_pelz_uri_hostname(key_id_data, &common_name, &common_name_len) != 0)
+      if (get_pelz_uri_hostname(key_id_data, &common_name) != 0)
       {
         pelz_log(LOG_ERR, "Failed to extract hostname from pelz uri");
         break;
@@ -237,19 +235,18 @@ int key_load(charbuf key_id)
         break;
       }
 
-      if (get_pelz_uri_key_UID(key_id_data, &server_key_id, &server_key_id_len) != 0)
+      if (get_pelz_uri_key_UID(key_id_data, &server_key_id) != 0)
       {
         pelz_log(LOG_ERR, "Failed to extract key UID from pelz uri");
         break;
       }
 
-      pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", common_name_len, common_name, common_name_len);
+      pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", common_name.len, common_name.chars, common_name.len);
       pelz_log(LOG_DEBUG, "Port Number: %d", port);
-      pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id, server_key_id);
-      key_table_add_from_server(eid, &status, key_id, common_name_len, (const char *) common_name, port,
-        server_key_id_len, server_key_id);
-      free(common_name);
-      free(server_key_id);
+      pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id.len, server_key_id.chars);
+      key_table_add_from_server(eid, &status, key_id, common_name, port, server_key_id);
+      free_charbuf(&common_name);
+      free_charbuf(&server_key_id);
       switch (status)
       {
       case ERR:
