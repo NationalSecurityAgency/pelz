@@ -164,8 +164,8 @@ public TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t ha
  *
  * @return 0 on success, 1 on error
  */
-public TableResponseStatus key_table_add_from_server(charbuf key_id, size_t server_id_len, 
-  [in, size=server_id_len] const char *server_id, int port, size_t server_key_id_len, [in, size=server_key_id_len] unsigned char *server_key_id);
+public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
+  int port, charbuf server_key_id);
 
 /**
  * <pre>
