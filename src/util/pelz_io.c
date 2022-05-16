@@ -614,7 +614,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 {
   TableResponseStatus ret;
   charbuf key_id;
-  charbuf server_id;
+  charbuf cert_id;
   uint64_t handle;
   size_t count;
 
@@ -773,32 +773,32 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     {
       return INVALID;
     }
-    server_id = new_charbuf(strlen(tokens[3]));
-    if (server_id.len != strlen(tokens[3]))
+    cert_id = new_charbuf(strlen(tokens[3]));
+    if (cert_id.len != strlen(tokens[3]))
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
       return ERR_CHARBUF;
     }
-    memcpy(server_id.chars, tokens[3], server_id.len);
-    table_delete(eid, &ret, SERVER, server_id);
+    memcpy(cert_id.chars, tokens[3], cert_id.len);
+    table_delete(eid, &ret, SERVER, cert_id);
     if (ret == NO_MATCH)
     {
-      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
       pelz_log(LOG_ERR, "Server ID not found");
-      free_charbuf(&server_id);
+      free_charbuf(&cert_id);
       return RM_CERT_FAIL;
     }
     else if (ret == ERR_REALLOC)
     {
-      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
       pelz_log(LOG_ERR, "Server Table reallocation failure");
-      free_charbuf(&server_id);
+      free_charbuf(&cert_id);
       return RM_CERT_FAIL;
     }
     else
     {
-      pelz_log(LOG_INFO, "Delete Server ID from Server Table: %.*s", (int) server_id.len, server_id.chars);
-      free_charbuf(&server_id);
+      pelz_log(LOG_INFO, "Delete Server ID from Server Table: %.*s", (int) cert_id.len, cert_id.chars);
+      free_charbuf(&cert_id);
       return RM_CERT;
     }
   case CMD_REMOVE_ALL_CERTS:
@@ -875,32 +875,32 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     {
       return INVALID;
     }
-    server_id = new_charbuf(strlen(tokens[3]));
-    if (server_id.len != strlen(tokens[3]))
+    cert_id = new_charbuf(strlen(tokens[3]));
+    if (cert_id.len != strlen(tokens[3]))
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
       return ERR_CHARBUF;
     }
-    memcpy(server_id.chars, tokens[3], server_id.len);
-    table_delete(eid, &ret, CA_TABLE, server_id);
+    memcpy(cert_id.chars, tokens[3], cert_id.len);
+    table_delete(eid, &ret, CA_TABLE, cert_id);
     if (ret == NO_MATCH)
     {
-      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
       pelz_log(LOG_ERR, "CA ID not found");
-      free_charbuf(&server_id);
+      free_charbuf(&cert_id);
       return RM_CA_FAIL;
     }
     else if (ret == ERR_REALLOC)
     {
-      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
       pelz_log(LOG_ERR, "CA Table reallocation failure");
-      free_charbuf(&server_id);
+      free_charbuf(&cert_id);
       return RM_CA_FAIL;
     }
     else
     {
-      pelz_log(LOG_INFO, "Delete CA ID from CA Table: %.*s", (int) server_id.len, server_id.chars);
-      free_charbuf(&server_id);
+      pelz_log(LOG_INFO, "Delete CA ID from CA Table: %.*s", (int) cert_id.len, cert_id.chars);
+      free_charbuf(&cert_id);
       return RM_CA;
     }
   case CMD_REMOVE_ALL_CA:
