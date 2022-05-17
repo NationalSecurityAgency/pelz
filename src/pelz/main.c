@@ -106,6 +106,8 @@ static void usage(const char *prog)
   fprintf(stdout, "\n");
   keytable_usage();
   fprintf(stdout, "\n");
+  ca_usage();
+  fprintf(stdout, "\n");
 }
 
 const struct option longopts[] = {
