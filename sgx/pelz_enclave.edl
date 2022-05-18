@@ -69,14 +69,13 @@ public TableResponseStatus table_id(TableType type, int index, [out] charbuf* id
  * This function to add values into the server hash table.
  * </pre>
  *
+ * @param[in] type The table type
  * @param[in] handle The handle value for the cert data location in the kmyth unseal data table
- * @param[in] server_table The server table that the new cert needs to be added to
- * @param[out] server_table The server table with the new added cert
  *
  * @return OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public TableResponseStatus server_table_add(uint64_t handle);
+public TableResponseStatus add_cert_to_table(TableType type, uint64_t handle);
 
 /**
  * <pre>
