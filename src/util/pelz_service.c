@@ -11,7 +11,6 @@
 
 #include "pelz_socket.h"
 #include "pelz_log.h"
-#include "pelz_io.h"
 #include "fifo_thread.h"
 #include "unsecure_socket_thread.h"
 #include "secure_socket_thread.h"
@@ -86,6 +85,10 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
     pelz_log(LOG_ERR, "Unable to start thread to monitor secure socket");
     return 1;
   }
+
+  printf("Threads created and waiting for exit command.\n");
+  if (global_pipe_reader_active)
+    printf("global_pipe_reader_active = true\n");
 
   while (global_pipe_reader_active)
   {

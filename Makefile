@@ -96,7 +96,9 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/unsecure_socket_thread.c \
 		 src/util/secure_socket_thread.c \
 		 src/util/util.c \
-		 src/util/pelz_io.c \
+		 src/util/key_load.c \
+		 src/util/parse_pipe_message.c \
+		 src/util/pipe_io.c \
 		 src/util/pelz_uri_helpers.c \
 		 src/util/pelz_loaders.c
 

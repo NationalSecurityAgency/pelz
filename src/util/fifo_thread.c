@@ -8,7 +8,8 @@
 
 #include "charbuf.h"
 #include "pelz_log.h"
-#include "pelz_io.h"
+#include "pipe_io.h"
+#include "parse_pipe_message.h"
 #include "pelz_socket.h"
 #include "fifo_thread.h"
 
@@ -214,6 +215,7 @@ void *fifo_thread_process(void *arg)
   }
   while (true);
   global_pipe_reader_active = false;
+  printf("global_pipe_reader_active = false\n");
   return NULL;
 }
 

@@ -6,7 +6,7 @@ enclave {
 	include "pelz_request_handler.h"
 	include "common_table.h"
   include "channel_table.h"
-	include "pelz_io.h"
+	include "key_load.h"
 	include "charbuf.h"
 	include "util.h"
 	trusted {
