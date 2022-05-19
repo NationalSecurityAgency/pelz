@@ -1,6 +1,5 @@
 /*
  * @file channel_table.h
- * @brief Pr
  */
 
 #ifndef INCLUDE_CHANNEL_TABLE_H_
