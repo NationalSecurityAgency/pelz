@@ -29,7 +29,7 @@ TableResponseStatus chan_table_init(int entry_num)
   if ((temp = (charbuf *) malloc(entry_num * sizeof(charbuf))) == NULL)
   {
     pelz_log(LOG_ERR, "Channel Key List Space Allocation Error");
-    return ERR_REALLOC;
+    return MEM_ALLOC_FAIL;
   }
   else
   {

@@ -72,7 +72,7 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
 
   if (pthread_create(&unsecure_socket_thread, NULL, unsecure_thread_wrapper, &threadArgs))
   {
-    pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
+    pelz_log(LOG_ERR, "Unable to start thread to monitor unsecure socket");
     return 1;
   }
 
@@ -83,7 +83,7 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
 
   if (pthread_create(&secure_socket_thread, NULL, secure_thread_wrapper, &threadArgs))
   {
-    pelz_log(LOG_ERR, "Unable to start thread to monitor named pipe");
+    pelz_log(LOG_ERR, "Unable to start thread to monitor secure socket");
     return 1;
   }
 

@@ -11,13 +11,13 @@
 
 #include "charbuf.h"
 
-typedef struct ChannalKeyTable
+typedef struct ChannelKeyTable
 {
   charbuf *chan_key;
   size_t num_entries;
 } ChanTable;
 
-extern ChanTable channal_table;
+extern ChanTable chan_table;
 
 #ifdef __cplusplus
 extern "C"
@@ -26,12 +26,12 @@ extern "C"
 
 /**
  * <pre>
- * This function adds a channel key to the channal table at index specified by socket_id. Note the mutex needs to be unlocked by the function that calls this function.
+ * This function adds a channel key to the channel table at index specified by socket_id. Note the mutex needs to be unlocked by the function that calls this function.
  * </pre>
  *
  * @param[in] socket_id Index location for the channel key
  * @param[in] key.chars Table value for the channel key
- * @param[in] key.len   Length of cahnnel key value
+ * @param[in] key.len   Length of channel key value
  *
  * @return OK on success, an error message indicating the type of
  *                    error otherwise.

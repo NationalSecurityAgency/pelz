@@ -12,7 +12,7 @@ typedef struct
 
 /**
  * <pre>
- * Function executed on generation of secure socket to listin for connections
+ * Function executed on generation of secure socket to listen for connections
  * <pre>
  *
  * @param[in] arg a pointer to a structure containing the
