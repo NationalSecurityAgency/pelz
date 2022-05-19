@@ -23,18 +23,24 @@
 
 EVP_PKEY *private_pkey;
 
-TableResponseStatus server_table_add(uint64_t handle)
+TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
 {
   Entry tmp_entry;
-  uint8_t *data;
+  uint8_t *data = NULL;
   size_t data_size = 0;
   int ret;
   int index = 0;
   int lastpos = 0;
   size_t len = 0;
   char *tmp_id;
+  Table *table = get_table_by_type(type);
 
-  if (server_table.mem_size >= MAX_MEM_SIZE)
+  if (table == NULL)
+  {
+    return ERR;
+  }
+
+  if (table->mem_size >= MAX_MEM_SIZE)
   {
     pelz_log(LOG_ERR, "Server Table memory allocation greater then specified limit.");
     return MEM_ALLOC_FAIL;
@@ -43,7 +49,7 @@ TableResponseStatus server_table_add(uint64_t handle)
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
-    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
     return RET_FAIL;
   }
 
@@ -57,14 +63,13 @@ TableResponseStatus server_table_add(uint64_t handle)
   free(data);
 
   X509_NAME *subj = X509_get_subject_name(tmp_entry.value.cert);
-
   if (subj == NULL)
   {
     pelz_log(LOG_ERR, "Could not parse certificate data");
     return ERR_X509;
   }
 
-  //extract the common name from the  X509 subject name by the index location
+  //extract the common name from the X509 subject name by the index location
   //by iterating over the subject name to the last position
   for (;;)
   {
@@ -89,9 +94,9 @@ TableResponseStatus server_table_add(uint64_t handle)
     return ERR_BUF;
   }
   memcpy(tmp_entry.id.chars, tmp_id, tmp_entry.id.len);
-  if (table_lookup(SERVER, tmp_entry.id, &index) == 0)
+  if (table_lookup(type, tmp_entry.id, &index) == 0)
   {
-    if (X509_cmp(server_table.entries[index].value.cert, tmp_entry.value.cert) == 0)
+    if (X509_cmp(table->entries[index].value.cert, tmp_entry.value.cert) == 0)
     {
       pelz_log(LOG_DEBUG, "Cert already added.");
       free_charbuf(&tmp_entry.id);
@@ -109,7 +114,7 @@ TableResponseStatus server_table_add(uint64_t handle)
 
   Entry *temp;
 
-  if ((temp = (Entry *) realloc(server_table.entries, (server_table.num_entries + 1) * sizeof(Entry))) == NULL)
+  if ((temp = (Entry *) realloc(table->entries, (table->num_entries + 1) * sizeof(Entry))) == NULL)
   {
     pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
     free_charbuf(&tmp_entry.id);
@@ -118,11 +123,11 @@ TableResponseStatus server_table_add(uint64_t handle)
   }
   else
   {
-    server_table.entries = temp;
+    table->entries = temp;
   }
-  server_table.entries[server_table.num_entries] = tmp_entry;
-  server_table.num_entries++;
-  server_table.mem_size = server_table.mem_size + (tmp_entry.id.len * sizeof(char)) + sizeof(size_t) + data_size;
+  table->entries[table->num_entries] = tmp_entry;
+  table->num_entries++;
+  table->mem_size = table->mem_size + (tmp_entry.id.len * sizeof(char)) + sizeof(size_t) + data_size;
   pelz_log(LOG_INFO, "Cert Added");
   return OK;
 }
@@ -151,7 +156,7 @@ TableResponseStatus private_pkey_add(uint64_t handle)
   data_size = retrieve_from_unseal_table(handle, &data);
   if (data_size == 0)
   {
-    pelz_log(LOG_ERR, "Failure to retrive data from unseal table.");
+    pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
     return RET_FAIL;
   }
   if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) != EXIT_SUCCESS)

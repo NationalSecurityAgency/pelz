@@ -1,6 +1,5 @@
 /*
  * @file common_table.h
- * @brief Pr
  */
 
 #ifndef INCLUDE_COMMON_TABLE_H_
@@ -41,6 +40,7 @@ typedef enum
 { 
   KEY,      /**< Table to store KEKs*/
   SERVER,   /**< Table to store server public certificates*/
+  CA_TABLE, /**< Table to store CA certificates*/
   TEST      /**< Testing value for table functions*/
 } TableType;
 
@@ -84,6 +84,17 @@ extern "C"
  *                    error otherwise.
  */
   TableResponseStatus table_lookup(TableType type, charbuf id, int *index);
+
+/**
+ * <pre>
+ * Helper function to get the table object corresponding to each TableType.
+ * </pre>
+ *
+ * @param[in] type The table type
+ *
+ * @return A pointer to the table object, or NULL if the type does not match
+ */
+  Table *get_table_by_type(TableType type);
 
 #ifdef __cplusplus
 }

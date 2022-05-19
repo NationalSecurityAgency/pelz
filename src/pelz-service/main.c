@@ -167,6 +167,8 @@ int main(int argc, char **argv)
   pelz_log(LOG_INFO, "Kmyth Unsealed Data Table Cleanup Complete");
   table_destroy(eid, &status, SERVER);
   pelz_log(LOG_INFO, "Server Table Destroy Complete");
+  table_destroy(eid, &status, CA_TABLE);
+  pelz_log(LOG_INFO, "CA Table Destroy Complete");
   table_destroy(eid, &status, KEY);
   pelz_log(LOG_INFO, "Key Table Destroy Complete");
   sgx_destroy_enclave(eid);
