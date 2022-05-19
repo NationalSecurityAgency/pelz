@@ -38,7 +38,7 @@ typedef struct CommonTable
 } Table;
 
 typedef enum
-{ KEY, SERVER, TEST } TableType;
+{ KEY, SERVER, CA_TABLE, TEST } TableType;
 
 /// Enum to provide a return response status for table related functions.
 typedef enum
@@ -80,6 +80,17 @@ extern "C"
  *                    error otherwise.
  */
   TableResponseStatus table_lookup(TableType type, charbuf id, int *index);
+
+/**
+ * <pre>
+ * Helper function to get the table object corresponding to each TableType.
+ * </pre>
+ *
+ * @param[in] type The table type
+ *
+ * @return A pointer to the table object, or NULL if the type does not match
+ */
+  Table *get_table_by_type(TableType type);
 
 #ifdef __cplusplus
 }

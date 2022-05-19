@@ -1,6 +1,41 @@
 #ifndef _CMD_INTERFACE_PELZ_H_
 #define _CMD_INTERFACE_PELZ_H_
 
+/*
+ *  0    seal <path>               Seals a file in .nkl format (pelz-service is not involved)
+ *  1    exit                      Terminates running pelz-service
+ *  2    keytable remove <key>     Removes a key with a specified <id>
+ *  3    keytable remove --all     Removes all keys
+ *  4    keytable list             Outputs a list of key <id> in Key Table
+ *  5    pki load cert <path>      Loads a server certificate
+ *  6    pki load private <path>   Loads a private key for connections to key servers
+ *  7    pki cert list             Outputs a list of certificate <CN> from the Server Table
+ *  8    pki remove <CN>           Removes a server certificate
+ *  9    pki remove --all          Removes all server certificates
+ *  10   pki remove private        Removes the private key
+ *  11   ca load <path>            Loads a CA certificate
+ *  12   ca list                   Outputs a list of certificate <CN> from the CA Table
+ *  13   ca remove <CN>            Removes a CA certificate
+ *  14   ca remove --all           Removes all CA certificates
+ */
+typedef enum
+{ CMD_SEAL = 0,
+  CMD_EXIT,
+  CMD_REMOVE_KEY,
+  CMD_REMOVE_ALL_KEYS,
+  CMD_LIST_KEYS,
+  CMD_LOAD_CERT,
+  CMD_LOAD_PRIV,
+  CMD_LIST_CERTS,
+  CMD_REMOVE_CERT,
+  CMD_REMOVE_ALL_CERTS,
+  CMD_REMOVE_PRIV = 10,
+  CMD_LOAD_CA,
+  CMD_LIST_CA,
+  CMD_REMOVE_CA,
+  CMD_REMOVE_ALL_CA,
+} CmdType;
+
 typedef enum
 { EMPTY,    //NULL value
   SEAL,     
@@ -12,6 +47,7 @@ typedef enum
   LOAD,     
   CERT,     
   PRIVATE,  
+  CA,
   OTHER     //Non-null value other then the ones listed above
 }CmdArgValue;
 

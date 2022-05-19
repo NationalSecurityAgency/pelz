@@ -25,6 +25,7 @@
 #include "pelz_loaders.h"
 #include "util.h"
 #include "pelz_thread.h"
+#include "cmd_interface.h"
 
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
@@ -613,7 +614,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
 {
   TableResponseStatus ret;
   charbuf key_id;
-  charbuf server_id;
+  charbuf cert_id;
   uint64_t handle;
   size_t count;
 
@@ -623,21 +624,9 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     return INVALID;
   }
 
-/*
- *  -1    exit                      Terminate running pelz-service
- *  -2    keytable remove key       Removes a key with a specified id
- *  -3    keytable remove all keys  Removes all keys
- *  -4    keytable list             Outputs a list of key <id> in Key Table
- *  -5    pki load cert             Loads a server certificate
- *  -6    pki load private          Loads a private key for connections to key servers
- *  -7    pki cert list             Outputs a list of certificate <CN> in Server Table
- *  -8    pki remove cert           Removes a server certificate   
- *  -9    pki remove all certs      Removes all server certificates
- *  -10   pki remove cert           Removes the private key   
- */
   switch (atoi(tokens[1]))
   {
-  case 1:
+  case CMD_EXIT:
     if (unlink(PELZSERVICE) == 0)
     {
       pelz_log(LOG_INFO, "Pipe deleted successfully");
@@ -647,7 +636,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       pelz_log(LOG_INFO, "Failed to delete the pipe");
     }
     return EXIT;
-  case 2:
+  case CMD_REMOVE_KEY:
     if (num_tokens != 4)
     {
       return INVALID;
@@ -681,7 +670,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       free_charbuf(&key_id);
       return RM_KEK;
     }
-  case 3:
+  case CMD_REMOVE_ALL_KEYS:
     table_destroy(eid, &ret, KEY);
     if (ret != OK)
     {
@@ -690,7 +679,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     pelz_log(LOG_INFO, "Key Table Destroyed and Re-Initialize");
     return RM_KEK_ALL;
-  case 4:
+  case CMD_LIST_KEYS:
     //Get the number of key table entries
     table_id_count(eid, &ret, KEY, &count);
     if (count == 0)
@@ -699,7 +688,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return NO_KEY_LIST;
     }
     return KEY_LIST;
-  case 5:
+  case CMD_LOAD_CERT:
     if (num_tokens != 4)
     {
       return INVALID;
@@ -711,7 +700,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       pelz_log(LOG_DEBUG, "Path: %s", tokens[3]);
       return INVALID_EXT_CERT;
     }
-    server_table_add(eid, &ret, handle);
+    add_cert_to_table(eid, &ret, SERVER, handle);
     if (ret != OK)
     {
       pelz_log(LOG_ERR, "Add cert failure");
@@ -741,7 +730,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ADD_CERT_FAIL;
     }
     return LOAD_CERT;
-  case 6:
+  case CMD_LOAD_PRIV:
     if (num_tokens != 4)
     {
       return INVALID;
@@ -770,7 +759,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ADD_PRIV_FAIL;
     }
     return LOAD_PRIV;
-  case 7:
+  case CMD_LIST_CERTS:
     //Get the number of server table entries
     table_id_count(eid, &ret, SERVER, &count);
     if (count == 0)
@@ -779,40 +768,40 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return NO_SERVER_LIST;
     }
     return SERVER_LIST;
-  case 8:
+  case CMD_REMOVE_CERT:
     if (num_tokens != 4)
     {
       return INVALID;
     }
-    server_id = new_charbuf(strlen(tokens[3]));
-    if (server_id.len != strlen(tokens[3]))
+    cert_id = new_charbuf(strlen(tokens[3]));
+    if (cert_id.len != strlen(tokens[3]))
     {
       pelz_log(LOG_ERR, "Charbuf creation error.");
       return ERR_CHARBUF;
     }
-    memcpy(server_id.chars, tokens[3], server_id.len);
-    table_delete(eid, &ret, SERVER, server_id);
+    memcpy(cert_id.chars, tokens[3], cert_id.len);
+    table_delete(eid, &ret, SERVER, cert_id);
     if (ret == NO_MATCH)
     {
-      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
       pelz_log(LOG_ERR, "Server ID not found");
-      free_charbuf(&server_id);
+      free_charbuf(&cert_id);
       return RM_CERT_FAIL;
     }
     else if (ret == ERR_REALLOC)
     {
-      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) server_id.len, server_id.chars);
+      pelz_log(LOG_ERR, "Delete Server ID from Server Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
       pelz_log(LOG_ERR, "Server Table reallocation failure");
-      free_charbuf(&server_id);
+      free_charbuf(&cert_id);
       return RM_CERT_FAIL;
     }
     else
     {
-      pelz_log(LOG_INFO, "Delete Server ID form Server Table: %.*s", (int) server_id.len, server_id.chars);
-      free_charbuf(&server_id);
+      pelz_log(LOG_INFO, "Delete Server ID from Server Table: %.*s", (int) cert_id.len, cert_id.chars);
+      free_charbuf(&cert_id);
       return RM_CERT;
     }
-  case 9:
+  case CMD_REMOVE_ALL_CERTS:
     table_destroy(eid, &ret, SERVER);
     if (ret != OK)
     {
@@ -821,7 +810,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     pelz_log(LOG_INFO, "Server Table Destroyed and Re-Initialized");
     return RM_ALL_CERT;
-  case 10:
+  case CMD_REMOVE_PRIV:
     //Free private pkey to remove pkey
     private_pkey_free(eid, &ret);
     if (ret != OK)
@@ -838,6 +827,100 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return RM_PRIV_FAIL;
     }
     return RM_PRIV;
+  case CMD_LOAD_CA:
+    if (num_tokens != 4)
+    {
+      return INVALID;
+    }
+
+    if (pelz_load_file_to_enclave(tokens[3], &handle))
+    {
+      pelz_log(LOG_INFO, "Invalid extension for ca load call");
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[3]);
+      return INVALID_EXT_CERT;
+    }
+
+    add_cert_to_table(eid, &ret, CA_TABLE, handle);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "Add cert failure");
+      switch (ret)
+      {
+      case ERR_REALLOC:
+        pelz_log(LOG_ERR, "CA Table memory allocation greater then specified limit.");
+        break;
+      case ERR_BUF:
+        pelz_log(LOG_ERR, "Charbuf creation error.");
+        break;
+      case ERR_X509:
+        pelz_log(LOG_ERR, "X509 allocation error.");
+        return X509_FAIL;
+      case RET_FAIL:
+        pelz_log(LOG_ERR, "Failure to retrieve data from unseal table.");
+        break;
+      case NO_MATCH:
+        pelz_log(LOG_ERR, "Cert entry and CA ID lookup do not match.");
+        break;
+      case MEM_ALLOC_FAIL:
+        pelz_log(LOG_ERR, "Cert List Space Reallocation Error");
+        break;
+      default:
+        pelz_log(LOG_ERR, "ca_table_add return not defined");
+      }
+      return LOAD_CA_FAIL;
+    }
+    return LOAD_CA;
+  case CMD_REMOVE_CA:
+    if (num_tokens != 4)
+    {
+      return INVALID;
+    }
+    cert_id = new_charbuf(strlen(tokens[3]));
+    if (cert_id.len != strlen(tokens[3]))
+    {
+      pelz_log(LOG_ERR, "Charbuf creation error.");
+      return ERR_CHARBUF;
+    }
+    memcpy(cert_id.chars, tokens[3], cert_id.len);
+    table_delete(eid, &ret, CA_TABLE, cert_id);
+    if (ret == NO_MATCH)
+    {
+      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
+      pelz_log(LOG_ERR, "CA ID not found");
+      free_charbuf(&cert_id);
+      return RM_CA_FAIL;
+    }
+    else if (ret == ERR_REALLOC)
+    {
+      pelz_log(LOG_ERR, "Delete CA ID from CA Table Failure: %.*s", (int) cert_id.len, cert_id.chars);
+      pelz_log(LOG_ERR, "CA Table reallocation failure");
+      free_charbuf(&cert_id);
+      return RM_CA_FAIL;
+    }
+    else
+    {
+      pelz_log(LOG_INFO, "Delete CA ID from CA Table: %.*s", (int) cert_id.len, cert_id.chars);
+      free_charbuf(&cert_id);
+      return RM_CA;
+    }
+  case CMD_REMOVE_ALL_CA:
+    table_destroy(eid, &ret, CA_TABLE);
+    if (ret != OK)
+    {
+      pelz_log(LOG_ERR, "CA Table Destroy Failure");
+      return RM_CA_ALL_FAIL;
+    }
+    pelz_log(LOG_INFO, "CA Table Destroyed and Re-Initialized");
+    return RM_CA_ALL;
+  case CMD_LIST_CA:
+    //Get the number of CA table entries
+    table_id_count(eid, &ret, CA_TABLE, &count);
+    if (count == 0)
+    {
+      pelz_log(LOG_INFO, "No entries in CA Table.");
+      return NO_CA_LIST;
+    }
+    return CA_LIST;
   default:
     pelz_log(LOG_ERR, "Pipe command invalid: %s %s", tokens[0], tokens[1]);
     return INVALID;

@@ -23,8 +23,9 @@ int cmd_interface_suite_add_tests(CU_pSuite suite)
 
 void test_check_arg(void)
 {
-  const char *args[17] = { NULL, "seal", "exit", "keytable", "pki", "remove", 
-          "list", "load", "cert", "private", "SEAL", "sea", "seal ", "seala",
+  const char *args[18] = { NULL, "seal", "exit", "keytable", "pki", "remove",
+          "list", "load", "cert", "private", "ca",
+          "SEAL", "sea", "seal ", "seala",
           "remvoe", "PRIVATE", "Private" };
 
   CU_ASSERT(check_arg((char *) args[0]) == EMPTY);
@@ -37,8 +38,9 @@ void test_check_arg(void)
   CU_ASSERT(check_arg((char *) args[7]) == LOAD);
   CU_ASSERT(check_arg((char *) args[8]) == CERT);
   CU_ASSERT(check_arg((char *) args[9]) == PRIVATE);
+  CU_ASSERT(check_arg((char *) args[10]) == CA);
 
-  for (int i = 10; i < 17; i++)
+  for (int i = 11; i < 18; i++)
   {
     CU_ASSERT(check_arg((char *) args[i]) == OTHER);
   }
