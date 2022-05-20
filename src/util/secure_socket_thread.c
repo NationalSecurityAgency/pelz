@@ -28,7 +28,7 @@ static void *secure_process_wrapper(void *arg)
   pthread_exit(NULL);
 }
 
-void secure_socket_thread(void *arg)
+void *secure_socket_thread(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
   int socket_listen_id = threadArgs->socket_id;
@@ -51,6 +51,7 @@ void secure_socket_thread(void *arg)
     {
       continue;
     }
+    pelz_log(LOG_DEBUG, "Secure socket connection accepted");
 
     if (socket_id > max_requests)
     {
@@ -71,11 +72,12 @@ void secure_socket_thread(void *arg)
     pelz_log(LOG_INFO, "Secure Socket Thread %d, %d", (int) stid[socket_id], socket_id);
   }
   while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
-  return;
+  global_secure_socket_active = false;
+  return NULL;
 }
 
 //This function will need to be changed with the attestation handshake and process flow
-void secure_socket_process(void *arg)
+void *secure_socket_process(void *arg)
 {
   ThreadArgs *processArgs = (ThreadArgs *) arg;
   int new_socket = processArgs->socket_id;
@@ -99,7 +101,7 @@ void secure_socket_process(void *arg)
         continue;
       }
       pelz_key_socket_close(new_socket);
-      return;
+      return NULL;
     }
 
     pelz_log(LOG_DEBUG, "%d::Request & Length: %.*s, %d", new_socket, (int) request.len, request.chars, (int) request.len);
@@ -123,7 +125,7 @@ void secure_socket_process(void *arg)
       pelz_log(LOG_DEBUG, "%d::Error: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
       pelz_key_socket_close(new_socket);
       free_charbuf(&request);
-      return;
+      return NULL;
     }
 
     free_charbuf(&request);
@@ -201,11 +203,11 @@ void secure_socket_process(void *arg)
         continue;
       }
       pelz_key_socket_close(new_socket);
-      return;
+      return NULL;
     }
     free_charbuf(&message);
   }
   pelz_key_socket_close(new_socket);
-  return;
+  return NULL;
 }
 

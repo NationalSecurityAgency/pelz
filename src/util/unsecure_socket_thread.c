@@ -28,7 +28,7 @@ static void *unsecure_process_wrapper(void *arg)
   pthread_exit(NULL);
 }
 
-void unsecure_socket_thread(void *arg)
+void *unsecure_socket_thread(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
   int socket_listen_id = threadArgs->socket_id;
@@ -51,6 +51,7 @@ void unsecure_socket_thread(void *arg)
     {
       continue;
     }
+    pelz_log(LOG_DEBUG, "Unsecure socket connection accepted");
 
     if (socket_id > max_requests)
     {
@@ -71,10 +72,11 @@ void unsecure_socket_thread(void *arg)
     pelz_log(LOG_INFO, "Unsecure Socket Thread %d, %d", (int) ustid[socket_id], socket_id);
   }
   while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
-  return;
+  global_unsecure_socket_active = false;
+  return NULL;
 }
 
-void unsecure_socket_process(void *arg)
+void *unsecure_socket_process(void *arg)
 {
   ThreadArgs *processArgs = (ThreadArgs *) arg;
   int new_socket = processArgs->socket_id;
@@ -96,7 +98,7 @@ void unsecure_socket_process(void *arg)
         continue;
       }
       pelz_key_socket_close(new_socket);
-      return;
+      return NULL;
     }
 
     pelz_log(LOG_DEBUG, "%d::Request & Length: %.*s, %d", new_socket, (int) request.len, request.chars, (int) request.len);
@@ -120,7 +122,7 @@ void unsecure_socket_process(void *arg)
       pelz_log(LOG_DEBUG, "%d::Error: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
       pelz_key_socket_close(new_socket);
       free_charbuf(&request);
-      return;
+      return NULL;
     }
 
     free_charbuf(&request);
@@ -198,11 +200,11 @@ void unsecure_socket_process(void *arg)
         continue;
       }
       pelz_key_socket_close(new_socket);
-      return;
+      return NULL;
     }
     free_charbuf(&message);
   }
   pelz_key_socket_close(new_socket);
-  return;
+  return NULL;
 }
 

@@ -15,7 +15,7 @@
  *
  * @return none
  */
-void unsecure_socket_thread(void *arg);
+void *unsecure_socket_thread(void *arg);
 
 /**
  * <pre>
@@ -28,6 +28,6 @@ void unsecure_socket_thread(void *arg);
  *
  * @return none
  */
-void unsecure_socket_process(void *arg);
+void *unsecure_socket_process(void *arg);
 
 #endif

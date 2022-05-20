@@ -21,7 +21,7 @@ typedef struct
  *
  * @return none
  */
-void secure_socket_thread(void *arg);
+void *secure_socket_thread(void *arg);
 
 /**
  * <pre>
@@ -34,6 +34,6 @@ void secure_socket_thread(void *arg);
  *
  * @return none
  */
-void secure_socket_process(void *arg);
+void *secure_socket_process(void *arg);
 
 #endif

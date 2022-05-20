@@ -215,7 +215,6 @@ void *fifo_thread_process(void *arg)
   }
   while (true);
   global_pipe_reader_active = false;
-  printf("global_pipe_reader_active = false\n");
   return NULL;
 }
 
