@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "pelz_socket.h"
 #include "pelz_log.h"
@@ -22,12 +23,16 @@ bool global_unsecure_socket_active = false;
 static void *unsecure_thread_wrapper(void *arg)
 {
   unsecure_socket_thread(arg);
+  pelz_log(LOG_DEBUG, "Unsecure socket thread exit");
+  global_unsecure_socket_active = false;
   pthread_exit(NULL);
 }
 
 static void *secure_thread_wrapper(void *arg)
 {
   secure_socket_thread(arg);
+  pelz_log(LOG_DEBUG, "Secure socket thread exit");
+  global_secure_socket_active = false;
   pthread_exit(NULL);
 }
 
@@ -77,14 +82,7 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
 
   do
   {
-    if (!global_unsecure_socket_active & global_pipe_reader_active)
-    {
-      pelz_log(LOG_DEBUG, "Unsecure socket closed");
-    }
-    if (!global_secure_socket_active & global_pipe_reader_active)
-    {
-      pelz_log(LOG_DEBUG, "Secure socket closed");
-    }
+    sleep(1);  //This sleep is to stop race conditions for the thread not terminated before end of the loop
     continue;  
   } while (global_pipe_reader_active || global_unsecure_socket_active || global_secure_socket_active);
 

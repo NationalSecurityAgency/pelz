@@ -214,7 +214,8 @@ void *fifo_thread_process(void *arg)
     }
   }
   while (true);
+  pelz_log(LOG_DEBUG, "Global pipe reader thread exit");
   global_pipe_reader_active = false;
-  return NULL;
+  pthread_exit(NULL);
 }
 

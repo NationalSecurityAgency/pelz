@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   long a = 0;
   bool secure = false;
 
-  while ((options = getopt_long(argc, argv, "m:p:a:hv", longopts, &option_index)) != -1)
+  while ((options = getopt_long(argc, argv, "m:p:a:hsv", longopts, &option_index)) != -1)
   {
     switch (options)
     {

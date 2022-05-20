@@ -83,7 +83,6 @@ void *secure_socket_thread(void *arg)
   }
   while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
   pelz_key_socket_teardown(&socket_listen_id);
-  global_secure_socket_active = false;
   return NULL;
 }
 
