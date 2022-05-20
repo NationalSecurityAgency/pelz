@@ -45,6 +45,7 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
     pelz_log(LOG_ERR, "Socket Initialization Error");
     return (1);
   }
+  pelz_log(LOG_DEBUG, "Socket on port %d created with listen_id of %d", port_attested, secure_socket_listen_id);
 
   if (!secure)
   {
@@ -53,6 +54,7 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
       pelz_log(LOG_ERR, "Socket Initialization Error");
       return (1);
     }
+    pelz_log(LOG_DEBUG, "Socket on port %d created with listen_id of %d", port_open, socket_listen_id);
   }
 
   threadArgs.lock = lock;
@@ -74,6 +76,7 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
     pelz_log(LOG_ERR, "Unable to start thread to monitor unsecure socket");
     return 1;
   }
+  pelz_log(LOG_INFO, "Unsecure Listen Socket Thread %d, %d", (int) unsecure_socket_thread, socket_listen_id);
 
   threadArgs.lock = lock;
   threadArgs.socket_id = secure_socket_listen_id;
@@ -85,16 +88,23 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
     pelz_log(LOG_ERR, "Unable to start thread to monitor secure socket");
     return 1;
   }
+  pelz_log(LOG_INFO, "Secure Listen Socket Thread %d, %d", (int) secure_socket_thread, secure_socket_listen_id);
 
   printf("Threads created and waiting for exit command.\n");
   if (global_pipe_reader_active)
     printf("global_pipe_reader_active = true\n");
 
-  while (global_pipe_reader_active)
+  do
   {
-    continue;
-  }
+    if (global_pipe_reader_active)
+    {
+      continue;
+    }
+    printf("global_pipe_reader_active = false\n");
+    break;
+  }while (global_pipe_reader_active);
 
+  printf("Exit from Pelz Program\n");
   pelz_log(LOG_INFO, "Exit Pelz Program");
 
   //Close and Teardown Socket before ending program
