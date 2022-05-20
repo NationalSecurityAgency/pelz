@@ -173,7 +173,6 @@ int pelz_key_socket_teardown(int *socket_listen_id)
 {
   pelz_log(LOG_INFO, "%d::Closing listening socket...", *socket_listen_id);
   close(*socket_listen_id);
-  *socket_listen_id = -1;
   pelz_log(LOG_INFO, "Closed listening socket: %d", *socket_listen_id);
   return (0);
 }

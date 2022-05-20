@@ -6,6 +6,7 @@
 typedef struct
 {
   int socket_id;
+  int port;
   int max_requests;
   pthread_mutex_t lock;
 } ThreadArgs;

@@ -33,33 +33,11 @@ static void *secure_thread_wrapper(void *arg)
 
 int pelz_service(int max_requests, int port_open, int port_attested, bool secure)
 {
-  int socket_listen_id;
-  int secure_socket_listen_id;
   ThreadArgs threadArgs;
 
   pthread_mutex_t lock;
 
   pthread_mutex_init(&lock, NULL);
-
-  //Initializing Socket for Pelz Key Service
-  if (pelz_key_socket_init(max_requests, port_attested, &secure_socket_listen_id))
-  {
-    pelz_log(LOG_ERR, "Socket Initialization Error");
-    return (1);
-  }
-  global_secure_socket_active = true;
-  pelz_log(LOG_DEBUG, "Socket on port %d created with listen_id of %d", port_attested, secure_socket_listen_id);
-
-  if (!secure)
-  {
-    if (pelz_key_socket_init(max_requests, port_open, &socket_listen_id))
-    {
-      pelz_log(LOG_ERR, "Socket Initialization Error");
-      return (1);
-    }
-    global_unsecure_socket_active = true;
-    pelz_log(LOG_DEBUG, "Socket on port %d created with listen_id of %d", port_open, socket_listen_id);
-  }
 
   threadArgs.lock = lock;
   pthread_t fifo_thread;
@@ -70,20 +48,23 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
     return 1;
   }
 
-  threadArgs.lock = lock;
-  threadArgs.socket_id = socket_listen_id;
-  threadArgs.max_requests = max_requests;
-  pthread_t unsecure_socket_thread;
-
-  if (pthread_create(&unsecure_socket_thread, NULL, unsecure_thread_wrapper, &threadArgs))
+  if (!secure)
   {
-    pelz_log(LOG_ERR, "Unable to start thread to monitor unsecure socket");
-    return 1;
+    threadArgs.lock = lock;
+    threadArgs.port = port_open;
+    threadArgs.max_requests = max_requests;
+    pthread_t unsecure_socket_thread;
+
+    if (pthread_create(&unsecure_socket_thread, NULL, unsecure_thread_wrapper, &threadArgs))
+    {
+      pelz_log(LOG_ERR, "Unable to start thread to monitor unsecure socket");
+      return 1;
+    }
+    pelz_log(LOG_INFO, "Unsecure Listen Socket Thread %d, %d", (int) unsecure_socket_thread, port_open);
   }
-  pelz_log(LOG_INFO, "Unsecure Listen Socket Thread %d, %d", (int) unsecure_socket_thread, socket_listen_id);
 
   threadArgs.lock = lock;
-  threadArgs.socket_id = secure_socket_listen_id;
+  threadArgs.port = port_attested;
   threadArgs.max_requests = max_requests;
   pthread_t secure_socket_thread;
 
@@ -92,22 +73,24 @@ int pelz_service(int max_requests, int port_open, int port_attested, bool secure
     pelz_log(LOG_ERR, "Unable to start thread to monitor secure socket");
     return 1;
   }
-  pelz_log(LOG_INFO, "Secure Listen Socket Thread %d, %d", (int) secure_socket_thread, secure_socket_listen_id);
+  pelz_log(LOG_INFO, "Secure Listen Socket Thread %d, %d", (int) secure_socket_thread, port_attested);
 
   do
   {
-    if (!global_unsecure_socket_active)
-      pelz_log(LOG_DEBUG, "Unsecure socket thread terminated");
-    if (!global_secure_socket_active)
-      pelz_log(LOG_DEBUG, "Secure socket thread terminated");
-    continue;
+    if (!global_unsecure_socket_active & global_pipe_reader_active)
+    {
+      pelz_log(LOG_DEBUG, "Unsecure socket closed");
+    }
+    if (!global_secure_socket_active & global_pipe_reader_active)
+    {
+      pelz_log(LOG_DEBUG, "Secure socket closed");
+    }
+    continue;  
   } while (global_pipe_reader_active || global_unsecure_socket_active || global_secure_socket_active);
 
   pelz_log(LOG_INFO, "Exit Pelz Program");
 
   //Close and Teardown Socket before ending program
-  pelz_key_socket_teardown(&socket_listen_id);
-  pelz_key_socket_teardown(&secure_socket_listen_id);
   pthread_mutex_destroy(&lock);
   return 0;
 }

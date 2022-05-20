@@ -31,13 +31,23 @@ static void *secure_process_wrapper(void *arg)
 void *secure_socket_thread(void *arg)
 {
   ThreadArgs *threadArgs = (ThreadArgs *) arg;
-  int socket_listen_id = threadArgs->socket_id;
+  int port = threadArgs->port;
   int max_requests = threadArgs->max_requests;
   pthread_mutex_t lock = threadArgs->lock;
 
   ThreadArgs processArgs;
   pthread_t stid[max_requests];
   int socket_id = 0;
+  int socket_listen_id;
+
+  //Initializing Socket
+  if (pelz_key_socket_init(max_requests, port, &socket_listen_id))
+  {
+    pelz_log(LOG_ERR, "Socket Initialization Error");
+    return NULL;
+  }
+  global_secure_socket_active = true;
+  pelz_log(LOG_DEBUG, "Secure socket on port %d created with listen_id of %d", port, socket_listen_id);
 
   do
   {
@@ -72,6 +82,7 @@ void *secure_socket_thread(void *arg)
     pelz_log(LOG_INFO, "Secure Socket Thread %d, %d", (int) stid[socket_id], socket_id);
   }
   while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
+  pelz_key_socket_teardown(&socket_listen_id);
   global_secure_socket_active = false;
   return NULL;
 }
