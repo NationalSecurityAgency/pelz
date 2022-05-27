@@ -211,11 +211,14 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
   *key_id = get_JSON_string_field(json, "key_id");
   if(key_id->len == 0 || key_id->chars == NULL)
   {
+    free_charbuf(key_id);
     return 1;
   }
   *data = get_JSON_string_field(json, "enc_data");
   if(data->len == 0 || data->chars == NULL)
   {
+    free_charbuf(key_id);
+    free_charbuf(data);
     return 1;
   }
   return (0);
@@ -223,85 +226,18 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
 
 int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
 {
-  if (!cJSON_HasObjectItem(json, "key_id"))
+  *key_id = get_JSON_string_field(json, "key_id");
+  if(key_id->len == 0 || key_id->chars == NULL)
   {
-    pelz_log(LOG_ERR, "Missing required JSON key: key_id.");
-    return (1);
-  }
-  else if (!cJSON_HasObjectItem(json, "key_id_len"))
-  {
-    pelz_log(LOG_ERR, "Missing required JSON key: key_id_len.");
-    return (1);
-  }
-  else if (!cJSON_HasObjectItem(json, "dec_data"))
-  {
-    pelz_log(LOG_ERR, "Missing required JSON key: dec_data.");
-    return (1);
-  }
-  else if (!cJSON_HasObjectItem(json, "dec_data_len"))
-  {
-    pelz_log(LOG_ERR, "Missing required JSON key: dec_data_len.");
-    return (1);
-  }
-  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "key_id_len")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: key_id_len. Data type should be integer.");
-    return (1);
-  }
-  *key_id = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "key_id_len")->valueint);
-  if (!cJSON_IsString(cJSON_GetObjectItem(json, "key_id")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: key_id. Data type should be string.");
     free_charbuf(key_id);
-    return (1);
+    return 1;
   }
-  if (cJSON_GetObjectItemCaseSensitive(json, "key_id")->valuestring != NULL)
+  *data = get_JSON_string_field(json, "dec_data");
+  if(data->len == 0 || data->chars == NULL)
   {
-    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "key_id")->valuestring) != key_id->len)
-    {
-      pelz_log(LOG_ERR, "Length of value in JSON key: key_id does not match value in JSON key: key_id_len.");
-      free_charbuf(key_id);
-      return (1);
-    }
-    memcpy(key_id->chars, cJSON_GetObjectItemCaseSensitive(json, "key_id")->valuestring, key_id->len);
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "No value in JSON key: key_id.");
-    free_charbuf(key_id);
-    return (1);
-  }
-  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "dec_data_len")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: dec_data_len. Data type should be integer.");
-    free_charbuf(key_id);
-    return (1);
-  }
-  *data = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "dec_data_len")->valueint);
-  if (!cJSON_IsString(cJSON_GetObjectItem(json, "dec_data")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: dec_data. Data type should be string.");
     free_charbuf(key_id);
     free_charbuf(data);
-    return (1);
-  }
-  if (cJSON_GetObjectItemCaseSensitive(json, "dec_data")->valuestring != NULL)
-  {
-    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "dec_data")->valuestring) != data->len)
-    {
-      pelz_log(LOG_ERR, "Length of value in JSON key: dec_data does not match value in JSON key: dec_data_len.");
-      free_charbuf(key_id);
-      free_charbuf(data);
-      return (1);
-    }
-    memcpy(data->chars, cJSON_GetObjectItemCaseSensitive(json, "dec_data")->valuestring, data->len);
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "No value in JSON key: dec_data.");
-    free_charbuf(key_id);
-    free_charbuf(data);
-    return (1);
+    return 1;
   }
   return (0);
 }
