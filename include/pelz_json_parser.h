@@ -24,11 +24,13 @@
  * @param[out] key_id.len The length of the Key ID variable
  * @param[out] data Data to Wrap or Unwrap
  * @param[out] data_len The length of the data variable
+ * @param[out] data_block output if data_block is used, data being encrypted/decrypted or NULL
+ * @param[out] cipher the cipher used to encrypt/decrypt data_block or NULL
  *
  * @return 0 on success, 1 on error
  *
  */
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert, charbuf * data_block, charbuf * cipher);
 
 /**
  * <pre>
@@ -96,6 +98,21 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
  *
  */
 int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data);
+
+/**
+ * <pre>
+ * JSON parser for client data block. Parser will extra data from JSON block
+ * </pre>
+ * @param[in]  json       The parsed JSON string in cJSON format
+ * @param[out] key_id     The key identifier for the key wrapping data_key
+ * @param[out] data_key   The key used to encrypt data_block
+ * @param[out] data_block The data block being decrypted with key_id
+ * @param[out] cipher     The cipher used to encrypt the data block with key_id
+ *
+ * @return 0 on success, 1 on error
+ *
+ */
+int data_decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data_key, charbuf * data_block, charbuf * cipher);
 
 /**
  * <pre>

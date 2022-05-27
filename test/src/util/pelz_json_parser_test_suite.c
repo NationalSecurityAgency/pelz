@@ -305,7 +305,7 @@ void test_request_decoder(void)
   {
     request = new_charbuf(strlen(invalid_request[i]));
     memcpy(request.chars, invalid_request[i], request.len);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 1);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert, NULL, NULL) == 1);
     free_charbuf(&request);
     request_type = REQ_UNK;
   }
@@ -325,7 +325,7 @@ void test_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert, NULL, NULL) == 1);
   free_charbuf(&request);
   request_type = REQ_UNK;
   
@@ -333,7 +333,7 @@ void test_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 1);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert, NULL, NULL) == 1);
   free_charbuf(&request);
   request_type = REQ_UNK;
   
@@ -353,7 +353,7 @@ void test_request_decoder(void)
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert, NULL, NULL) == 0);
     CU_ASSERT(request_type == REQ_ENC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
@@ -370,7 +370,7 @@ void test_request_decoder(void)
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert, NULL, NULL) == 0);
     CU_ASSERT(request_type == REQ_DEC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
@@ -419,7 +419,7 @@ void test_request_decoder(void)
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert, NULL, NULL) == 0);
     CU_ASSERT(request_type == REQ_ENC_SIGNED);
     //CU_ASSERT(key_id.len == json_key_id_len);
     //CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
@@ -435,7 +435,7 @@ void test_request_decoder(void)
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert, NULL, NULL) == 0);
     CU_ASSERT(request_type == REQ_DEC_SIGNED);
     //CU_ASSERT(key_id.len == json_key_id_len);
     //CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
