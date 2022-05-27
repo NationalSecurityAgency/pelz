@@ -253,12 +253,15 @@ void thread_process(void *arg)
     charbuf data_out;
     charbuf request_sig;
     charbuf requestor_cert;
+    charbuf *data_block_in = NULL;
 
     charbuf data;
     charbuf output;
+    charbuf data_block;
+    charbuf cipher;
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
+    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert, data_block_in, &cipher))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
@@ -270,16 +273,23 @@ void thread_process(void *arg)
 
     free_charbuf(&request);
 
+    //for a key or data request, this is used
     decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
     free_charbuf(&data_in);
 
+    if (data_block_in != NULL)
+    {
+      decodeBase64Data(data_block_in->chars, data_block_in->len, &data_block.chars, &data_block.len);
+      free_charbuf(data_block_in);
+    }
+
     pthread_mutex_lock(&lock);
-    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+    pelz_request_handler(eid, &status, request_type, key_id, data, data_block, cipher, &output);
     if (status == KEK_NOT_LOADED)
     {
       if (key_load(key_id) == 0)
       {
-        pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+        pelz_request_handler(eid, &status, request_type, key_id, data, data_block, cipher, &output);
       }
       else
       {
@@ -288,6 +298,11 @@ void thread_process(void *arg)
     }
     pthread_mutex_unlock(&lock);
     free_charbuf(&data);
+    if(request_type == REQ_DATA_DEC)
+    {
+      free_charbuf(&data_block);
+      free_charbuf(&cipher);
+    }
 
     if (status != REQUEST_OK)
     {
