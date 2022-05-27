@@ -25,6 +25,11 @@ int pelz_json_parser_suite_add_tests(CU_pSuite suite)
     return (1);
   }
 
+  if (NULL == CU_add_test(suite, "Test JSON Data Decryption Request Parser", test_data_decrypt_parser))
+  {
+    return (1);
+  }
+
   if (NULL == CU_add_test(suite, "Test Decoding of JSON formatted Request", test_request_decoder))
   {
     return (1);
@@ -250,6 +255,127 @@ void test_decrypt_parser(void)
   //Clean-up JSON
   cJSON_Delete(json);
 }
+
+void test_data_decrypt_parser(void)
+{
+  cJSON *json;
+  charbuf key_id;
+  charbuf data_key;
+  charbuf data_block;
+  charbuf cipher;
+
+  //Valid Test Values
+  const char *json_key_id = "file:/test/key1.txt";
+  unsigned int json_key_id_len = 19;
+  const char *json_data_key = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
+  unsigned int json_data_key_len = 45;
+  const char *json_data_block = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
+  unsigned int json_data_block_len = 57;
+  const char *json_cipher = "AES/GCM/NoPadding";
+  unsigned int json_cipher_len = 17;
+
+  //Building of a standard valid JSON request
+  json = cJSON_CreateObject();
+  cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(5));
+
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
+
+  cJSON_AddItemToObject(json, "data_key", cJSON_CreateString(json_data_key));
+  cJSON_AddItemToObject(json, "data_key_len", cJSON_CreateNumber(json_data_key_len));
+
+  cJSON_AddItemToObject(json, "data_block", cJSON_CreateString(json_data_block));
+  cJSON_AddItemToObject(json, "data_block_len", cJSON_CreateNumber(json_data_block_len));
+
+  cJSON_AddItemToObject(json, "cipher", cJSON_CreateString(json_cipher));
+  cJSON_AddItemToObject(json, "cipher_len", cJSON_CreateNumber(json_cipher_len));
+
+  //Test standard valid JSON request
+  CU_ASSERT(data_decrypt_parser(json, &key_id, &data_key, &data_block, &cipher) == 0);
+  CU_ASSERT(key_id.len == json_key_id_len);
+  CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
+  CU_ASSERT(data_key.len == json_data_key_len);
+  CU_ASSERT(memcmp(data_key.chars, json_data_key, data_key.len) == 0);
+  CU_ASSERT(data_block.len == json_data_block_len);
+  CU_ASSERT(memcmp(data_block.chars, json_data_block, data_block.len) == 0);
+  CU_ASSERT(cipher.len == json_cipher_len);
+  CU_ASSERT(memcmp(cipher.chars, json_cipher, cipher.len) == 0);
+//  free_charbuf(&key_id);
+//  free_charbuf(&data_key);
+//  free_charbuf(&data_block);
+//  free_charbuf(&cipher);
+/*
+  //Test check of JSON request hasObject
+  cJSON_DeleteItemFromObject(json, "key_id");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
+
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
+
+  cJSON_DeleteItemFromObject(json, "dec_data");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
+
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+
+  cJSON_DeleteItemFromObject(json, "enc_data");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
+  free_charbuf(&key_id);
+  free_charbuf(&data);
+  cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
+
+  cJSON_DeleteItemFromObject(json, "enc_data_len");
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
+  free_charbuf(&key_id);
+  free_charbuf(&data);
+  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
+
+//Test check of JSON request isNumber
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateString("19"));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
+
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateString("57"));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+
+  //Test check of JSON request isString
+  cJSON_DeleteItemFromObject(json, "key_id");
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id");
+  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
+
+  cJSON_DeleteItemFromObject(json, "dec_data");
+  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateNumber(6842));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "dec_data");
+  cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
+  //Test check of JSON request string length match
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(20));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "key_id_len");
+  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
+
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(50));
+  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
+  cJSON_DeleteItemFromObject(json, "dec_data_len");
+  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
+*/
+  //Clean-up JSON
+  cJSON_Delete(json);
+}
+
 
 void test_request_decoder(void)
 {

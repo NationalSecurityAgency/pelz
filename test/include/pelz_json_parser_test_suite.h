@@ -15,6 +15,7 @@ int pelz_json_parser_suite_add_tests(CU_pSuite suite);
 // Tests
 void test_encrypt_parser(void);
 void test_decrypt_parser(void);
+void test_data_decrypt_parser(void);
 void test_request_decoder(void);
 void test_message_encoder(void);
 void test_error_message_encoder(void);

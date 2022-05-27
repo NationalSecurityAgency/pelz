@@ -370,7 +370,7 @@ int data_decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data_key, char
     pelz_log(LOG_ERR, "Missing required JSON key: cipher_len.");
     return (1);
   }
-  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "data_key_id_len")))
+  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "key_id_len")))
   {
     pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: key_id_len. Data type should be integer.");
     return (1);
@@ -430,10 +430,6 @@ int data_decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data_key, char
     free_charbuf(data_key);
     return (1);
   }
-
-
-
-
   if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "data_block_len")))
   {
     pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: data_block_len. Data type should be integer.");
@@ -470,9 +466,6 @@ int data_decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data_key, char
     free_charbuf(data_block);
     return (1);
   }
-
-
-
 
   if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "cipher_len")))
   {
