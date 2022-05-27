@@ -78,17 +78,9 @@ void test_encrypt_parser(void)
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
   cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
 
-  cJSON_DeleteItemFromObject(json, "key_id_len");
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
-
   cJSON_DeleteItemFromObject(json, "enc_data");
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
-
-  cJSON_DeleteItemFromObject(json, "enc_data_len");
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
   cJSON_DeleteItemFromObject(json, "dec_data");
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
@@ -103,19 +95,6 @@ void test_encrypt_parser(void)
   free_charbuf(&data);
   cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
-  //Test check of JSON request isNumber
-  cJSON_DeleteItemFromObject(json, "key_id_len");
-  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateString("19"));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "key_id_len");
-  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
-
-  cJSON_DeleteItemFromObject(json, "enc_data_len");
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateString("45"));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "enc_data_len");
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
-
   //Test check of JSON request isString
   cJSON_DeleteItemFromObject(json, "key_id");
   cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482));
@@ -128,19 +107,6 @@ void test_encrypt_parser(void)
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
   cJSON_DeleteItemFromObject(json, "enc_data");
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
-
-  //Test check of JSON request string length match
-  cJSON_DeleteItemFromObject(json, "key_id_len");
-  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(20));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "key_id_len");
-  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
-
-  cJSON_DeleteItemFromObject(json, "enc_data_len");
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(50));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "enc_data_len");
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
 
   //Clean-up JSON
   cJSON_Delete(json);
