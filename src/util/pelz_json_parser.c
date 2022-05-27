@@ -14,8 +14,7 @@
 
 /**
  * <pre>
- * Helper function to extract fields from JSON structs. The fields must have
- * an associated length field whose name is <field_name>_len.
+ * Helper function to extract string fields from JSON structs.
  * <pre>
  *
  * @param[in] json       The JSON structure.
@@ -52,8 +51,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
 
 /**
  * <pre>
- * Helper function to extract fields from JSON structs. The fields must have
- * an associated length field whose name is <field_name>_len.
+ * Helper function to extract fields from JSON structs. 
  * <pre>
  *
  * @param[in]  json       The JSON structure.
