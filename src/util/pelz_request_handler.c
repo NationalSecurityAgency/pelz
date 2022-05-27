@@ -54,12 +54,16 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
     if (aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
         data.chars, data.len, &out_key.chars, &out_key.len))
     {
+      free_charbuf(&out_key);
       return DECRYPT_ERROR;
     }
     if (aes_gcm_decrypt(out_key.chars, out_key.len, data_block.chars, data_block.len, &outData.chars, &outData.len))
     {
+      free_charbuf(&out_key);
       return DECRYPT_ERROR;
     }
+    free_charbuf(&out_key);
+    break;
   default:
     return REQUEST_TYPE_ERROR;
 
