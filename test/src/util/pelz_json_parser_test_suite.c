@@ -52,7 +52,6 @@ void test_encrypt_parser(void)
   const char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
   unsigned int enc_data_len = 45;
   const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
-  unsigned int dec_data_len = 57;
 
   //Building of a standard valid JSON request
   json = cJSON_CreateObject();
@@ -116,7 +115,6 @@ void test_decrypt_parser(void)
   const char *json_key_id = "file:/test/key1.txt";
   unsigned int json_key_id_len = 19;
   const char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
-  unsigned int enc_data_len = 45;
   const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
   unsigned int dec_data_len = 57;
 
