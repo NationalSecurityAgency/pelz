@@ -244,86 +244,19 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
 
 int signed_parser(cJSON * json, charbuf * request_sig, charbuf * requestor_cert)
 {
-  if (!cJSON_HasObjectItem(json, "request_sig"))
+  *request_sig = get_JSON_string_field(json, "request_sig");
+  if(request_sig->len == 0 || request_sig->chars == NULL)
   {
-    pelz_log(LOG_ERR, "Missing required JSON key: request_sig.");
-    return (1);
-  }
-  else if (!cJSON_HasObjectItem(json, "request_sig_len"))
-  {
-    pelz_log(LOG_ERR, "Missing required JSON key: request_sig_len.");
-    return (1);
-  }
-  else if (!cJSON_HasObjectItem(json, "requestor_cert"))
-  {
-    pelz_log(LOG_ERR, "Missing required JSON key: requestor_cert.");
-    return (1);
-  }
-  else if (!cJSON_HasObjectItem(json, "requestor_cert_len"))
-  {
-    pelz_log(LOG_ERR, "Missing required JSON key: requestor_cert_len.");
-    return (1);
-  }
-  
-  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "request_sig_len")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: request_sig_len. Data type should be integer.");
-    return (1);
-  }
-  *request_sig = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "request_sig_len")->valueint);
-  if (!cJSON_IsString(cJSON_GetObjectItem(json, "request_sig")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: request_sig. Data type should be string.");
     free_charbuf(request_sig);
-    return (1);
+    return 1;
   }
-  if (cJSON_GetObjectItemCaseSensitive(json, "request_sig")->valuestring != NULL)
+
+  *requestor_cert = get_JSON_string_field(json, "requestor_cert");
+  if(requestor_cert->len == 0 || requestor_cert->chars == NULL)
   {
-    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "request_sig")->valuestring) != request_sig->len)
-    {     
-      pelz_log(LOG_ERR, "Length of value in JSON key: request_sig does not match value in JSON key: request_sig_len.");
-      free_charbuf(request_sig);
-      return (1);
-    }
-    memcpy(request_sig->chars, cJSON_GetObjectItemCaseSensitive(json, "request_sig")->valuestring, request_sig->len);
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "No value in JSON key: request_sig.");
-    free_charbuf(request_sig);
-    return (1);
-  }
-  if (!cJSON_IsNumber(cJSON_GetObjectItem(json, "requestor_cert_len")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: requestor_cert_len. Data type should be integer.");
-    free_charbuf(request_sig);
-    return (1);
-  }
-  *requestor_cert = new_charbuf(cJSON_GetObjectItemCaseSensitive(json, "requestor_cert_len")->valueint);
-  if (!cJSON_IsString(cJSON_GetObjectItem(json, "requestor_cert")))
-  {
-    pelz_log(LOG_ERR, "Incorrect data type of JSON value of JSON key: requestor_cert. Data type should be string.");
     free_charbuf(request_sig);
     free_charbuf(requestor_cert);
-    return (1);
-  }
-  if (cJSON_GetObjectItemCaseSensitive(json, "requestor_cert")->valuestring != NULL)
-  {
-    if (strlen(cJSON_GetObjectItemCaseSensitive(json, "requestor_cert")->valuestring) != requestor_cert->len)
-    {
-      pelz_log(LOG_ERR, "Length of value in JSON key: requestor_cert does not match value in JSON key: requestor_cert_len.");
-      free_charbuf(request_sig);
-      free_charbuf(requestor_cert);
-      return (1);
-    }
-    memcpy(requestor_cert->chars, cJSON_GetObjectItemCaseSensitive(json, "requestor_cert")->valuestring, requestor_cert->len);
-  }
-  else
-  {
-    pelz_log(LOG_ERR, "No value in JSON key: requestor_cert.");
-    free_charbuf(request_sig);
-    free_charbuf(requestor_cert);
-    return (1);
+    return 1;
   }
   return (0);
 }

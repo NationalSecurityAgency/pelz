@@ -58,11 +58,8 @@ void test_encrypt_parser(void)
   json = cJSON_CreateObject();
   cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(1));
   cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-  cJSON_AddItemToObject(json, "key_id_len", cJSON_CreateNumber(json_key_id_len));
   cJSON_AddItemToObject(json, "enc_data", cJSON_CreateString(enc_data));
-  cJSON_AddItemToObject(json, "enc_data_len", cJSON_CreateNumber(enc_data_len));
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
-  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
                        
   //Test standard valid JSON request
   CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
@@ -89,11 +86,8 @@ void test_encrypt_parser(void)
   free_charbuf(&data);
   cJSON_AddItemToObject(json, "dec_data", cJSON_CreateString(dec_data));
 
-  cJSON_DeleteItemFromObject(json, "dec_data_len");
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
   free_charbuf(&key_id);
   free_charbuf(&data);
-  cJSON_AddItemToObject(json, "dec_data_len", cJSON_CreateNumber(dec_data_len));
 
   //Test check of JSON request isString
   cJSON_DeleteItemFromObject(json, "key_id");
@@ -192,7 +186,7 @@ void test_request_decoder(void)
   cJSON *json_dec_signed;
 
   const char *invalid_request[4] = {
-    "{\"key_id_len\": 28, \"key_id\": \"file:/test/testkeys/key2.txt\"}",
+    "{\"key_id\": \"file:/test/testkeys/key2.txt\"}",
     "{\"request_type\": \"one\"}", "{\"request_type\": 0}", "{\"request_type\": 7}"
   };
   const char *json_key_id[6] = {
@@ -266,13 +260,9 @@ void test_request_decoder(void)
   for (int i = 0; i < 6; i++)
   {
     cJSON_AddItemToObject(json_enc, "key_id", cJSON_CreateString(json_key_id[i]));
-    cJSON_AddItemToObject(json_enc, "key_id_len", cJSON_CreateNumber(json_key_id_len));
     cJSON_AddItemToObject(json_dec, "key_id", cJSON_CreateString(json_key_id[i]));
-    cJSON_AddItemToObject(json_dec, "key_id_len", cJSON_CreateNumber(json_key_id_len));
     cJSON_AddItemToObject(json_enc, "enc_data", cJSON_CreateString(enc_data[i]));
     cJSON_AddItemToObject(json_dec, "dec_data", cJSON_CreateString(dec_data[i]));
-    cJSON_AddItemToObject(json_enc, "enc_data_len", cJSON_CreateNumber(enc_data_len[i]));
-    cJSON_AddItemToObject(json_dec, "dec_data_len", cJSON_CreateNumber(dec_data_len[i]));
 
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
@@ -309,31 +299,19 @@ void test_request_decoder(void)
 
     //Free the cJSON Objects to allow the addition of the next Object per the loop
     cJSON_DeleteItemFromObject(json_dec, "dec_data");
-    cJSON_DeleteItemFromObject(json_dec, "dec_data_len");
     cJSON_DeleteItemFromObject(json_enc, "enc_data");
-    cJSON_DeleteItemFromObject(json_enc, "enc_data_len");
     cJSON_DeleteItemFromObject(json_enc, "key_id");
-    cJSON_DeleteItemFromObject(json_enc, "key_id_len");
     cJSON_DeleteItemFromObject(json_dec, "key_id");
-    cJSON_DeleteItemFromObject(json_dec, "key_id_len");
   }
     // In the future these values will have to align with the validation() function
     cJSON_AddItemToObject(json_enc_signed, "key_id", cJSON_CreateString("file:/test/key1.txt"));
-    cJSON_AddItemToObject(json_enc_signed, "key_id_len", cJSON_CreateNumber(19));
     cJSON_AddItemToObject(json_dec_signed, "key_id", cJSON_CreateString("file:/test/key1.txt"));
-    cJSON_AddItemToObject(json_dec_signed, "key_id_len", cJSON_CreateNumber(19));
     cJSON_AddItemToObject(json_enc_signed, "enc_data", cJSON_CreateString("TestData\n"));
     cJSON_AddItemToObject(json_dec_signed, "dec_data", cJSON_CreateString("TestData\n"));
-    cJSON_AddItemToObject(json_enc_signed, "enc_data_len", cJSON_CreateNumber(9));
-    cJSON_AddItemToObject(json_dec_signed, "dec_data_len", cJSON_CreateNumber(9));
     cJSON_AddItemToObject(json_enc_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
-    cJSON_AddItemToObject(json_enc_signed, "request_sig_len", cJSON_CreateNumber(13));
     cJSON_AddItemToObject(json_enc_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
-    cJSON_AddItemToObject(json_enc_signed, "requestor_cert_len", cJSON_CreateNumber(14)); 
     cJSON_AddItemToObject(json_dec_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
-    cJSON_AddItemToObject(json_dec_signed, "request_sig_len", cJSON_CreateNumber(13));
     cJSON_AddItemToObject(json_dec_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
-    cJSON_AddItemToObject(json_dec_signed, "requestor_cert_len", cJSON_CreateNumber(14)); 
 
     request_type = REQ_UNK;
 
@@ -373,21 +351,13 @@ void test_request_decoder(void)
     free_charbuf(&data);
 
     cJSON_DeleteItemFromObject(json_dec_signed, "dec_data");
-    cJSON_DeleteItemFromObject(json_dec_signed, "dec_data_len");
     cJSON_DeleteItemFromObject(json_enc_signed, "enc_data");
-    cJSON_DeleteItemFromObject(json_enc_signed, "enc_data_len");
     cJSON_DeleteItemFromObject(json_enc_signed, "key_id");
-    cJSON_DeleteItemFromObject(json_enc_signed, "key_id_len");
     cJSON_DeleteItemFromObject(json_dec_signed, "key_id");
-    cJSON_DeleteItemFromObject(json_dec_signed, "key_id_len");
     cJSON_DeleteItemFromObject(json_dec_signed, "request_sig");
-    cJSON_DeleteItemFromObject(json_dec_signed, "request_sig_len");
     cJSON_DeleteItemFromObject(json_dec_signed, "requestor_cert");
-    cJSON_DeleteItemFromObject(json_dec_signed, "requestor_cert_len");
     cJSON_DeleteItemFromObject(json_enc_signed, "request_sig");
-    cJSON_DeleteItemFromObject(json_enc_signed, "request_sig_len");
     cJSON_DeleteItemFromObject(json_enc_signed, "requestor_cert");
-    cJSON_DeleteItemFromObject(json_enc_signed, "requestor_cert_len");
 
   cJSON_Delete(json_enc);
   cJSON_Delete(json_dec);
