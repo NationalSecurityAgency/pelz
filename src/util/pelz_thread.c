@@ -298,6 +298,11 @@ void thread_process(void *arg)
     }
     pthread_mutex_unlock(&lock);
     free_charbuf(&data);
+    if(request_type == REQ_DATA_DEC)
+    {
+      free_charbuf(&data_block);
+      free_charbuf(&cipher);
+    }
 
     if (status != REQUEST_OK)
     {
