@@ -6,7 +6,7 @@
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 
-RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
+RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf data_block, charbuf cipher, charbuf * output)
 {
   charbuf outData;
   int index;

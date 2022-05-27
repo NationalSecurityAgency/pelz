@@ -34,6 +34,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return (1);
   }
   *request_type = (RequestType) cJSON_GetObjectItemCaseSensitive(json, "request_type")->valueint;
+  //These are only set when used
+  data_block = NULL;
+  cipher = NULL;
   switch (*request_type)
   {    
   case REQ_ENC:

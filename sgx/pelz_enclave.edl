@@ -178,13 +178,15 @@ public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf ser
  * @param[in] request_type the type of the request (encrypt or decrypt)
  * @param[in] key_id       the key_id of the key to be used for the request
  * @param[in] data         the input data
+ * @param[in] data_block   the data block to be decrypted by the DEK in 'data'
+ * @param[in] cipher       the cipher used to encrypted data block
  * @param[out] output      a pointer to a charbuf to hold the output, will
  *                         be created inside the call
  *
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
+public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf data_block, charbuf cipher, [out] charbuf* output);
 	};
 	untrusted {
 /**
