@@ -169,7 +169,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
 
     tmp = (char *) calloc((data.len + 1), sizeof(char));
     memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "enc_out", cJSON_CreateString(tmp));
+    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
     free(tmp);
     break;
   case REQ_DEC:
@@ -180,7 +180,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
 
     tmp = (char *) calloc((data.len + 1), sizeof(char));
     memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "dec_out", cJSON_CreateString(tmp));
+    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
     free(tmp);
     break;
   default:
@@ -210,7 +210,7 @@ int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
     free_charbuf(key_id);
     return 1;
   }
-  *data = get_JSON_string_field(json, "enc_data");
+  *data = get_JSON_string_field(json, "data");
   if(data->len == 0 || data->chars == NULL)
   {
     free_charbuf(key_id);
@@ -228,7 +228,7 @@ int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
     free_charbuf(key_id);
     return 1;
   }
-  *data = get_JSON_string_field(json, "dec_data");
+  *data = get_JSON_string_field(json, "data");
   if(data->len == 0 || data->chars == NULL)
   {
     free_charbuf(key_id);
