@@ -15,16 +15,6 @@
 // Adds all key table tests to main test runner.
 int pelz_json_parser_suite_add_tests(CU_pSuite suite)
 {
-  
-  if (NULL == CU_add_test(suite, "Test JSON Encryption Request Parser", test_encrypt_parser))
-  {
-    return (1);
-  }
-  if (NULL == CU_add_test(suite, "Test JSON Decryption Request Parser", test_decrypt_parser))
-  {
-    return (1);
-  }
-
   if (NULL == CU_add_test(suite, "Test Decoding of JSON formatted Request", test_request_decoder))
   {
     return (1);
@@ -38,119 +28,6 @@ int pelz_json_parser_suite_add_tests(CU_pSuite suite)
     return (1);
   }
   return (0);
-}
-
-void test_encrypt_parser(void)
-{
-  cJSON *json;
-  charbuf key_id;
-  charbuf data;
-
-  //Valid Test Values
-  const char *json_key_id = "file:/test/key1.txt";
-  unsigned int json_key_id_len = 19;
-  const char *enc_data = "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n";
-  unsigned int enc_data_len = 45;
-
-  //Building of a standard valid JSON request
-  json = cJSON_CreateObject();
-  cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(1));
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-  cJSON_AddItemToObject(json, "data", cJSON_CreateString(enc_data));
-                       
-  //Test standard valid JSON request
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
-  CU_ASSERT(key_id.len == json_key_id_len);
-  CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
-  CU_ASSERT(data.len == enc_data_len);
-  CU_ASSERT(memcmp(data.chars, enc_data, data.len) == 0);
-  free_charbuf(&key_id);
-  free_charbuf(&data);
-
-  //Test check of JSON request hasObject
-  cJSON_DeleteItemFromObject(json, "key_id");
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-
-  cJSON_DeleteItemFromObject(json, "data");
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_AddItemToObject(json, "data", cJSON_CreateString(enc_data));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 0);
-
-  free_charbuf(&key_id);
-  free_charbuf(&data);
-
-  //Test check of JSON request isString
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-
-  cJSON_DeleteItemFromObject(json, "data");
-  cJSON_AddItemToObject(json, "data", cJSON_CreateNumber(6842));
-  CU_ASSERT(encrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "data");
-  cJSON_AddItemToObject(json, "data", cJSON_CreateString(enc_data));
-
-  //Clean-up JSON
-  cJSON_Delete(json);
-}
-
-void test_decrypt_parser(void)
-{
-  cJSON *json;
-  charbuf key_id;
-  charbuf data;
-
-  //Valid Test Values
-  const char *json_key_id = "file:/test/key1.txt";
-  unsigned int json_key_id_len = 19;
-  const char *dec_data = "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n";
-  unsigned int dec_data_len = 57;
-
-  //Building of a standard valid JSON request
-  json = cJSON_CreateObject();
-  cJSON_AddItemToObject(json, "request_type", cJSON_CreateNumber(2));
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-  cJSON_AddItemToObject(json, "data", cJSON_CreateString(dec_data));
-
-  //Test standard valid JSON request
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 0);
-  CU_ASSERT(key_id.len == json_key_id_len);
-  CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
-  CU_ASSERT(data.len == dec_data_len);
-  CU_ASSERT(memcmp(data.chars, dec_data, data.len) == 0);
-  free_charbuf(&key_id);
-  free_charbuf(&data);
-
-  //Test check of JSON request hasObject
-  cJSON_DeleteItemFromObject(json, "key_id");
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-
-  cJSON_DeleteItemFromObject(json, "data");
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
-  cJSON_AddItemToObject(json, "data", cJSON_CreateString(dec_data));
-
-  free_charbuf(&key_id);
-  free_charbuf(&data);
-
-  //Test check of JSON request isString
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateNumber(5482));
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "key_id");
-  cJSON_AddItemToObject(json, "key_id", cJSON_CreateString(json_key_id));
-
-  cJSON_DeleteItemFromObject(json, "data");
-  cJSON_AddItemToObject(json, "data", cJSON_CreateNumber(6842));
-  CU_ASSERT(decrypt_parser(json, &key_id, &data) == 1);
-  cJSON_DeleteItemFromObject(json, "data");
-  cJSON_AddItemToObject(json, "data", cJSON_CreateString(dec_data));
-
-  //Clean-up JSON
-  cJSON_Delete(json);
 }
 
 void test_request_decoder(void)

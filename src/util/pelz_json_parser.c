@@ -100,7 +100,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   }
 
   *data = get_JSON_string_field(json, "data");
-  if(data->len == 0 || data->chars = NULL)
+  if(data->len == 0 || data->chars == NULL)
   {
     pelz_log(LOG_ERR, "Failed to exract data from JSON.");
     cJSON_Delete(json);
