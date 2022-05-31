@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "pelz_io.h"
+#include "key_load.h"
 #include "charbuf.h"
 
 #ifdef __cplusplus

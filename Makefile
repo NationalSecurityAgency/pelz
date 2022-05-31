@@ -92,9 +92,13 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
-		 src/util/pelz_thread.c \
+		 src/util/fifo_thread.c \
+		 src/util/unsecure_socket_thread.c \
+		 src/util/secure_socket_thread.c \
 		 src/util/util.c \
-		 src/util/pelz_io.c \
+		 src/util/key_load.c \
+		 src/util/parse_pipe_message.c \
+		 src/util/pipe_io.c \
 		 src/util/pelz_uri_helpers.c \
 		 src/util/pelz_loaders.c
 
@@ -363,7 +367,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 				 sgx/log_ocall.o \
 				 sgx/ecdh_ocall.o \
 				 sgx/ecdh_util.o \
-			   sgx/memory_ocall.o
+				 sgx/memory_ocall.o
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -494,6 +498,10 @@ sgx/server_table.o: src/util/server_table.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/channel_table.o: src/util/channel_table.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
 sgx/aes_keywrap_3394nopad.o: src/util/aes_keywrap_3394nopad.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
@@ -510,6 +518,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
 		     sgx/server_table.o \
+				 sgx/channel_table.o \
 		     sgx/aes_keywrap_3394nopad.o \
 		     sgx/pelz_request_handler.o \
 		     sgx/charbuf.o \
@@ -544,6 +553,7 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 						sgx/common_table.o \
      			  sgx/key_table.o \
      			  sgx/server_table.o \
+						sgx/channel_table.o \
      			  sgx/aes_keywrap_3394nopad.o \
      			  sgx/pelz_request_handler.o \
      			  sgx/charbuf.o \

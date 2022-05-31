@@ -16,7 +16,7 @@
 #include <kmyth/file_io.h>
 
 #include "pelz_log.h"
-#include "pelz_io.h"
+#include "pipe_io.h"
 #include "charbuf.h"
 #include "seal.h"
 #include "cmd_interface.h"

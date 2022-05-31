@@ -8,7 +8,7 @@
 
 #include "cmd_interface.h"
 #include "pelz_log.h"
-#include "pelz_io.h"
+#include "pipe_io.h"
 
 CmdArgValue check_arg(char *arg)
 {
