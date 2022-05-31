@@ -36,10 +36,8 @@ The JSON objects can be in two forms: requests and responses.
 * key_id : string of characters
      * URI for the key location - used as the key identifier.
      * URI syntax must currently comply with RFC 8089 and RFC 1738 Section 3.1.
-* key\_id_len : int
-    * Integer specifying the length of the key_id URI.
 * data : string of characters
-    * Base64 encoded version of the key to be wrapped or unwrapped.
+    * Base64 encoded data to be processed based on request type.
 
 Examples:
 
@@ -56,7 +54,7 @@ JSON Request for AES Key Unwrap
     * URI for the key location (key identifier).
     * The key_id specified in the JSON request will be included in the JSON response.
 * data : string of characters
-    * Base-64 encoded, output data.
+    * Base-64 encoded, output data based on request type.
 * error : string of characters
     * Error message for the service user
 
