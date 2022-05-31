@@ -46,7 +46,6 @@ void *secure_socket_thread(void *arg)
     pelz_log(LOG_ERR, "Socket Initialization Error");
     return NULL;
   }
-  global_secure_socket_active = true;
   pelz_log(LOG_DEBUG, "Secure socket on port %d created with listen_id of %d", port, socket_listen_id);
 
   do

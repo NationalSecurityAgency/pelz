@@ -1,20 +1,34 @@
-# PyKMIP Usage Demo
+# Key Encryption Key (KEK) in-use Protection Demonstration 
 
 ## Introduction
-This outlines the steps required to create an end-to-end demo of pelz using both Accumulo and
-PyKMIP. **These steps are intended for demonstration purposes only, they are not intended for
-operational use.** The demo demonstrates the ability for Accumulo to request a key-encryption-key
-stored within PyKMIP. Pelz processes this request, retrieves the key, and uses it to wrap/unwrap
-file keys for Accumulo. Although the demo is intended to run in an SGX simulator, this demonstrates
-a process for retrieving a key from a key server and using a trusted-execution environment to
-protect it while serving cloud software.
+This part of the project demonstrates how to use the pelz key service to protect the most sensitive 
+keys used by the Accumulo database management software, the key encryption keys (KEKs). 
 
-These instructions detail the install and setup processes for Accumulo, pelz, PyKMIP, and a proxy
-server. They proxy server coordinates communication between pelz and PyKMIP. This is because pelz
-does not support TLS endpoints within the Trusted-Exceuction Environment (TEE). The instructions
-then explain how to build Accumulo and run its unit tests using pelz and PyKMIP. The unit tests
-require successful functionality of the PelzCryptoService within Accumulo to protect the file-
-encryption-keys (FEKs) by using the key-encryption-key (KEK) stored within the PyKMIP server. 
+**This code is intended for demonstration purposes only, it is not intended for operational use.**
+
+Accumulo encryption and decryption capabilities are documented at [Accumulo On Disk encryption](https://accumulo.apache.org/docs/2.x/security/on-disk-encryption). 
+PelzCryptoService is a custom implementation of the Accumulo CryptoService interface that supports 
+pelz integration. Accumulo is easily configured to use PelzCryptoService instead of the default 
+AESCryptoService (or any other custom) implementation. In an encrypted Accumulo database, data is 
+stored in RFiles encrypted with file encryption keys (FEKs). The FEKs are key-wrapped using KEKs 
+and stored, in addition to the encrypted data, as part of the RFile. 
+
+In this demo, we assume that the KEKs are initially stored in a KMIP key server, which we simulate 
+using [PyKMIP](https://github.com/OpenKMIP/PyKMIP). Here we demonstrate the ability for Accumulo 
+to request that pelz wrap or unwrap an FEK, using a KEK hosted by a PyKMIP server. Pelz processes 
+this request, retrieves the KEK, and uses it to wrap/unwrap FEKs for Accumulo. The KEKs are 
+protected from compromise throughout this process; they are stored securely on the KMIP key server, 
+sent to pelz through a secure communication channel, and protected in use within the pelz trusted 
+execution environment (TEE). Although intended to run in an SGX simulator, this code demonstrates 
+a process that can be employed for securely retrieving a key from a key server, and then using a 
+hardware rooted TEE to protect it while serving a cloud-based application. 
+
+These instructions detail the install and setup processes for Accumulo, pelz, PyKMIP, and a proxy 
+server. The proxy server coordinates communication between pelz and PyKMIP. This is because pelz 
+does not support TLS endpoints within the TEE. The instructions then explain how to build Accumulo 
+and run its unit tests using pelz and PyKMIP. The unit tests verify that the PelzCryptoService 
+functionality within Accumulo correctly protects sample file encryption keys (FEKs) using a key 
+encryption key (KEK) stored within a PyKMIP server. 
 
 ## Keys-in-use demonstration process
 
