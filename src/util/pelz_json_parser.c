@@ -88,45 +88,60 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return (1);
   }
 
-  switch (*request_type)
-  {    
-  case REQ_ENC:
-  case REQ_ENC_SIGNED:
-    if (encrypt_parser(json, key_id, data))
-    {
-      pelz_log(LOG_ERR, "Encrypt Request Parser Error");
-      cJSON_Delete(json);
-      return (1);
-    }
-    break;
-  case REQ_DEC: 
-  case REQ_DEC_SIGNED:
-    if (decrypt_parser(json, key_id, data))
-    {
-      pelz_log(LOG_ERR, "Decrypt Request Parser Error");
-      cJSON_Delete(json);
-      return (1);
-    }
-    break;
-  default:
-    pelz_log(LOG_WARNING, "Invalid Request Type");
-    cJSON_Delete(json);
-    return (1);
-  }
-  if ( (*request_type == REQ_ENC_SIGNED) || (*request_type == REQ_DEC_SIGNED) )
+  // We always parse out key_id and data. Other parsing may
+  // happen depending on the request type.
+  *key_id = get_JSON_string_field(json, "key_id");
+  if(key_id->len == 0 || key_id->chars == NULL)
   {
-    if (signed_parser(json, request_sig, requestor_cert) )
+    pelz_log(LOG_ERR, "Failed to extract key_id from JSON.");
+    cJSON_Delete(json);
+    free_charbuf(key_id);
+    return 1;
+  }
+
+  *data = get_JSON_string_field(json, "data");
+  if(data->len == 0 || data->chars = NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to exract data from JSON.");
+    cJSON_Delete(json);
+    free_charbuf(key_id);
+    free_charbuf(data);
+    return 1;
+  }
+
+  if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
+  {
+    *request_sig = get_JSON_string_field(json, "request_sig");
+    if(request_sig->len == 0 || request_sig->chars == NULL)
     {
-      pelz_log(LOG_ERR, "Encrypt/Decrypt Signed Parser Error");
       cJSON_Delete(json);
-      return (1);
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      return 1;
     }
-    if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+
+    *requestor_cert = get_JSON_string_field(json, "requestor_cert");
+    if(requestor_cert->len == 0 || requestor_cert->chars == NULL)
     {
-      pelz_log(LOG_ERR, "Signature Validation Error");
       cJSON_Delete(json);
-      return (1);
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      free_charbuf(requestor_cert);
+      return 1;
     }
+  }
+  
+  if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+  {
+    pelz_log(LOG_ERR, "Signature Validation Error");
+    cJSON_Delete(json);
+    free_charbuf(key_id);
+    free_charbuf(data);
+    free_charbuf(request_sig);
+    free_charbuf(requestor_cert);
+    return (1);
   }
   cJSON_Delete(json);
   return (0);
@@ -199,61 +214,6 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
   memcpy(message->chars, tmp, message->len);
   cJSON_Delete(root);
   free(tmp);
-  return (0);
-}
-
-int encrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
-{
-  *key_id = get_JSON_string_field(json, "key_id");
-  if(key_id->len == 0 || key_id->chars == NULL)
-  {
-    free_charbuf(key_id);
-    return 1;
-  }
-  *data = get_JSON_string_field(json, "data");
-  if(data->len == 0 || data->chars == NULL)
-  {
-    free_charbuf(key_id);
-    free_charbuf(data);
-    return 1;
-  }
-  return (0);
-}
-
-int decrypt_parser(cJSON * json, charbuf * key_id, charbuf * data)
-{
-  *key_id = get_JSON_string_field(json, "key_id");
-  if(key_id->len == 0 || key_id->chars == NULL)
-  {
-    free_charbuf(key_id);
-    return 1;
-  }
-  *data = get_JSON_string_field(json, "data");
-  if(data->len == 0 || data->chars == NULL)
-  {
-    free_charbuf(key_id);
-    free_charbuf(data);
-    return 1;
-  }
-  return (0);
-}
-
-int signed_parser(cJSON * json, charbuf * request_sig, charbuf * requestor_cert)
-{
-  *request_sig = get_JSON_string_field(json, "request_sig");
-  if(request_sig->len == 0 || request_sig->chars == NULL)
-  {
-    free_charbuf(request_sig);
-    return 1;
-  }
-
-  *requestor_cert = get_JSON_string_field(json, "requestor_cert");
-  if(requestor_cert->len == 0 || requestor_cert->chars == NULL)
-  {
-    free_charbuf(request_sig);
-    free_charbuf(requestor_cert);
-    return 1;
-  }
   return (0);
 }
 
