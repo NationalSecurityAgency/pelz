@@ -72,12 +72,6 @@ void test_request_decoder(void)
     57, 57, 45, 45, 33, 33
   };
 
-  /*
-  const char * request_sig_val = "Request\n";
-  unsigned int request_sig_val_len = 8;
-  const char * requestor_cert_val = "Cert1\n";
-  unsigned int requestor_cert_val_len = 6;
-  */
   pelz_log(LOG_DEBUG, "Start Request Decoder Test");
   //Test Invalid Requests with bad request_types
   for (int i = 0; i < 4; i++)
@@ -183,10 +177,6 @@ void test_request_decoder(void)
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_ENC_SIGNED);
-    //CU_ASSERT(key_id.len == json_key_id_len);
-    //CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
-    //CU_ASSERT(data.len == enc_data_len);
-    //CU_ASSERT(memcmp(data.chars, enc_data, data.len) == 0);   
     free_charbuf(&request);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
@@ -199,17 +189,13 @@ void test_request_decoder(void)
     free(tmp);
     CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_DEC_SIGNED);
-    //CU_ASSERT(key_id.len == json_key_id_len);
-    //CU_ASSERT(memcmp(key_id.chars, json_key_id, key_id.len) == 0);
-    //CU_ASSERT(data.len == enc_data_len);
-    //CU_ASSERT(memcmp(data.chars, enc_data, data.len) == 0);   
     free_charbuf(&request);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
 
-    cJSON_DeleteItemFromObject(json_dec_signed, "dec_data");
-    cJSON_DeleteItemFromObject(json_enc_signed, "enc_data");
+    cJSON_DeleteItemFromObject(json_dec_signed, "data");
+    cJSON_DeleteItemFromObject(json_enc_signed, "data");
     cJSON_DeleteItemFromObject(json_enc_signed, "key_id");
     cJSON_DeleteItemFromObject(json_dec_signed, "key_id");
     cJSON_DeleteItemFromObject(json_dec_signed, "request_sig");
