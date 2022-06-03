@@ -1,11 +1,11 @@
 # Pelz
 
 ## Introduction
-Pelz is an open source project about managing keys within a service for other applications. Currently, pelz provides the ability to load keys which can then be used to wrap or unwrap other keys. It is our goal to move the key table and wrapping/unwrapping functionality into a trusted-execution environment.
+Pelz is an open source project about managing keys within a service for other applications. Currently, pelz provides the ability to load keys which can then be used to wrap or unwrap other keys (or data). The key table and wrapping/unwrapping functionality is implemented within an Intel Software Guard eXtensions (SGX) trusted-execution environment. This means that the pelz encryption/decryption operations, and the cryptographic keys employed, can be obscured even from the operating system and privileged users that administer the system. Further, pelz functionality can be hosted on commodity (non-specialized) computing platforms. 
 
 Pelz provides a socket interface to other programs to request AES key wrap/unwrap.  The request and response are JavaScript Object Notation (JSON) formatted. The expected JSON structure is described below. The location of key encryption keys (KEKs) is specified through a URI. The URI can identify a file, a key server destination, etc. The schemes currently implemented are specified below.
 
-Pelz is currently in an early prototyping phase. It is our intent to eventually move the key table into trusted hardware. There are no plans for creating a release at this time.
+Note: Pelz is currently in a prototyping phase. At this point, the application programming interface (API) is still somewhat fluid but should stabilize as fundamental capabilities mature. There are no plans for creating a release at this time. 
 ----
 
 ## Running pelz as a Linux service
@@ -31,8 +31,10 @@ The JSON objects can be in two forms: requests and responses.
 
 #### Request JSON Key and Values
 * request_type : int
-    * 1 for AES Key Wrap
-    * 2 for AES Key Unwrap
+    * 1 for AES Key Wrap (unsigned JSON request)
+    * 2 for AES Key Unwrap (unsigned JSON request)
+    * 3 for AES Key Wrap (signed JSON request) - still being implemented
+    * 4 for AES Key Unwrap (signed JSON request) - still being implemented
 * key_id : string of characters
      * URI for the key location - used as the key identifier.
      * URI syntax must currently comply with RFC 8089 and RFC 1738 Section 3.1.
@@ -71,6 +73,6 @@ Although any URI scheme could be supported, we currently only support reading fr
 * RFC 8089 (File Scheme) based sytax.
 
 #### Pelz 
-* Retrieve a key from a networked server (to be implemented as a future enhancement).
+* Retrieve a key from a networked server.
 * RFC 1738 (Uniform Resource Locators) Section 3.1 based syntax. No specific application of the protocol sections for RFC959 (FTP).
 * This implementation assumes user and password are included into host if applicable.
