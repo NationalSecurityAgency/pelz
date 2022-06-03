@@ -5,7 +5,7 @@ Pelz is an open source project about managing keys within a service for other ap
 
 Pelz provides a socket interface to other programs to request AES key wrap/unwrap.  The request and response are JavaScript Object Notation (JSON) formatted. The expected JSON structure is described below. The location of key encryption keys (KEKs) is specified through a URI. The URI can identify a file, a key server destination, etc. The schemes currently implemented are specified below.
 
-Note: Pelz is currently in a prototyping phase. At this point, the application programming interface (API) is still somewhat fluid but should stabilize as fundamental capabilities mature. There are no plans for creating a release at this time. 
+Note: Pelz is a proof of concept and does not have all the security features required in a robust tool for operational use. Further, in its current prototyping phase, the application programming interface (API) is still somewhat fluid but should stabilize as fundamental capabilities mature. There are no plans for creating a release at this time.
 ----
 
 ## Running pelz as a Linux service
