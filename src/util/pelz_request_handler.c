@@ -6,7 +6,7 @@
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 
-RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
+RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
 {
   charbuf outData;
   int index;
@@ -30,6 +30,31 @@ RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key
     {
       return ENCRYPT_ERROR;
     }
+    break;
+  default:
+    return REQUEST_TYPE_ERROR;
+
+  }
+  output->len = outData.len;
+  ocall_malloc(output->len, &output->chars);
+  memcpy(output->chars, outData.chars, output->len);
+  return REQUEST_OK;
+}
+
+
+RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf * output)
+{
+  charbuf outData;
+  int index;
+
+  if (table_lookup(KEY, key_id, &index))
+  {
+    return KEK_NOT_LOADED;
+  }
+
+  //Encrypt or Decrypt data per request_type
+  switch (request_type)
+  {
     break;
   case REQ_DEC:
     if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (data.len < 24

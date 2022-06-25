@@ -140,18 +140,40 @@ void *unsecure_socket_process(void *arg)
     free_charbuf(&data_in);
 
     pthread_mutex_lock(&lock);
-    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
-    if (status == KEK_NOT_LOADED)
+
+    switch(request_type)
     {
-      if (key_load(key_id) == 0)
+    case REQ_ENC:
+      pelz_encrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+      if (status == KEK_NOT_LOADED)
       {
-        pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+	if (key_load(key_id) == 0)
+        {
+          pelz_encrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+        }
+        else
+        {
+          status = KEK_LOAD_ERROR;
+        }
       }
-      else
+      break;
+    case REQ_DEC:
+      pelz_decrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+      if (status == KEK_NOT_LOADED)
       {
-        status = KEK_LOAD_ERROR;
+	if (key_load(key_id) == 0)
+        {
+          pelz_decrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+        }
+        else
+        {
+          status = KEK_LOAD_ERROR;
+        }
       }
-    }
+      break;
+    default:
+      status = REQUEST_TYPE_ERROR;
+    }    
     pthread_mutex_unlock(&lock);
     free_charbuf(&data);
 
