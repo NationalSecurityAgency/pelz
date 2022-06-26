@@ -16,25 +16,16 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
     return KEK_NOT_LOADED;
   }
 
-  //Encrypt or Decrypt data per request_type
-  switch (request_type)
+  if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (data.len < 16 || data.len % 8 != 0))
   {
-  case REQ_ENC:
-    if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (data.len < 16
-        || data.len % 8 != 0))
-    {
-      return KEY_OR_DATA_ERROR;
-    }
-    if (aes_keywrap_3394nopad_encrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-        data.chars, data.len, &outData.chars, &outData.len))
-    {
-      return ENCRYPT_ERROR;
-    }
-    break;
-  default:
-    return REQUEST_TYPE_ERROR;
-
+    return KEY_OR_DATA_ERROR;
   }
+  if (aes_keywrap_3394nopad_encrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
+				    data.chars, data.len, &outData.chars, &outData.len))
+  {
+    return ENCRYPT_ERROR;
+  }
+  
   output->len = outData.len;
   ocall_malloc(output->len, &output->chars);
   memcpy(output->chars, outData.chars, output->len);
@@ -52,26 +43,16 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
     return KEK_NOT_LOADED;
   }
 
-  //Encrypt or Decrypt data per request_type
-  switch (request_type)
+  if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (data.len < 24 || data.len % 8 != 0))
   {
-    break;
-  case REQ_DEC:
-    if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (data.len < 24
-        || data.len % 8 != 0))
-    {
-      return KEY_OR_DATA_ERROR;
-    }
-    if (aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-        data.chars, data.len, &outData.chars, &outData.len))
-    {
-      return DECRYPT_ERROR;
-    }
-    break;
-  default:
-    return REQUEST_TYPE_ERROR;
-
+    return KEY_OR_DATA_ERROR;
   }
+  if (aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
+				    data.chars, data.len, &outData.chars, &outData.len))
+  {
+    return DECRYPT_ERROR;
+  }
+  
   output->len = outData.len;
   ocall_malloc(output->len, &output->chars);
   memcpy(output->chars, outData.chars, output->len);

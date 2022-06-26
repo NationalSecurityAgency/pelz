@@ -96,13 +96,6 @@ void test_request(void)
   CU_ASSERT(status == KEK_NOT_LOADED);
   free_charbuf(&tmp);
 
-  //Check that non-valid request type returns correct error status
-  tmp = copy_CWD_to_id(prefix, valid_id[0]);
-  request_type = REQ_UNK;
-  pelz_encrypt_request_handler(eid, &status, request_type, tmp, data_in, &output);
-  CU_ASSERT(status == REQUEST_TYPE_ERROR);
-  free_charbuf(&tmp);
-
   //Check that non-valid encyption key returns correct error status
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
   request_type = REQ_ENC;
