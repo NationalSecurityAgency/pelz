@@ -28,7 +28,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   charbuf field;
   if(!cJSON_HasObjectItem(json, field_name) || !cJSON_IsString(cJSON_GetObjectItem(json, field_name)))
   {
-    pelz_log(LOG_ERR, "Missing JSON field %s.", field_name);
+    pelz_log(LOG_WARN, "Missing JSON field %s.", field_name);
     return new_charbuf(0);
   } 
   if(cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring != NULL)
@@ -43,7 +43,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   }
   else
   {
-    pelz_log(LOG_ERR, "No value in JSON field %s.", field_name);
+    pelz_log(LOG_WARN, "No value in JSON field %s.", field_name);
     return new_charbuf(0);
   }
   return field;
@@ -131,6 +131,15 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(requestor_cert);
       return 1;
     }
+  }
+
+  // The iv and tag fields are not always present, and at this point
+  // we don't know if they're necessary or not so if they're not there
+  // we just move on.
+  if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
+  {
+    *iv = get_JSON_string_field(json, "iv");
+    *tag = get_JSON_string_field(json, "tag");
   }
   
   if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
