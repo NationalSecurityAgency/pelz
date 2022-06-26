@@ -125,6 +125,8 @@ void *secure_socket_process(void *arg)
 
     charbuf data;
     charbuf output;
+    charbuf tag;
+    charbuf iv;
 
     //Parse request for processing
     if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
@@ -146,12 +148,12 @@ void *secure_socket_process(void *arg)
     switch(request_type)
     {
     case REQ_ENC:
-      pelz_encrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+      pelz_encrypt_request_handler(eid, &status, request_type, key_id, data, &output, &iv, &tag);
       if (status == KEK_NOT_LOADED)
       {
 	if (key_load(key_id) == 0)
         {
-          pelz_encrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+          pelz_encrypt_request_handler(eid, &status, request_type, key_id, data, &output, &iv, &tag);
         }
         else
         {
@@ -160,12 +162,12 @@ void *secure_socket_process(void *arg)
       }
       break;
     case REQ_DEC:
-      pelz_decrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+      pelz_decrypt_request_handler(eid, &status, request_type, key_id, data, iv, tag, &output);
       if (status == KEK_NOT_LOADED)
       {
 	if (key_load(key_id) == 0)
         {
-          pelz_decrypt_request_handler(eid, &status, request_type, key_id, data, &output);
+          pelz_decrypt_request_handler(eid, &status, request_type, key_id, data, iv, tag, &output);
         }
         else
         {
