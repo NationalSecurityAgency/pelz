@@ -129,7 +129,7 @@ void *secure_socket_process(void *arg)
     charbuf iv;
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
+    if (request_decoder(request, &request_type, &key_id, &data_in, &iv, &tag, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);

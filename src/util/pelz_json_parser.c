@@ -72,7 +72,7 @@ static int get_JSON_int_field(cJSON* json, const char* field_name, int* value)
 }
 
 
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
   char *str = NULL;
