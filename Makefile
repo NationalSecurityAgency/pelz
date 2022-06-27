@@ -107,6 +107,7 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/util_test_suite.c \
 		 test/src/util/aes_keywrap_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
+		 test/src/util/request_signing_test_suite.c \
 		 test/src/util/test_helper_functions.c \
 		 test/src/util/test_pelz_uri_helpers.c \
 		 test/src/util/table_test_suite.c \

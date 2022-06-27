@@ -47,7 +47,7 @@ charbuf serialize_request_data(RequestType * request_type, charbuf * key_id, cha
 charbuf create_signature(EVP_PKEY * sign_pkey, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * requestor_cert)
 {
   // Note: This is included for demonstration/testing purposes.
-  // A production implementation should run within SGX for data protection.
+  // A production implementation should run within the enclave for data protection.
 
   int ret;
   charbuf signature = new_charbuf(0);
@@ -109,7 +109,6 @@ int check_cert_chain(X509 *requestor_x509) {
 
   return 0;
 }
-
 
 int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
