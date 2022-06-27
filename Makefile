@@ -90,6 +90,7 @@ App_Pipe_File := src/pelz/main.c
 
 App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
+		 src/util/request_signing.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
 		 src/util/fifo_thread.c \
