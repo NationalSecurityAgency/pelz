@@ -132,18 +132,24 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(requestor_cert);
       return 1;
     }
+
+    if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+    {
+      pelz_log(LOG_ERR, "Signature Validation Error");
+      cJSON_Delete(json);
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      free_charbuf(requestor_cert);
+      return (1);
+    }
   }
-  
-  if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+  else
   {
-    pelz_log(LOG_ERR, "Signature Validation Error");
-    cJSON_Delete(json);
-    free_charbuf(key_id);
-    free_charbuf(data);
-    free_charbuf(request_sig);
-    free_charbuf(requestor_cert);
-    return (1);
+    *request_sig = new_charbuf(0);
+    *requestor_cert = new_charbuf(0);
   }
+
   cJSON_Delete(json);
   return (0);
 }
