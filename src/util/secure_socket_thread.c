@@ -120,6 +120,7 @@ void *secure_socket_process(void *arg)
     charbuf key_id;
     charbuf request_sig;
     charbuf requestor_cert;
+    charbuf cipher_name;
 
     charbuf raw_output = new_charbuf(0);
     charbuf encoded_output = new_charbuf(0);
@@ -131,7 +132,7 @@ void *secure_socket_process(void *arg)
     charbuf encoded_iv = new_charbuf(0);
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &encoded_iv, &encoded_tag, &encoded_input_data, &request_sig, &requestor_cert))
+    if (request_decoder(request, &request_type, &key_id, &cipher_name, &encoded_iv, &encoded_tag, &encoded_input_data, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
@@ -232,7 +233,8 @@ void *secure_socket_process(void *arg)
     free_charbuf(&raw_iv);
     free_charbuf(&raw_tag);
     free_charbuf(&encoded_iv);
-    free_charbuf(&encoded_tag);    
+    free_charbuf(&encoded_tag);
+    free_charbuf(&cipher_name);
 
     pelz_log(LOG_DEBUG, "%d::Message & Length: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     //Send processed request back to client

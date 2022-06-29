@@ -41,6 +41,7 @@ void test_request_decoder(void)
   charbuf requestor_cert;
   charbuf tag;
   charbuf iv;
+  charbuf cipher_name;
   cJSON *json_enc;
   cJSON *json_dec;
   cJSON *json_enc_signed;
@@ -74,13 +75,15 @@ void test_request_decoder(void)
     57, 57, 45, 45, 33, 33
   };
 
+  const char* cipher_name_str = "cipher_name";
+
   pelz_log(LOG_DEBUG, "Start Request Decoder Test");
   //Test Invalid Requests with bad request_types
   for (int i = 0; i < 4; i++)
   {
     request = new_charbuf(strlen(invalid_request[i]));
     memcpy(request.chars, invalid_request[i], request.len);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
     free_charbuf(&request);
     request_type = REQ_UNK;
   }
@@ -94,13 +97,12 @@ void test_request_decoder(void)
   cJSON_AddItemToObject(json_dec, "request_type", cJSON_CreateNumber(2));
   cJSON_AddItemToObject(json_enc_signed, "request_type", cJSON_CreateNumber(3));
   cJSON_AddItemToObject(json_dec_signed, "request_type", cJSON_CreateNumber(4));
-  
 
   tmp = cJSON_PrintUnformatted(json_enc);
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   free_charbuf(&request);
   request_type = REQ_UNK;
   
@@ -108,7 +110,7 @@ void test_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   free_charbuf(&request);
   request_type = REQ_UNK;
   
@@ -120,18 +122,23 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec, "data", cJSON_CreateString(dec_data[i]));
     cJSON_AddItemToObject(json_dec, "iv", cJSON_CreateString(dec_data[i]));
     cJSON_AddItemToObject(json_dec, "tag", cJSON_CreateString(dec_data[i]));
+    cJSON_AddItemToObject(json_enc, "cipher", cJSON_CreateString(cipher_name_str));
+    cJSON_AddItemToObject(json_dec, "cipher", cJSON_CreateString(cipher_name_str));
+    
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_ENC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
     CU_ASSERT(data.len == enc_data_len[i]);
     CU_ASSERT(memcmp(data.chars, enc_data[i], data.len) == 0);
-
+    CU_ASSERT(cipher_name.len == strlen(cipher_name_str));
+    CU_ASSERT(memcmp(cipher_name.chars, cipher_name_str, cipher_name.len) == 0);
+    
     // An encrypt request should never populate iv or tag.
     CU_ASSERT(iv.len == 0);
     CU_ASSERT(tag.len == 0);
@@ -140,14 +147,14 @@ void test_request_decoder(void)
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
-
+    free_charbuf(&cipher_name);
     
     //Creating the request charbuf for the JSON then testing request_decoder for decryption
     tmp = cJSON_PrintUnformatted(json_dec);
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_DEC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
@@ -155,7 +162,9 @@ void test_request_decoder(void)
     CU_ASSERT(memcmp(data.chars, dec_data[i], data.len) == 0);
     CU_ASSERT(memcmp(iv.chars, dec_data[i], iv.len) == 0);
     CU_ASSERT(memcmp(tag.chars, dec_data[i], tag.len) == 0);
-
+    CU_ASSERT(cipher_name.len == strlen(cipher_name_str));
+    CU_ASSERT(memcmp(cipher_name.chars, cipher_name_str, cipher_name.len) == 0);
+    
     free_charbuf(&request);
     free_charbuf(&iv);
     free_charbuf(&tag);
@@ -170,6 +179,8 @@ void test_request_decoder(void)
     cJSON_DeleteItemFromObject(json_dec, "key_id");
     cJSON_DeleteItemFromObject(json_dec, "iv");
     cJSON_DeleteItemFromObject(json_dec, "tag");
+    cJSON_DeleteItemFromObject(json_enc, "cipher");
+    cJSON_DeleteItemFromObject(json_dec, "cipher");
   }
     // In the future these values will have to align with the validation() function
     cJSON_AddItemToObject(json_enc_signed, "key_id", cJSON_CreateString("file:/test/key1.txt"));
@@ -180,7 +191,8 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_enc_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
     cJSON_AddItemToObject(json_dec_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
     cJSON_AddItemToObject(json_dec_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
-
+    cJSON_AddItemToObject(json_enc_signed, "cipher", cJSON_CreateString(cipher_name_str));
+    cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str));
     request_type = REQ_UNK;
 
     // The memory and length comparisons don't seem to be working, similar to when we last worked on these test cases
@@ -191,24 +203,26 @@ void test_request_decoder(void)
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_ENC_SIGNED);
     free_charbuf(&request);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
+    free_charbuf(&cipher_name);
     
     //Creating the request charbuf for the JSON then testing request signed decoder for encryption
     tmp = cJSON_PrintUnformatted(json_dec_signed);
     request = new_charbuf(strlen(tmp));
     memcpy(request.chars, tmp, request.len);
     free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
     CU_ASSERT(request_type == REQ_DEC_SIGNED);
     free_charbuf(&request);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
+    free_charbuf(&cipher_name);
 
     cJSON_DeleteItemFromObject(json_dec_signed, "data");
     cJSON_DeleteItemFromObject(json_enc_signed, "data");
@@ -218,9 +232,10 @@ void test_request_decoder(void)
     cJSON_DeleteItemFromObject(json_dec_signed, "requestor_cert");
     cJSON_DeleteItemFromObject(json_enc_signed, "request_sig");
     cJSON_DeleteItemFromObject(json_enc_signed, "requestor_cert");
-
-  cJSON_Delete(json_enc);
-  cJSON_Delete(json_dec);
+    cJSON_DeleteItemFromObject(json_enc_signed, "cipher");
+    cJSON_DeleteItemFromObject(json_dec_signed, "cipher");
+    cJSON_Delete(json_enc);
+    cJSON_Delete(json_dec);
 }
 
 void test_message_encoder(void)

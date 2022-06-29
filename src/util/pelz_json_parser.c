@@ -72,7 +72,7 @@ static int get_JSON_int_field(cJSON* json, const char* field_name, int* value)
 }
 
 
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf* cipher_name, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
   char *str = NULL;
@@ -88,7 +88,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return (1);
   }
 
-  // We always parse out key_id and data. Other parsing may
+  // We always parse out key_id, cipher, and data. Other parsing may
   // happen depending on the request type.
   *key_id = get_JSON_string_field(json, "key_id");
   if(key_id->len == 0 || key_id->chars == NULL)
@@ -99,12 +99,23 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return 1;
   }
 
+  *cipher_name = get_JSON_string_field(json, "cipher");
+  if(cipher_name->len == 0 || cipher_name->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to extract cipher from JSON.");
+    cJSON_Delete(json);
+    free_charbuf(key_id);
+    free_charbuf(cipher_name);
+    return 1;
+  }
+		 
   *data = get_JSON_string_field(json, "data");
   if(data->len == 0 || data->chars == NULL)
   {
     pelz_log(LOG_ERR, "Failed to exract data from JSON.");
     cJSON_Delete(json);
     free_charbuf(key_id);
+    free_charbuf(cipher_name);
     free_charbuf(data);
     return 1;
   }
