@@ -222,24 +222,29 @@ void test_message_encoder(void)
   const char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
   const char *valid_enc_message[5] =
     { "{\"key_id\":\"file:/test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"file\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"anything\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
+      "{\"key_id\":\"test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",   
+      "{\"key_id\":\"file\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+      "{\"key_id\":\"anything\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+      "{\"key_id\":\"\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
   };
   const char *valid_dec_message[5] =
-    { "{\"key_id\":\"file:/test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"file\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"anything\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
+    { "{\"key_id\":\"file:/test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"file\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"anything\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
   };
   
   //Start Message Encoder Test
   pelz_log(LOG_DEBUG, "Start Message Encoder Test");
 
   data = new_charbuf(57);
+  iv = new_charbuf(57);
+  tag = new_charbuf(57);
   memcpy(data.chars, "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", data.len);
+  memcpy(iv.chars, data.chars, data.len);
+  memcpy(tag.chars, data.chars, data.len);
+  
   key_id = new_charbuf(strlen(test[0]));
   memcpy(key_id.chars, test[0], key_id.len);
 
