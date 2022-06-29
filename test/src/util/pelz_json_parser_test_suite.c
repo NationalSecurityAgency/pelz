@@ -94,7 +94,7 @@ void test_request_decoder(void)
   cJSON_AddItemToObject(json_dec, "request_type", cJSON_CreateNumber(2));
   cJSON_AddItemToObject(json_enc_signed, "request_type", cJSON_CreateNumber(3));
   cJSON_AddItemToObject(json_dec_signed, "request_type", cJSON_CreateNumber(4));
-
+  
 
   tmp = cJSON_PrintUnformatted(json_enc);
   request = new_charbuf(strlen(tmp));
@@ -118,6 +118,8 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec, "key_id", cJSON_CreateString(json_key_id[i]));
     cJSON_AddItemToObject(json_enc, "data", cJSON_CreateString(enc_data[i]));
     cJSON_AddItemToObject(json_dec, "data", cJSON_CreateString(dec_data[i]));
+    cJSON_AddItemToObject(json_dec, "iv", cJSON_CreateString(dec_data[i]));
+    cJSON_AddItemToObject(json_dec, "tag", cJSON_CreateString(dec_data[i]));
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
     request = new_charbuf(strlen(tmp));
@@ -128,7 +130,12 @@ void test_request_decoder(void)
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
     CU_ASSERT(data.len == enc_data_len[i]);
-    CU_ASSERT(memcmp(data.chars, enc_data[i], data.len) == 0);   
+    CU_ASSERT(memcmp(data.chars, enc_data[i], data.len) == 0);
+
+    // An encrypt request should never populate iv or tag.
+    CU_ASSERT(iv.len == 0);
+    CU_ASSERT(tag.len == 0);
+    
     free_charbuf(&request);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
@@ -146,7 +153,12 @@ void test_request_decoder(void)
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
     CU_ASSERT(data.len == dec_data_len[i]);
     CU_ASSERT(memcmp(data.chars, dec_data[i], data.len) == 0);
+    CU_ASSERT(memcmp(iv.chars, dec_data[i], iv.len) == 0);
+    CU_ASSERT(memcmp(tag.chars, dec_data[i], tag.len) == 0);
+
     free_charbuf(&request);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
@@ -156,6 +168,8 @@ void test_request_decoder(void)
     cJSON_DeleteItemFromObject(json_enc, "data");
     cJSON_DeleteItemFromObject(json_enc, "key_id");
     cJSON_DeleteItemFromObject(json_dec, "key_id");
+    cJSON_DeleteItemFromObject(json_dec, "iv");
+    cJSON_DeleteItemFromObject(json_dec, "tag");
   }
     // In the future these values will have to align with the validation() function
     cJSON_AddItemToObject(json_enc_signed, "key_id", cJSON_CreateString("file:/test/key1.txt"));
