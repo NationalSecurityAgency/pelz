@@ -44,7 +44,7 @@ void test_request(void)
   charbuf iv;
   charbuf cipher_name;
 
-  const char* cipher_name_str = "cipher_name";
+  const char* cipher_name_str = "AES/KeyWrap/RFC3394NoPadding/256";
   cipher_name = new_charbuf(strlen(cipher_name_str));
   memcpy(cipher_name.chars, cipher_name_str, cipher_name.len);
   
@@ -111,13 +111,13 @@ void test_request(void)
   data = new_charbuf(8);
   memcpy(data.chars, "abcdefgh", data.len);
   pelz_encrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, &output, &iv, &tag);
-  CU_ASSERT(status == KEY_OR_DATA_ERROR);
+  CU_ASSERT(status == ENCRYPT_ERROR);
   secure_free_charbuf(&data);
 
   data = new_charbuf(30);
   memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
   pelz_encrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, &output, &iv, &tag);
-  CU_ASSERT(status == KEY_OR_DATA_ERROR);
+  CU_ASSERT(status == ENCRYPT_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
 
@@ -127,13 +127,13 @@ void test_request(void)
   data = new_charbuf(8);
   memcpy(data.chars, "abcdefgh", data.len);
   pelz_decrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, iv, tag, &output);
-  CU_ASSERT(status == KEY_OR_DATA_ERROR);
+  CU_ASSERT(status == DECRYPT_ERROR);
   secure_free_charbuf(&data);
 
   data = new_charbuf(30);
   memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
   pelz_decrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, iv, tag, &output);
-  CU_ASSERT(status == KEY_OR_DATA_ERROR);
+  CU_ASSERT(status == DECRYPT_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
 

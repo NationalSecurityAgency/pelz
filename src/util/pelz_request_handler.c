@@ -1,7 +1,7 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 #include "common_table.h"
-#include "cipher/cipher.h"
+#include "cipher/pelz_cipher.h"
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
@@ -11,25 +11,30 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   charbuf cipher_data_internal;
   int index;
 
+  unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
+  cipher_t cipher_struct = pelz_get_cipher_t_from_string((char*)cipher_name_string);
+  free(cipher_name_string);
+
+  if(cipher_struct.cipher_name == NULL)
+  {
+    return ENCRYPT_ERROR;
+  }
+  
   if (table_lookup(KEY, key_id, &index))
   {
     return KEK_NOT_LOADED;
   }
 
-  if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (plain_data.len < 16 || plain_data.len % 8 != 0))
-  {
-    return KEY_OR_DATA_ERROR;
-  }
-  if (pelz_aes_keywrap_3394nopad_encrypt(key_table.entries[index].value.key.chars,
-					 key_table.entries[index].value.key.len,
-					 plain_data.chars,
-					 plain_data.len,
-					 NULL,
-					 NULL,
-					 &cipher_data_internal.chars,
-					 &cipher_data_internal.len,
-					 NULL,
-					 NULL))
+  if (cipher_struct.encrypt_fn(key_table.entries[index].value.key.chars,
+			       key_table.entries[index].value.key.len,
+			       plain_data.chars,
+			       plain_data.len,
+			       NULL,
+			       NULL,
+			       &cipher_data_internal.chars,
+			       &cipher_data_internal.len,
+			       NULL,
+			       NULL))
   {
     return ENCRYPT_ERROR;
   }
@@ -47,25 +52,29 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   charbuf plain_data_internal;
   int index;
 
+  unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
+  cipher_t cipher_struct = pelz_get_cipher_t_from_string((char*)cipher_name_string);
+  free(cipher_name_string);
+
+  if(cipher_struct.cipher_name == NULL)
+  {
+    return DECRYPT_ERROR;
+  }
   if (table_lookup(KEY, key_id, &index))
   {
     return KEK_NOT_LOADED;
   }
 
-  if ((key_table.entries[index].value.key.len < 16 || key_table.entries[index].value.key.len % 8 != 0) || (cipher_data.len < 24 || cipher_data.len % 8 != 0))
-  {
-    return KEY_OR_DATA_ERROR;
-  }
-  if (pelz_aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars,
-					 key_table.entries[index].value.key.len,
-					 NULL,
-					 0,
-					 cipher_data.chars,
-					 cipher_data.len,
-					 NULL,
-					 0,
-					 &plain_data_internal.chars,
-					 &plain_data_internal.len))
+  if(cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars,
+			      key_table.entries[index].value.key.len,
+			      NULL,
+			      0,
+			      cipher_data.chars,
+			      cipher_data.len,
+			      NULL,
+			      0,
+			      &plain_data_internal.chars,
+			      &plain_data_internal.len))
   {
     return DECRYPT_ERROR;
   }
