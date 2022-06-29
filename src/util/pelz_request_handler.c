@@ -1,7 +1,7 @@
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 #include "common_table.h"
-#include "aes_keywrap_3394nopad.h"
+#include "cipher/cipher.h"
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
@@ -20,8 +20,16 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   {
     return KEY_OR_DATA_ERROR;
   }
-  if (aes_keywrap_3394nopad_encrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-				    plain_data.chars, plain_data.len, &cipher_data_internal.chars, &cipher_data_internal.len))
+  if (pelz_aes_keywrap_3394nopad_encrypt(key_table.entries[index].value.key.chars,
+					 key_table.entries[index].value.key.len,
+					 plain_data.chars,
+					 plain_data.len,
+					 NULL,
+					 NULL,
+					 &cipher_data_internal.chars,
+					 &cipher_data_internal.len,
+					 NULL,
+					 NULL))
   {
     return ENCRYPT_ERROR;
   }
@@ -48,8 +56,16 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   {
     return KEY_OR_DATA_ERROR;
   }
-  if (aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars, key_table.entries[index].value.key.len,
-				    cipher_data.chars, cipher_data.len, &plain_data_internal.chars, &plain_data_internal.len))
+  if (pelz_aes_keywrap_3394nopad_decrypt(key_table.entries[index].value.key.chars,
+					 key_table.entries[index].value.key.len,
+					 NULL,
+					 0,
+					 cipher_data.chars,
+					 cipher_data.len,
+					 NULL,
+					 0,
+					 &plain_data_internal.chars,
+					 &plain_data_internal.len))
   {
     return DECRYPT_ERROR;
   }

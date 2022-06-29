@@ -81,6 +81,7 @@ void test_request(void)
     secure_free_charbuf(&key);
     request_type = REQ_ENC;
     pelz_encrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data_in, &output, &iv, &tag);
+    //    CU_ASSERT(status == REQUEST_OK);
     CU_ASSERT(status == REQUEST_OK);
     request_type = REQ_DEC;
     data = copy_chars_from_charbuf(output, 0);
