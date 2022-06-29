@@ -29,12 +29,12 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 			       key_table.entries[index].value.key.len,
 			       plain_data.chars,
 			       plain_data.len,
-			       NULL,
-			       NULL,
+			       &iv->chars,
+			       &iv->len,
 			       &cipher_data_internal.chars,
 			       &cipher_data_internal.len,
-			       NULL,
-			       NULL))
+			       &tag->chars,
+			       &tag->len))
   {
     return ENCRYPT_ERROR;
   }
@@ -67,12 +67,12 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
 
   if(cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars,
 			      key_table.entries[index].value.key.len,
-			      NULL,
-			      0,
+			      iv.chars,
+			      iv.len,
 			      cipher_data.chars,
 			      cipher_data.len,
-			      NULL,
-			      0,
+			      tag.chars,
+			      tag.len,
 			      &plain_data_internal.chars,
 			      &plain_data_internal.len))
   {
