@@ -215,7 +215,10 @@ void test_message_encoder(void)
   charbuf data;
   charbuf request_sig;
   charbuf requestor_cert;
+  charbuf iv;
+  charbuf tag;
   charbuf message;
+  
   const char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
   const char *valid_enc_message[5] =
     { "{\"key_id\":\"file:/test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
@@ -245,13 +248,10 @@ void test_message_encoder(void)
   requestor_cert = new_charbuf(11);
   memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
 
-  // Testing unknown request
-  CU_ASSERT(message_encoder(REQ_UNK, key_id, data, &message) == 1);
-
   // Testing a request without signatures/certificates (This will be removed after they are required)
   free_charbuf(&request_sig);
   free_charbuf(&requestor_cert);
-  CU_ASSERT(message_encoder(REQ_ENC, key_id, data, &message) == 0);
+  CU_ASSERT(message_encoder(REQ_ENC, key_id, iv, tag, data, &message) == 0);
   free_charbuf(&key_id);
   // Restore values
   request_sig = new_charbuf(11);
@@ -263,10 +263,10 @@ void test_message_encoder(void)
   {
     key_id = new_charbuf(strlen(test[i]));
     memcpy(key_id.chars, test[i], key_id.len);
-    CU_ASSERT(message_encoder(REQ_ENC, key_id, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_ENC, key_id, iv, tag, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_enc_message[i], message.len) == 0);
     free_charbuf(&message);
-    CU_ASSERT(message_encoder(REQ_DEC, key_id, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_DEC, key_id, iv, tag, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_dec_message[i], message.len) == 0);
     free_charbuf(&message);
     free_charbuf(&key_id);

@@ -212,7 +212,7 @@ public TableResponseStatus chan_table_destroy();
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output, [out] charbuf* iv, [out] charbuf* tag);
+public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf plain_data, [out] charbuf* cipher_data, [out] charbuf* iv, [out] charbuf* tag);
 
 /**
  * <pre>
@@ -233,7 +233,7 @@ public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_ty
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf data, charbuf iv, charbuf tag, [out] charbuf* output);
+public RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_data, charbuf iv, charbuf tag, [out] charbuf* plain_data);
 	};
 	untrusted {
 /**

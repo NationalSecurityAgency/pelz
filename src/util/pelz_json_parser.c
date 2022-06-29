@@ -28,7 +28,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   charbuf field;
   if(!cJSON_HasObjectItem(json, field_name) || !cJSON_IsString(cJSON_GetObjectItem(json, field_name)))
   {
-    pelz_log(LOG_WARN, "Missing JSON field %s.", field_name);
+    pelz_log(LOG_WARNING, "Missing JSON field %s.", field_name);
     return new_charbuf(0);
   } 
   if(cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring != NULL)
@@ -43,7 +43,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   }
   else
   {
-    pelz_log(LOG_WARN, "No value in JSON field %s.", field_name);
+    pelz_log(LOG_WARNING, "No value in JSON field %s.", field_name);
     return new_charbuf(0);
   }
   return field;
@@ -177,41 +177,41 @@ int error_message_encoder(charbuf * message, const char *err_message)
   return (0);
 }
 
-int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf * message)
+int message_encoder(RequestType request_type, charbuf key_id, charbuf iv, charbuf tag, charbuf data, charbuf * message)
 {
+
   cJSON *root;
   char *tmp = NULL;
 
   root = cJSON_CreateObject();
-  switch (request_type)
+  tmp = (char *) calloc((key_id.len + 1), sizeof(char));
+  memcpy(tmp, key_id.chars, key_id.len);
+  cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
+  free(tmp);
+  
+  tmp = (char *) calloc((data.len + 1), sizeof(char));
+  memcpy(tmp, data.chars, data.len);
+  cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
+  free(tmp);
+  
+  if(request_type == REQ_DEC)
   {
-  case REQ_ENC:
-    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
-    memcpy(tmp, key_id.chars, key_id.len);
-    cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
-    free(tmp);
-
-    tmp = (char *) calloc((data.len + 1), sizeof(char));
-    memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
-    free(tmp);
-    break;
-  case REQ_DEC:
-    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
-    memcpy(tmp, key_id.chars, key_id.len);
-    cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
-    free(tmp);
-
-    tmp = (char *) calloc((data.len + 1), sizeof(char));
-    memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
-    free(tmp);
-    break;
-  default:
-    pelz_log(LOG_ERR, "Request Type not recognized.");
-    cJSON_Delete(root);
-    return (1);
+    if(tag.chars != NULL && tag.len != 0)
+    {
+      tmp = (char *)calloc(tag.len+1, sizeof(char));
+      memcpy(tmp, tag.chars, tag.len);
+      cJSON_AddItemToObject(root, "tag", cJSON_CreateString(tmp));
+      free(tmp);
+    }
+    if(iv.chars != NULL && iv.len != 0)
+    {
+      tmp = (char *)calloc(iv.len+1, sizeof(char));
+      memcpy(tmp, iv.chars, iv.len);
+      cJSON_AddItemToObject(root, "iv", cJSON_CreateString(tmp));
+      free(tmp);
+    }
   }
+  
   if (cJSON_IsInvalid(root))
   {
     pelz_log(LOG_ERR, "JSON Message Creation Failed");
