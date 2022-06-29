@@ -194,7 +194,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf iv, charbu
   cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
   free(tmp);
   
-  if(request_type == REQ_DEC)
+  if(request_type == REQ_ENC)
   {
     if(tag.chars != NULL && tag.len != 0)
     {
