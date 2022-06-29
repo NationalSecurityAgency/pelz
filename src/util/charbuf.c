@@ -31,9 +31,12 @@ void free_charbuf(charbuf * buf)
 {
   if (buf != NULL)
   {
-    free(buf->chars);
-    buf->chars = NULL;
-    buf->len = 0;
+    if(buf->len > 0)
+    {
+      free(buf->chars);
+      buf->chars = NULL;
+      buf->len = 0;
+    }
   }
 }
 
