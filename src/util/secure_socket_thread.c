@@ -150,12 +150,12 @@ void *secure_socket_process(void *arg)
     switch(request_type)
     {
     case REQ_ENC:
-      pelz_encrypt_request_handler(eid, &status, request_type, key_id, raw_input_data, &raw_output, &raw_iv, &raw_tag);
+      pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, raw_input_data, &raw_output, &raw_iv, &raw_tag);
       if (status == KEK_NOT_LOADED)
       {
 	if (key_load(key_id) == 0)
         {
-          pelz_encrypt_request_handler(eid, &status, request_type, key_id, raw_input_data, &raw_output, &raw_iv, &raw_tag);
+          pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, raw_input_data, &raw_output, &raw_iv, &raw_tag);
         }
         else
         {
@@ -166,12 +166,12 @@ void *secure_socket_process(void *arg)
     case REQ_DEC:
       decodeBase64Data(encoded_tag.chars, encoded_tag.len, &raw_tag.chars, &raw_tag.len);
       decodeBase64Data(encoded_iv.chars, encoded_iv.len, &raw_iv.chars, &raw_iv.len);
-      pelz_decrypt_request_handler(eid, &status, request_type, key_id, raw_input_data, raw_iv, raw_tag, &raw_output);
+      pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, raw_input_data, raw_iv, raw_tag, &raw_output);
       if (status == KEK_NOT_LOADED)
       {
 	if (key_load(key_id) == 0)
         {
-          pelz_decrypt_request_handler(eid, &status, request_type, key_id, raw_input_data, raw_iv, raw_tag, &raw_output);
+          pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, raw_input_data, raw_iv, raw_tag, &raw_output);
         }
         else
         {

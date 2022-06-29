@@ -6,7 +6,7 @@
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 
-RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag)
+RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag)
 {
   charbuf cipher_data_internal;
   int index;
@@ -34,7 +34,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 }
 
 
-RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data)
+RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data)
 {
   charbuf plain_data_internal;
   int index;

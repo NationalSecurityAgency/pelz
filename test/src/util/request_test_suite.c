@@ -42,6 +42,12 @@ void test_request(void)
   charbuf output;
   charbuf tag;
   charbuf iv;
+  charbuf cipher_name;
+
+  const char* cipher_name_str = "cipher_name";
+  cipher_name = new_charbuf(strlen(cipher_name_str));
+  memcpy(cipher_name.chars, cipher_name_str, cipher_name.len);
+  
   const char *prefix = "file:";
   const char *valid_id[3] = { "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt" };
   const char *tmp_id[2] = { "/test/data/key7.txt", "/test/data/key1txt" };
@@ -56,10 +62,10 @@ void test_request(void)
   //KEK not loaded so function should return KEK_NOT_LOADED
   tmp = copy_CWD_to_id(prefix, valid_id[0]);
   request_type = REQ_ENC;
-  pelz_encrypt_request_handler(eid, &status, request_type, tmp, data_in, &output, &iv, &tag);
+  pelz_encrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data_in, &output, &iv, &tag);
   CU_ASSERT(status == KEK_NOT_LOADED);
   request_type = REQ_DEC;
-  pelz_decrypt_request_handler(eid, &status, request_type, tmp, data_in, iv, tag, &output);
+  pelz_decrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data_in, iv, tag, &output);
   CU_ASSERT(status == KEK_NOT_LOADED);
   free_charbuf(&tmp);
   request_type = REQ_UNK;
@@ -74,12 +80,12 @@ void test_request(void)
     CU_ASSERT(ret == OK);
     secure_free_charbuf(&key);
     request_type = REQ_ENC;
-    pelz_encrypt_request_handler(eid, &status, request_type, tmp, data_in, &output, &iv, &tag);
+    pelz_encrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data_in, &output, &iv, &tag);
     CU_ASSERT(status == REQUEST_OK);
     request_type = REQ_DEC;
     data = copy_chars_from_charbuf(output, 0);
     secure_free_charbuf(&output);
-    pelz_decrypt_request_handler(eid, &status, request_type, tmp, data, iv, tag, &output);
+    pelz_decrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, iv, tag, &output);
     CU_ASSERT(status == REQUEST_OK);
     CU_ASSERT(cmp_charbuf(output, data_in) == 0);
     free_charbuf(&tmp);
@@ -89,12 +95,12 @@ void test_request(void)
 
   //Check that non-valid file does not load key
   tmp = copy_CWD_to_id(prefix, tmp_id[0]);
-  pelz_encrypt_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output, &iv, &tag);
+  pelz_encrypt_request_handler(eid, &status, REQ_ENC, tmp, cipher_name, data_in, &output, &iv, &tag);
   CU_ASSERT(status == KEK_NOT_LOADED);
   free_charbuf(&tmp);
 
   tmp = copy_CWD_to_id(prefix, tmp_id[1]);
-  pelz_encrypt_request_handler(eid, &status, REQ_ENC, tmp, data_in, &output, &iv, & tag);
+  pelz_encrypt_request_handler(eid, &status, REQ_ENC, tmp, cipher_name, data_in, &output, &iv, & tag);
   CU_ASSERT(status == KEK_NOT_LOADED);
   free_charbuf(&tmp);
 
@@ -103,13 +109,13 @@ void test_request(void)
   request_type = REQ_ENC;
   data = new_charbuf(8);
   memcpy(data.chars, "abcdefgh", data.len);
-  pelz_encrypt_request_handler(eid, &status, request_type, tmp, data, &output, &iv, &tag);
+  pelz_encrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, &output, &iv, &tag);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
 
   data = new_charbuf(30);
   memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
-  pelz_encrypt_request_handler(eid, &status, request_type, tmp, data, &output, &iv, &tag);
+  pelz_encrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, &output, &iv, &tag);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
@@ -119,13 +125,13 @@ void test_request(void)
   request_type = REQ_DEC;
   data = new_charbuf(8);
   memcpy(data.chars, "abcdefgh", data.len);
-  pelz_decrypt_request_handler(eid, &status, request_type, tmp, data, iv, tag, &output);
+  pelz_decrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, iv, tag, &output);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
 
   data = new_charbuf(30);
   memcpy(data.chars, "abcdefghijklmnopqrstuvwxyz0123", data.len);
-  pelz_decrypt_request_handler(eid, &status, request_type, tmp, data, iv, tag, &output);
+  pelz_decrypt_request_handler(eid, &status, request_type, tmp, cipher_name, data, iv, tag, &output);
   CU_ASSERT(status == KEY_OR_DATA_ERROR);
   secure_free_charbuf(&data);
   free_charbuf(&tmp);
