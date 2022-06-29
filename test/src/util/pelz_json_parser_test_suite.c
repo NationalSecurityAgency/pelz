@@ -247,21 +247,24 @@ void test_message_encoder(void)
   charbuf iv;
   charbuf tag;
   charbuf message;
+  charbuf cipher_name;
+
+  const char* cipher_name_str = "cipher_name";
   
   const char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
   const char *valid_enc_message[5] =
-    { "{\"key_id\":\"file:/test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-      "{\"key_id\":\"test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",   
-      "{\"key_id\":\"file\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-      "{\"key_id\":\"anything\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-      "{\"key_id\":\"\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
+    { "{\"key_id\":\"file:/test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+      "{\"key_id\":\"test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",   
+      "{\"key_id\":\"file\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+      "{\"key_id\":\"anything\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+      "{\"key_id\":\"\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
   };
   const char *valid_dec_message[5] =
-    { "{\"key_id\":\"file:/test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"test/key1.txt\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"file\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"anything\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
-    "{\"key_id\":\"\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
+    { "{\"key_id\":\"file:/test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"file\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"anything\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
+    "{\"key_id\":\"\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
   };
   
   //Start Message Encoder Test
@@ -270,6 +273,9 @@ void test_message_encoder(void)
   data = new_charbuf(57);
   iv = new_charbuf(57);
   tag = new_charbuf(57);
+  cipher_name = new_charbuf(strlen(cipher_name_str));
+  memcpy(cipher_name.chars, cipher_name_str, cipher_name.len);
+  
   memcpy(data.chars, "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n", data.len);
   memcpy(iv.chars, data.chars, data.len);
   memcpy(tag.chars, data.chars, data.len);
@@ -285,7 +291,7 @@ void test_message_encoder(void)
   // Testing a request without signatures/certificates (This will be removed after they are required)
   free_charbuf(&request_sig);
   free_charbuf(&requestor_cert);
-  CU_ASSERT(message_encoder(REQ_ENC, key_id, iv, tag, data, &message) == 0);
+  CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, iv, tag, data, &message) == 0);
   free_charbuf(&key_id);
   // Restore values
   request_sig = new_charbuf(11);
@@ -297,14 +303,15 @@ void test_message_encoder(void)
   {
     key_id = new_charbuf(strlen(test[i]));
     memcpy(key_id.chars, test[i], key_id.len);
-    CU_ASSERT(message_encoder(REQ_ENC, key_id, iv, tag, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, iv, tag, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_enc_message[i], message.len) == 0);
     free_charbuf(&message);
-    CU_ASSERT(message_encoder(REQ_DEC, key_id, iv, tag, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_DEC, key_id, cipher_name, iv, tag, data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_dec_message[i], message.len) == 0);
     free_charbuf(&message);
     free_charbuf(&key_id);
   }
+  free_charbuf(&cipher_name);
   free_charbuf(&data);
 }
 

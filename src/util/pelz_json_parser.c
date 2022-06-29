@@ -188,7 +188,7 @@ int error_message_encoder(charbuf * message, const char *err_message)
   return (0);
 }
 
-int message_encoder(RequestType request_type, charbuf key_id, charbuf iv, charbuf tag, charbuf data, charbuf * message)
+int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf iv, charbuf tag, charbuf data, charbuf * message)
 {
 
   cJSON *root;
@@ -199,7 +199,10 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf iv, charbu
   memcpy(tmp, key_id.chars, key_id.len);
   cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
   free(tmp);
-  
+
+  tmp = (char*)null_terminated_string_from_charbuf(cipher_name);
+  cJSON_AddItemToObject(root, "cipher", cJSON_CreateString(tmp));
+    
   tmp = (char *) calloc((data.len + 1), sizeof(char));
   memcpy(tmp, data.chars, data.len);
   cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));

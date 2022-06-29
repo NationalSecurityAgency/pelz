@@ -220,7 +220,7 @@ void *unsecure_socket_process(void *arg)
       {
         encoded_output.chars[encoded_output.len] = 0;
       }
-      message_encoder(request_type, key_id, encoded_iv, encoded_tag, encoded_output, &message);
+      message_encoder(request_type, key_id, cipher_name, encoded_iv, encoded_tag, encoded_output, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
       pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     }
