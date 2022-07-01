@@ -18,12 +18,18 @@
 /* Concatenate request data for signing and validation. */
 charbuf serialize_request_data(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * requestor_cert)
 {
-  // Note: It may be possible to have collisions with this serialization because some field lengths are not fixed.
+  // Format:
+  // request_type (16B, network byte order)
+  // key_id (string, null terminated)
+  // data (string, null terminated)
+  // requestor_cert (string, null terminated)
+
+  // Note: The null terminators are included to mitigate signature collision attacks.
 
   uint16_t req_type = *request_type;
-  size_t concat_len = sizeof(req_type) + key_id->len + requestor_cert->len + data->len;
-  size_t place = 0;
+  size_t concat_len = sizeof(req_type) + key_id->len + requestor_cert->len + data->len + 3;
   charbuf serial = new_charbuf(concat_len);
+  unsigned char * dst = serial.chars;
 
   if (serial.chars == NULL)
   {
@@ -31,22 +37,25 @@ charbuf serialize_request_data(RequestType * request_type, charbuf * key_id, cha
   }
 
   req_type = htons(req_type);
+  memcpy(dst, &req_type, sizeof(req_type));
 
-  memcpy(serial.chars + place, &req_type, sizeof(req_type));
-  place += sizeof(req_type);
-  memcpy(serial.chars + place, key_id->chars, key_id->len);
-  place += key_id->len;
-  memcpy(serial.chars + place, requestor_cert->chars, requestor_cert->len);
-  place += requestor_cert->len;
-  memcpy(serial.chars + place, data->chars, data->len);
-  place += data->len;
+  memcpy(dst, key_id->chars, key_id->len);
+  dst += key_id->len;
+  *dst++ = '\0';
+
+  memcpy(dst, data->chars, data->len);
+  *dst++ = '\0';
+
+  memcpy(dst, requestor_cert->chars, requestor_cert->len);
+  dst += requestor_cert->len;
+  *dst++ = '\0';
 
   return serial;
 }
 
 charbuf create_signature(EVP_PKEY * sign_pkey, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * requestor_cert)
 {
-  // Note: This is included for demonstration/testing purposes.
+  // Note: This is included for testing/demonstration/reference.
   // A production implementation should run within the enclave for data protection.
 
   int ret;
