@@ -24,19 +24,21 @@
 #define TIMEOUTUSEC 0
 
 //Initialization of Socket
-int pelz_key_socket_init(int max_request, int *socket_listen_id)
+int pelz_key_socket_init(int max_request, int port, int *socket_listen_id)
 {
   struct addrinfo hints;
   struct addrinfo *bind_address;
 
   int socket_listen;
+  char portaddr[6];
 
   pelz_log(LOG_INFO, "Configuring local address...");
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
-  getaddrinfo(0, "10600", &hints, &bind_address);
+  sprintf(portaddr, "%d", port);
+  getaddrinfo(0, portaddr, &hints, &bind_address);
 
   pelz_log(LOG_INFO, "Creating socket...");
   socket_listen = socket(bind_address->ai_family, bind_address->ai_socktype, bind_address->ai_protocol);
@@ -171,7 +173,6 @@ int pelz_key_socket_teardown(int *socket_listen_id)
 {
   pelz_log(LOG_INFO, "%d::Closing listening socket...", *socket_listen_id);
   close(*socket_listen_id);
-  *socket_listen_id = -1;
   pelz_log(LOG_INFO, "Closed listening socket: %d", *socket_listen_id);
   return (0);
 }

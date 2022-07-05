@@ -1,6 +1,5 @@
 /*
  * @file common_table.h
- * @brief Pr
  */
 
 #ifndef INCLUDE_COMMON_TABLE_H_
@@ -38,7 +37,12 @@ typedef struct CommonTable
 } Table;
 
 typedef enum
-{ KEY, SERVER, CA_TABLE, TEST } TableType;
+{ 
+  KEY,      /**< Table to store KEKs*/
+  SERVER,   /**< Table to store server public certificates*/
+  CA_TABLE, /**< Table to store CA certificates*/
+  TEST      /**< Testing value for table functions*/
+} TableType;
 
 /// Enum to provide a return response status for table related functions.
 typedef enum

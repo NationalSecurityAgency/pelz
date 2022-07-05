@@ -31,12 +31,13 @@
  * <pre>
  *
  * @param[in] max_request Value for maxim request received at once
+ * @param[in] port        Value for the port number
  * @param[out] socket_id Integer representation of listening socket
  *
  * @return 0 on success, 1 on error
  *
  */
-int pelz_key_socket_init(int max_request, int *socket_listen_id);
+int pelz_key_socket_init(int max_request, int port, int *socket_listen_id);
 
 /**
  * <pre>
