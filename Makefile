@@ -117,6 +117,7 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 App_Cpp_Files_for_Test := src/util/common_table.c \
 		 src/util/key_table.c \
 		 src/util/server_table.c \
+		 src/util/ca_table.c \
 		 src/util/aes_keywrap_3394nopad.c \
 		 src/util/pelz_request_handler.c
 
@@ -502,6 +503,10 @@ sgx/server_table.o: src/util/server_table.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/ca_table.o: src/util/ca_table.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
 sgx/channel_table.o: src/util/channel_table.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
@@ -522,6 +527,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
 		     sgx/server_table.o \
+		     sgx/ca_table.o \
 				 sgx/channel_table.o \
 		     sgx/aes_keywrap_3394nopad.o \
 		     sgx/pelz_request_handler.o \
@@ -557,6 +563,7 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 						sgx/common_table.o \
      			  sgx/key_table.o \
      			  sgx/server_table.o \
+     			  sgx/ca_table.o \
 						sgx/channel_table.o \
      			  sgx/aes_keywrap_3394nopad.o \
      			  sgx/pelz_request_handler.o \
