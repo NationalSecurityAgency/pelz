@@ -474,6 +474,10 @@ sgx/sgx_retrieve_key_impl.o: kmyth/sgx/trusted/src/wrapper/sgx_retrieve_key_impl
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
+sgx/pelz_aes_gcm.o: src/cipher/pelz_aes_gcm.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/aes_gcm.o: kmyth/src/cipher/aes_gcm.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -533,6 +537,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/ec_key_cert_unmarshal.o \
 		     sgx/ecdh_util.o \
 		     sgx/sgx_retrieve_key_impl.o \
+		     sgx/pelz_aes_gcm.o \
 		     sgx/aes_gcm.o \
 		     sgx/memory_util.o \
 		     sgx/kmip_util.o \
@@ -570,6 +575,7 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 			  sgx/ecdh_util.o \
 			  sgx/sgx_retrieve_key_impl.o \
 			  sgx/aes_gcm.o \
+			  sgx/pelz_aes_gcm.o \
 			  sgx/memory_util.o \
 			  sgx/kmip_util.o \
 			  sgx/enclave_helper_functions.o \
