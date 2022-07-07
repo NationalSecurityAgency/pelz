@@ -14,6 +14,9 @@
 #include <request_signing.h>
 
 #include "ecdh_util.h"
+#include "common_table.h"
+#include "pelz_enclave.h"
+#include ENCLAVE_HEADER_UNTRUSTED
 
 /* Concatenate request data for signing and validation. */
 charbuf serialize_request_data(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * requestor_cert)
@@ -110,15 +113,6 @@ X509 * load_cert(charbuf * requestor_cert)
   return cert_x509;
 }
 
-/* Check if the request cert is signed by a known CA. */
-int check_cert_chain(X509 *requestor_x509) {
-  // FIXME: not yet implemented
-
-  // requires ecall to access stored CA certs
-
-  return 0;
-}
-
 int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   // Note: This is vulnerable to signature replay attacks.
@@ -164,8 +158,10 @@ int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * d
     return 1;
   }
 
-  ret = check_cert_chain(requestor_x509);
-  if (ret)
+  /* Check if the request cert is signed by a known CA. */
+  TableResponseStatus status;
+  verify_cert(eid, &status, *requestor_cert);
+  if (status != OK)
   {
     X509_free(requestor_x509);
     return 1;
