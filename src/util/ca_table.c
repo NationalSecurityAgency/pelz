@@ -71,7 +71,7 @@ TableResponseStatus verify_cert(charbuf target_der)
   }
 
   // X509_STORE_CTX_set_purpose(x509_store_ctx, X509_PURPOSE_ANY);
-  
+
   int success = X509_verify_cert(store_ctx);
 
   X509_STORE_CTX_free(store_ctx);

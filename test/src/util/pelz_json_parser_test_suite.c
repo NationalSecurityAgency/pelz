@@ -19,11 +19,10 @@ int pelz_json_parser_suite_add_tests(CU_pSuite suite)
   {
     return (1);
   }
-  // TODO: Enable this once signed requests are supported.
-  // if (NULL == CU_add_test(suite, "Test Decoding of JSON formatted signed Request", test_signed_request_decoder))
-  // {
-  //   return (1);
-  // }
+  if (NULL == CU_add_test(suite, "Test Decoding of JSON formatted signed Request", test_signed_request_decoder))
+  {
+    return (1);
+  }
   if (NULL == CU_add_test(suite, "Test Encoding of JSON formatted Response Message", test_message_encoder))
   {
     return (1);
@@ -191,7 +190,7 @@ void test_signed_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 1);  // temporary return value
   CU_ASSERT(request_type == REQ_ENC_SIGNED);
   free_charbuf(&request);
   request_type = REQ_UNK;
@@ -203,7 +202,7 @@ void test_signed_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 0);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &data, &request_sig, &requestor_cert) == 1);  // temporary return value
   CU_ASSERT(request_type == REQ_DEC_SIGNED);
   free_charbuf(&request);
   request_type = REQ_UNK;
