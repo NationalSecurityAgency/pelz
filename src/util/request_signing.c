@@ -10,6 +10,8 @@
 
 #include <openssl/x509.h>
 
+#include "kmyth/formatting_tools.h"
+
 #include <pelz_log.h>
 #include <request_signing.h>
 
@@ -113,14 +115,23 @@ X509 * load_cert(charbuf * requestor_cert)
   return cert_x509;
 }
 
-int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * encoded_sig, charbuf * requestor_cert)
 {
   // Note: This is vulnerable to signature replay attacks.
 
   int ret;
+  charbuf decoded_sig = new_charbuf(0);
   X509 *requestor_x509;
   EVP_PKEY *requestor_pubkey;
   charbuf serial;
+
+  // Undo base64 encoding
+  ret = decodeBase64Data(encoded_sig->chars, encoded_sig->len, &decoded_sig.chars, &decoded_sig.len);
+  if (ret != 0)
+  {
+    pelz_log(LOG_ERR, "decodeBase64Data failed");
+    return 1;
+  }
 
   // Extract the public key from requestor_cert
   requestor_x509 = load_cert(requestor_cert);
@@ -147,7 +158,7 @@ int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * d
   }
 
   /* Check that the request signature matches the request data. */
-  ret = verify_buffer(requestor_pubkey, serial.chars, serial.len, request_sig->chars, request_sig->len);
+  ret = verify_buffer(requestor_pubkey, serial.chars, serial.len, decoded_sig.chars, decoded_sig.len);
 
   free_charbuf(&serial);
   EVP_PKEY_free(requestor_pubkey);
