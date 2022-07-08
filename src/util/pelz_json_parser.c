@@ -112,6 +112,10 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
 
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
+    // TODO: Remove this once signed requests are supported.
+    pelz_log(LOG_ERR, "Signed requests are not fully implemented.");
+    return 1;
+
     *request_sig = get_JSON_string_field(json, "request_sig");
     if(request_sig->len == 0 || request_sig->chars == NULL)
     {
