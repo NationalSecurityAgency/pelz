@@ -57,7 +57,7 @@ In addition to the fields from unsigned requests,
 described above, signed requests include:
 
 * requestor_cert : string of characters
-    * X509 certificate in PEM format.
+    * X509 certificate in base64 encoded DER format.
     * The certificate must be signed by a certificate authority that is trusted by Pelz.
 * request_sig : string of characters
     * Base64 encoded digital signature of the message content.

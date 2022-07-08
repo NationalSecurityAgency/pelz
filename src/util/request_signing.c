@@ -10,7 +10,7 @@
 
 #include <openssl/x509.h>
 
-#include "kmyth/formatting_tools.h"
+#include <kmyth/formatting_tools.h>
 
 #include <pelz_log.h>
 #include <request_signing.h>
@@ -90,7 +90,7 @@ charbuf create_signature(EVP_PKEY * sign_pkey, RequestType * request_type, charb
   return signature;
 }
 
-X509 * load_cert(charbuf * requestor_cert)
+X509 * load_pem_cert(charbuf * requestor_cert)
 {
   // create BIO wrapper for cert string
   BIO *cert_bio = BIO_new_mem_buf(requestor_cert->chars, requestor_cert->len);
@@ -115,43 +115,59 @@ X509 * load_cert(charbuf * requestor_cert)
   return cert_x509;
 }
 
-int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * encoded_sig, charbuf * requestor_cert)
+int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * encoded_sig, charbuf * encoded_cert)
 {
   // Note: This is vulnerable to signature replay attacks.
 
   int ret;
   charbuf decoded_sig = new_charbuf(0);
+  charbuf decoded_cert = new_charbuf(0);
   X509 *requestor_x509;
   EVP_PKEY *requestor_pubkey;
   charbuf serial;
+
+  // Undo base64 encoding
+  ret = decodeBase64Data(encoded_cert->chars, encoded_cert->len, &decoded_cert.chars, &decoded_cert.len);
+  if (ret != 0)
+  {
+    pelz_log(LOG_ERR, "decodeBase64Data failed");
+    free_charbuf(&decoded_sig);
+    return 1;
+  }
+
+  requestor_x509 = d2i_X509(NULL, (const unsigned char **) &decoded_cert.chars, decoded_cert.len);
+  if (requestor_x509 == NULL)
+  {
+    kmyth_sgx_log(LOG_ERR, "DER to X509 format conversion failed");
+    free_charbuf(&decoded_cert);
+    return 1;
+  }
+
+  // Extract the public key from requestor_cert
+  requestor_pubkey = X509_get_pubkey(requestor_x509);
+  if (requestor_pubkey == NULL)
+  {
+    pelz_log(LOG_ERR, "X509_get_pubkey failed");
+    free_charbuf(&decoded_cert);
+    X509_free(requestor_x509);
+    return 1;
+  }
+
+  serial = serialize_request_data(request_type, key_id, data, encoded_cert);
+  if (serial.chars == NULL)
+  {
+    free_charbuf(&decoded_cert);
+    X509_free(requestor_x509);
+    EVP_PKEY_free(requestor_pubkey);
+    return 1;
+  }
 
   // Undo base64 encoding
   ret = decodeBase64Data(encoded_sig->chars, encoded_sig->len, &decoded_sig.chars, &decoded_sig.len);
   if (ret != 0)
   {
     pelz_log(LOG_ERR, "decodeBase64Data failed");
-    return 1;
-  }
-
-  // Extract the public key from requestor_cert
-  requestor_x509 = load_cert(requestor_cert);
-  if (requestor_x509 == NULL)
-  {
-    pelz_log(LOG_ERR, "load_cert failed");
-    return 1;
-  }
-
-  requestor_pubkey = X509_get_pubkey(requestor_x509);
-  if (requestor_pubkey == NULL)
-  {
-    pelz_log(LOG_ERR, "X509_get_pubkey failed");
-    X509_free(requestor_x509);
-    return 1;
-  }
-
-  serial = serialize_request_data(request_type, key_id, data, requestor_cert);
-  if (serial.chars == NULL)
-  {
+    free_charbuf(&decoded_cert);
     X509_free(requestor_x509);
     EVP_PKEY_free(requestor_pubkey);
     return 1;
@@ -161,25 +177,27 @@ int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * d
   ret = verify_buffer(requestor_pubkey, serial.chars, serial.len, decoded_sig.chars, decoded_sig.len);
 
   free_charbuf(&serial);
+  free_charbuf(&decoded_sig);
   EVP_PKEY_free(requestor_pubkey);
 
   if (ret)
   {
+    free_charbuf(&decoded_cert);
     X509_free(requestor_x509);
     return 1;
   }
 
   /* Check if the request cert is signed by a known CA. */
   TableResponseStatus status;
-  verify_cert(eid, &status, *requestor_cert);
+  verify_cert(eid, &status, decoded_cert);
+
+  free_charbuf(&decoded_cert);
+  X509_free(requestor_x509);
+
   if (status != OK)
   {
-    X509_free(requestor_x509);
     return 1;
   }
-
-  X509_free(requestor_x509);
-  requestor_x509 = NULL;
 
   return 0;
 }

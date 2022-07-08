@@ -11,9 +11,10 @@
 #include <openssl/x509.h>
 #include <openssl/pem.h>
 
-
 #include <charbuf.h>
 #include <pelz_log.h>
+
+#include <kmyth/formatting_tools.h>
 
 
 #define TEST_KEY_ID "file:/fake/path/to/key.txt"
@@ -47,10 +48,8 @@ void test_create_validate_signature(void)
   int ret;
   X509 *requestor_cert;
   EVP_PKEY *requestor_privkey;
-  BIO *pem_bio;
-  BUF_MEM *pem_buf;
   RequestType req_type = REQ_ENC;
-  charbuf key_id, data, requestor_cert_pem, signature;
+  charbuf key_id, data, requestor_cert_der, requestor_cert_encoded, signature;
 
   // initialize request data
   key_id = new_charbuf(strlen(TEST_KEY_ID));
@@ -62,23 +61,35 @@ void test_create_validate_signature(void)
   // load key pair from file
   load_test_key_pair(&requestor_cert, &requestor_privkey);
 
-  // convert x509 to pem string
-  pem_bio = BIO_new(BIO_s_mem());
-  PEM_write_bio_X509(pem_bio, requestor_cert);
-  BIO_get_mem_ptr(pem_bio, &pem_buf);
-  requestor_cert_pem = new_charbuf(pem_buf->length);
-  memcpy(requestor_cert_pem.chars, pem_buf->data, requestor_cert_pem.len);
-  BIO_free(pem_bio);
-  pem_buf = NULL;
-  pem_bio = NULL;
+  // convert x509 to der format
+  requestor_cert_der = new_charbuf(0);
+  requestor_cert_der.len = i2d_X509(requestor_cert, &requestor_cert_der.chars);
+  if (requestor_cert_der.len == 0)
+  {
+    pelz_log(LOG_ERR, "i2d_X509 failed");
+  }
+
+  // encode certificate
+  ret = encodeBase64Data(requestor_cert_der.chars, requestor_cert_der.len,
+                         &requestor_cert_encoded.chars, &requestor_cert_encoded.len);
+  if (ret != 0)
+  {
+    pelz_log(LOG_ERR, "encodeBase64Data failed");
+  }
 
   // create signature
-  signature = create_signature(requestor_privkey, &req_type, &key_id, &data, &requestor_cert_pem);
+  signature = create_signature(requestor_privkey, &req_type, &key_id, &data, &requestor_cert_encoded);
   CU_ASSERT(signature.len > 0);
 
   // check signature
-  ret = validate_signature(&req_type, &key_id, &data, &signature, &requestor_cert_pem);
+  ret = validate_signature(&req_type, &key_id, &data, &signature, &requestor_cert_encoded);
   CU_ASSERT(ret == 0);
+
+  free_charbuf(&key_id);
+  free_charbuf(&data);
+  free_charbuf(&requestor_cert_der);
+  free_charbuf(&requestor_cert_encoded);
+  free_charbuf(&signature);
 
   X509_free(requestor_cert);
   EVP_PKEY_free(requestor_privkey);
