@@ -43,4 +43,6 @@ int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * d
  */
 charbuf create_signature(EVP_PKEY * sign_pkey, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * requestor_cert);
 
+charbuf serialize_request_data(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * requestor_cert);
+
 #endif /* INCLUDE_REQUEST_SIGNING_H_ */

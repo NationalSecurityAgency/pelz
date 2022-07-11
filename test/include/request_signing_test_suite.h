@@ -9,9 +9,12 @@
 #include <CUnit/CUnit.h>
 
 // Adds all tests to suite in main test runner
-int pelz_request_signing_suite_add_tests(CU_pSuite suite);
+int request_signing_suite_add_tests(CU_pSuite suite);
 
 // Tests
+void test_create_validate_signature_simple(void);
 void test_create_validate_signature(void);
+void test_verify_cert_chain(void);
+void test_verify_cert_chain_enclave(void);
 
 #endif /* PELZ_REQUEST_SIGNING_SUITE_H_ */

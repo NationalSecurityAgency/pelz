@@ -313,6 +313,10 @@ endif
 
 ######## Common Objects ########
 
+sgx/ec_key_cert_marshal.o: kmyth/sgx/common/src/ec_key_cert_marshal.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -368,6 +372,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 				 src/util/cmd_interface.c \
 			   $(App_Cpp_Kmyth_Files) \
 				 sgx/test_enclave_u.o \
+				 sgx/ec_key_cert_marshal.o \
 				 sgx/ec_key_cert_unmarshal.o \
 				 sgx/log_ocall.o \
 				 sgx/ecdh_ocall.o \
@@ -378,6 +383,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			 -Isgx \
 			 -Itest/include \
 			 $(App_C_Flags) \
+			 -g \
 			 $(ENCLAVE_HEADERS) \
 			 $(App_Link_Flags) \
 			 -lcrypto \
@@ -609,9 +615,11 @@ test: all test-all
 	@openssl x509 -in test/data/node_pub.pem -inform pem -out test/data/node_pub.der -outform der
 	@openssl x509 -in test/data/proxy_pub.pem -inform pem -out test/data/proxy_pub.der -outform der
 	@openssl pkey -in test/data/node_priv.pem -inform pem -out test/data/node_priv.der -outform der
+	@openssl x509 -in test/data/test-ca.pem -inform pem -out test/data/test-ca.der -outform der
 	@./bin/pelz seal test/data/node_pub.der -o test/data/node_pub.der.nkl
 	@./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
 	@./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
+	@./bin/pelz seal test/data/test-ca.der -o test/data/test-ca.der.nkl
 	@echo "GEN => Test Key/Cert Files"
 	@cd kmyth/sgx && make demo-pre demo/bin/ecdh-server --eval="Demo_App_C_Flags += -DDEMO_LOG_LEVEL=LOG_WARNING"
 	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -m 1 2> /dev/null &

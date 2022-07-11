@@ -35,8 +35,6 @@ TableResponseStatus verify_cert(charbuf target_der)
     return ERR;
   }
 
-  // OpenSSL_add_all_algorithms();
-
   // Create cert store
   X509_STORE *store = X509_STORE_new();
   if (store == NULL)
@@ -69,8 +67,6 @@ TableResponseStatus verify_cert(charbuf target_der)
     kmyth_sgx_log(LOG_ERR, "X509_STORE_CTX_init failed");
     return ERR;
   }
-
-  // X509_STORE_CTX_set_purpose(x509_store_ctx, X509_PURPOSE_ANY);
 
   int success = X509_verify_cert(store_ctx);
 
