@@ -126,17 +126,19 @@ int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * d
   X509 *requestor_x509;
   EVP_PKEY *requestor_pubkey;
   charbuf serial;
+  const unsigned char *der_buf;
 
   // Undo base64 encoding
   ret = decodeBase64Data(encoded_cert->chars, encoded_cert->len, &decoded_cert.chars, &decoded_cert.len);
   if (ret != 0)
   {
     pelz_log(LOG_ERR, "decodeBase64Data failed");
-    free_charbuf(&decoded_sig);
     return 1;
   }
 
-  requestor_x509 = d2i_X509(NULL, (const unsigned char **) &decoded_cert.chars, decoded_cert.len);
+  // Load DER cert (requires temporary pointer)
+  der_buf = decoded_cert.chars;
+  requestor_x509 = d2i_X509(NULL, &der_buf, decoded_cert.len);
   if (requestor_x509 == NULL)
   {
     kmyth_sgx_log(LOG_ERR, "DER to X509 format conversion failed");
