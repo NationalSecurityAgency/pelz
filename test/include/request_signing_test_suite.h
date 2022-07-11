@@ -16,5 +16,6 @@ void test_create_validate_signature_simple(void);
 void test_create_validate_signature(void);
 void test_verify_cert_chain(void);
 void test_verify_cert_chain_enclave(void);
+void test_invalid_cert_chain_enclave(void);
 
 #endif /* PELZ_REQUEST_SIGNING_SUITE_H_ */

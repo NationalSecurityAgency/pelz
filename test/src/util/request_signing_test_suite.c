@@ -47,6 +47,10 @@ int request_signing_suite_add_tests(CU_pSuite suite)
   {
     return (1);
   }
+  if (NULL == CU_add_test(suite, "Test Validation of Unsigned Cert", test_invalid_cert_chain_enclave))
+  {
+    return (1);
+  }
   return (0);
 }
 
@@ -137,6 +141,8 @@ void test_create_validate_signature(void)
   load_test_key_pair(&requestor_cert, &requestor_privkey);
 
   // load CA key to enclave
+  table_destroy(eid, &status, CA_TABLE);
+  CU_ASSERT(status == OK);
   ret = pelz_load_file_to_enclave((char *) "test/data/test-ca.der.nkl", &handle);
   CU_ASSERT(ret == 0);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
@@ -221,10 +227,8 @@ void test_verify_cert_chain_enclave(void)
   int der_len = -1;
   charbuf der_cert = new_charbuf(0);
 
-  // load CA key to enclave
-  ret = pelz_load_file_to_enclave((char *) "test/data/test-ca.der.nkl", &handle);
-  CU_ASSERT(ret == 0);
-  add_cert_to_table(eid, &status, CA_TABLE, handle);
+  // initialize CA table
+  table_destroy(eid, &status, CA_TABLE);
   CU_ASSERT(status == OK);
 
   // load key pair from file
@@ -235,10 +239,53 @@ void test_verify_cert_chain_enclave(void)
   der_cert.chars = der_buf;
   der_cert.len = der_len;
 
-  // Check cert chain
+  // Check cert chain before loading CA cert
+  verify_cert(eid, &status, der_cert);
+  CU_ASSERT(status != OK);
+
+  // load CA key to enclave
+  ret = pelz_load_file_to_enclave((char *) "test/data/test-ca.der.nkl", &handle);
+  CU_ASSERT(ret == 0);
+  add_cert_to_table(eid, &status, CA_TABLE, handle);
+  CU_ASSERT(status == OK);
+
+  // Check cert chain after loading CA cert
   verify_cert(eid, &status, der_cert);
   CU_ASSERT(status == OK);
 
   X509_free(requestor_cert);
   EVP_PKEY_free(requestor_privkey);
+}
+
+void test_invalid_cert_chain_enclave(void)
+{
+  int ret;
+  TableResponseStatus status;
+  X509 *requestor_cert;
+  uint64_t handle;
+  unsigned char *der_buf = NULL;
+  int der_len = -1;
+  charbuf der_cert = new_charbuf(0);
+
+  // load CA key to enclave
+  ret = pelz_load_file_to_enclave((char *) "test/data/test-ca.der.nkl", &handle);
+  CU_ASSERT(ret == 0);
+  add_cert_to_table(eid, &status, CA_TABLE, handle);
+  CU_ASSERT(status == OK);
+
+  // load cert from file
+  BIO *cert_bio = BIO_new_file("test/data/node_pub.pem", "r");
+  requestor_cert = PEM_read_bio_X509(cert_bio, NULL, 0, NULL);
+  BIO_free(cert_bio);
+
+  // convert x509 to der format
+  marshal_ec_x509_to_der(&requestor_cert, &der_buf, &der_len);
+  der_cert.chars = der_buf;
+  der_cert.len = der_len;
+
+  // Check cert chain
+  verify_cert(eid, &status, der_cert);
+  CU_ASSERT(status != OK);
+
+  X509_free(requestor_cert);
 }
