@@ -117,7 +117,8 @@ X509 * load_pem_cert(charbuf * requestor_cert)
 
 int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * encoded_sig, charbuf * encoded_cert)
 {
-  // Note: This is vulnerable to signature replay attacks.
+  // Note: This is vulnerable to signature replay attacks,
+  //       but we will use message encryption to avoid leaking sensitive data.
 
   int ret;
   charbuf decoded_sig = new_charbuf(0);
