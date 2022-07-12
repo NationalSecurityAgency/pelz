@@ -11,6 +11,7 @@
 #include <pelz_request_handler.h>
 #include <charbuf.h>
 #include <pelz_log.h>
+#include <request_signing.h>
 
 /**
  * <pre>
@@ -111,6 +112,10 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
 
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
+    // TODO: Remove this once signed requests are supported.
+    pelz_log(LOG_ERR, "Signed requests are not fully implemented.");
+    return 1;
+
     *request_sig = get_JSON_string_field(json, "request_sig");
     if(request_sig->len == 0 || request_sig->chars == NULL)
     {
@@ -131,18 +136,24 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(requestor_cert);
       return 1;
     }
+
+    if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+    {
+      pelz_log(LOG_ERR, "Signature Validation Error");
+      cJSON_Delete(json);
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      free_charbuf(requestor_cert);
+      return (1);
+    }
   }
-  
-  if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+  else
   {
-    pelz_log(LOG_ERR, "Signature Validation Error");
-    cJSON_Delete(json);
-    free_charbuf(key_id);
-    free_charbuf(data);
-    free_charbuf(request_sig);
-    free_charbuf(requestor_cert);
-    return (1);
+    *request_sig = new_charbuf(0);
+    *requestor_cert = new_charbuf(0);
   }
+
   cJSON_Delete(json);
   return (0);
 }
@@ -215,11 +226,4 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
   cJSON_Delete(root);
   free(tmp);
   return (0);
-}
-
-// At some point this function will have to contain a concatenated string of the buffer fields to ensure order when comparing info
-int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
-{
-  // Stub
-  return 0;
 }

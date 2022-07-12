@@ -36,8 +36,8 @@ The JSON objects can be in two forms: requests and responses.
     * 3 for AES Key Wrap (signed JSON request) - still being implemented
     * 4 for AES Key Unwrap (signed JSON request) - still being implemented
 * key_id : string of characters
-     * URI for the key location - used as the key identifier.
-     * URI syntax must currently comply with RFC 8089 and RFC 1738 Section 3.1.
+    * URI for the key location - used as the key identifier.
+    * URI syntax must currently comply with RFC 8089 and RFC 1738 Section 3.1.
 * data : string of characters
     * Base64 encoded data to be processed based on request type.
 
@@ -50,6 +50,18 @@ JSON Request for AES Key Wrap
 JSON Request for AES Key Unwrap
 * {"key_id": "file:~/pelz/test/key1.txt", "request_type": 2, "data": "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n"}
 * {"key_id": "pelz://localhost/7000/fake_key_id", "request_type": 2, "data": "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n"}
+
+##### Signed Request JSON
+
+In addition to the fields from unsigned requests,
+described above, signed requests include:
+
+* requestor_cert : string of characters
+    * X509 certificate in base64 encoded DER format.
+    * The certificate must be signed by a certificate authority that is trusted by Pelz.
+* request_sig : string of characters
+    * Base64 encoded digital signature of the message content.
+    * The signing key must correspond to the public key in the requestor_cert.
 
 #### Response JSON Key and Values
 * key_id : string of characters
