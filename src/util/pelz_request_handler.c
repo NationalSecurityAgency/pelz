@@ -47,11 +47,20 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
     return ENCRYPT_ERROR;
   }
 
-  // TODO: Add error checking here.
   iv->len = iv_internal.len;
   if(iv->len > 0)
   {
     ocall_malloc(iv->len, &iv->chars);
+    if(iv->chars == NULL)
+    {
+      free_charbuf(&cipher_data_internal);
+      free_charbuf(&iv_internal);
+      free_charbuf(&tag_internal);
+      iv->len = 0;
+      tag->len = 0;
+      cipher_data->len = 0;
+      return ENCRYPT_ERROR;
+    }
     memcpy(iv->chars, iv_internal.chars, iv->len);
   }
 
@@ -59,6 +68,21 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   if(tag->len > 0)
   {
     ocall_malloc(tag->len, &tag->chars);
+    if(tag->chars == NULL)
+    {
+      free_charbuf(&cipher_data_internal);
+      free_charbuf(&iv_internal);
+      free_charbuf(&tag_internal);
+      tag->len = 0;
+      cipher_data->len = 0;
+      if(iv->chars != NULL)
+      {
+	ocall_free(iv->chars, iv->len);
+	iv->chars = NULL;
+	iv->len = 0;
+      }
+      return ENCRYPT_ERROR;
+    }
     memcpy(tag->chars, tag_internal.chars, tag->len);
   }
   
@@ -67,6 +91,21 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   if(cipher_data->chars == NULL)
   {
     free_charbuf(&cipher_data_internal);
+    free_charbuf(&iv_internal);
+    free_charbuf(&tag_internal);
+    if(iv->chars != NULL)
+    {
+      ocall_free(iv->chars, iv->len);
+      iv->chars = NULL;
+      iv->len = 0;
+    }
+    if(tag->chars != NULL)
+    {
+      ocall_free(tag->chars, tag->len);
+      tag->chars = NULL;
+      tag->len = 0;
+    }
+    cipher_data->len = 0;
     return ENCRYPT_ERROR;
   }
   memcpy(cipher_data->chars, cipher_data_internal.chars, cipher_data->len);
@@ -118,6 +157,7 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   ocall_malloc(plain_data->len, &plain_data->chars);
   if(plain_data->chars == NULL)
   {
+    plain_data->len = 0;
     free_charbuf(&plain_data_internal);
     return DECRYPT_ERROR;
   }

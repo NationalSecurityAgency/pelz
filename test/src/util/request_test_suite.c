@@ -145,9 +145,7 @@ void test_encrypt_decrypt(void)
     table_destroy(eid, &table_status, KEY);
   }
   
-
   free_charbuf(&plaintext);
   free_charbuf(&key_id);
-
 }
 
