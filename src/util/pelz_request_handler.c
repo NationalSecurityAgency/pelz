@@ -9,6 +9,9 @@
 RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag)
 {
   charbuf cipher_data_internal;
+  charbuf iv_internal = new_charbuf(0);
+  charbuf tag_internal = new_charbuf(0);
+  
   int index;
 
   unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
@@ -34,14 +37,29 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 			       key_table.entries[index].value.key.len,
 			       plain_data.chars,
 			       plain_data.len,
-			       &iv->chars,
-			       &iv->len,
+			       &iv_internal.chars,
+			       &iv_internal.len,
 			       &cipher_data_internal.chars,
 			       &cipher_data_internal.len,
-			       &tag->chars,
-			       &tag->len))
+			       &tag_internal.chars,
+			       &tag_internal.len))
   {
     return ENCRYPT_ERROR;
+  }
+
+  // TODO: Add error checking here.
+  iv->len = iv_internal.len;
+  if(iv->len > 0)
+  {
+    ocall_malloc(iv->len, &iv->chars);
+    memcpy(iv->chars, iv_internal.chars, iv->len);
+  }
+
+  tag->len = tag_internal.len;
+  if(tag->len > 0)
+  {
+    ocall_malloc(tag->len, &tag->chars);
+    memcpy(tag->chars, tag_internal.chars, tag->len);
   }
   
   cipher_data->len = cipher_data_internal.len;
@@ -53,6 +71,8 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   }
   memcpy(cipher_data->chars, cipher_data_internal.chars, cipher_data->len);
   free_charbuf(&cipher_data_internal);
+  free_charbuf(&iv_internal);
+  free_charbuf(&tag_internal);
   return REQUEST_OK;
 }
 
