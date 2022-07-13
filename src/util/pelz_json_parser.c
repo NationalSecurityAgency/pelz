@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <cjson/cJSON.h>
 
+
 #include <pelz_json_parser.h>
 #include <pelz_request_handler.h>
 #include <charbuf.h>
@@ -220,6 +221,45 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf data, char
 // At some point this function will have to contain a concatenated string of the buffer fields to ensure order when comparing info
 int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
+  int a = key_id->len;
+  int b = data->len;
+
+  int length = 9 + key_id->len + data->len;
+
+  // Offset for memcpy()
+  int offset = 0;
+
+  unsigned char my_buffer[length+1];
+
+  // Request Type data
+  char request_buffer[2];
+  sprintf(request_buffer, "%d", *((int*)request_type));
+  
+  // Key_id length data
+  char key_buffer[4];
+  sprintf(key_buffer, "%d", a);
+
+  // 'Data' length data
+  char data_buffer[4];
+  sprintf(data_buffer, "%d", b);
+ 
+  // 'Concatenating' all of our data
+  memcpy(my_buffer + offset, request_buffer, 1);
+  offset += 1;
+  memcpy(my_buffer + offset, key_id->chars, key_id->len);
+  offset += key_id->len;
+  memcpy(my_buffer + offset, data->chars, data->len);
+  offset += data->len;
+  memcpy(my_buffer + offset, key_buffer, 4);
+  offset += 4;
+  memcpy(my_buffer + offset, data_buffer, 4);
+
+  // Extract the public key from requestor_cert
+
+  // verify_buffer() function, similar logic to sign_buffer()
+
+  // At this point, we pass control to a certificate validating function inside the enclave
+
   // Stub
   return 0;
 }
