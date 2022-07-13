@@ -22,11 +22,11 @@
 #error OpenSSL version 1.1.1 or newer is required
 #endif
 
-// cipher_list[] - array of structs that is used to specify all valid
+// pelz_cipher_list[] - array of structs that is used to specify all valid
 //                 (e.g., implemented and supported) symmetric cipher opetions
 //
 // The cipher names MUST be formatted <Algorithm>/<Mode>/<Padding>/<Key Size>
-const cipher_t cipher_list[] = {
+const cipher_t pelz_cipher_list[] = {
   {.cipher_name = "AES/KeyWrap/RFC3394NoPadding/256",
    .encrypt_fn = pelz_aes_keywrap_3394nopad_encrypt,
    .decrypt_fn = pelz_aes_keywrap_3394nopad_decrypt},
@@ -72,14 +72,14 @@ cipher_t pelz_get_cipher_t_from_string(char *cipher_string)
   // go through cipher_list looking for user-specified cipher name
   size_t i = 0;
 
-  while (cipher_list[i].cipher_name != NULL)
+  while (pelz_cipher_list[i].cipher_name != NULL)
   {
     if (strncmp
-        (cipher_list[i].cipher_name, cipher_string,
-         strlen(cipher_list[i].cipher_name) + 1) == 0)
+        (pelz_cipher_list[i].cipher_name, cipher_string,
+         strlen(pelz_cipher_list[i].cipher_name) + 1) == 0)
     {
       // found it, set cipher to this entry in cipher_list and stop looking
-      cipher = cipher_list[i];
+      cipher = pelz_cipher_list[i];
       break;
     }
     i++;
@@ -88,7 +88,7 @@ cipher_t pelz_get_cipher_t_from_string(char *cipher_string)
   return cipher;
 }
 
-size_t get_key_len_from_cipher(cipher_t cipher)
+size_t pelz_get_key_len_from_cipher(cipher_t cipher)
 {
   if (cipher.cipher_name == NULL)
   {

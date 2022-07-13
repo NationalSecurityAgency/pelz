@@ -10,8 +10,6 @@
 
 #include <stddef.h>
 
-#include "aes_keywrap_3394nopad.h"
-
 /**
  * All data encryption methods must be implemented with encrypt/decrypt
  * functions matching this declaration.
@@ -103,7 +101,7 @@ cipher_t pelz_get_cipher_t_from_string(char *cipher_string);
  *
  * @return The key length in bits, or 0 on failure
  */
-size_t get_key_len_from_cipher(cipher_t cipher);
-      
+size_t pelz_get_key_len_from_cipher(cipher_t cipher);
 
+extern const cipher_t pelz_cipher_list[];
 #endif /* CIPHER_H */
