@@ -269,7 +269,8 @@ endef
 .PHONY: all run test-run test-all
 
 ifeq ($(Build_Mode), HW_RELEASE)
-all: $(App_Name) $(Enclave_Name)
+all: override ENCLAVE_HEADERS = -DENCLAVE_HEADER_TRUSTED=$(ENCLAVE_HEADER_TRUSTED) -DENCLAVE_HEADER_UNTRUSTED=$(ENCLAVE_HEADER_UNTRUSTED)
+all: pre bin/$(App_Name_Service) bin/$(App_Name_Pipe) sgx/$(Signed_Enclave_Name)
 	@echo "The project has been built in release hardware mode."
 	@echo "Please sign the $(Enclave_Name) first with your signing key before you run the $(App_Name) to launch and access the enclave."
 	@echo "To sign the enclave use the command:"
@@ -288,7 +289,8 @@ ifneq ($(Build_Mode), HW_RELEASE)
 endif
 
 ifeq ($(Build_Mode), HW_RELEASE)
-test-all: $(App_Name) $(Test_Enclave_Name)
+test-all: override ENCLAVE_HEADERS = -DENCLAVE_HEADER_TRUSTED=$(TEST_ENCLAVE_HEADER_TRUSTED) -DENCLAVE_HEADER_UNTRUSTED=$(TEST_ENCLAVE_HEADER_UNTRUSTED)
+test-all: pre test/bin/$(App_Name_Test) sgx/$(Signed_Test_Enclave_Name)
 	@echo "The project has been built in release hardware mode."
 	@echo "Please sign the $(Test_Enclave_Name) first with your signing key before you run the $(App_Name) to launch and access the enclave."
 	@echo "To sign the enclave use the command:"
