@@ -36,7 +36,7 @@ static const size_t cipher_key_bytes[] = {32, 24, 16, 32, 24, 16, 0};
 // Adds all request handler tests to main test runner.
 int request_suite_add_tests(CU_pSuite suite)
 {
-  if (NULL == CU_add_test(suite, "Test Pelz Request Missing Key", test_missing_key_request))
+  if (NULL == CU_add_test(suite, "Test Pelz Request Invalid Key ID", test_invalid_key_id))
   {
     return (1);
   }
@@ -44,10 +44,14 @@ int request_suite_add_tests(CU_pSuite suite)
   {
     return 1;
   }
+  if (NULL == CU_add_test(suite, "Test Pelz Request Missing Key ID", test_missing_key_id))
+  {
+    return 1;
+  }
   return (0);
 }
 
-void test_missing_key_request(void)
+void test_invalid_key_id(void)
 {
   TableResponseStatus table_status;
   RequestResponseStatus response_status;
@@ -98,8 +102,9 @@ void test_missing_key_request(void)
 
 void test_encrypt_decrypt(void)
 {
-  TableResponseStatus table_status;
   RequestResponseStatus request_status;
+  TableResponseStatus table_status;
+
 
   const char* key_id_str = "file:/test/data/key1.txt";
   charbuf key_id = new_charbuf(strlen(key_id_str));
@@ -149,3 +154,42 @@ void test_encrypt_decrypt(void)
   free_charbuf(&key_id);
 }
 
+void test_missing_key_id(void)
+{
+  RequestResponseStatus request_status;
+
+  charbuf key_id = new_charbuf(0);
+
+  const char* plaintext_str = "abcdefghijklmnopqrstuvwxyz012345";
+  charbuf plaintext = new_charbuf(strlen(plaintext_str));
+  memcpy(plaintext.chars, plaintext_str, plaintext.len);
+
+  size_t cipher_index = 0;
+  while(cipher_names[cipher_index] != NULL)
+  {
+    charbuf cipher_name = new_charbuf(strlen(cipher_names[cipher_index]));
+    memcpy(cipher_name.chars, cipher_names[cipher_index], cipher_name.len);
+    cipher_index++;
+    
+    charbuf iv = new_charbuf(0);
+    charbuf tag = new_charbuf(0);
+    charbuf ciphertext = new_charbuf(0);
+
+    pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+    CU_ASSERT(request_status == ENCRYPT_ERROR);
+    CU_ASSERT(iv.chars == NULL);
+    CU_ASSERT(iv.len == 0);
+    CU_ASSERT(tag.chars == NULL);
+    CU_ASSERT(tag.len == 0);
+    CU_ASSERT(ciphertext.chars == NULL);
+    CU_ASSERT(ciphertext.len == 0);
+    
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    free_charbuf(&ciphertext);
+    free_charbuf(&cipher_name);
+  }
+  
+  free_charbuf(&plaintext);
+  free_charbuf(&key_id);
+}
