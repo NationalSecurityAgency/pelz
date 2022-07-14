@@ -174,6 +174,10 @@ TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
     return ERR;
   }
 
+  if(id.chars == NULL || id.len == 0)
+  {
+    return ERR;
+  }
   for (unsigned int i = 0; i < table->num_entries; i++)
   {
     if (cmp_charbuf(id, table->entries[i].id) == 0)

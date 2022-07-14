@@ -19,6 +19,11 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   {
     return ENCRYPT_ERROR;
   }
+
+  if(key_id.chars == NULL || key_id.len == 0)
+  {
+    return ENCRYPT_ERROR;
+  }
   
   cipher_t cipher_struct = pelz_get_cipher_t_from_string((char*)cipher_name_string);
   free(cipher_name_string);
