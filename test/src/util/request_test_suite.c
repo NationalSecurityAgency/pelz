@@ -48,6 +48,10 @@ int request_suite_add_tests(CU_pSuite suite)
   {
     return 1;
   }
+  if (NULL == CU_add_test(suite, "Test Pelz Request Invalid or Missing Cipher Name", test_invalid_cipher_name))
+  {
+    return 1;
+  }
   return (0);
 }
 
@@ -187,9 +191,110 @@ void test_missing_key_id(void)
     free_charbuf(&iv);
     free_charbuf(&tag);
     free_charbuf(&ciphertext);
+
+    // For testing purposes we use "plaintext" as the ciphertext,
+    // since the code should never look at it anyway.
+    pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext);
+    CU_ASSERT(request_status == DECRYPT_ERROR);
+    CU_ASSERT(iv.chars == NULL);
+    CU_ASSERT(iv.len == 0);
+    CU_ASSERT(tag.chars == NULL);
+    CU_ASSERT(tag.len == 0);
+    CU_ASSERT(ciphertext.chars == NULL);
+    CU_ASSERT(ciphertext.len == 0);
+    
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    free_charbuf(&ciphertext);
+    
     free_charbuf(&cipher_name);
   }
   
   free_charbuf(&plaintext);
   free_charbuf(&key_id);
+}
+
+void test_invalid_cipher_name(void)
+{
+  RequestResponseStatus request_status;
+  TableResponseStatus table_status;
+
+  const char* key_id_str = "file:/test/data/key1.txt";
+  charbuf key_id = new_charbuf(strlen(key_id_str));
+  memcpy(key_id.chars, key_id_str, key_id.len);
+
+  const char*  full_key_data = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
+  const char* plaintext_str = "abcdefghijklmnopqrstuvwxyz012345";
+  charbuf plaintext = new_charbuf(strlen(plaintext_str));
+  memcpy(plaintext.chars, plaintext_str, plaintext.len);
+
+  // We add a key to the table, although we shouldn't need it
+  charbuf key_data = new_charbuf(32);
+  memcpy(key_data.chars, full_key_data, key_data.len);
+  key_table_add_key(eid, &table_status, key_id, key_data);
+
+     
+  charbuf iv = new_charbuf(0);
+  charbuf tag = new_charbuf(0);
+  charbuf ciphertext = new_charbuf(0);
+  charbuf decrypt = new_charbuf(0);
+
+  // Test with an empty cipher name
+  charbuf cipher_name = new_charbuf(0);
+  
+  pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+  CU_ASSERT(request_status == ENCRYPT_ERROR);
+  CU_ASSERT(iv.chars == NULL);
+  CU_ASSERT(iv.len == 0);
+  CU_ASSERT(tag.chars == NULL);
+  CU_ASSERT(tag.len == 0);
+  CU_ASSERT(ciphertext.chars == NULL);
+  CU_ASSERT(ciphertext.len == 0);
+
+  // Repurpose plaintext as ciphertext, which shouldn't matter
+  // since it should never get looked at.
+  pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext);
+  CU_ASSERT(request_status == DECRYPT_ERROR);
+  CU_ASSERT(iv.chars == NULL);
+  CU_ASSERT(iv.len == 0);
+  CU_ASSERT(tag.chars == NULL);
+  CU_ASSERT(tag.len == 0);
+  CU_ASSERT(ciphertext.chars == NULL);
+  CU_ASSERT(ciphertext.len == 0);
+
+
+  // Now we test with an invalid (but non-empty) cipher name
+  const char* cipher_name_str = "fakeciphername";
+  cipher_name = new_charbuf(strlen(cipher_name_str));
+  memcpy(cipher_name.chars, cipher_name_str, strlen(cipher_name_str));
+  pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+  CU_ASSERT(request_status == ENCRYPT_ERROR);
+  CU_ASSERT(iv.chars == NULL);
+  CU_ASSERT(iv.len == 0);
+  CU_ASSERT(tag.chars == NULL);
+  CU_ASSERT(tag.len == 0);
+  CU_ASSERT(ciphertext.chars == NULL);
+  CU_ASSERT(ciphertext.len == 0);
+
+  // Repurpose plaintext as ciphertext, which shouldn't matter
+  // since it should never get looked at.
+  pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext);
+  CU_ASSERT(request_status == DECRYPT_ERROR);
+  CU_ASSERT(iv.chars == NULL);
+  CU_ASSERT(iv.len == 0);
+  CU_ASSERT(tag.chars == NULL);
+  CU_ASSERT(tag.len == 0);
+  CU_ASSERT(ciphertext.chars == NULL);
+  CU_ASSERT(ciphertext.len == 0);
+  
+  free_charbuf(&iv);
+  free_charbuf(&tag);
+  free_charbuf(&ciphertext);
+  free_charbuf(&decrypt);
+  free_charbuf(&cipher_name);
+  table_destroy(eid, &table_status, KEY);
+  free_charbuf(&plaintext);
+  free_charbuf(&key_id);
+
 }

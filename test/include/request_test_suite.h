@@ -15,4 +15,5 @@ void test_request(void);
 void test_invalid_key_id(void);
 void test_encrypt_decrypt(void);
 void test_missing_key_id(void);
+void test_invalid_cipher_name(void);
 #endif /* REQUEST_TEST_SUITE_H_ */
