@@ -1,7 +1,7 @@
 /**
- * @file  aes_gcm.c
+ * @file  pelz_aes_gcm.c
  *
- * @brief Implements AES GCM for kmyth.
+ * @brief Implements AES GCM for pelz.
  */
 
 #include "cipher/pelz_aes_gcm.h"
