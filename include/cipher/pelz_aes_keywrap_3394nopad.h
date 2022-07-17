@@ -18,17 +18,32 @@
  * @param[in]  key_len     The length (in bytes) of the AES key
  *                         (must be 16, 24, of 32)
  *
- * @param[in]  inData      The plaintext data to be wrapped -
+ * @param[in]  plain       The plaintext data to be wrapped -
  *                         pass in pointer to input plaintext buffer
  *
- * @param[in]  inData_len  The length of the plaintext data in bytes
+ * @param[in]  plain_len   The length of the plaintext data in bytes
  *
- * @param[out] outData     The output ciphertext data -
+ * @param[out] iv          Unused parameter only present to provide a
+ *                         consistent interface for all ciphers. 
+ *                         Should be NULL, is ignored.
+ * 
+ * @param[out] cipher      The output ciphertext data -
  *                         pass as pointer to address of buffer
  *
- * @param[out] outData_len The length of the output ciphertext in bytes -
+ * @param[out] cipher_len  The length of the output ciphertext in bytes -
  *                         pass as pointer to length value
  *
+ * @param[out] tag_len     Pointer to hold the length of iv.
+ *                         Should be NULL, is ignored.
+ *
+ * @param[out] tag         Unused parameter only present to provide a
+ *                         consistent interface for all ciphers.
+ *                         Should be NULL, is ignored.
+ * 
+ * @param[out  tag_len     Pointer to hold the length of tag.
+ *                         Should be NULL, is ignored.
+ *
+
  * @return 0 on success, 1 on error
  */
 int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
@@ -52,15 +67,27 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
  * @param[in]  key_len     The length (in bytes) of the AES key
  *                         (must be 16, 24, or 32)
  *
- * @param[in]  inData      The encrypted data to be unwrapped -
+ * @param[in]  iv          Unused parameter only present to provide a 
+ *                         consistent interface for all ciphers.
+ *                         Should be NULL, is ignored.
+ * 
+ * @param[in]  iv_len      The length of iv, is ignored.
+ *
+ * @param[in]  cipher      The encrypted data to be unwrapped -
  *                         pass in pointer to input buffer
  *
- * @param[in]  inData_len  The length of the encrypted data in bytes
+ * @param[in]  cipher_len  The length of the encrypted data in bytes
  *
- * @param[out] outData     The output plaintext buffer -
+ * @param[in]  tag         Unused parameter only present to provide a 
+ *                         consistent interface for all ciphers.
+ *                         Should be NULL, is ignored.
+ *
+ * @param[in]  tag_len     The length of tag, is ignored.
+ *
+ * @param[out] plian       The output plaintext buffer -
  *                         pass as pointer to address of buffer
  *
- * @param[out] outData_len The length in bytes of the output plaintext -
+ * @param[out] plain_len   The length in bytes of the output plaintext -
  *                         pass as pointer to length value
  *
  * @return 0 on success, 1 on error
