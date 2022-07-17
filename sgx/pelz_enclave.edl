@@ -193,7 +193,7 @@ public TableResponseStatus chan_table_destroy();
 
 /**
  * <pre>
- * This function implements the request handling by looking if pelz already has
+ * This function implements encrypt request handling by looking if pelz already has
  * the key and if not then adding the key to the key table. Along with the
  * key lookup, this function checks the request type then based on the request
  * type it calls the wrap or unwrap functions to return requested key value.
@@ -201,8 +201,9 @@ public TableResponseStatus chan_table_destroy();
  *
  * @param[in] request_type the type of the request (encrypt or decrypt)
  * @param[in] key_id       the key_id of the key to be used for the request
- * @param[in] data         the input data
- * @param[out] output      a pointer to a charbuf to hold the output, will
+ * @param[in] cipher_name  the name of the cipher used for the request
+ * @param[in] plain_data   the input data
+ * @param[out] cipher_data a pointer to a charbuf to hold the output, will
  *                         be created inside the call
  * @param[out] iv          a pointer to a charbuf to hold the IV, will
  *                         be allocated inside the call if necessary
@@ -216,7 +217,7 @@ public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_ty
 
 /**
  * <pre>
- * This function implements the request handling by looking if pelz already has
+ * This function implements decrypt handling by looking if pelz already has
  * the key and if not then adding the key to the key table. Along with the
  * key lookup, this function checks the request type then based on the request
  * type it calls the wrap or unwrap functions to return requested key value.
@@ -224,10 +225,11 @@ public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_ty
  *
  * @param[in] request_type the type of the request (encrypt or decrypt)
  * @param[in] key_id       the key_id of the key to be used for the request
- * @param[in] data         the input data
+ * @param[in] cipher_name  the name of the cipher used for the request
+ * @param[in] cipher_data  the input data
  * @param[in] iv           the iv used to encrypt the data, may be empty.
  * @param[in] tag          the MAC tag for the encryption, may be empty.
- * @param[out] output      a pointer to a charbuf to hold the output, will
+ * @param[out] plian_data  a pointer to a charbuf to hold the output, will
  *                         be created inside the call
  *
  * @return REQUEST_OK on success, an error message indicating the type of
