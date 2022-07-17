@@ -208,7 +208,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_nam
   cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
   free(tmp);
   
-  if(request_type == REQ_DEC)
+  if(request_type == REQ_ENC || request_type == REQ_ENC_SIGNED)
   {
     if(tag.chars != NULL && tag.len != 0)
     {

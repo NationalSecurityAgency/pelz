@@ -252,14 +252,14 @@ void test_message_encoder(void)
   const char* cipher_name_str = "cipher_name";
   
   const char *test[5] = { "file:/test/key1.txt", "test/key1.txt", "file", "anything", "" };
-  const char *valid_enc_message[5] =
+  const char *valid_dec_message[5] =
     { "{\"key_id\":\"file:/test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
       "{\"key_id\":\"test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",   
       "{\"key_id\":\"file\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
       "{\"key_id\":\"anything\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
       "{\"key_id\":\"\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
   };
-  const char *valid_dec_message[5] =
+  const char *valid_enc_message[5] =
     { "{\"key_id\":\"file:/test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
     "{\"key_id\":\"test/key1.txt\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
     "{\"key_id\":\"file\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
