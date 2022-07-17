@@ -1,7 +1,7 @@
 /**
  * @file  cipher.h
  *
- * @brief Provides structures, constants, and utilities for Kmyth
+ * @brief Provides structures, constants, and utilities for pelz
  *        symmetric ciphers.
  */
 
@@ -11,28 +11,44 @@
 #include <stddef.h>
 
 /**
- * All data encryption methods must be implemented with encrypt/decrypt
+ * All data encryption methods must be implemented with encrypt
  * functions matching this declaration.
  *
- * Ciphers that involve more information to decrypt (for example, IVs or tags)
- * are responsible for explicitly managing that information as part of
- * outData. See the AES/GCM implementation in aes_gcm.c/h for an example.
+ * Ciphers that do not require some of these arguments should ignore them.
  *
  * @param[in]  key         The hex bytes containing the key -
  *                         pass in pointer to key buffer
  *
  * @param[in]  key_len     The length of the key in bytes
  *
- * @param[in]  inData      The data to be encrypted/decrypted -
+ * @param[in]  plain       The data to be encrypted -
  *                         pass in pointer to input data buffer
  *
- * @param[in]  inData_len  The length of the data in bytes
+ * @param[in]  plain_len   The length of plain in bytes
  *
- * @param[out] outData     The output data -
+ * @param[out] iv          A pointer to the address of the buffer to hold
+ *                         the initialization vector if required. This argument
+ *                         should be ignored if the cipher does not
+ *                         require an initialization vector.
+ *
+ * @param[out] iv_len      The length of iv in bytes, passed as a pointer
+ *                         to a size_t to hold the value. This argument should
+ *                         be ignored if the cipher does not require an 
+ *                         initialization vector.
+ *
+ * @param[out] cipher      The output data -
  *                         pass in pointer to address of output buffer
  *
- * @param[out] outData_len The length of the output data in bytes
+ * @param[out] cipher_len  The length of the output data in bytes
  *                         pass as pointer to length value
+ *
+ * @param[out] tag         A pointer to the address of the buffer to hold
+ *                         the MAC tag if required. This argument shold be 
+ *                         ignored if the cipher does not produce a MAC tag.
+ *
+ * @param[out] tag_len     The length of tag in bytes, passes as a pointer to
+ *                         a size_t to hold the value. This argument should be 
+ *                         ignored if the cipher does not produce a MAC tag.
  *
  * @return 0 on success, 1 on error.
  */
@@ -47,7 +63,49 @@ typedef int (*encrypt_cipher) (unsigned char *key,
 			       unsigned char** tag,
 			       size_t* tag_len);
 
+/**
+ * All data decryption methods must be implemented with decrypt
+ * functions matching this declaration.
+ *
+ * Ciphers that do not require some of these arguments should ignore them.
+ *
+ * @param[in]  key         The hex bytes containing the key -
+ *                         pass in pointer to key buffer
+ *
+ * @param[in]  key_len     The length of the key in bytes
+ *
+ * @param[in]  iv          A pointer to the buffer holding
+ *                         the initialization vector if required. This argument
+ *                         should be ignored if the cipher does not
+ *                         require an initialization vector.
+ *
+ * @param[in]  iv_len      The length of iv in bytes. This argument should
+ *                         be ignored if the cipher does not require an 
+ *                         initialization vector.
+ *
+ * @param[in]  cipher      The data to be decrypted -
+ *                         pass in pointer to input data buffer
+ *
+ * @param[in]  cipher_len  The length of cipher in bytes
+ *
+ * @param[in]  tag         A pointer to the buffer holding
+ *                         the MAC tag if required. This argument shold be 
+ *                         ignored if the cipher does not consume a MAC tag.
+ *
+ * @param[in]  tag_len     The length of tag in bytes, passes as a pointer to
+ *                         a size_t to hold the value. This argument should be 
+ *                         ignored if the cipher does not consume a MAC tag.
+ *
+ * @param[out] plain       The output data -
+ *                         pass in pointer to address of output buffer
+ *
+ * @param[out] plain_len   The length of the output data in bytes
+ *                         pass as pointer to length value
+ *
 
+ *
+ * @return 0 on success, 1 on error.
+ */
 typedef int (*decrypt_cipher) (unsigned char* key,
 			       size_t key_len,
 			       unsigned char* iv,
