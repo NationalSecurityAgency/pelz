@@ -245,14 +245,10 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   {
     return 1;
   }
-  
-  *plain_len = cipher_len;
-  *plain = malloc(*plain_len);
-  if(*plain == NULL)
-  {
-    *plain_len = 0;
-    return 1;
-  }
+
+  // We set the plain_len to 0 so if we error out before actually
+  // getting to it we don't have to set it before returning.
+  *plain_len = 0;
   
   // variables to hold/accumulate length returned by EVP library calls
   //   - OpenSSL insists this be an int
@@ -264,9 +260,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
 
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     return 1;
   }
   int init_result = 0;
@@ -287,9 +280,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   }
   if (!init_result)
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -297,9 +287,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   // set tag to expected tag passed in with input data
   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag_len, tag))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -307,9 +294,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   // set the IV length in the cipher context
   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -317,13 +301,18 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   // set the key and IV in the cipher context
   if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
 
+  *plain_len = cipher_len;
+  *plain = malloc(*plain_len);
+  if(*plain == NULL)
+  {
+    *plain_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
   // decrypt the input ciphertext, put result in the output plaintext buffer
   if (!EVP_DecryptUpdate(ctx, *plain, &len, cipher, *plain_len))
   {
