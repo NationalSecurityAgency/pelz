@@ -10,6 +10,15 @@
 
 #include <stddef.h>
 
+typedef struct {
+  unsigned char* data;
+  size_t data_len;
+  unsigned char* iv;
+  size_t iv_len;
+  unsigned char* tag;
+  size_t tag_len;
+} cipher_data_t;
+
 /**
  * All data encryption methods must be implemented with encrypt
  * functions matching this declaration.
