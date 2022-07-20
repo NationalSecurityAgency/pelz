@@ -56,12 +56,7 @@ int pelz_aes_gcm_encrypt(unsigned char *key,
 			 size_t key_len,
 			 unsigned char* plain,
 			 size_t plain_len,
-			 unsigned char** iv,
-			 size_t* iv_len,
-			 unsigned char** cipher,
-			 size_t* cipher_len,
-			 unsigned char** tag,
-			 size_t* tag_len);
+			 cipher_data_t* cipher_data);
 
 /**
  * @brief This function uses the AES-GCM implementation from OpenSSL to
@@ -89,12 +84,7 @@ int pelz_aes_gcm_encrypt(unsigned char *key,
  */
 int pelz_aes_gcm_decrypt(unsigned char *key,
 			 size_t key_len,
-			 unsigned char* iv,
-			 size_t iv_len,
-			 unsigned char* cipher,
-			 size_t cipher_len,
-			 unsigned char* tag,
-			 size_t tag_len,
+			 cipher_data_t cipher_data,
 			 unsigned char** plain,
 			 size_t* plain_len);
 #ifdef __cplusplus

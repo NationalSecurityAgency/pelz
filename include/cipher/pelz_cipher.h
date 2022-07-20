@@ -11,8 +11,8 @@
 #include <stddef.h>
 
 typedef struct {
-  unsigned char* data;
-  size_t data_len;
+  unsigned char* cipher;
+  size_t cipher_len;
   unsigned char* iv;
   size_t iv_len;
   unsigned char* tag;
@@ -65,12 +65,7 @@ typedef int (*encrypt_cipher) (unsigned char *key,
 			       size_t key_len,
 			       unsigned char *plain,
 			       size_t plain_len,
-			       unsigned char** iv,
-			       size_t* iv_len,
-			       unsigned char** cipher,
-			       size_t* cipher_len,
-			       unsigned char** tag,
-			       size_t* tag_len);
+			       cipher_data_t* cipher_data);
 
 /**
  * All data decryption methods must be implemented with decrypt
@@ -117,12 +112,7 @@ typedef int (*encrypt_cipher) (unsigned char *key,
  */
 typedef int (*decrypt_cipher) (unsigned char* key,
 			       size_t key_len,
-			       unsigned char* iv,
-			       size_t iv_len,
-			       unsigned char* cipher,
-			       size_t cipher_len,
-			       unsigned char* tag,
-			       size_t tag_len,
+			       cipher_data_t cipher_data,
 			       unsigned char** plain,
 			       size_t* plain_len);
 

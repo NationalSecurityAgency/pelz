@@ -7,7 +7,7 @@
 #define PELZ_AES_KEYWRAP_3394NOPAD_H_
 
 #include <stdlib.h>
-
+#include "cipher/pelz_cipher.h"
 /**
  * @brief This function uses OpenSSL to perform AES key wrap without padding
  *        (RFC 3394).
@@ -50,12 +50,7 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
 				       size_t key_len,
 				       unsigned char *plain,
 				       size_t plain_len,
-				       unsigned char** iv,
-				       size_t* iv_len,
-				       unsigned char** cipher,
-				       size_t* cipher_len,
-				       unsigned char** tag,
-				       size_t* tag_len);
+				       cipher_data_t* cipher_data);
 
 /**
  * @brief This function uses OpenSSL to perform AES key unwrap without padding
@@ -94,12 +89,7 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
  */
 int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
 				       size_t key_len,
-				       unsigned char* iv,
-				       size_t iv_len,
-				       unsigned char* cipher,
-				       size_t cipher_len,
-				       unsigned char* tag,
-				       size_t tag_len,
+				       cipher_data_t cipher_data,
 				       unsigned char** plain,
 				       size_t* plain_len);
 
