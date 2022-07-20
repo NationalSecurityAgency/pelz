@@ -26,6 +26,17 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
 			 size_t *tag_len)
 {
 
+  // Setting these here so we don't have to if we error out
+  // before getting to them.
+  *cipher_len = 0;
+  *cipher = NULL;
+
+  *iv_len = 0;
+  *iv = NULL;
+
+  *tag_len = 0;
+  *tag = NULL;
+  
   // validate non-NULL and non-empty encryption key specified
   if (key == NULL || key_len == 0)
   {
@@ -38,40 +49,6 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
     return 1;
   }
 
-  *cipher_len = plain_len;
-  *iv_len     = PELZ_GCM_IV_LEN;
-  *tag_len    = PELZ_GCM_TAG_LEN;
-  
-  *cipher = malloc(*cipher_len);
-  if (*cipher == NULL)
-  {
-    return 1;
-  }
-
-  *iv = malloc(*iv_len);
-  if(*iv == NULL)
-  {
-    free(*cipher);
-    *cipher = NULL;
-    *cipher_len = 0;
-    *iv_len = 0;
-    *tag_len = 0;
-    return 1;
-  }
-
-  *tag = (unsigned char*)malloc(*tag_len);
-  if(*tag == NULL)
-  {
-    free(*cipher);
-    free(*iv);
-    *cipher = NULL;
-    *iv = NULL;
-    *cipher_len = 0;
-    *iv_len = 0;
-    *tag_len = 0;
-    return 1;
-  }
-
   // variable to hold length of resulting CT - OpenSSL insists this be an int
   int ciphertext_len = 0;
 
@@ -80,15 +57,6 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
 
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
-    free(*cipher);
-    free(*iv);
-    free(*tag);
-    *cipher = NULL;
-    *iv = NULL;
-    *tag = NULL;
-    *cipher_len = 0;
-    *iv_len = 0;
-    *tag_len = 0;
     return 1;
   }
   int init_result = 0;
@@ -109,30 +77,25 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   }
   if (!init_result)
   {
-    free(*cipher);
-    free(*iv);
-    free(*tag);
-    *cipher = NULL;
-    *iv = NULL;
-    *tag = NULL;
-    *cipher_len = 0;
-    *tag_len = 0;
-    *iv_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
 
-  // create the IV
+  // Create the IV. At the moment if you ask Pelz to encrypt for you
+  // it'll only use the default IV length, but decrypt will work
+  // with any valid IV length.
+  *iv_len     = PELZ_GCM_IV_LEN;
+  *iv = malloc(*iv_len);
+  if(*iv == NULL)
+  {
+    *iv_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
   if (RAND_bytes(*iv, *iv_len) != 1)
   {
-    free(*cipher);
     free(*iv);
-    free(*tag);
-    *cipher = NULL;
     *iv = NULL;
-    *tag = NULL;
-    *cipher_len = 0;
-    *tag_len = 0;
     *iv_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -141,15 +104,9 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   // set the IV length in the cipher context
   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, *iv_len, NULL))
   {
-    free(*cipher);
     free(*iv);
-    free(*tag);
-    *cipher = NULL;
     *iv = NULL;
-    *tag = NULL;
-    *cipher_len = 0;
     *iv_len = 0;
-    *tag_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -157,30 +114,35 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   // set the key and IV in the cipher context
   if (!EVP_EncryptInit_ex(ctx, NULL, NULL, key, *iv))
   {
-    free(*cipher);
     free(*iv);
-    free(*tag);
-    *cipher = NULL;
     *iv = NULL;
-    *tag = NULL;
-    *cipher_len = 0;
-    *tag_len = 0;
     *iv_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
 
+  // For GCM as we're using it with the tag and IV held separately
+  // the ciphertext length matches the plaintext length.
+  *cipher_len = plain_len;
+  *cipher = malloc(*cipher_len);
+  if (*cipher == NULL)
+  {
+    free(*iv);
+    *iv = NULL;
+    *iv_len = 0;
+    *cipher_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
+  
   // encrypt the input plaintext, put result in the output ciphertext buffer
   if (!EVP_EncryptUpdate(ctx, *cipher, &ciphertext_len, plain, plain_len))
   {
     free(*cipher);
     free(*iv);
-    free(*tag);
     *cipher = NULL;
-    *tag = NULL;
     *iv = NULL;
     *cipher_len = 0;
-    *tag_len = 0;
     *iv_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -191,13 +153,25 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   {
     free(*cipher);
     free(*iv);
-    free(*tag);
     *cipher = NULL;
-    *tag = NULL;
     *iv = NULL;
     *cipher_len = 0;
-    *tag_len = 0;
     *iv_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
+
+  *tag_len = PELZ_GCM_TAG_LEN;
+  *tag = (unsigned char*)malloc(*tag_len);
+  if(*tag == NULL)
+  {
+    free(*cipher);
+    free(*iv);
+    *cipher = NULL;
+    *iv = NULL;
+    *cipher_len = 0;
+    *iv_len = 0;
+    *tag_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -254,6 +228,11 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
 			 unsigned char** plain,
 			 size_t* plain_len)
 {
+  // Setting here so we don't have to do anything if we
+  // error out before getting to them.
+  *plain_len = 0;
+  *plain = NULL;
+  
   // validate non-NULL and non-empty decryption key specified
   if (key == NULL || key_len == 0)
   {
@@ -275,15 +254,7 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   {
     return 1;
   }
-  
-  *plain_len = cipher_len;
-  *plain = malloc(*plain_len);
-  if(*plain == NULL)
-  {
-    *plain_len = 0;
-    return 1;
-  }
-  
+
   // variables to hold/accumulate length returned by EVP library calls
   //   - OpenSSL insists this be an int
   int len = 0;
@@ -294,9 +265,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
 
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     return 1;
   }
   int init_result = 0;
@@ -317,9 +285,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   }
   if (!init_result)
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -327,9 +292,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   // set tag to expected tag passed in with input data
   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag_len, tag))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -337,9 +299,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   // set the IV length in the cipher context
   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -347,13 +306,18 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   // set the key and IV in the cipher context
   if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
   {
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
 
+  *plain_len = cipher_len;
+  *plain = malloc(*plain_len);
+  if(*plain == NULL)
+  {
+    *plain_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
   // decrypt the input ciphertext, put result in the output plaintext buffer
   if (!EVP_DecryptUpdate(ctx, *plain, &len, cipher, *plain_len))
   {

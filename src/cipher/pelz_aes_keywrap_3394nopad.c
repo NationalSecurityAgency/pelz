@@ -26,6 +26,11 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
 				       unsigned char** tag,
 				       size_t* tag_len)
 {
+  // Zero/null out so if we error out before setting them we don't have
+  // to set them before returning.
+  *cipher_len = 0;
+  *cipher = NULL;
+  
   // validate non-NULL and non-empty encryption key specified
   if (key == NULL || key_len == 0)
   {
@@ -46,18 +51,6 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
     return 1;
   }
 
-  // setup output ciphertext data buffer (outData):
-  //   - an 8-byte integrity check value is prepended to input plaintext
-  //   - the ciphertext output is the same length as the expanded plaintext
-  *cipher_len = plain_len + 8;
-  *cipher = NULL;
-  *cipher = (unsigned char *) malloc(*cipher_len);
-  if (*cipher == NULL)
-  {
-    pelz_log(LOG_ERR, "malloc error for output ciphertext ... exiting");
-    return 1;
-  }
-
   // initialize the cipher context to match cipher suite being used
   //   - OpenSSL requires the WRAP_ALLOW flag be explicitly set to use key
   //     wrap modes through EVP.
@@ -66,9 +59,6 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
     pelz_log(LOG_ERR, "error creating AES Key Wrap cipher context ... exiting");
-    free(*cipher);
-    *cipher = NULL;
-    *cipher_len = 0;
     return 1;
   }
   EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
@@ -91,9 +81,6 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!init_result)
   {
     pelz_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
-    free(*cipher);
-    *cipher = NULL;
-    *cipher_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -102,9 +89,19 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
   if (!EVP_EncryptInit_ex(ctx, NULL, NULL, key, NULL))
   {
     pelz_log(LOG_ERR, "error setting key ... exiting");
-    free(*cipher);
-    *cipher = NULL;
-    *cipher_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
+
+  // setup output ciphertext data buffer (outData):
+  //   - an 8-byte integrity check value is prepended to input plaintext
+  //   - the ciphertext output is the same length as the expanded plaintext
+  *cipher_len = plain_len + 8;
+  *cipher = NULL;
+  *cipher = (unsigned char *) malloc(*cipher_len);
+  if (*cipher == NULL)
+  {
+    pelz_log(LOG_ERR, "malloc error for output ciphertext ... exiting");
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -174,6 +171,11 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
 				       unsigned char** plain,
 				       size_t* plain_len)
 {
+  // We set these now so if we error out before setting them we
+  // don't have to zero/null them before returning.
+  *plain_len = 0;
+  *plain = NULL;
+  
   // validate non-NULL and non-empty decryption key specified
   if (key == NULL || key_len == 0)
   {
@@ -210,16 +212,6 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
     return 1;
   }
 
-  // output data buffer (plain) will contain the decrypted plaintext, which
-  // should be the same size as the input ciphertext data (original plaintext
-  // plus prepended 8-byte integrity check value)
-  *plain = (unsigned char *) malloc(cipher_len);
-  if (*plain == NULL)
-  {
-    pelz_log(LOG_ERR, "malloc error for PT output ... exiting");
-    return 1;
-  }
-
   // initialize the cipher context to match cipher suite being used
   //   - OpenSSL requires the WRAP_ALLOW flag be explicitly set to use key
   //     wrap modes through EVP.
@@ -228,9 +220,6 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!(ctx = EVP_CIPHER_CTX_new()))
   {
     pelz_log(LOG_ERR, "error creating cipher context ... exiting");
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     return 1;
   }
   EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
@@ -253,9 +242,6 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!init_result)
   {
     pelz_log(LOG_ERR, "AES Key Wrap cipher context init error ... exiting");
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -265,9 +251,6 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
   if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, NULL))
   {
     pelz_log(LOG_ERR, "error setting key ... exiting");
-    free(*plain);
-    *plain = NULL;
-    *plain_len = 0;
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
@@ -276,6 +259,17 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
   // the output plaintext length we actually end up matches the expected result
   //   - tmp_len: integer variable used to get output size from EVP functions
   int tmp_len = 0;
+
+  // output data buffer (plain) will contain the decrypted plaintext, which
+  // should be the same size as the input ciphertext data (original plaintext
+  // plus prepended 8-byte integrity check value)
+  *plain = (unsigned char *) malloc(cipher_len);
+  if (*plain == NULL)
+  {
+    pelz_log(LOG_ERR, "malloc error for PT output ... exiting");
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
 
   // decrypt the input ciphertext, put result (with the prepended integrity
   // check value validated and removed) in the output plaintext buffer
