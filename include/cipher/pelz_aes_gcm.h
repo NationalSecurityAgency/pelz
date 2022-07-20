@@ -25,30 +25,21 @@ extern "C" {
  * @brief This function uses the AES-GCM implementation from OpenSSL to
  *        encrypt data.
  *
- * <pre>
- * The outData block has the form 
- *    IV||data||tag
- * where
- *      the IV is 12 (GCM_IV_LEN) bytes in length and
- *      the tag is 16 (GCM_TAG_LEN) bytes in length.
- * </pre>
- *
  * @param[in]  key         The hex bytes containing the key -
  *                         pass in pointer to key buffer
  *
  * @param[in]  key_len     The length of the key in bytes
  *                         (must be 16, 24, or 32)
  *
- * @param[in]  inData      The plaintext data to be encrypted -
+ * @param[in]  plain       The plaintext data to be encrypted -
  *                         pass in pointer to input plaintext data buffer)
  *
- * @param[in]  inData_len  The length, in bytes, of the plaintext data
+ * @param[in]  plain_len   The length, in bytes, of the plaintext data
  *
- * @param[out] outData     The output ciphertext (including the GCM IV and tag) -
- *                         pass in pointer to address of ciphertext buffer
- *
- * @param[out] outData_len The length in bytes of outData -
- *                         pass as pointer to length value
+ * @param[out] cipher_data The output data, including:
+ *                         - The ciphertext
+ *                         - The IV
+ *                         - The MAC tag.
  *
  * @return 0 on success, 1 on error
  */
@@ -68,16 +59,15 @@ int pelz_aes_gcm_encrypt(unsigned char *key,
  * @param[in]  key_len     The length of the key in bytes
  *                         (must be 16, 24, or 32)
  *
- * @param[in]  inData      The IV, ciphertext, and tag,
- *                         formatted IV||ciphertext||tag -
- *                         pass in pointer to input values
+ * @param[in]  cipher_data A cipher_data_t structure containing:
+ *                         - The ciphertext
+ *                         - The IV used to encrypt the ciphertext
+ *                         - The MAC tag
  *
- * @param[in]  inData_len  The length in bytes of the ciphertext and tag
- *
- * @param[out] outData     The output plaintext -
+ * @param[out] plain       The output plaintext -
  *                         passed as pointer to address of output buffer
  *
- * @param[out] outData_len The length in bytes of outData
+ * @param[out] plain_len   The length in bytes of outData
  *                         passed as pointer to length value
  *
  * @return 0 on success, 1 on error

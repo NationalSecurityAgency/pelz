@@ -35,29 +35,11 @@ typedef struct {
  *
  * @param[in]  plain_len   The length of plain in bytes
  *
- * @param[out] iv          A pointer to the address of the buffer to hold
- *                         the initialization vector if required. This argument
- *                         should be ignored if the cipher does not
- *                         require an initialization vector.
- *
- * @param[out] iv_len      The length of iv in bytes, passed as a pointer
- *                         to a size_t to hold the value. This argument should
- *                         be ignored if the cipher does not require an 
- *                         initialization vector.
- *
- * @param[out] cipher      The output data -
- *                         pass in pointer to address of output buffer
- *
- * @param[out] cipher_len  The length of the output data in bytes
- *                         pass as pointer to length value
- *
- * @param[out] tag         A pointer to the address of the buffer to hold
- *                         the MAC tag if required. This argument shold be 
- *                         ignored if the cipher does not produce a MAC tag.
- *
- * @param[out] tag_len     The length of tag in bytes, passes as a pointer to
- *                         a size_t to hold the value. This argument should be 
- *                         ignored if the cipher does not produce a MAC tag.
+ * @param[out] cipher_data A pointer to a cipher_data_t structure to hold all
+ *                         outputs of the encryption. This includes:
+ *                         - The output ciphertext
+ *                         - The IV (if necessary)
+ *                         - The MAC tag (if necessary)
  *
  * @return 0 on success, 1 on error.
  */
@@ -77,28 +59,12 @@ typedef int (*encrypt_cipher) (unsigned char *key,
  *                         pass in pointer to key buffer
  *
  * @param[in]  key_len     The length of the key in bytes
- *
- * @param[in]  iv          A pointer to the buffer holding
- *                         the initialization vector if required. This argument
- *                         should be ignored if the cipher does not
- *                         require an initialization vector.
- *
- * @param[in]  iv_len      The length of iv in bytes. This argument should
- *                         be ignored if the cipher does not require an 
- *                         initialization vector.
- *
- * @param[in]  cipher      The data to be decrypted -
- *                         pass in pointer to input data buffer
- *
- * @param[in]  cipher_len  The length of cipher in bytes
- *
- * @param[in]  tag         A pointer to the buffer holding
- *                         the MAC tag if required. This argument shold be 
- *                         ignored if the cipher does not consume a MAC tag.
- *
- * @param[in]  tag_len     The length of tag in bytes, passes as a pointer to
- *                         a size_t to hold the value. This argument should be 
- *                         ignored if the cipher does not consume a MAC tag.
+ * 
+ * @param[in]  cipher_data A cipher_data_st structure containing all data
+ *                         required for decryption. This includes:
+ *                         - The ciphertext
+ *                         - The IV (if necessary)
+ *                         - The MAC tag (if necessary)
  *
  * @param[out] plain       The output data -
  *                         pass in pointer to address of output buffer
