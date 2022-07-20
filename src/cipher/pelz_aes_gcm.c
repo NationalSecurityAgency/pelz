@@ -26,6 +26,17 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
 			 size_t *tag_len)
 {
 
+  // Setting these here so we don't have to if we error out
+  // before getting to them.
+  *cipher_len = 0;
+  *cipher = NULL;
+
+  *iv_len = 0;
+  *iv = NULL;
+
+  *tag_len = 0;
+  *tag = NULL;
+  
   // validate non-NULL and non-empty encryption key specified
   if (key == NULL || key_len == 0)
   {
@@ -37,13 +48,6 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   {
     return 1;
   }
-
-  // Setting these to 0 here so if we error out later before
-  // changing them we don't have to reset them to 0.
-  *cipher_len = 0;
-  *iv_len     = 0;
-  *tag_len    = 0;
-  
 
   // variable to hold length of resulting CT - OpenSSL insists this be an int
   int ciphertext_len = 0;
@@ -224,6 +228,11 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
 			 unsigned char** plain,
 			 size_t* plain_len)
 {
+  // Setting here so we don't have to do anything if we
+  // error out before getting to them.
+  *plain_len = 0;
+  *plain = NULL;
+  
   // validate non-NULL and non-empty decryption key specified
   if (key == NULL || key_len == 0)
   {
@@ -246,10 +255,6 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
     return 1;
   }
 
-  // We set the plain_len to 0 so if we error out before actually
-  // getting to it we don't have to set it before returning.
-  *plain_len = 0;
-  
   // variables to hold/accumulate length returned by EVP library calls
   //   - OpenSSL insists this be an int
   int len = 0;
