@@ -28,7 +28,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   charbuf field;
   if(!cJSON_HasObjectItem(json, field_name) || !cJSON_IsString(cJSON_GetObjectItem(json, field_name)))
   {
-    pelz_log(LOG_ERR, "Missing JSON field %s.", field_name);
+    pelz_log(LOG_WARNING, "Missing JSON field %s.", field_name);
     return new_charbuf(0);
   } 
   if(cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring != NULL)
@@ -43,7 +43,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   }
   else
   {
-    pelz_log(LOG_ERR, "No value in JSON field %s.", field_name);
+    pelz_log(LOG_WARNING, "No value in JSON field %s.", field_name);
     return new_charbuf(0);
   }
   return field;
@@ -72,7 +72,7 @@ static int get_JSON_int_field(cJSON* json, const char* field_name, int* value)
 }
 
 
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf* cipher_name, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
   char *str = NULL;
@@ -88,7 +88,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return (1);
   }
 
-  // We always parse out key_id and data. Other parsing may
+  // We always parse out key_id, cipher, and data. Other parsing may
   // happen depending on the request type.
   *key_id = get_JSON_string_field(json, "key_id");
   if(key_id->len == 0 || key_id->chars == NULL)
@@ -99,12 +99,23 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return 1;
   }
 
+  *cipher_name = get_JSON_string_field(json, "cipher");
+  if(cipher_name->len == 0 || cipher_name->chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to extract cipher from JSON.");
+    cJSON_Delete(json);
+    free_charbuf(key_id);
+    free_charbuf(cipher_name);
+    return 1;
+  }
+		 
   *data = get_JSON_string_field(json, "data");
   if(data->len == 0 || data->chars == NULL)
   {
     pelz_log(LOG_ERR, "Failed to exract data from JSON.");
     cJSON_Delete(json);
     free_charbuf(key_id);
+    free_charbuf(cipher_name);
     free_charbuf(data);
     return 1;
   }
@@ -131,6 +142,15 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(requestor_cert);
       return 1;
     }
+  }
+
+  // The iv and tag fields are not always present, and at this point
+  // we don't know if they're necessary or not so if they're not there
+  // we just move on.
+  if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
+  {
+    *iv = get_JSON_string_field(json, "iv");
+    *tag = get_JSON_string_field(json, "tag");
   }
   
   if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
@@ -168,41 +188,44 @@ int error_message_encoder(charbuf * message, const char *err_message)
   return (0);
 }
 
-int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf * message)
+int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf iv, charbuf tag, charbuf data, charbuf * message)
 {
+
   cJSON *root;
   char *tmp = NULL;
 
   root = cJSON_CreateObject();
-  switch (request_type)
+  tmp = (char *) calloc((key_id.len + 1), sizeof(char));
+  memcpy(tmp, key_id.chars, key_id.len);
+  cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
+  free(tmp);
+
+  tmp = (char*)null_terminated_string_from_charbuf(cipher_name);
+  cJSON_AddItemToObject(root, "cipher", cJSON_CreateString(tmp));
+    
+  tmp = (char *) calloc((data.len + 1), sizeof(char));
+  memcpy(tmp, data.chars, data.len);
+  cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
+  free(tmp);
+  
+  if(request_type == REQ_ENC || request_type == REQ_ENC_SIGNED)
   {
-  case REQ_ENC:
-    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
-    memcpy(tmp, key_id.chars, key_id.len);
-    cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
-    free(tmp);
-
-    tmp = (char *) calloc((data.len + 1), sizeof(char));
-    memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
-    free(tmp);
-    break;
-  case REQ_DEC:
-    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
-    memcpy(tmp, key_id.chars, key_id.len);
-    cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
-    free(tmp);
-
-    tmp = (char *) calloc((data.len + 1), sizeof(char));
-    memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
-    free(tmp);
-    break;
-  default:
-    pelz_log(LOG_ERR, "Request Type not recognized.");
-    cJSON_Delete(root);
-    return (1);
+    if(tag.chars != NULL && tag.len != 0)
+    {
+      tmp = (char *)calloc(tag.len+1, sizeof(char));
+      memcpy(tmp, tag.chars, tag.len);
+      cJSON_AddItemToObject(root, "tag", cJSON_CreateString(tmp));
+      free(tmp);
+    }
+    if(iv.chars != NULL && iv.len != 0)
+    {
+      tmp = (char *)calloc(iv.len+1, sizeof(char));
+      memcpy(tmp, iv.chars, iv.len);
+      cJSON_AddItemToObject(root, "iv", cJSON_CreateString(tmp));
+      free(tmp);
+    }
   }
+  
   if (cJSON_IsInvalid(root))
   {
     pelz_log(LOG_ERR, "JSON Message Creation Failed");

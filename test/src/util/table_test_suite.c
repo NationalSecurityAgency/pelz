@@ -44,23 +44,26 @@ int table_suite_add_tests(CU_pSuite suite)
   return (0);
 }
 
-uint64_t get_file_handle(const char *path)
+bool get_file_handle(const char *path, uint64_t* handle)
 {
   uint8_t *data = NULL;
   size_t data_len = 0;
-  uint64_t handle = 0;
 
   if (read_bytes_from_file((char *) path, &data, &data_len))
   {
     pelz_log(LOG_ERR, "read_bytes_from_file function failure");
+    return false;
   }
-  if (kmyth_sgx_unseal_nkl(eid, data, data_len, &handle))
-  {
-    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-  }
-  free(data);
-
-  return handle;
+  if(data_len > 0)
+    {
+      if (kmyth_sgx_unseal_nkl(eid, data, data_len, handle))
+	{
+	  pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+	  return false;
+	}
+      free(data);
+    }
+  return true;
 }
 
 void test_table_destroy(void)
@@ -111,37 +114,45 @@ void test_table_add(void)
   key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == RET_FAIL);
 
-  handle = get_file_handle(valid_id[1]);
-  key_table_add_from_handle(eid, &status, tmp, handle);
-  CU_ASSERT(status == OK);
-  free_charbuf(&tmp);
-  pelz_log(LOG_INFO, "Key Table add from Handle complete");
+  if(get_file_handle(valid_id[1], &handle)){
+    key_table_add_from_handle(eid, &status, tmp, handle);
+    CU_ASSERT(status == OK);
+    free_charbuf(&tmp);
+    pelz_log(LOG_INFO, "Key Table add from Handle complete");
 
-  //Testing the server table add
-  add_cert_to_table(eid, &status, SERVER, handle);
-  CU_ASSERT(status == RET_FAIL);
+    //Testing the server table add
+    add_cert_to_table(eid, &status, SERVER, handle);
+    CU_ASSERT(status == RET_FAIL);
+  }
+  
+  if(get_file_handle(valid_id[3], &handle))
+  {
+    add_cert_to_table(eid, &status, SERVER, handle);
+    CU_ASSERT(status == OK);
+    pelz_log(LOG_INFO, "Server Table add complete");
+  }
 
-  handle = get_file_handle(valid_id[3]);
-  add_cert_to_table(eid, &status, SERVER, handle);
-  CU_ASSERT(status == OK);
-  pelz_log(LOG_INFO, "Server Table add complete");
+  if(get_file_handle(valid_id[3], &handle))
+  {
+    get_file_handle(valid_id[3], &handle);
+    add_cert_to_table(eid, &status, CA_TABLE, handle);
+    CU_ASSERT(status == OK);
+    pelz_log(LOG_INFO, "CA Table add complete");
 
-  handle = get_file_handle(valid_id[3]);
-  add_cert_to_table(eid, &status, CA_TABLE, handle);
-  CU_ASSERT(status == OK);
-  pelz_log(LOG_INFO, "CA Table add complete");
-
-  //Testing the private pkey add
-  private_pkey_init(eid, &status);
-  CU_ASSERT(status == OK);
-  private_pkey_add(eid, &status, handle);
-  CU_ASSERT(status == RET_FAIL);
-
-  handle = get_file_handle(valid_id[4]);
-  private_pkey_add(eid, &status, handle);
-  CU_ASSERT(status == OK);
-  pelz_log(LOG_INFO, "Private Pkey add success");
-
+    //Testing the private pkey add
+    private_pkey_init(eid, &status);
+    CU_ASSERT(status == OK);
+    private_pkey_add(eid, &status, handle);
+    CU_ASSERT(status == ERR_X509);
+  }
+  
+  if(get_file_handle(valid_id[4], &handle))
+  {
+    private_pkey_add(eid, &status, handle);
+    CU_ASSERT(status == OK);
+    pelz_log(LOG_INFO, "Private Pkey add success");
+  }
+    
   server_id = new_charbuf(strlen("localhost"));
   memcpy(server_id.chars, "localhost", server_id.len);
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
@@ -197,19 +208,19 @@ void test_table_lookup(void)
   }
 
   //Initial load of certs into the server table
-  handle = get_file_handle(valid_id[6]);
+  get_file_handle(valid_id[6],&handle);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
-  handle = get_file_handle(valid_id[7]);
+  get_file_handle(valid_id[7],&handle);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
-  handle = get_file_handle(valid_id[6]);
+  get_file_handle(valid_id[6],&handle);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
 
-  handle = get_file_handle(valid_id[7]);
+  get_file_handle(valid_id[7],&handle);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
 
@@ -308,19 +319,19 @@ void test_table_delete(void)
   }
 
   //Initial load of certs into the server table
-  handle = get_file_handle(valid_id[6]);
+  get_file_handle(valid_id[6], &handle);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
-  handle = get_file_handle(valid_id[7]);
+  get_file_handle(valid_id[7], &handle);
   add_cert_to_table(eid, &status, SERVER, handle);
   CU_ASSERT(status == OK);
 
-  handle = get_file_handle(valid_id[6]);
+  get_file_handle(valid_id[6], &handle);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
 
-  handle = get_file_handle(valid_id[7]);
+  get_file_handle(valid_id[7], &handle);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
 

@@ -115,7 +115,7 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 App_Cpp_Files_for_Test := src/util/common_table.c \
 		 src/util/key_table.c \
 		 src/util/server_table.c \
-		 src/util/aes_keywrap_3394nopad.c \
+		 src/cipher/pelz_aes_keywrap_3394nopad.c \
 		 src/util/pelz_request_handler.c
 
 App_Cpp_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
@@ -186,7 +186,7 @@ else
 endif
 Crypto_Library_Name := sgx_tcrypto
 
-Enclave_Include_Paths := -Iinclude 
+Enclave_Include_Paths := -Iinclude
 Enclave_Include_Paths += -Isgx 
 Enclave_Include_Paths += -I$(SGX_SDK)/include 
 Enclave_Include_Paths += -I$(SGX_SDK)/include/tlibc 
@@ -476,6 +476,10 @@ sgx/sgx_retrieve_key_impl.o: kmyth/sgx/trusted/src/wrapper/sgx_retrieve_key_impl
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
+sgx/pelz_aes_gcm.o: src/cipher/pelz_aes_gcm.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/aes_gcm.o: kmyth/src/cipher/aes_gcm.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -504,7 +508,7 @@ sgx/channel_table.o: src/util/channel_table.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
-sgx/aes_keywrap_3394nopad.o: src/util/aes_keywrap_3394nopad.c
+sgx/pelz_aes_keywrap_3394nopad.o: src/cipher/pelz_aes_keywrap_3394nopad.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
@@ -516,24 +520,30 @@ sgx/charbuf.o: src/util/charbuf.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/pelz_cipher.o: src/cipher/pelz_cipher.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
 		     sgx/server_table.o \
-				 sgx/channel_table.o \
-		     sgx/aes_keywrap_3394nopad.o \
+	 	     sgx/channel_table.o \
+		     sgx/pelz_aes_keywrap_3394nopad.o \
 		     sgx/pelz_request_handler.o \
 		     sgx/charbuf.o \
 		     sgx/kmyth_enclave_seal.o \
-				 sgx/kmyth_enclave_unseal.o \
+		     sgx/kmyth_enclave_unseal.o \
 		     sgx/kmyth_enclave_memory_util.o \
 		     sgx/kmyth_enclave_retrieve_key.o \
 		     sgx/ec_key_cert_unmarshal.o \
 		     sgx/ecdh_util.o \
 		     sgx/sgx_retrieve_key_impl.o \
+		     sgx/pelz_aes_gcm.o \
 		     sgx/aes_gcm.o \
 		     sgx/memory_util.o \
-		     sgx/kmip_util.o 
+		     sgx/kmip_util.o \
+		     sgx/pelz_cipher.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 
@@ -552,26 +562,28 @@ sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
 	@echo "CC  <= $<"
 
 sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
-						sgx/common_table.o \
-     			  sgx/key_table.o \
-     			  sgx/server_table.o \
-						sgx/channel_table.o \
-     			  sgx/aes_keywrap_3394nopad.o \
-     			  sgx/pelz_request_handler.o \
-     			  sgx/charbuf.o \
-     			  sgx/kmyth_enclave_seal.o \
-     			  sgx/kmyth_enclave_unseal.o \
-     			  sgx/kmyth_enclave_memory_util.o \
-     			  sgx/kmyth_enclave_retrieve_key.o \
-     			  sgx/ec_key_cert_unmarshal.o \
-     			  sgx/ecdh_util.o \
-     			  sgx/sgx_retrieve_key_impl.o \
-     			  sgx/aes_gcm.o \
-     			  sgx/memory_util.o \
-     			  sgx/kmip_util.o \
-     			  sgx/enclave_helper_functions.o
+			  sgx/common_table.o \
+			  sgx/key_table.o \
+			  sgx/server_table.o \
+			  sgx/channel_table.o \
+			  sgx/pelz_aes_keywrap_3394nopad.o \
+			  sgx/pelz_request_handler.o \
+			  sgx/charbuf.o \
+			  sgx/kmyth_enclave_seal.o \
+			  sgx/kmyth_enclave_unseal.o \
+			  sgx/kmyth_enclave_memory_util.o \
+			  sgx/kmyth_enclave_retrieve_key.o \
+			  sgx/ec_key_cert_unmarshal.o \
+			  sgx/ecdh_util.o \
+			  sgx/sgx_retrieve_key_impl.o \
+			  sgx/aes_gcm.o \
+			  sgx/pelz_aes_gcm.o \
+			  sgx/memory_util.o \
+			  sgx/kmip_util.o \
+			  sgx/enclave_helper_functions.o \
+			  sgx/pelz_cipher.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
-	@echo "LINK =>  $@"
+	@echo "LINK =>	$@"
 
 sgx/$(Signed_Test_Enclave_Name): sgx/$(Test_Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) \
