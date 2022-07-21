@@ -36,7 +36,7 @@ extern "C" {
  *
  * @param[in]  plain_len   The length, in bytes, of the plaintext data
  *
- * @param[out] cipher_data The output data, including:
+ * @param[out] cipher_data A pointer to a cipher_data_t structure that will contain:
  *                         - The ciphertext
  *                         - The IV
  *                         - The MAC tag.
