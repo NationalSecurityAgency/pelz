@@ -41,16 +41,51 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 			       plain_data.len,
 			       &cipher_data_st))
   {
+    free(cipher_data_st.cipher);
+    free(cipher_data_st.iv);
+    free(cipher_data_st.tag);
     return ENCRYPT_ERROR;
   }
-  
-  if(cipher_data_st.iv_len > 0)
+
+
+  // Set up the output for cipher_data_st.cipher first because it's the only
+  // one that should always be present and it makes the error handling slightly
+  // cleaner to do it first.
+  if(cipher_data_st.cipher_len > 0 && cipher_data_st.cipher != NULL)
+  {
+    ocall_malloc(cipher_data_st.cipher_len, &cipher_data->chars);
+    if(cipher_data->chars == NULL)
+    {
+      free(cipher_data_st.cipher);
+      free(cipher_data_st.tag);
+      free(cipher_data_st.iv);
+      
+      cipher_data->len = 0;
+      return ENCRYPT_ERROR;
+    }
+    cipher_data->len = cipher_data_st.cipher_len;
+    memcpy(cipher_data->chars, cipher_data_st.cipher, cipher_data->len);
+  }
+  else
+  {
+    free(cipher_data_st.cipher);
+    free(cipher_data_st.tag);
+    free(cipher_data_st.iv);
+    return ENCRYPT_ERROR;
+  }
+  free(cipher_data_st.cipher);
+
+  if(cipher_data_st.iv_len > 0 && cipher_data_st.iv != NULL)
   {
     ocall_malloc(cipher_data_st.iv_len, &iv->chars);
     if(iv->chars == NULL)
     {
+      ocall_free(cipher_data->chars, cipher_data->len);
+      cipher_data->chars = NULL;
+      cipher_data->len = 0;
+      
       iv->len = 0;
-      free(cipher_data_st.cipher);
+      
       free(cipher_data_st.iv);
       free(cipher_data_st.tag);
       return ENCRYPT_ERROR;
@@ -58,54 +93,29 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
     iv->len = cipher_data_st.iv_len;
     memcpy(iv->chars, cipher_data_st.iv, iv->len);
   }
+  free(cipher_data_st.iv);
 
-  if(cipher_data_st.tag_len > 0)
+  if(cipher_data_st.tag_len > 0 && cipher_data_st.tag != NULL)
   {
-    tag->len = cipher_data_st.tag_len;
     ocall_malloc(cipher_data_st.tag_len, &tag->chars);
     if(tag->chars == NULL)
     {
-      free(cipher_data_st.cipher);
-      free(cipher_data_st.tag);
-      free(cipher_data_st.iv);
+      ocall_free(cipher_data->chars, cipher_data->len);
+      cipher_data->chars = NULL;
+      cipher_data->len = 0;
+            
+      ocall_free(iv->chars, iv->len);
+      iv->chars = NULL;
+      iv->len = 0;
+
       tag->len = 0;
-      if(iv->chars != NULL)
-      {
-	ocall_free(iv->chars, iv->len);
-	iv->chars = NULL;
-	iv->len = 0;
-      }
+
+      free(cipher_data_st.tag);
       return ENCRYPT_ERROR;
     }
     tag->len = cipher_data_st.tag_len;
     memcpy(tag->chars, cipher_data_st.tag, tag->len);
   }
-  
-  ocall_malloc(cipher_data_st.cipher_len, &cipher_data->chars);
-  if(cipher_data->chars == NULL)
-  {
-    free(cipher_data_st.cipher);
-    free(cipher_data_st.tag);
-    free(cipher_data_st.iv);
-    if(iv->chars != NULL)
-    {
-      ocall_free(iv->chars, iv->len);
-      iv->chars = NULL;
-      iv->len = 0;
-    }
-    if(tag->chars != NULL)
-    {
-      ocall_free(tag->chars, tag->len);
-      tag->chars = NULL;
-      tag->len = 0;
-    }
-    cipher_data->len = 0;
-    return ENCRYPT_ERROR;
-  }
-  cipher_data->len = cipher_data_st.cipher_len;
-  memcpy(cipher_data->chars, cipher_data_st.cipher, cipher_data->len);
-  free(cipher_data_st.cipher);
-  free(cipher_data_st.iv);
   free(cipher_data_st.tag);
   return REQUEST_OK;
 }
