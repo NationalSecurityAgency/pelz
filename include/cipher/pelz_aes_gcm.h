@@ -1,7 +1,7 @@
 /**
- * @file aes_gcm.h
+ * @file pelz_aes_gcm.h
  *
- * @brief Provides access to OpenSSL's AES GCM implementation for kmyth.
+ * @brief Provides access to OpenSSL's AES GCM implementation for pelz.
  */
 #ifndef PELZ_AES_GCM_H
 #define PELZ_AES_GCM_H
