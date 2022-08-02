@@ -7,9 +7,9 @@ openssl ecparam -name secp384r1 -genkey -noout -out proxy_priv.pem
 openssl req -new -x509 -key proxy_priv.pem -subj "/CN=localhost" -out proxy_pub.pem -days 365
 
 # Generate CA key+cert
-openssl req -new -x509 -nodes -subj "/CN=PelzTest-CA" -keyout test-ca.key -out test-ca.pem -days 365
+openssl req -new -x509 -nodes -subj "/CN=PelzTest-CA" -keyout ca_priv.pem -out ca_pub.pem -days 365
 
 # Generate key+csr+cert for remote client, signed by the CA
 openssl ecparam -name secp384r1 -genkey -noout -out worker_priv.pem
 openssl req -new -sha512 -key worker_priv.pem -subj "/CN=TestWorker" -out worker_pub.csr
-openssl x509 -req -sha256 -in worker_pub.csr -out worker_pub.pem -CAcreateserial -CAkey test-ca.key -CA test-ca.pem -days 365
+openssl x509 -req -sha256 -in worker_pub.csr -out worker_pub.pem -CAcreateserial -CAkey ca_priv.pem -CA ca_pub.pem -days 365

@@ -143,7 +143,7 @@ void test_create_validate_signature(void)
   // load CA key to enclave
   table_destroy(eid, &status, CA_TABLE);
   CU_ASSERT(status == OK);
-  ret = pelz_load_file_to_enclave((char *) "test/data/test-ca.der.nkl", &handle);
+  ret = pelz_load_file_to_enclave((char *) "test/data/ca_pub.der.nkl", &handle);
   CU_ASSERT(ret == 0);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
@@ -189,7 +189,7 @@ void test_verify_cert_chain(void)
   load_test_key_pair(&requestor_cert, &requestor_privkey);
 
   // load CA cert from file
-  BIO *cert_bio = BIO_new_file("test/data/test-ca.pem", "r");
+  BIO *cert_bio = BIO_new_file("test/data/ca_pub.pem", "r");
   ca_cert = PEM_read_bio_X509(cert_bio, NULL, 0, NULL);
   BIO_free(cert_bio);
 
@@ -244,7 +244,7 @@ void test_verify_cert_chain_enclave(void)
   CU_ASSERT(status != OK);
 
   // load CA key to enclave
-  ret = pelz_load_file_to_enclave((char *) "test/data/test-ca.der.nkl", &handle);
+  ret = pelz_load_file_to_enclave((char *) "test/data/ca_pub.der.nkl", &handle);
   CU_ASSERT(ret == 0);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
@@ -268,7 +268,7 @@ void test_invalid_cert_chain_enclave(void)
   charbuf der_cert = new_charbuf(0);
 
   // load CA key to enclave
-  ret = pelz_load_file_to_enclave((char *) "test/data/test-ca.der.nkl", &handle);
+  ret = pelz_load_file_to_enclave((char *) "test/data/ca_pub.der.nkl", &handle);
   CU_ASSERT(ret == 0);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
