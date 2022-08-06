@@ -118,7 +118,7 @@ void test_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   CU_ASSERT(request_type = REQ_ENC_SIGNED);
   free_charbuf(&request);
   request_type = REQ_UNK;
@@ -127,7 +127,7 @@ void test_request_decoder(void)
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
   free(tmp);
-  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   CU_ASSERT(request_type == REQ_DEC_SIGNED);
   free_charbuf(&request);
   request_type = REQ_UNK;
@@ -330,8 +330,6 @@ void test_message_encoder(void)
   free_charbuf(&requestor_cert);
   CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, iv, tag, data, &message) == 0);
 
-  // Testing unknown request
-  CU_ASSERT(message_encoder(REQ_UNK, key_id, cipher_name, iv, tag, data, &message) == 1);
   free_charbuf(&key_id);
 
   // Testing unsigned responses
