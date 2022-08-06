@@ -80,6 +80,18 @@ public TableResponseStatus add_cert_to_table(TableType type, uint64_t handle);
 
 /**
  * <pre>
+ * Verify a certificate using the trusted CA certs in the CA table.
+ * </pre>
+ *
+ * @param[in] target The certificate to be verified, as a DER charbuf.
+ *
+ * @return OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public TableResponseStatus verify_cert(charbuf target_der);
+
+/**
+ * <pre>
  * This function initializes a pkey.
  * <pre>
  *

@@ -87,7 +87,7 @@ void test_request_decoder(void)
     free_charbuf(&request);
     request_type = REQ_UNK;
   }
-  
+
   //Building of the json request and most combinations
   json_enc = cJSON_CreateObject();
   json_dec = cJSON_CreateObject();
@@ -105,7 +105,7 @@ void test_request_decoder(void)
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   free_charbuf(&request);
   request_type = REQ_UNK;
-  
+
   tmp = cJSON_PrintUnformatted(json_dec);
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
@@ -113,7 +113,28 @@ void test_request_decoder(void)
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   free_charbuf(&request);
   request_type = REQ_UNK;
+
+  tmp = cJSON_PrintUnformatted(json_enc_signed);
+  request = new_charbuf(strlen(tmp));
+  memcpy(request.chars, tmp, request.len);
+  free(tmp);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+  CU_ASSERT(request_type = REQ_ENC_SIGNED);
+  free_charbuf(&request);
+  request_type = REQ_UNK;
+
+  tmp = cJSON_PrintUnformatted(json_dec_signed);
+  request = new_charbuf(strlen(tmp));
+  memcpy(request.chars, tmp, request.len);
+  free(tmp);
+  CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+  CU_ASSERT(request_type == REQ_DEC_SIGNED);
+  free_charbuf(&request);
+  request_type = REQ_UNK;
+
   
+       
+
   for (int i = 0; i < 6; i++)
   {
     cJSON_AddItemToObject(json_enc, "key_id", cJSON_CreateString(json_key_id[i]));
@@ -124,6 +145,25 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec, "tag", cJSON_CreateString(dec_data[i]));
     cJSON_AddItemToObject(json_enc, "cipher", cJSON_CreateString(cipher_name_str));
     cJSON_AddItemToObject(json_dec, "cipher", cJSON_CreateString(cipher_name_str));
+
+
+    cJSON_AddItemToObject(json_enc_signed, "key_id", cJSON_CreateString(json_key_id[i]));
+    cJSON_AddItemToObject(json_dec_signed, "key_id", cJSON_CreateString(json_key_id[i]));
+    cJSON_AddItemToObject(json_enc_signed, "data", cJSON_CreateString(enc_data[i]));
+    cJSON_AddItemToObject(json_dec_signed, "data", cJSON_CreateString(dec_data[i]));
+    cJSON_AddItemToObject(json_dec_signed, "iv", cJSON_CreateString(dec_data[i]));
+    cJSON_AddItemToObject(json_dec_signed, "tag", cJSON_CreateString(dec_data[i]));
+    cJSON_AddItemToObject(json_enc_signed, "cipher", cJSON_CreateString(cipher_name_str));
+    cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str));
+    
+    cJSON_AddItemToObject(json_enc_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
+    cJSON_AddItemToObject(json_enc_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
+    cJSON_AddItemToObject(json_dec_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
+    cJSON_AddItemToObject(json_dec_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
+    cJSON_AddItemToObject(json_enc_signed, "cipher", cJSON_CreateString(cipher_name_str));
+    cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str));
+
+    
     
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
@@ -172,6 +212,39 @@ void test_request_decoder(void)
     free_charbuf(&key_id);
     free_charbuf(&data);
 
+
+    tmp = cJSON_PrintUnformatted(json_enc_signed);
+    request = new_charbuf(strlen(tmp));
+    memcpy(request.chars, tmp, request.len);
+    free(tmp);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_type = REQ_ENC_SIGNED);
+    free_charbuf(&request);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    free_charbuf(&key_id);
+    free_charbuf(&data);
+    free_charbuf(&request_sig);
+    free_charbuf(&requestor_cert);
+    request_type = REQ_UNK;
+
+
+    tmp = cJSON_PrintUnformatted(json_dec_signed);
+    request = new_charbuf(strlen(tmp));
+    memcpy(request.chars, tmp, request.len);
+    free(tmp);
+    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
+    CU_ASSERT(request_type == REQ_DEC_SIGNED);
+    free_charbuf(&request);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    free_charbuf(&key_id);
+    free_charbuf(&data);
+    free_charbuf(&request_sig);
+    free_charbuf(&requestor_cert);
+    request_type = REQ_UNK;
+    
+
     //Free the cJSON Objects to allow the addition of the next Object per the loop
     cJSON_DeleteItemFromObject(json_dec, "data");
     cJSON_DeleteItemFromObject(json_enc, "data");
@@ -181,61 +254,25 @@ void test_request_decoder(void)
     cJSON_DeleteItemFromObject(json_dec, "tag");
     cJSON_DeleteItemFromObject(json_enc, "cipher");
     cJSON_DeleteItemFromObject(json_dec, "cipher");
-  }
-    // In the future these values will have to align with the validation() function
-    cJSON_AddItemToObject(json_enc_signed, "key_id", cJSON_CreateString("file:/test/key1.txt"));
-    cJSON_AddItemToObject(json_dec_signed, "key_id", cJSON_CreateString("file:/test/key1.txt"));
-    cJSON_AddItemToObject(json_enc_signed, "data", cJSON_CreateString("TestData\n"));
-    cJSON_AddItemToObject(json_dec_signed, "data", cJSON_CreateString("TestData\n"));
-    cJSON_AddItemToObject(json_enc_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
-    cJSON_AddItemToObject(json_enc_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
-    cJSON_AddItemToObject(json_dec_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
-    cJSON_AddItemToObject(json_dec_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
-    cJSON_AddItemToObject(json_enc_signed, "cipher", cJSON_CreateString(cipher_name_str));
-    cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str));
-    request_type = REQ_UNK;
-
-    // The memory and length comparisons don't seem to be working, similar to when we last worked on these test cases
-    // We'll have to fix that in the near future
-
-    //Creating the request charbuf for the JSON then testing request signed encoder for encryption
-    tmp = cJSON_PrintUnformatted(json_enc_signed);
-    request = new_charbuf(strlen(tmp));
-    memcpy(request.chars, tmp, request.len);
-    free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
-    CU_ASSERT(request_type == REQ_ENC_SIGNED);
-    free_charbuf(&request);
-    request_type = REQ_UNK;
-    free_charbuf(&key_id);
-    free_charbuf(&data);
-    free_charbuf(&cipher_name);
-    
-    //Creating the request charbuf for the JSON then testing request signed decoder for encryption
-    tmp = cJSON_PrintUnformatted(json_dec_signed);
-    request = new_charbuf(strlen(tmp));
-    memcpy(request.chars, tmp, request.len);
-    free(tmp);
-    CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 0);
-    CU_ASSERT(request_type == REQ_DEC_SIGNED);
-    free_charbuf(&request);
-    request_type = REQ_UNK;
-    free_charbuf(&key_id);
-    free_charbuf(&data);
-    free_charbuf(&cipher_name);
-
     cJSON_DeleteItemFromObject(json_dec_signed, "data");
     cJSON_DeleteItemFromObject(json_enc_signed, "data");
     cJSON_DeleteItemFromObject(json_enc_signed, "key_id");
     cJSON_DeleteItemFromObject(json_dec_signed, "key_id");
-    cJSON_DeleteItemFromObject(json_dec_signed, "request_sig");
-    cJSON_DeleteItemFromObject(json_dec_signed, "requestor_cert");
+    cJSON_DeleteItemFromObject(json_dec_signed, "iv");
+    cJSON_DeleteItemFromObject(json_dec_signed, "tag");
     cJSON_DeleteItemFromObject(json_enc_signed, "request_sig");
     cJSON_DeleteItemFromObject(json_enc_signed, "requestor_cert");
+    cJSON_DeleteItemFromObject(json_dec_signed, "request_sig");
+    cJSON_DeleteItemFromObject(json_dec_signed, "requestor_cert");
     cJSON_DeleteItemFromObject(json_enc_signed, "cipher");
     cJSON_DeleteItemFromObject(json_dec_signed, "cipher");
-    cJSON_Delete(json_enc);
-    cJSON_Delete(json_dec);
+    
+  }
+
+  cJSON_Delete(json_enc);
+  cJSON_Delete(json_dec);
+  cJSON_Delete(json_enc_signed);
+  cJSON_Delete(json_dec_signed);
 }
 
 void test_message_encoder(void)
@@ -266,7 +303,7 @@ void test_message_encoder(void)
     "{\"key_id\":\"anything\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}",
     "{\"key_id\":\"\",\"cipher\":\"cipher_name\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}"
   };
-  
+
   //Start Message Encoder Test
   pelz_log(LOG_DEBUG, "Start Message Encoder Test");
 
@@ -292,13 +329,12 @@ void test_message_encoder(void)
   free_charbuf(&request_sig);
   free_charbuf(&requestor_cert);
   CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, iv, tag, data, &message) == 0);
-  free_charbuf(&key_id);
-  // Restore values
-  request_sig = new_charbuf(11);
-  memcpy(request_sig.chars, "HelloWorld\n", request_sig.len);
-  requestor_cert = new_charbuf(11);
-  memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
 
+  // Testing unknown request
+  CU_ASSERT(message_encoder(REQ_UNK, key_id, cipher_name, iv, tag, data, &message) == 1);
+  free_charbuf(&key_id);
+
+  // Testing unsigned responses
   for (int i = 0; i < 5; i++)
   {
     key_id = new_charbuf(strlen(test[i]));
@@ -312,6 +348,15 @@ void test_message_encoder(void)
     free_charbuf(&key_id);
   }
   free_charbuf(&cipher_name);
+
+  // TODO: Test signed responses
+  request_sig = new_charbuf(11);
+  memcpy(request_sig.chars, "HelloWorld\n", request_sig.len);
+  requestor_cert = new_charbuf(11);
+  memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
+  free_charbuf(&request_sig);
+  free_charbuf(&requestor_cert);
+
   free_charbuf(&data);
 }
 
