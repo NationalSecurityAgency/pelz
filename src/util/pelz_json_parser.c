@@ -121,11 +121,17 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return 1;
   }
 
+  // The iv and tag fields are not always present, and at this point
+  // we don't know if they're necessary or not so if they're not there
+  // we just move on.
+  if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
+  {
+    *iv = get_JSON_string_field(json, "iv");
+    *tag = get_JSON_string_field(json, "tag");
+  }
+
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
-    // TODO: Remove this once signed requests are supported.
-    pelz_log(LOG_ERR, "Signed requests are not fully implemented.");
-
     *request_sig = get_JSON_string_field(json, "request_sig");
     if(request_sig->len == 0 || request_sig->chars == NULL)
     {
@@ -147,7 +153,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return 1;
     }
 
-    if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
+    if ( validate_signature(request_type, key_id, cipher_name, iv, tag, data, request_sig, requestor_cert) )
     {
       pelz_log(LOG_ERR, "Signature Validation Error");
       cJSON_Delete(json);
@@ -158,16 +164,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return (1);
     }
   }
-
-  // The iv and tag fields are not always present, and at this point
-  // we don't know if they're necessary or not so if they're not there
-  // we just move on.
-  if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
-  {
-    *iv = get_JSON_string_field(json, "iv");
-    *tag = get_JSON_string_field(json, "tag");
-  }
-  
+ 
   cJSON_Delete(json);
   return (0);
 }

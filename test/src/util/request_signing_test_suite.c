@@ -126,7 +126,7 @@ void test_create_validate_signature(void)
   uint64_t handle;
   TableResponseStatus status;
   RequestType req_type = REQ_ENC;
-  charbuf key_id, data, requestor_cert_encoded, signature, signature_encoded;
+  charbuf key_id, data, requestor_cert_encoded, signature, signature_encoded, cipher_name, iv, tag;
   unsigned char *der_buf = NULL;
   int der_len = -1;
 
@@ -166,7 +166,7 @@ void test_create_validate_signature(void)
   CU_ASSERT(ret == 0);
 
   // check signature
-  ret = validate_signature(&req_type, &key_id, &data, &signature_encoded, &requestor_cert_encoded);
+  ret = validate_signature(&req_type, &key_id, &cipher_name, &iv, &tag, &data, &signature_encoded, &requestor_cert_encoded);
   CU_ASSERT(ret == 0);
 
   free(der_buf);
