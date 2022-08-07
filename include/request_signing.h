@@ -17,6 +17,9 @@
  *
  * @param[in] request_type The request type value.
  * @param[in] key_id The request key ID.
+ * @param[in] cipher_name The name of the cipher used for the request.
+ * @param[in] iv     The IV included in the request, may be empty.
+ * @param[in] tag    The tag inclded in the request, may be empty.
  * @param[in] data The request data to be wrapped/unwrapped (base64 encoded).
  * @param[in] request_sig The digital signature for the request content (base64 encoded).
  * @param[in] requestor_cert The requestor's X509 certificate (base64 encoded DER).
@@ -24,7 +27,7 @@
  * @return 0 on success, 1 on error
  *
  */
-int validate_signature(RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
+int validate_signature(RequestType * request_type, charbuf * key_id, charbuf* cipher_name, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert);
 
 /**
  * <pre>
