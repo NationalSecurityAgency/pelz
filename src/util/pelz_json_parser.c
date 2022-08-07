@@ -139,6 +139,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(key_id);
       free_charbuf(data);
       free_charbuf(request_sig);
+      free_charbuf(iv);
+      free_charbuf(tag);
+      free_charbuf(cipher_name);
       return 1;
     }
 
@@ -150,6 +153,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(data);
       free_charbuf(request_sig);
       free_charbuf(requestor_cert);
+      free_charbuf(iv);
+      free_charbuf(tag);
+      free_charbuf(cipher_name);
       return 1;
     }
 
@@ -161,6 +167,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(data);
       free_charbuf(request_sig);
       free_charbuf(requestor_cert);
+      free_charbuf(iv);
+      free_charbuf(tag);
+      free_charbuf(cipher_name);
       return (1);
     }
   }

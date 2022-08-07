@@ -199,5 +199,6 @@ int validate_signature(RequestType * request_type, charbuf * key_id, charbuf* ci
     return 1;
   }
 
+  // Always return 1 here because the functionality isn't fully impelemented yet.
   return 1;
 }
