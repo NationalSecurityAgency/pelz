@@ -158,20 +158,6 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(cipher_name);
       return 1;
     }
-
-    if ( validate_signature(request_type, key_id, cipher_name, iv, tag, data, request_sig, requestor_cert) )
-    {
-      pelz_log(LOG_ERR, "Signature Validation Error");
-      cJSON_Delete(json);
-      free_charbuf(key_id);
-      free_charbuf(data);
-      free_charbuf(request_sig);
-      free_charbuf(requestor_cert);
-      free_charbuf(iv);
-      free_charbuf(tag);
-      free_charbuf(cipher_name);
-      return (1);
-    }
   }
  
   cJSON_Delete(json);
