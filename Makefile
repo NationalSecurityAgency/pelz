@@ -615,11 +615,11 @@ test: all test-all
 	@openssl x509 -in test/data/node_pub.pem -inform pem -out test/data/node_pub.der -outform der
 	@openssl x509 -in test/data/proxy_pub.pem -inform pem -out test/data/proxy_pub.der -outform der
 	@openssl pkey -in test/data/node_priv.pem -inform pem -out test/data/node_priv.der -outform der
-	@openssl x509 -in test/data/test-ca.pem -inform pem -out test/data/test-ca.der -outform der
+	@openssl x509 -in test/data/ca_pub.pem -inform pem -out test/data/ca_pub.der -outform der
 	@./bin/pelz seal test/data/node_pub.der -o test/data/node_pub.der.nkl
 	@./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
 	@./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
-	@./bin/pelz seal test/data/test-ca.der -o test/data/test-ca.der.nkl
+	@./bin/pelz seal test/data/ca_pub.der -o test/data/ca_pub.der.nkl
 	@echo "GEN => Test Key/Cert Files"
 	@cd kmyth/sgx && make demo-pre demo/bin/ecdh-server --eval="Demo_App_C_Flags += -DDEMO_LOG_LEVEL=LOG_WARNING"
 	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -m 1 2> /dev/null &
@@ -628,6 +628,8 @@ test: all test-all
 	@rm -f test/data/*.pem
 	@rm -f test/data/*.der
 	@rm -f test/data/*.nkl
+	@rm -f test/data/*.csr
+	@rm -f test/data/*.srl
 
 .PHONY: install-test-vectors
 
