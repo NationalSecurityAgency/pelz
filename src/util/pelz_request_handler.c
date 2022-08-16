@@ -9,7 +9,7 @@
 RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag)
 {
   int index;
-
+  
   unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
   if(cipher_name_string == NULL)
   {

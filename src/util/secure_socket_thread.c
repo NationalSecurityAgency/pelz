@@ -132,7 +132,7 @@ void *secure_socket_process(void *arg)
     charbuf encoded_iv = new_charbuf(0);
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &cipher_name, &encoded_iv, &encoded_tag, &encoded_input_data, &request_sig, &requestor_cert))
+    if (request_decoder(request, &request_type, &key_id, &cipher_name, &encoded_iv, &encoded_tag, &raw_input_data, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
@@ -142,9 +142,6 @@ void *secure_socket_process(void *arg)
       return NULL;
     }
     free_charbuf(&request);
-
-    decodeBase64Data(encoded_input_data.chars, encoded_input_data.len, &raw_input_data.chars, &raw_input_data.len);
-    free_charbuf(&encoded_input_data);
 
     pthread_mutex_lock(&lock);
     switch(request_type)

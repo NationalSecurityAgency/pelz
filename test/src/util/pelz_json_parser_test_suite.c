@@ -11,6 +11,7 @@
 
 #include <charbuf.h>
 #include <pelz_log.h>
+#include "kmyth/formatting_tools.h"
 
 // Adds all key table tests to main test runner.
 int pelz_json_parser_suite_add_tests(CU_pSuite suite)
@@ -174,8 +175,12 @@ void test_request_decoder(void)
     CU_ASSERT(request_type == REQ_ENC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
-    CU_ASSERT(data.len == enc_data_len[i]);
-    CU_ASSERT(memcmp(data.chars, enc_data[i], data.len) == 0);
+
+    charbuf raw_data;
+    decodeBase64Data((unsigned char*)enc_data[i], enc_data_len[i], &(raw_data.chars), &(raw_data.len));
+    CU_ASSERT(data.len == raw_data.len);
+    CU_ASSERT(memcmp(data.chars, raw_data.chars, data.len) == 0);
+    free_charbuf(&raw_data);
     CU_ASSERT(cipher_name.len == strlen(cipher_name_str));
     CU_ASSERT(memcmp(cipher_name.chars, cipher_name_str, cipher_name.len) == 0);
     
@@ -198,8 +203,11 @@ void test_request_decoder(void)
     CU_ASSERT(request_type == REQ_DEC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
-    CU_ASSERT(data.len == dec_data_len[i]);
-    CU_ASSERT(memcmp(data.chars, dec_data[i], data.len) == 0);
+    decodeBase64Data((unsigned char*)dec_data[i], dec_data_len[i], &(raw_data.chars), &(raw_data.len));
+    //    CU_ASSERT(data.len == dec_data_len[i]);
+    //CU_ASSERT(memcmp(data.chars, dec_data[i], data.len) == 0);
+    CU_ASSERT(data.len == raw_data.len);
+    CU_ASSERT(memcmp(data.chars, raw_data.chars, data.len) == 0);
     CU_ASSERT(memcmp(iv.chars, dec_data[i], iv.len) == 0);
     CU_ASSERT(memcmp(tag.chars, dec_data[i], tag.len) == 0);
     CU_ASSERT(cipher_name.len == strlen(cipher_name_str));

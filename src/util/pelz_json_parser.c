@@ -12,6 +12,7 @@
 #include <charbuf.h>
 #include <pelz_log.h>
 #include <request_signing.h>
+#include "kmyth/formatting_tools.h"
 
 /**
  * <pre>
@@ -78,6 +79,8 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   cJSON *json;
   char *str = NULL;
 
+  charbuf encoded = new_charbuf(0);
+
   str = (char *) calloc((request.len + 1), sizeof(char));
   memcpy(str, request.chars, request.len);
   json = cJSON_Parse(str);
@@ -109,17 +112,21 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     free_charbuf(cipher_name);
     return 1;
   }
-		 
-  *data = get_JSON_string_field(json, "data");
-  if(data->len == 0 || data->chars == NULL)
+
+  // The following fields are base-64 encoded, so we parse and
+  // decode them
+  encoded = get_JSON_string_field(json, "data");
+  if(encoded.len == 0 || encoded.chars == NULL)
   {
-    pelz_log(LOG_ERR, "Failed to exract data from JSON.");
+    pelz_log(LOG_ERR, "Failed to extract data from JSON.");
     cJSON_Delete(json);
     free_charbuf(key_id);
     free_charbuf(cipher_name);
-    free_charbuf(data);
+    free_charbuf(&encoded);
     return 1;
   }
+  decodeBase64Data(encoded.chars, encoded.len, &(data->chars), &(data->len));
+  free_charbuf(&encoded);
 
   // The iv and tag fields are not always present, and at this point
   // we don't know if they're necessary or not so if they're not there
