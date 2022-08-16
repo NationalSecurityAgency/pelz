@@ -12,7 +12,7 @@
 #include "util_test_suite.h"
 #include "aes_keywrap_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
-#include "request_signing_test_suite.h"
+//#include "request_signing_test_suite.h"
 #include "table_test_suite.h"
 #include "request_test_suite.h"
 #include "cmd_interface_test_suite.h"
@@ -136,19 +136,19 @@ int main(int argc, char **argv)
   }
 
   // Add request signing test suite ---- tests request signing/validation operations
-  CU_pSuite request_signing_Suite = NULL;
+  /* CU_pSuite request_signing_Suite = NULL; */
 
-  request_signing_Suite = CU_add_suite("Pelz Request Signing Suite", init_suite, clean_suite);
-  if (NULL == request_signing_Suite)
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
-  if (request_signing_suite_add_tests(request_signing_Suite))
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
+  /* request_signing_Suite = CU_add_suite("Pelz Request Signing Suite", init_suite, clean_suite); */
+  /* if (NULL == request_signing_Suite) */
+  /* { */
+  /*   CU_cleanup_registry(); */
+  /*   return CU_get_error(); */
+  /* } */
+  /* if (request_signing_suite_add_tests(request_signing_Suite)) */
+  /* { */
+  /*   CU_cleanup_registry(); */
+  /*   return CU_get_error(); */
+  /* } */
 
   // Add pelz uri helpers suite ---- tests pelz uri helpers
   CU_pSuite test_pelz_uri_helpers_suite = NULL;

@@ -90,7 +90,6 @@ App_Pipe_File := src/pelz/main.c
 
 App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
-		 src/util/request_signing.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
 		 src/util/fifo_thread.c \
@@ -107,7 +106,6 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/util_test_suite.c \
 		 test/src/util/aes_keywrap_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
-		 test/src/util/request_signing_test_suite.c \
 		 test/src/util/test_helper_functions.c \
 		 test/src/util/test_pelz_uri_helpers.c \
 		 test/src/util/table_test_suite.c \
@@ -118,7 +116,6 @@ App_Cpp_Files_for_Test := src/util/common_table.c \
 		 src/util/key_table.c \
 		 src/util/server_table.c \
 		 src/cipher/pelz_aes_keywrap_3394nopad.c \
-		 src/util/ca_table.c \
 		 src/util/pelz_request_handler.c
 
 App_Cpp_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
@@ -537,6 +534,10 @@ sgx/pelz_cipher.o: src/cipher/pelz_cipher.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/enclave_request_signing.o: src/util/enclave_request_signing.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
@@ -558,7 +559,8 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/aes_gcm.o \
 		     sgx/memory_util.o \
 		     sgx/kmip_util.o \
-		     sgx/pelz_cipher.o
+		     sgx/pelz_cipher.o \
+		     sgx/enclave_request_signing.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 
@@ -597,7 +599,8 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 			  sgx/kmip_util.o \
 			  sgx/enclave_helper_functions.o \
 			  sgx/pelz_cipher.o \
-			  sgx/ca_table.o 
+			  sgx/ca_table.o \
+			  sgx/enclave_request_signing.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>	$@"
 
