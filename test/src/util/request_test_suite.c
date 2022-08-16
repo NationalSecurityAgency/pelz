@@ -76,6 +76,8 @@ void test_invalid_key_id(void)
   charbuf ciphertext;
   charbuf iv;
   charbuf tag;
+  charbuf signature;
+  charbuf cert;
   
   size_t cipher_index = 0;
   while(cipher_names[cipher_index] != NULL)
@@ -84,7 +86,7 @@ void test_invalid_key_id(void)
     memcpy(cipher_name.chars, cipher_names[cipher_index], cipher_name.len);
     cipher_index++;
     
-    pelz_encrypt_request_handler(eid, &response_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+    pelz_encrypt_request_handler(eid, &response_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag, signature, cert);
     CU_ASSERT(response_status == KEK_NOT_LOADED);
     CU_ASSERT(ciphertext.chars == NULL);
     CU_ASSERT(ciphertext.len == 0);
@@ -97,7 +99,7 @@ void test_invalid_key_id(void)
     free_charbuf(&iv);
     free_charbuf(&tag);
 
-    pelz_decrypt_request_handler(eid, &response_status, REQ_DEC, key_id, cipher_name, ciphertext, iv, tag, &plaintext);
+    pelz_decrypt_request_handler(eid, &response_status, REQ_DEC, key_id, cipher_name, ciphertext, iv, tag, &plaintext, signature, cert);
     CU_ASSERT(response_status == KEK_NOT_LOADED);
     CU_ASSERT(plaintext.chars == NULL);
     CU_ASSERT(plaintext.len == 0);
@@ -141,11 +143,12 @@ void test_encrypt_decrypt(void)
     charbuf tag = new_charbuf(0);
     charbuf ciphertext = new_charbuf(0);
     charbuf decrypt = new_charbuf(0);
-
-    pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+    charbuf signature = new_charbuf(0);
+    charbuf cert = new_charbuf(0);
+    pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag, signature, cert);
     CU_ASSERT(request_status == REQUEST_OK);
 
-    pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, ciphertext, iv, tag, &decrypt);
+    pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, ciphertext, iv, tag, &decrypt, signature, cert);
     CU_ASSERT(request_status == REQUEST_OK);
     CU_ASSERT(decrypt.len == plaintext.len);
     CU_ASSERT(memcmp(decrypt.chars, plaintext.chars, decrypt.len) == 0);
@@ -182,8 +185,10 @@ void test_missing_key_id(void)
     charbuf iv = new_charbuf(0);
     charbuf tag = new_charbuf(0);
     charbuf ciphertext = new_charbuf(0);
-
-    pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+    charbuf signature = new_charbuf(0);
+    charbuf cert = new_charbuf(0);
+    
+    pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag, signature, cert);
     CU_ASSERT(request_status == ENCRYPT_ERROR);
     CU_ASSERT(iv.chars == NULL);
     CU_ASSERT(iv.len == 0);
@@ -195,10 +200,11 @@ void test_missing_key_id(void)
     free_charbuf(&iv);
     free_charbuf(&tag);
     free_charbuf(&ciphertext);
+    
 
     // For testing purposes we use "plaintext" as the ciphertext,
     // since the code should never look at it anyway.
-    pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext);
+    pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext, signature, cert);
     CU_ASSERT(request_status == DECRYPT_ERROR);
     CU_ASSERT(iv.chars == NULL);
     CU_ASSERT(iv.len == 0);
@@ -243,11 +249,12 @@ void test_invalid_cipher_name(void)
   charbuf tag = new_charbuf(0);
   charbuf ciphertext = new_charbuf(0);
   charbuf decrypt = new_charbuf(0);
-
+  charbuf signature = new_charbuf(0);
+  charbuf cert = new_charbuf(0);
   // Test with an empty cipher name
   charbuf cipher_name = new_charbuf(0);
   
-  pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+  pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag, signature, cert);
   CU_ASSERT(request_status == ENCRYPT_ERROR);
   CU_ASSERT(iv.chars == NULL);
   CU_ASSERT(iv.len == 0);
@@ -258,7 +265,7 @@ void test_invalid_cipher_name(void)
 
   // Repurpose plaintext as ciphertext, which shouldn't matter
   // since it should never get looked at.
-  pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext);
+  pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext, signature, cert);
   CU_ASSERT(request_status == DECRYPT_ERROR);
   CU_ASSERT(iv.chars == NULL);
   CU_ASSERT(iv.len == 0);
@@ -272,7 +279,7 @@ void test_invalid_cipher_name(void)
   const char* cipher_name_str = "fakeciphername";
   cipher_name = new_charbuf(strlen(cipher_name_str));
   memcpy(cipher_name.chars, cipher_name_str, strlen(cipher_name_str));
-  pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag);
+  pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag, signature, cert);
   CU_ASSERT(request_status == ENCRYPT_ERROR);
   CU_ASSERT(iv.chars == NULL);
   CU_ASSERT(iv.len == 0);
@@ -283,7 +290,7 @@ void test_invalid_cipher_name(void)
 
   // Repurpose plaintext as ciphertext, which shouldn't matter
   // since it should never get looked at.
-  pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext);
+  pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &ciphertext, signature, cert);
   CU_ASSERT(request_status == DECRYPT_ERROR);
   CU_ASSERT(iv.chars == NULL);
   CU_ASSERT(iv.len == 0);
@@ -332,8 +339,10 @@ void test_missing_input_data(void)
     charbuf iv = new_charbuf(0);
     charbuf tag = new_charbuf(0);
     charbuf output_data = new_charbuf(0);
-
-    pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &output_data, &iv, &tag);
+    charbuf signature = new_charbuf(0);
+    charbuf cert = new_charbuf(0);
+    
+    pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &output_data, &iv, &tag, signature, cert);
     CU_ASSERT(request_status == ENCRYPT_ERROR);
     CU_ASSERT(output_data.chars == NULL);
     CU_ASSERT(output_data.len == 0);
@@ -342,7 +351,7 @@ void test_missing_input_data(void)
     CU_ASSERT(tag.chars == NULL);
     CU_ASSERT(tag.len == 0);
 
-    pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &output_data);
+    pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, plaintext, iv, tag, &output_data, signature, cert);
     CU_ASSERT(request_status == DECRYPT_ERROR);
     CU_ASSERT(output_data.chars == NULL);
     CU_ASSERT(output_data.len == 0);

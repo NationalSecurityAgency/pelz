@@ -207,6 +207,7 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_nam
 
   cJSON *root;
   char *tmp = NULL;
+  charbuf encoded;
 
   root = cJSON_CreateObject();
   tmp = (char *) calloc((key_id.len + 1), sizeof(char));
@@ -216,26 +217,32 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_nam
 
   tmp = (char*)null_terminated_string_from_charbuf(cipher_name);
   cJSON_AddItemToObject(root, "cipher", cJSON_CreateString(tmp));
-    
-  tmp = (char *) calloc((data.len + 1), sizeof(char));
-  memcpy(tmp, data.chars, data.len);
+
+  encodeBase64Data(data.chars, data.len, &encoded.chars, &encoded.len);
+  tmp = (char *) calloc((encoded.len + 1), sizeof(char));
+  memcpy(tmp, encoded.chars, encoded.len);
   cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
+  free_charbuf(&encoded);
   free(tmp);
   
   if(request_type == REQ_ENC || request_type == REQ_ENC_SIGNED)
   {
     if(tag.chars != NULL && tag.len != 0)
     {
-      tmp = (char *)calloc(tag.len+1, sizeof(char));
-      memcpy(tmp, tag.chars, tag.len);
+      encodeBase64Data(tag.chars, tag.len, &encoded.chars, &encoded.len);
+      tmp = (char *)calloc(encoded.len+1, sizeof(char));
+      memcpy(tmp, encoded.chars, encoded.len);
       cJSON_AddItemToObject(root, "tag", cJSON_CreateString(tmp));
+      free_charbuf(&encoded);
       free(tmp);
     }
     if(iv.chars != NULL && iv.len != 0)
     {
-      tmp = (char *)calloc(iv.len+1, sizeof(char));
-      memcpy(tmp, iv.chars, iv.len);
+      encodeBase64Data(iv.chars, iv.len, &encoded.chars, &encoded.len);
+      tmp = (char *)calloc(encoded.len+1, sizeof(char));
+      memcpy(tmp, encoded.chars, encoded.len);
       cJSON_AddItemToObject(root, "iv", cJSON_CreateString(tmp));
+      free_charbuf(&encoded);
       free(tmp);
     }
   }

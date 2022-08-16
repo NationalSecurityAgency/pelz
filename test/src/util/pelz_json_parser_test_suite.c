@@ -341,19 +341,28 @@ void test_message_encoder(void)
   CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, iv, tag, data, &message) == 0);
 
   free_charbuf(&key_id);
-
+  charbuf decoded_iv;
+  charbuf decoded_tag;
+  charbuf decoded_data;
+  
   // Testing unsigned responses
   for (int i = 0; i < 5; i++)
   {
+    decodeBase64Data(iv.chars, iv.len, &decoded_iv.chars, &decoded_iv.len);
+    decodeBase64Data(tag.chars, tag.len, &decoded_tag.chars, &decoded_tag.len);
+    decodeBase64Data(data.chars, data.len, &decoded_data.chars, &decoded_data.len);
     key_id = new_charbuf(strlen(test[i]));
     memcpy(key_id.chars, test[i], key_id.len);
-    CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, iv, tag, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, decoded_iv, decoded_tag, decoded_data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_enc_message[i], message.len) == 0);
     free_charbuf(&message);
-    CU_ASSERT(message_encoder(REQ_DEC, key_id, cipher_name, iv, tag, data, &message) == 0);
+    CU_ASSERT(message_encoder(REQ_DEC, key_id, cipher_name, decoded_iv, decoded_tag, decoded_data, &message) == 0);
     CU_ASSERT(memcmp(message.chars, valid_dec_message[i], message.len) == 0);
     free_charbuf(&message);
     free_charbuf(&key_id);
+    free_charbuf(&decoded_iv);
+    free_charbuf(&decoded_tag);
+    free_charbuf(&decoded_data);
   }
   free_charbuf(&cipher_name);
 

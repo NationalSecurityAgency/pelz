@@ -2,12 +2,21 @@
 #include "pelz_request_handler.h"
 #include "common_table.h"
 #include "cipher/pelz_cipher.h"
+#include "enclave_request_signing.h"
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 
-RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag)
+RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag, charbuf signature, charbuf cert)
 {
+  // Start by checking that the signature validates, if present (and required).
+  if(request_type == REQ_ENC_SIGNED)
+  {
+    if(validate_signature(request_type, key_id, plain_data, signature, cert) == false)
+    {
+      return ENCRYPT_ERROR;
+    }
+  }
   int index;
   
   unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
@@ -121,8 +130,17 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 }
 
 
-RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data)
+RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data, charbuf signature, charbuf cert)
 {
+  // Start by checking that the signature validates, if present (and required).
+  if(request_type == REQ_DEC_SIGNED)
+  {
+    if(validate_signature(request_type, key_id, cipher_data, signature, cert) == false)
+    {
+      return ENCRYPT_ERROR;
+    }
+  }
+  
   charbuf plain_data_internal;
   int index;
 
