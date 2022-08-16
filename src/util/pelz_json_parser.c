@@ -133,7 +133,10 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   // we just move on.
   if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
   {
-    *iv = get_JSON_string_field(json, "iv");
+    encoded = get_JSON_string_field(json, "iv");
+    decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
+    free_charbuf(&encoded);
+    
     *tag = get_JSON_string_field(json, "tag");
   }
 
