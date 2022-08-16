@@ -158,9 +158,9 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str));
     
     cJSON_AddItemToObject(json_enc_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
-    cJSON_AddItemToObject(json_enc_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
+    cJSON_AddItemToObject(json_enc_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt\n"));
     cJSON_AddItemToObject(json_dec_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
-    cJSON_AddItemToObject(json_dec_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt2\n"));
+    cJSON_AddItemToObject(json_dec_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt\n"));
     cJSON_AddItemToObject(json_enc_signed, "cipher", cJSON_CreateString(cipher_name_str));
     cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str));
 
@@ -221,7 +221,7 @@ void test_request_decoder(void)
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
-
+    free_charbuf(&raw_data);
 
     tmp = cJSON_PrintUnformatted(json_enc_signed);
     request = new_charbuf(strlen(tmp));

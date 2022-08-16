@@ -144,7 +144,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
 
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
-    *request_sig = get_JSON_string_field(json, "request_sig");
+    encoded = get_JSON_string_field(json, "request_sig");
+    decodeBase64Data(encoded.chars, encoded.len, &(request_sig->chars), &(request_sig->len));
+    free_charbuf(&encoded);
     if(request_sig->len == 0 || request_sig->chars == NULL)
     {
       cJSON_Delete(json);
@@ -157,7 +159,10 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       return 1;
     }
 
-    *requestor_cert = get_JSON_string_field(json, "requestor_cert");
+    encoded = get_JSON_string_field(json, "requestor_cert");
+    decodeBase64Data(encoded.chars, encoded.len, &(requestor_cert->chars), &(requestor_cert->len));
+    free_charbuf(&encoded);
+
     if(requestor_cert->len == 0 || requestor_cert->chars == NULL)
     {
       cJSON_Delete(json);
