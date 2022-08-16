@@ -137,7 +137,9 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
     free_charbuf(&encoded);
     
-    *tag = get_JSON_string_field(json, "tag");
+    encoded = get_JSON_string_field(json, "tag");
+    decodeBase64Data(encoded.chars, encoded.len, &(tag->chars), &(tag->len));
+    free_charbuf(&encoded);
   }
 
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)

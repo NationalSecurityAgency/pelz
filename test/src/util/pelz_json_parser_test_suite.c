@@ -209,7 +209,9 @@ void test_request_decoder(void)
 
     CU_ASSERT(iv.len == raw_data.len);
     CU_ASSERT(memcmp(iv.chars, raw_data.chars, iv.len) == 0);
-    CU_ASSERT(memcmp(tag.chars, dec_data[i], tag.len) == 0);
+
+    CU_ASSERT(tag.len == raw_data.len);
+    CU_ASSERT(memcmp(tag.chars, raw_data.chars, tag.len) == 0);
     CU_ASSERT(cipher_name.len == strlen(cipher_name_str));
     CU_ASSERT(memcmp(cipher_name.chars, cipher_name_str, cipher_name.len) == 0);
     
