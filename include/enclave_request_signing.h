@@ -11,9 +11,9 @@ extern "C"
 #include "pelz_request_handler.h"
 #include "pelz_enclave.h"
 
-charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf data, charbuf requestor_cert);
+  charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert);
 
-bool validate_signature(RequestType request_type, charbuf key_id, charbuf data, charbuf signature, charbuf cert);
+  bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf signature, charbuf cert);
   
   
 

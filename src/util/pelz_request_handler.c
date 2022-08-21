@@ -12,7 +12,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   // Start by checking that the signature validates, if present (and required).
   if(request_type == REQ_ENC_SIGNED)
   {
-    if(validate_signature(request_type, key_id, plain_data, signature, cert) == false)
+    if(validate_signature(request_type, key_id, cipher_name, plain_data, *iv, *tag, signature, cert) == false)
     {
       return ENCRYPT_ERROR;
     }
@@ -135,9 +135,9 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   // Start by checking that the signature validates, if present (and required).
   if(request_type == REQ_DEC_SIGNED)
   {
-    if(validate_signature(request_type, key_id, cipher_data, signature, cert) == false)
+    if(validate_signature(request_type, key_id, cipher_name, cipher_data, iv, tag, signature, cert) == false)
     {
-      return ENCRYPT_ERROR;
+      return DECRYPT_ERROR;
     }
   }
   

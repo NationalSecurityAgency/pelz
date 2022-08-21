@@ -17,7 +17,7 @@
 
 
 
-charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf data, charbuf requestor_cert)
+charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert)
 {
   uint64_t request_type_int = (uint64_t)request_type;
 
@@ -57,7 +57,7 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf data
   return serialized;
 }
   
-bool validate_signature(RequestType request_type, charbuf key_id, charbuf data, charbuf signature, charbuf cert)
+bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf signature, charbuf cert)
 {
   bool result = false;
   X509* requestor_x509;
@@ -85,7 +85,7 @@ bool validate_signature(RequestType request_type, charbuf key_id, charbuf data, 
     return result;
   }
 
-  serialized = serialize_request(request_type, key_id, data, cert);
+  serialized = serialize_request(request_type, key_id, cipher_name, data, iv, tag, cert);
   if(serialized.chars == NULL)
   {
     X509_free(requestor_x509);
