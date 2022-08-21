@@ -209,6 +209,8 @@ public TableResponseStatus chan_table_destroy();
  *                         be allocated inside the call if necessary
  * @param[out] tag         the MAC tag produced by the encryption, will
  *                         be allocated inside the call if necessary
+ * @param[in] signature    the signature over the request
+ * @param[in] cert         the certificate used to validate the signature
  *
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
@@ -229,8 +231,10 @@ public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_ty
  * @param[in] cipher_data  the input data
  * @param[in] iv           the iv used to encrypt the data, may be empty.
  * @param[in] tag          the MAC tag for the encryption, may be empty.
- * @param[out] plian_data  a pointer to a charbuf to hold the output, will
+ * @param[out] plain_data  a pointer to a charbuf to hold the output, will
  *                         be created inside the call
+ * @param[in] signature    the signature over the request
+ * @param[in] cert         the certificate used to validate the signature
  *
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
