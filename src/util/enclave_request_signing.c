@@ -19,11 +19,74 @@
 
 charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert)
 {
+  size_t num_fields = 5;
+  if(request_type == REQ_DEC_SIGNED || request_type == REQ_DEC)
+  {
+    // If there's a mismatch between NULL chars and length in tag or IV
+    // that's an indication something odd is happening, so error out.
+    if((iv.chars == NULL && iv.len != 0) ||
+       (iv.chars != NULL && iv.len == 0) ||
+       (tag.chars == NULL && tag.len != 0) ||
+       (tag.chars != NULL && tag.len == 0))
+    {
+      return new_charbuf(0);
+    }
+    if(tag.chars != NULL && tag.len != 0)
+    {
+      num_fields++;
+    }
+    if(iv.chars != NULL && iv.len != 0)
+    {
+      num_fields++;
+    }
+  }
+  // If it's not a decrypt request there shouldn't be an IV or tag.
+  else{
+    if(tag.chars != NULL || tag.len != 0 || iv.chars != NULL || iv.len != 0)
+    {
+      return new_charbuf(0);
+    }
+  }
   uint64_t request_type_int = (uint64_t)request_type;
 
-  // TODO: Handle the overflow cases here
-  uint64_t total_size = (5*sizeof(uint64_t)) + key_id.len + data.len + requestor_cert.len;
+  uint64_t total_size = ((num_fields+1)*sizeof(uint64_t));
+  if(total_size + key_id.len < total_size)
+  {
+    return new_charbuf(0);
+  }
+  total_size += key_id.len;
 
+  if(total_size + cipher_name.len < total_size)
+  {
+    return new_charbuf(0);
+  }
+  total_size += cipher_name.len;
+
+  if(total_size + data.len < total_size)
+  {
+    return new_charbuf(0);
+  }
+  total_size += data.len;
+
+  if(total_size + iv.len < total_size)
+  {
+    return new_charbuf(0);
+  }
+  total_size += iv.len;
+
+  if(total_size + tag.len < total_size)
+  {
+    return new_charbuf(0);
+  }
+  total_size += tag.len;
+
+  if(total_size + requestor_cert.len < total_size)
+  {
+    return new_charbuf(0);
+  }
+  total_size += requestor_cert.len;
+
+  
   charbuf serialized = new_charbuf(total_size);
   if(serialized.chars == NULL)
   {
@@ -44,11 +107,35 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf ciph
   memcpy(dst, key_id.chars, key_id.len);
   dst += key_id.len;
 
+  memcpy(dst, (uint64_t*)(&cipher_name.len), sizeof(uint64_t));
+  dst += sizeof(uint64_t);
+
+  memcpy(dst, cipher_name.chars, cipher_name.len);
+  dst += cipher_name.len;
+
   memcpy(dst, (uint64_t*)(&data.len), sizeof(uint64_t));
   dst += sizeof(uint64_t);
 
   memcpy(dst, data.chars, data.len);
   dst += data.len;
+
+  if(iv.len > 0)
+  {
+    memcpy(dst, (uint64_t*)(&iv.len), sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, iv.chars, iv.len);
+    dst += iv.len;
+  }
+
+  if(tag.len > 0)
+  {
+    memcpy(dst, (uint64_t*)(&tag.len), sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, tag.chars, tag.len);
+    dst += tag.len;
+  }
 
   memcpy(dst, (uint64_t*)(&requestor_cert.len), sizeof(uint64_t));
   dst += sizeof(uint64_t);
