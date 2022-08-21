@@ -16,6 +16,14 @@ extern "C"
  * Serializes request data so the signature can be validated.
  * </pre>
  *
+ * The serialized data starts with:
+ * 8 bytes little-ending encoding of the total size of the serialized request
+ * 8 bytes encoding a uint64_t little-endian encoding of the request_type
+ *
+ * Then each field present is serialized as
+ * 8 byte little-endian encoding of the field length
+ * The field data 
+ *
  * @param[in] request_type   The request type
  * @param[in] key_id         The key_id extracted from the request
  * @param[in] cipher_name    The cipher_name extracted from the request

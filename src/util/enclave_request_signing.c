@@ -19,7 +19,7 @@
 
 charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert)
 {
-  size_t num_fields = 5;
+  uint64_t num_fields = 5;
   if(request_type == REQ_DEC_SIGNED || request_type == REQ_DEC)
   {
     // If there's a mismatch between NULL chars and length in tag or IV
