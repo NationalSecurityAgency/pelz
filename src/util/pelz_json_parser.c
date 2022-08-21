@@ -11,7 +11,6 @@
 #include <pelz_request_handler.h>
 #include <charbuf.h>
 #include <pelz_log.h>
-#include <request_signing.h>
 #include "kmyth/formatting_tools.h"
 
 /**
