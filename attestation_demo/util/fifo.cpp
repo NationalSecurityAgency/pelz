@@ -39,8 +39,12 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <errno.h>
+#include <netdb.h>
 
 #include "fifo_def.h"
+
+
+#define BUFFER_SIZE 4096  // This is somewhat arbitrary.
 
 // The Initiator demo originally used a new socket connection for each message,
 // but Pelz expects a single persistent connection for the entire session.
@@ -135,7 +139,19 @@ int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG
     char recv_msg[BUFFER_SIZE + 1] = {0};
     FIFO_MSG * response = NULL;
 
-    // The original version of this function created a UNIX socket connection here.
+    // The original version of this function created a new UNIX socket connection here.
+
+    if (server_sock_fd == -1)
+    {
+        printf("ERROR, trying to send a message before connecting to the server");
+    }
+
+    if ((byte_num = send(server_sock_fd, reinterpret_cast<char *>(fiforequest), static_cast<int>(fiforequest_size), 0)) == -1)
+    {
+        printf("connection error, %s, line %d..\n", strerror(errno), __LINE__);
+        ret = -1;
+        goto CLEAN;
+    }
 
     byte_num = recv(server_sock_fd, reinterpret_cast<char *>(recv_msg), BUFFER_SIZE, 0);
     if (byte_num > 0)
