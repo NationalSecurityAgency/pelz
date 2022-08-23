@@ -394,7 +394,6 @@ extern "C" ATTESTATION_STATUS end_session(uint32_t session_id)
     }
 
     return status;
-
 }
 
 
