@@ -85,6 +85,11 @@ uint32_t test_message_exchange()
     max_out_buff_size = 50; // it's assumed the maximum payload size in response message is 50 bytes, it's for demonstration purpose
     secret_data = 0x12345678; //Secret Data here is shown only for purpose of demonstration.
 
+    // TODO: 1. Change this placeholder message to an unsigned pelz request.
+    // TODO: 2. Change the message to a signed pelz request.
+    // TODO: 3. Change the message to a signed pelz request with individually encrypted fields.
+    // TODO: 4. Generate the request signature using a double-wrapped signing key (using kmyth).
+
     //Marshals the secret data into a buffer
     ke_status = marshal_message_exchange_request(target_fn_id, msg_type, secret_data, &marshalled_inp_buff, &marshalled_inp_buff_len);
     if(ke_status != SUCCESS)

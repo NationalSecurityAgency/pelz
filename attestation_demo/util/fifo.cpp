@@ -42,12 +42,84 @@
 
 #include "fifo_def.h"
 
-#define SERVER_ADDR "127.0.0.1"
-#define SERVER_PORT 8888
+// The Initiator demo originally used a new socket connection for each message,
+// but Pelz expects a single persistent connection for the entire session.
+static int server_sock_fd = -1;
 
-#define BUFFER_SIZE 1024
 
-#define UNIX_DOMAIN "/tmp/UNIX.domain"
+// Create a socket and connect to the server_name:server_port
+// This function was adapted from create_socket() in
+// linux-sgx/SampleCode/SampleAttestedTLS/non_enc_client/client.cpp
+int connect_to_server(char* server_name, char* server_port)
+{
+    int sockfd = -1;
+    struct addrinfo hints, *dest_info, *curr_di;
+    int res;
+
+    hints = {0};
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if ((res = getaddrinfo(server_name, server_port, &hints, &dest_info)) != 0)
+    {
+        printf(
+            "Error: Cannot resolve hostname %s. %s\n",
+            server_name,
+            gai_strerror(res));
+        goto done;
+    }
+
+    curr_di = dest_info;
+    while (curr_di)
+    {
+        if (curr_di->ai_family == AF_INET)
+        {
+            break;
+        }
+
+        curr_di = curr_di->ai_next;
+    }
+
+    if (!curr_di)
+    {
+        printf(
+            "Error: Cannot get address for hostname %s.\n",
+            server_name);
+        goto done;
+    }
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1)
+    {
+        printf("Error: Cannot create socket %d.\n", errno);
+        goto done;
+    }
+
+    if (connect(
+            sockfd,
+            (struct sockaddr*)curr_di->ai_addr,
+            sizeof(struct sockaddr)) == -1)
+    {
+        printf(
+            "failed to connect to %s:%s (errno=%d)\n",
+            server_name,
+            server_port,
+            errno);
+        close(sockfd);
+        sockfd = -1;
+        goto done;
+    }
+    printf("connected to %s:%s\n", server_name, server_port);
+
+done:
+    if (dest_info)
+        freeaddrinfo(dest_info);
+
+    server_sock_fd = sockfd;
+
+    return sockfd;
+}
+
 
 /* Function Description: this is for client to send request message and receive response message
  * Parameter Description:
@@ -62,33 +134,8 @@ int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG
     long byte_num;
     char recv_msg[BUFFER_SIZE + 1] = {0};
     FIFO_MSG * response = NULL;
-  
-    struct sockaddr_un server_addr;
-    int server_sock_fd = socket(PF_UNIX, SOCK_STREAM, 0);
-    if (server_sock_fd == -1)
-    {
-        printf("socket error");
-        return -1;
-    }
 
-    server_addr.sun_family = AF_UNIX;
-    strcpy(server_addr.sun_path, UNIX_DOMAIN);
-
-
-    if (connect(server_sock_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0)
-    {
-        printf("connection error, %s, line %d.\n", strerror(errno), __LINE__);
-        ret = -1;
-        goto CLEAN;
-    }
-
-
-    if ((byte_num = send(server_sock_fd, reinterpret_cast<char *>(fiforequest), static_cast<int>(fiforequest_size), 0)) == -1)
-    {
-        printf("connection error, %s, line %d..\n", strerror(errno), __LINE__);
-        ret = -1;
-        goto CLEAN;
-    }
+    // The original version of this function created a UNIX socket connection here.
 
     byte_num = recv(server_sock_fd, reinterpret_cast<char *>(recv_msg), BUFFER_SIZE, 0);
     if (byte_num > 0)

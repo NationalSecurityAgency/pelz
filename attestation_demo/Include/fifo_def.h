@@ -99,6 +99,7 @@ typedef struct _fifo_msg_req
 extern "C" {
 #endif
 
+int connect_to_server(const char* server_name, const char* server_port);
 int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG **fiforesponse, size_t *fiforesponse_size);
 
 #ifdef __cplusplus
