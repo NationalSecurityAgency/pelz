@@ -96,6 +96,7 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/fifo_thread.c \
 		 src/util/unsecure_socket_thread.c \
 		 src/util/secure_socket_thread.c \
+		 src/util/secure_socket_ecdh.c \
 		 src/util/util.c \
 		 src/util/key_load.c \
 		 src/util/parse_pipe_message.c \
@@ -348,6 +349,7 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path ../kmyth/sgx/trusted
 	@echo "GEN  =>  $@"
 
+
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -529,12 +531,17 @@ sgx/charbuf.o: src/util/charbuf.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/secure_socket_enclave.o: src/util/secure_socket_enclave.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
 		     sgx/server_table.o \
 		     sgx/ca_table.o \
 				 sgx/channel_table.o \
+			 sgx/secure_socket_enclave.o \
 		     sgx/aes_keywrap_3394nopad.o \
 		     sgx/pelz_request_handler.o \
 		     sgx/charbuf.o \

@@ -29,32 +29,85 @@
  *
  */
 
-#ifndef INCLUDE_SECURE_SOCKET_ECDH_H_
-#define INCLUDE_SECURE_SOCKET_ECDH_H_
+// This file is copied from
+// linux-sgx/SampleCode/LocalAttestation/Include/fifo_def.h
 
-#include <pthread.h>
+#ifndef _FIFO_DEF_H_
+#define _FIFO_DEF_H_
+
+#include <stdio.h>
+#include <string.h>
+// #include <fcntl.h>
+#include <unistd.h>
 
 #include "sgx_eid.h"
 #include "sgx_dh.h"
 
-#include "dh_datatypes.h"
-#include "dh_fifo_def.h"
-#include "dh_session_protocol.h"
+typedef enum{
+	FIFO_DH_REQ_MSG1,
+	FIFO_DH_RESP_MSG1,
+	FIFO_DH_MSG2,
+	FIFO_DH_MSG3,
+	FIFO_DH_MSG_REQ,
+	FIFO_DH_MSG_RESP,
+	FIFO_DH_CLOSE_REQ,
+	FIFO_DH_CLOSE_RESP
+}FIFO_MSG_TYPE;
 
-// This is somewhat arbitrary.
-#define MAX_MSG_SIZE 4096
+typedef struct _fifomsgheader
+{
+	FIFO_MSG_TYPE type;
+	size_t size; // demonstrate FIFO message content size
+	int sockfd;
+}FIFO_MSG_HEADER;
+
+typedef struct _fifomsg
+{
+	FIFO_MSG_HEADER header;
+	unsigned char msgbuf[1];
+}FIFO_MSG;
 
 
-/**
- * <pre>
- * Handle a message received on the secure socket interface.
- * <pre>
- *
- * @param[in] sockfd the socket file descriptor
- * @param[in] message the message content
- *
- * @returns 0 on success, 1 on error
- */
-int handle_message(int sockfd, FIFO_MSG * message);
+typedef struct _session_close
+{
+	uint32_t session_id;
+}SESSION_CLOSE_REQ;
+
+typedef struct _session_msg1_response
+{
+	uint32_t sessionid;   // responder create a session ID and input here
+	sgx_dh_msg1_t dh_msg1; // responder returns msg1
+}SESSION_MSG1_RESP;
+
+typedef struct _session_msg2
+{
+	uint32_t sessionid;
+	sgx_dh_msg2_t dh_msg2;
+}SESSION_MSG2;
+
+typedef struct _session_msg3
+{
+	uint32_t sessionid;
+	sgx_dh_msg3_t dh_msg3;
+}SESSION_MSG3;
+
+typedef struct _fifo_msg_req
+{
+	uint32_t session_id;
+	size_t max_payload_size;
+	size_t size;
+	unsigned char buf[1];
+}FIFO_MSGBODY_REQ;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int connect_to_server(char* server_name, char* server_port);
+int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG **fiforesponse, size_t *fiforesponse_size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

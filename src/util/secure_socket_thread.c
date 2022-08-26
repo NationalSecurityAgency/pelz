@@ -89,7 +89,7 @@ void *secure_socket_thread(void *arg)
 //Receive message from client
 int recv_message(int socket_id, FIFO_MSG ** message)
 {
-  int bytes_received;
+  size_t bytes_received;
   FIFO_MSG_HEADER header;
   FIFO_MSG *msg;
 
@@ -111,7 +111,7 @@ int recv_message(int socket_id, FIFO_MSG ** message)
 
   header.sockfd = socket_id;  // Save current socket fd in header
 
-  msg = malloc(sizeof(FIFO_MSG_HEADER) + header.size + 1);
+  msg = (FIFO_MSG *) malloc(sizeof(FIFO_MSG_HEADER) + header.size + 1);
 
   if (header.size > 0)
   {
@@ -139,10 +139,7 @@ void *secure_socket_process(void *arg)
   int sockfd = processArgs->socket_id;
   pthread_mutex_t lock = processArgs->lock;
 
-  charbuf request;
-  charbuf message;
-  RequestResponseStatus status;
-  const char *err_message;
+  int ret;
 
   // TODO: keep track of session ID, and other unprotected session metadata
 
@@ -167,130 +164,142 @@ void *secure_socket_process(void *arg)
 
     pelz_log(LOG_DEBUG, "%d::Request type & Length: %d, %d", sockfd, message->header.type, message->header.size);
 
-    if (handle_message(sockfd, message))
-    {
-      pelz_log(LOG_ERR, "%d::Error handling message", sockfd);
-      return NULL;
-    }
+    pthread_mutex_lock(&lock);
+    ret = handle_message(sockfd, message);
+    pthread_mutex_unlock(&lock);
 
     free(message);
     message = NULL;
+
+    if (ret)
+    {
+      pelz_log(LOG_ERR, "%d::Error handling message", sockfd);
+      while (!pelz_key_socket_check(sockfd))
+      {
+        continue;
+      }
+      pelz_key_socket_close(sockfd);
+      return NULL;
+    }
   }
 
   return NULL;
 }
 
-// This function will need to be moved into the enclave
-int handle_pelz_request(charbuf request)
+
+/* Function Description: Generates the response from the request message
+ * Parameter Description:
+ * [input] decrypted_data: pointer to decrypted data
+ * [output] resp_buffer: pointer to response message, which is allocated in this function
+ * [output] resp_length: this is response length
+ * 
+ * Note: This function would normally be protected in the enclave
+ *       because the request message has already been decrypted,
+ *       but the JSON library is currently only supported in unprotected code,
+ *       so all unencrypted JSON fields must be exposed anyway.
+ */
+int ocall_handle_pelz_request_msg(char* req_data, size_t req_length, char** resp_buffer, size_t* resp_length)
 {
-    // TODO:
-    // Unwrap message
-    // Extract encrypted parameters from JSON
-    // Handle request + gen response (ecall)
-    // Construct response JSON
-    // Wrap + send message
+  charbuf request;
+  charbuf message;
+  RequestResponseStatus status;
+  const char *err_message;
+  RequestType request_type = REQ_UNK;
 
-    RequestType request_type = REQ_UNK;
+  charbuf key_id;
+  charbuf data_in;
+  charbuf data_out;
+  charbuf request_sig;
+  charbuf requestor_cert;
 
-    charbuf key_id;
-    charbuf data_in;
-    charbuf data_out;
-    charbuf request_sig;
-    charbuf requestor_cert;
+  charbuf data;
+  charbuf output;
 
-    charbuf data;
-    charbuf output;
+  //Placeholder results
+  *resp_buffer = NULL;
+  *resp_length = 0;
 
-    //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
-    {
-      err_message = "Missing Data";
-      error_message_encoder(&message, err_message);
-      pelz_log(LOG_DEBUG, "%d::Error: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
-      pelz_key_socket_close(new_socket);
-      free_charbuf(&request);
-      return NULL;
-    }
+  //Place input data in a charbuf
+  request = new_charbuf(0);
+  request.chars = (unsigned char*) req_data;
+  request.len = req_length;
 
+  //Parse request for processing
+  if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
+  {
+    err_message = "Missing Data";
+    error_message_encoder(&message, err_message);
+    pelz_log(LOG_DEBUG, "Error: %.*s, %d", (int) message.len, message.chars, (int) message.len);
     free_charbuf(&request);
+    return -1;
+  }
 
-    decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
-    free_charbuf(&data_in);
+  free_charbuf(&request);
 
-    pthread_mutex_lock(&lock);
-    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
-    if (status == KEK_NOT_LOADED)
+  decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
+  free_charbuf(&data_in);
+
+  pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+  if (status == KEK_NOT_LOADED)
+  {
+    if (key_load(key_id) == 0)
     {
-      if (key_load(key_id) == 0)
-      {
-        pelz_request_handler(eid, &status, request_type, key_id, data, &output);
-      }
-      else
-      {
-        status = KEK_LOAD_ERROR;
-      }
-    }
-    pthread_mutex_unlock(&lock);
-    free_charbuf(&data);
-
-    if (status != REQUEST_OK)
-    {
-      pelz_log(LOG_ERR, "%d::Service Error\nSend error message.", new_socket);
-      switch (status)
-      {
-      case KEK_LOAD_ERROR:
-        err_message = "Key not added";
-        break;
-      case KEY_OR_DATA_ERROR:
-        err_message = "Key or Data Error";
-        break;
-      case ENCRYPT_ERROR:
-        err_message = "Encrypt Error";
-        break;
-      case DECRYPT_ERROR:
-        err_message = "Decrypt Error";
-        break;
-      case REQUEST_TYPE_ERROR:
-        err_message = "Request Type Error";
-        break;
-      case CHARBUF_ERROR:
-        err_message = "Charbuf Error";
-        break;
-      default:
-        err_message = "Unrecognized response";
-      }
-      error_message_encoder(&message, err_message);
+      pelz_request_handler(eid, &status, request_type, key_id, data, &output);
     }
     else
     {
-      encodeBase64Data(output.chars, output.len, &data_out.chars, &data_out.len);
-      if (strlen((char *) data_out.chars) != data_out.len)
-      {
-        data_out.chars[data_out.len] = 0;
-      }
-      message_encoder(request_type, key_id, data_out, &message);
-      pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
-      pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
+      status = KEK_LOAD_ERROR;
     }
-    free_charbuf(&key_id);
-    free_charbuf(&data_out);
-    free_charbuf(&output);
-
-    pelz_log(LOG_DEBUG, "%d::Message & Length: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
-    //Send processed request back to client
-    if (pelz_key_socket_send(new_socket, message))
-    {
-      pelz_log(LOG_ERR, "%d::Socket Send Error", new_socket);
-      free_charbuf(&message);
-      while (!pelz_key_socket_check(new_socket))
-      {
-        continue;
-      }
-      pelz_key_socket_close(new_socket);
-      return NULL;
-    }
-    free_charbuf(&message);
   }
-  pelz_key_socket_close(new_socket);
-  return NULL;
+  free_charbuf(&data);
+
+  if (status != REQUEST_OK)
+  {
+    pelz_log(LOG_ERR, "Service Error\nSend error message.");
+    switch (status)
+    {
+    case KEK_LOAD_ERROR:
+      err_message = "Key not added";
+      break;
+    case KEY_OR_DATA_ERROR:
+      err_message = "Key or Data Error";
+      break;
+    case ENCRYPT_ERROR:
+      err_message = "Encrypt Error";
+      break;
+    case DECRYPT_ERROR:
+      err_message = "Decrypt Error";
+      break;
+    case REQUEST_TYPE_ERROR:
+      err_message = "Request Type Error";
+      break;
+    case CHARBUF_ERROR:
+      err_message = "Charbuf Error";
+      break;
+    default:
+      err_message = "Unrecognized response";
+    }
+    error_message_encoder(&message, err_message);
+  }
+  else
+  {
+    encodeBase64Data(output.chars, output.len, &data_out.chars, &data_out.len);
+    if (strlen((char *) data_out.chars) != data_out.len)
+    {
+      data_out.chars[data_out.len] = 0;
+    }
+    message_encoder(request_type, key_id, data_out, &message);
+    pelz_log(LOG_DEBUG, "Message Encode Complete");
+    pelz_log(LOG_DEBUG, "Message: %.*s, %d", (int) message.len, message.chars, (int) message.len);
+  }
+  free_charbuf(&key_id);
+  free_charbuf(&data_out);
+  free_charbuf(&output);
+
+  pelz_log(LOG_DEBUG, "Message & Length: %.*s, %d", (int) message.len, message.chars, (int) message.len);
+
+  *resp_buffer = (char *) message.chars;
+  *resp_length = message.len;
+
+  return 0;
 }

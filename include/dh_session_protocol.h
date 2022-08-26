@@ -29,32 +29,43 @@
  *
  */
 
-#ifndef INCLUDE_SECURE_SOCKET_ECDH_H_
-#define INCLUDE_SECURE_SOCKET_ECDH_H_
+// This file is copied from
+// linux-sgx/SampleCode/LocalAttestation/Include/dh_session_protocol.h
 
-#include <pthread.h>
+#ifndef _DH_SESSION_PROROCOL_H
+#define _DH_SESSION_PROROCOL_H
 
-#include "sgx_eid.h"
-#include "sgx_dh.h"
+#include "sgx_ecp_types.h"
+#include "sgx_key.h"
+#include "sgx_report.h"
+#include "sgx_attributes.h"
 
-#include "dh_datatypes.h"
-#include "dh_fifo_def.h"
-#include "dh_session_protocol.h"
+#define NONCE_SIZE         16
+#define MAC_SIZE           16
 
-// This is somewhat arbitrary.
-#define MAX_MSG_SIZE 4096
+#define MSG_BUF_LEN        sizeof(ec_pub_t)*2
+#define MSG_HASH_SZ        32
 
 
-/**
- * <pre>
- * Handle a message received on the secure socket interface.
- * <pre>
- *
- * @param[in] sockfd the socket file descriptor
- * @param[in] message the message content
- *
- * @returns 0 on success, 1 on error
- */
-int handle_message(int sockfd, FIFO_MSG * message);
+//Session information structure
+typedef struct _la_dh_session_t
+{
+    uint32_t  session_id; //Identifies the current session
+    uint32_t  status; //Indicates session is in progress, active or closed
+    union
+    {
+        struct
+        {
+			sgx_dh_session_t dh_session;
+        }in_progress;
+
+        struct
+        {
+            sgx_key_128bit_t AEK; //Session Key
+            uint32_t counter; //Used to store Message Sequence Number
+        }active;
+    };
+} dh_session_t;
+
 
 #endif

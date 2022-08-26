@@ -31,39 +31,33 @@
 
 /* Note: much of this code is adapted from linux-sgx/SampleCode/LocalAttestation/EnclaveResponder/EnclaveMessageExchange.cpp */
 
+#include <string.h>
 
 #include "sgx_trts.h"
 #include "sgx_utils.h"
-#include "EnclaveMessageExchange.h"
 #include "sgx_eid.h"
-#include "error_codes.h"
 #include "sgx_ecp_types.h"
 #include "sgx_thread.h"
-#include <map>
-#include "dh_session_protocol.h"
 #include "sgx_dh.h"
 #include "sgx_tcrypto.h"
+#include "secure_socket_ecdh.h"
+#include "dh_error_codes.h"
 
 
 #define MAX_SESSION_COUNT  16
 
-//number of open sessions
-uint32_t g_session_count = 0;
+//Array of pointers to session info
+dh_session_t *dh_sessions[MAX_SESSION_COUNT] = { 0 };
 
 ATTESTATION_STATUS generate_session_id(uint32_t *session_id);
-extern "C" ATTESTATION_STATUS end_session(uint32_t session_id);
-
-//Array of open session ids
-session_id_tracker_t *g_session_id_tracker[MAX_SESSION_COUNT];
-
-
-
+ATTESTATION_STATUS end_session(uint32_t session_id);
+uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity);
 
 //Handle the request from Source Enclave for a session
-extern "C" ATTESTATION_STATUS session_request(sgx_dh_msg1_t *dh_msg1,
+ATTESTATION_STATUS session_request(sgx_dh_msg1_t *dh_msg1,
                           uint32_t *session_id )
 {
-    dh_session_t session_info;
+    dh_session_t *session_info;
     sgx_dh_session_t sgx_dh_session;
     sgx_status_t status = SGX_SUCCESS;
 
@@ -82,33 +76,32 @@ extern "C" ATTESTATION_STATUS session_request(sgx_dh_msg1_t *dh_msg1,
     if ((status = (sgx_status_t)generate_session_id(session_id)) != SUCCESS)
         return status; //no more sessions available
 
-    //Allocate memory for the session id tracker
-    g_session_id_tracker[*session_id] = (session_id_tracker_t *)malloc(sizeof(session_id_tracker_t));
-    if(!g_session_id_tracker[*session_id])
+    //Allocate session info and store in the tracker
+    session_info = (dh_session_t *)calloc(1, sizeof(dh_session_t));
+    if(!session_info)
     {
         return MALLOC_ERROR;
     }
 
-    memset(g_session_id_tracker[*session_id], 0, sizeof(session_id_tracker_t));
-    g_session_id_tracker[*session_id]->session_id = *session_id;
-    session_info.status = IN_PROGRESS;
+    // memset(session_info, 0, sizeof(dh_session_t));
+    session_info->session_id = *session_id;
+    session_info->status = IN_PROGRESS;
 
     //Generate Message1 that will be returned to Source Enclave
     status = sgx_dh_responder_gen_msg1((sgx_dh_msg1_t*)dh_msg1, &sgx_dh_session);
     if(SGX_SUCCESS != status)
     {
-        SAFE_FREE(g_session_id_tracker[*session_id]);
+        SAFE_FREE(session_info);
         return status;
     }
-    memcpy(&session_info.in_progress.dh_session, &sgx_dh_session, sizeof(sgx_dh_session_t));
-    //Store the session information under the corresponding source enclave id key
-    g_dest_session_info_map.insert(std::pair<uint32_t, dh_session_t>(*session_id, session_info));
+    memcpy(&session_info->in_progress.dh_session, &sgx_dh_session, sizeof(sgx_dh_session_t));
+    dh_sessions[*session_id] = session_info;
 
     return status;
 }
 
 //Verify Message 2, generate Message3 and exchange Message 3 with Source Enclave
-extern "C" ATTESTATION_STATUS exchange_report(sgx_dh_msg2_t *dh_msg2,
+ATTESTATION_STATUS exchange_report(sgx_dh_msg2_t *dh_msg2,
                           sgx_dh_msg3_t *dh_msg3,
                           uint32_t session_id)
 {
@@ -127,19 +120,10 @@ extern "C" ATTESTATION_STATUS exchange_report(sgx_dh_msg2_t *dh_msg2,
     memset(&dh_aek,0, sizeof(sgx_key_128bit_t));
     do
     {
-        //Retrieve the session information for the corresponding source enclave id
-        std::map<uint32_t, dh_session_t>::iterator it = g_dest_session_info_map.find(session_id);
-        if(it != g_dest_session_info_map.end())
-        {
-            session_info = &it->second;
-        }
-        else
-        {
-            status = INVALID_SESSION;
-            break;
-        }
+        //Retrieve the session information for the corresponding session id
+        session_info = dh_sessions[session_id];
 
-        if(session_info->status != IN_PROGRESS)
+        if(session_info == NULL || session_info->status != IN_PROGRESS)
         {
             status = INVALID_SESSION;
             break;
@@ -161,7 +145,7 @@ extern "C" ATTESTATION_STATUS exchange_report(sgx_dh_msg2_t *dh_msg2,
         }
 
         //Verify source enclave's trust
-          if(verify_peer_enclave_trust(&initiator_identity) != SUCCESS)
+        if(verify_peer_enclave_trust(&initiator_identity) != SUCCESS)
         {
             return INVALID_SESSION;
         }
@@ -172,7 +156,6 @@ extern "C" ATTESTATION_STATUS exchange_report(sgx_dh_msg2_t *dh_msg2,
         session_info->active.counter = 0;
         memcpy(session_info->active.AEK, &dh_aek, sizeof(sgx_key_128bit_t));
         memset(&dh_aek,0, sizeof(sgx_key_128bit_t));
-        g_session_count++;
     }while(0);
 
     if(status != SUCCESS)
@@ -184,7 +167,7 @@ extern "C" ATTESTATION_STATUS exchange_report(sgx_dh_msg2_t *dh_msg2,
 }
 
 //Process the request from the Source enclave and send the response message back to the Source enclave
-extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
+ATTESTATION_STATUS generate_response(secure_message_t* req_message,
                                      size_t req_message_size,
                                      size_t max_payload_size,
                                      secure_message_t* resp_message,
@@ -196,7 +179,6 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     uint8_t *decrypted_data;
     uint32_t decrypted_data_length;
     uint32_t plain_text_offset;
-    ms_in_msg_exchange_t * ms;
     size_t resp_data_length;
     size_t resp_message_calc_size;
     char* resp_data;
@@ -215,20 +197,12 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
         return INVALID_PARAMETER_ERROR;
     }
 
-    //Get the session information from the map corresponding to the source enclave id
-    std::map<uint32_t, dh_session_t>::iterator it = g_dest_session_info_map.find(session_id);
-    if(it != g_dest_session_info_map.end())
-    {
-        session_info = &it->second;
-    }
-    else
-    {
-        return INVALID_SESSION;
-    }
+    //Retrieve the session information for the corresponding session id
+    session_info = dh_sessions[session_id];
 
-    if(session_info->status != ACTIVE)
+    if(session_info == NULL || session_info->status != ACTIVE)
     {
-        return INVALID_SESSION;
+        status = INVALID_SESSION;
     }
 
     //Set the decrypted data length to the payload size obtained from the message
@@ -254,7 +228,7 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     //Decrypt the request message payload from source enclave
     status = sgx_rijndael128GCM_decrypt(&session_info->active.AEK, req_message->message_aes_gcm_data.payload,
                 decrypted_data_length, decrypted_data,
-                reinterpret_cast<uint8_t *>(&(req_message->message_aes_gcm_data.reserved)),
+                (uint8_t *)(&(req_message->message_aes_gcm_data.reserved)),
                 sizeof(req_message->message_aes_gcm_data.reserved), &(req_message->message_aes_gcm_data.payload[plain_text_offset]), plaintext_length,
                 &req_message->message_aes_gcm_data.payload_tag);
 
@@ -264,9 +238,6 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
         return status;
     }
 
-    //Casting the decrypted data to the marshaling structure type to obtain type of request (generic message exchange/enclave to enclave call)
-    ms = (ms_in_msg_exchange_t *)decrypted_data;
-
     // Verify if the nonce obtained in the request is equal to the session nonce
     if(*((uint32_t*)req_message->message_aes_gcm_data.reserved) != session_info->active.counter || *((uint32_t*)req_message->message_aes_gcm_data.reserved) > ((uint32_t)-2))
     {
@@ -274,23 +245,14 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
         return INVALID_PARAMETER_ERROR;
     }
 
-    if(ms->msg_type == MESSAGE_EXCHANGE)
-    {
-        //Call the generic secret response generator for message exchange
-        ret = message_exchange_response_generator((char*)decrypted_data, &resp_data, &resp_data_length);
-        if(ret !=0)
-        {
-            SAFE_FREE(decrypted_data);
-            SAFE_FREE(resp_data);
-            return INVALID_SESSION;
-        }
-    }
-    else
+    // Call Pelz request message handler
+    ret = ocall_handle_pelz_request_msg((char*)decrypted_data, decrypted_data_length, &resp_data, &resp_data_length);
+    if(ret !=0)
     {
         SAFE_FREE(decrypted_data);
-        return INVALID_REQUEST_TYPE_ERROR;
+        SAFE_FREE(resp_data);
+        return INVALID_SESSION;
     }
-
 
     if(resp_data_length > max_payload_size)
     {
@@ -299,7 +261,7 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
         return OUT_BUFFER_LENGTH_ERROR;
     }
 
-    resp_message_calc_size = sizeof(secure_message_t)+ resp_data_length;
+    resp_message_calc_size = sizeof(secure_message_t) + resp_data_length;
 
     if(resp_message_calc_size > resp_message_size)
     {
@@ -330,8 +292,8 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
 
     //Prepare the response message with the encrypted payload
     status = sgx_rijndael128GCM_encrypt(&session_info->active.AEK, (uint8_t*)resp_data, data2encrypt_length,
-                reinterpret_cast<uint8_t *>(&(temp_resp_message->message_aes_gcm_data.payload)),
-                reinterpret_cast<uint8_t *>(&(temp_resp_message->message_aes_gcm_data.reserved)),
+                (uint8_t *)(&(temp_resp_message->message_aes_gcm_data.payload)),
+                (uint8_t *)(&(temp_resp_message->message_aes_gcm_data.reserved)),
                 sizeof(temp_resp_message->message_aes_gcm_data.reserved), plaintext, plaintext_length,
                 &(temp_resp_message->message_aes_gcm_data.payload_tag));
 
@@ -355,43 +317,23 @@ extern "C" ATTESTATION_STATUS generate_response(secure_message_t* req_message,
 
 
 //Respond to the request from the Source Enclave to close the session
-extern "C" ATTESTATION_STATUS end_session(uint32_t session_id)
+ATTESTATION_STATUS end_session(uint32_t session_id)
 {
     ATTESTATION_STATUS status = SUCCESS;
-    int i;
-    dh_session_t session_info;
-    //uint32_t session_id;
+    dh_session_t *session_info;
 
-    //Get the session information from the map corresponding to the source enclave id
-    std::map<uint32_t, dh_session_t>::iterator it = g_dest_session_info_map.find(session_id);
-    if(it != g_dest_session_info_map.end())
+    //Retrieve the session information for the corresponding session id
+    session_info = dh_sessions[session_id];
+
+    if(session_info == NULL)
     {
-        session_info = it->second;
-    }
-    else
-    {
-        return INVALID_SESSION;
+        status = INVALID_SESSION;
     }
 
-    //session_id = session_info.session_id;
     //Erase the session information for the current session
-    g_dest_session_info_map.erase(session_id);
-
-    //Update the session id tracker
-    if (g_session_count > 0)
-    {
-        //check if session exists
-        for (i=1; i <= MAX_SESSION_COUNT; i++)
-        {
-            if(g_session_id_tracker[i-1] != NULL && g_session_id_tracker[i-1]->session_id == session_id)
-            {
-                memset(g_session_id_tracker[i-1], 0, sizeof(session_id_tracker_t));
-                SAFE_FREE(g_session_id_tracker[i-1]);
-                g_session_count--;
-                break;
-            }
-        }
-    }
+    dh_sessions[session_id] = NULL;
+    memset(session_info, 0, sizeof(dh_session_t));
+    SAFE_FREE(session_info);
 
     return status;
 }
@@ -406,10 +348,11 @@ ATTESTATION_STATUS generate_session_id(uint32_t *session_id)
     {
         return INVALID_PARAMETER_ERROR;
     }
-    //if the session structure is uninitialized, set that as the next session ID
+
+    // find the first unused entry in the session info array, and use the index as the session id
     for (int i = 0; i < MAX_SESSION_COUNT; i++)
     {
-        if (g_session_id_tracker[i] == NULL)
+        if (dh_sessions[i] == NULL)
         {
             *session_id = i;
             return status;
@@ -419,5 +362,32 @@ ATTESTATION_STATUS generate_session_id(uint32_t *session_id)
     status = NO_AVAILABLE_SESSION_ERROR;
 
     return status;
+}
 
+/* Function Description:
+ *   this is to verify peer enclave's identity
+ * For demonstration purpose, we verify below points:
+ *   1. peer enclave's MRSIGNER is as expected
+ *   2. peer enclave's PROD_ID is as expected
+ *   3. peer enclave's attribute is reasonable that it should be INITIALIZED and without DEBUG attribute (except the project is built with DEBUG option)
+ * */
+uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity)
+{
+    if(!peer_enclave_identity)
+        return INVALID_PARAMETER_ERROR;
+
+    // TODO: possibly compare peer enclave's MRSIGNER to known value
+    // if (memcmp((uint8_t *)&peer_enclave_identity->mr_signer, (uint8_t*)&g_initiator_mrsigner, sizeof(sgx_measurement_t)))
+    //     return ENCLAVE_TRUST_ERROR;
+
+    if(peer_enclave_identity->isv_prod_id != 0 || !(peer_enclave_identity->attributes.flags & SGX_FLAGS_INITTED))
+        return ENCLAVE_TRUST_ERROR;
+
+    // check the enclave isn't loaded in enclave debug mode, except that the project is built for debug purpose
+#if defined(NDEBUG)
+    if (peer_enclave_identity->attributes.flags & SGX_FLAGS_DEBUG)
+        return ENCLAVE_TRUST_ERROR;
+#endif
+
+    return SUCCESS;
 }

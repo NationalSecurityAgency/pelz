@@ -47,6 +47,7 @@
 #include "pelz_service.h"
 #include "pelz_request_handler.h"
 #include "secure_socket_thread.h"
+#include "secure_socket_ecdh.h"
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
@@ -69,7 +70,7 @@ int generate_and_send_session_msg1_resp(int clientfd)
   memset(&msg1resp, 0, sizeof(SESSION_MSG1_RESP));
 
   // call responder enclave to generate ECDH message 1
-  ret = session_request(e2_enclave_id, &status, &msg1resp.dh_msg1, &msg1resp.sessionid);
+  ret = session_request(eid, &status, &msg1resp.dh_msg1, &msg1resp.sessionid);
   if (ret != SGX_SUCCESS)
   {
     pelz_log(LOG_ERR, "failed to do ECALL session_request.\n");
@@ -133,7 +134,7 @@ int process_exchange_report(int clientfd, SESSION_MSG2 * msg2)
   msg3->sessionid = msg2->sessionid;
 
   // call responder enclave to process ECDH message 2 and generate message 3
-  ret = exchange_report(e2_enclave_id, &status, &msg2->dh_msg2, &msg3->dh_msg3, msg2->sessionid);
+  ret = exchange_report(eid, &status, &msg2->dh_msg2, &msg3->dh_msg3, msg2->sessionid);
   if (ret != SGX_SUCCESS)
   {
     pelz_log(LOG_ERR, "EnclaveResponse_exchange_report failure.\n");
@@ -184,7 +185,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
   }
   memset(resp_message, 0, resp_message_size);
 
-  ret = generate_response(e2_enclave_id, &status, (secure_message_t *)req_msg->buf, req_msg->size, req_msg->max_payload_size, resp_message, resp_message_size, req_msg->session_id);
+  ret = generate_response(eid, &status, (secure_message_t *)req_msg->buf, req_msg->size, req_msg->max_payload_size, resp_message, resp_message_size, req_msg->session_id);
   if (ret != SGX_SUCCESS)
   {
     pelz_log(LOG_ERR, "EnclaveResponder_generate_response error.\n");
@@ -233,7 +234,7 @@ int process_close_req(int clientfd, SESSION_CLOSE_REQ * close_req)
     return -1;
 
   // call responder enclave to close this session
-  ret = end_session(e2_enclave_id, &status, close_req->session_id);
+  ret = end_session(eid, &status, close_req->session_id);
   if (ret != SGX_SUCCESS)
     return -1;
 
@@ -290,7 +291,7 @@ int handle_message(int sockfd, FIFO_MSG * message)
     case FIFO_DH_CLOSE_REQ:
     {
       // process message close request
-      if (process_close_req(sockfd, (SESSION_CLOSE_REQ *) message->msgbuf != 0)
+      if (process_close_req(sockfd, (SESSION_CLOSE_REQ *) message->msgbuf) != 0)
       {
         pelz_log(LOG_ERR, "failed to close ecdh session.\n");
         return -1;
