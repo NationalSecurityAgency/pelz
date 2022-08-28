@@ -31,15 +31,11 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf ciph
     {
       return new_charbuf(0);
     }
-    if(tag.chars != NULL && tag.len != 0)
-    {
-      num_fields++;
-    }
-    if(iv.chars != NULL && iv.len != 0)
-    {
-      num_fields++;
-    }
+
+    // Decrypt requests have 2 extra fields, IV and tag (which can be empty).
+    num_fields = 7;
   }
+
   // If it's not a decrypt request there shouldn't be an IV or tag.
   else{
     if(tag.chars != NULL || tag.len != 0 || iv.chars != NULL || iv.len != 0)
@@ -119,17 +115,16 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf ciph
   memcpy(dst, data.chars, data.len);
   dst += data.len;
 
-  if(iv.len > 0)
+  // Decrypt requests always serialize iv and tag fields,
+  // althogh they may be empty.
+  if(request_type == REQ_DEC_SIGNED)
   {
     memcpy(dst, (uint64_t*)(&iv.len), sizeof(uint64_t));
     dst += sizeof(uint64_t);
 
     memcpy(dst, iv.chars, iv.len);
     dst += iv.len;
-  }
 
-  if(tag.len > 0)
-  {
     memcpy(dst, (uint64_t*)(&tag.len), sizeof(uint64_t));
     dst += sizeof(uint64_t);
 
