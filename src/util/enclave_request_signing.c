@@ -116,7 +116,7 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf ciph
   dst += data.len;
 
   // Decrypt requests always serialize iv and tag fields,
-  // althogh they may be empty.
+  // although they may be empty.
   if(request_type == REQ_DEC_SIGNED)
   {
     memcpy(dst, (uint64_t*)(&iv.len), sizeof(uint64_t));
