@@ -42,6 +42,7 @@
 #include "sgx_tcrypto.h"
 #include "secure_socket_ecdh.h"
 #include "dh_error_codes.h"
+#include ENCLAVE_HEADER_TRUSTED
 
 
 #define MAX_SESSION_COUNT  16
@@ -186,7 +187,7 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     size_t header_size, expected_payload_size;
     dh_session_t *session_info;
     secure_message_t* temp_resp_message;
-    uint32_t ret;
+    int ret;
     sgx_status_t status;
 
     plaintext = (const uint8_t*)(" ");
@@ -246,17 +247,16 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     }
 
     // Call Pelz request message handler
-    ret = ocall_handle_pelz_request_msg((char*)decrypted_data, decrypted_data_length, &resp_data, &resp_data_length);
-    if(ret !=0)
+    status = ocall_handle_pelz_request_msg(&ret, (char*)decrypted_data, decrypted_data_length, &resp_data, &resp_data_length);
+    if(SGX_SUCCESS != status)
     {
         SAFE_FREE(decrypted_data);
-        SAFE_FREE(resp_data);
         return INVALID_SESSION;
     }
 
     if(resp_data_length > max_payload_size)
     {
-        SAFE_FREE(resp_data);
+        ocall_free(resp_data, resp_data_length);
         SAFE_FREE(decrypted_data);
         return OUT_BUFFER_LENGTH_ERROR;
     }
@@ -265,7 +265,7 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
 
     if(resp_message_calc_size > resp_message_size)
     {
-        SAFE_FREE(resp_data);
+        ocall_free(resp_data, resp_data_length);
         SAFE_FREE(decrypted_data);
         return OUT_BUFFER_LENGTH_ERROR;
     }
@@ -274,9 +274,9 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     temp_resp_message = (secure_message_t*)malloc(resp_message_calc_size);
     if(!temp_resp_message)
     {
-            SAFE_FREE(resp_data);
-            SAFE_FREE(decrypted_data);
-            return MALLOC_ERROR;
+        ocall_free(resp_data, resp_data_length);
+        SAFE_FREE(decrypted_data);
+        return MALLOC_ERROR;
     }
 
     memset(temp_resp_message,0,sizeof(secure_message_t)+ resp_data_length);
@@ -299,7 +299,7 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
 
     if(SGX_SUCCESS != status)
     {
-        SAFE_FREE(resp_data);
+        ocall_free(resp_data, resp_data_length);
         SAFE_FREE(decrypted_data);
         SAFE_FREE(temp_resp_message);
         return status;
@@ -309,7 +309,7 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     memcpy(resp_message, temp_resp_message, sizeof(secure_message_t)+ resp_data_length);
 
     SAFE_FREE(decrypted_data);
-    SAFE_FREE(resp_data);
+    ocall_free(resp_data, resp_data_length);
     SAFE_FREE(temp_resp_message);
 
     return SUCCESS;

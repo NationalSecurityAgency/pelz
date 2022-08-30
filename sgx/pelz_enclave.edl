@@ -264,7 +264,7 @@ void ocall_malloc(size_t size, [user_check] unsigned char** buf);
 void ocall_free([user_check] void* ptr, size_t len);
 
 // TODO: Add docstring
-int ocall_handle_pelz_request_msg([in] char* req_data, size_t req_length, [out] char** resp_buffer, [out] size_t* resp_length);
+int ocall_handle_pelz_request_msg([in, size = req_length] char* req_data, size_t req_length, [out] char** resp_buffer, [out] size_t* resp_length);
 	};
 };	
 	

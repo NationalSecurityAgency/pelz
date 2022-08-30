@@ -190,10 +190,7 @@ int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG
         ret = -1;
     }
 
-
 CLEAN:
-    close(server_sock_fd);
-
     return ret;
 }
 

@@ -92,7 +92,7 @@ int generate_and_send_session_msg1_resp(int clientfd)
   memcpy(fifo_resp->msgbuf, &msg1resp, sizeof(SESSION_MSG1_RESP));
 
   //send message 1 to client
-  if (send(clientfd, reinterpret_cast<char *>(fifo_resp), static_cast<int>(respmsgsize), 0) == -1)
+  if (send(clientfd, (char *)fifo_resp, respmsgsize, 0) == -1)
   {
     pelz_log(LOG_ERR, "fail to send msg1 response.\n");
     retcode = -1;
@@ -143,7 +143,7 @@ int process_exchange_report(int clientfd, SESSION_MSG2 * msg2)
   }
 
   // send ECDH message 3 to client
-  if (send(clientfd, reinterpret_cast<char *>(response), static_cast<int>(msgsize), 0) == -1)
+  if (send(clientfd, (char *)response, msgsize, 0) == -1)
   {
     pelz_log(LOG_ERR, "server_send() failure.\n");
     free(response);
@@ -208,7 +208,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
 
   free(resp_message);
 
-  if (send(clientfd, reinterpret_cast<char *>(fifo_resp), sizeof(FIFO_MSG) + static_cast<int>(resp_message_size), 0) == -1)
+  if (send(clientfd, (char *)fifo_resp, sizeof(FIFO_MSG) + resp_message_size, 0) == -1)
   {
     pelz_log(LOG_ERR, "server_send() failure.\n");
     free(fifo_resp);
@@ -242,7 +242,7 @@ int process_close_req(int clientfd, SESSION_CLOSE_REQ * close_req)
   close_ack.header.type = FIFO_DH_CLOSE_RESP;
   close_ack.header.size = 0;
 
-  if (send(clientfd, reinterpret_cast<char *>(&close_ack), sizeof(FIFO_MSG), 0) == -1)
+  if (send(clientfd, (char *)&close_ack, sizeof(FIFO_MSG), 0) == -1)
   {
     pelz_log(LOG_ERR, "server_send() failure.\n");
     return -1;

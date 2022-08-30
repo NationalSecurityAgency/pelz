@@ -113,6 +113,8 @@ int recv_message(int socket_id, FIFO_MSG ** message)
 
   msg = (FIFO_MSG *) malloc(sizeof(FIFO_MSG_HEADER) + header.size + 1);
 
+  memcpy(msg, &header, sizeof(FIFO_MSG_HEADER));
+
   if (header.size > 0)
   {
     bytes_received = recv(socket_id, msg->msgbuf, header.size, 0);
@@ -229,12 +231,11 @@ int ocall_handle_pelz_request_msg(char* req_data, size_t req_length, char** resp
   {
     err_message = "Missing Data";
     error_message_encoder(&message, err_message);
+    *resp_buffer = (char *) message.chars;
+    *resp_length = message.len;
     pelz_log(LOG_DEBUG, "Error: %.*s, %d", (int) message.len, message.chars, (int) message.len);
-    free_charbuf(&request);
-    return -1;
+    return 0;
   }
-
-  free_charbuf(&request);
 
   decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
   free_charbuf(&data_in);
@@ -291,9 +292,9 @@ int ocall_handle_pelz_request_msg(char* req_data, size_t req_length, char** resp
     message_encoder(request_type, key_id, data_out, &message);
     pelz_log(LOG_DEBUG, "Message Encode Complete");
     pelz_log(LOG_DEBUG, "Message: %.*s, %d", (int) message.len, message.chars, (int) message.len);
+    free_charbuf(&data_out);
   }
   free_charbuf(&key_id);
-  free_charbuf(&data_out);
   free_charbuf(&output);
 
   pelz_log(LOG_DEBUG, "Message & Length: %.*s, %d", (int) message.len, message.chars, (int) message.len);

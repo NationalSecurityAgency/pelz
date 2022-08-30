@@ -53,13 +53,13 @@ Generate or install $(SIGNING_KEY)
 e.g., run 'openssl genrsa -out $(SIGNING_KEY) -3 3072'
 endef
 
-$(SIGNING_KEY):
-	$(error $(err_no_enclave_signing_key))
-
 $(SIGNED_ENCLAVE_NAME) : $(ENCLAVE_NAME) $(SIGNING_KEY)
 	@$(SGX_ENCLAVE_SIGNER) sign -key $(SIGNING_KEY) -enclave $(ENCLAVE_NAME) -out $@ -config EnclaveInitiator.config.xml
 	@cp $(SIGNED_ENCLAVE_NAME) $(TOPDIR)/$(OUTDIR)/
 	@echo "SIGN =>  $@"
+
+$(SIGNING_KEY):
+	$(error $(err_no_enclave_signing_key))
 
 # Enable the security flags
 Enclave_Security_Link_Flags := -Wl,-z,relro,-z,now,-z,noexecstack
