@@ -168,6 +168,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
   secure_message_t *resp_message = NULL;
   FIFO_MSG * fifo_resp = NULL;
   size_t resp_message_size;
+  size_t resp_message_max_size;
 
   if (!req_msg)
   {
@@ -175,17 +176,17 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
     return -1;
   }
 
-  resp_message_size = sizeof(secure_message_t) + req_msg->max_payload_size;
+  resp_message_max_size = sizeof(secure_message_t) + req_msg->max_payload_size;
   //Allocate memory for the response message
-  resp_message = (secure_message_t*)malloc(resp_message_size);
+  resp_message = (secure_message_t*)malloc(resp_message_max_size);
   if (!resp_message)
   {
     pelz_log(LOG_ERR, "memory allocation failure.\n");
     return -1;
   }
-  memset(resp_message, 0, resp_message_size);
+  memset(resp_message, 0, resp_message_max_size);
 
-  ret = generate_response(eid, &status, (secure_message_t *)req_msg->buf, req_msg->size, req_msg->max_payload_size, resp_message, resp_message_size, req_msg->session_id);
+  ret = generate_response(eid, &status, (secure_message_t *)req_msg->buf, req_msg->size, req_msg->max_payload_size, resp_message, &resp_message_size, resp_message_max_size, req_msg->session_id);
   if (ret != SGX_SUCCESS)
   {
     pelz_log(LOG_ERR, "EnclaveResponder_generate_response error.\n");

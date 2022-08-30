@@ -172,7 +172,8 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
                                      size_t req_message_size,
                                      size_t max_payload_size,
                                      secure_message_t* resp_message,
-                                     size_t resp_message_size,
+                                     size_t *resp_message_size,
+                                     size_t resp_message_max_size,
                 				     uint32_t session_id)
 {
     const uint8_t* plaintext;
@@ -263,7 +264,7 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
 
     resp_message_calc_size = sizeof(secure_message_t) + resp_data_length;
 
-    if(resp_message_calc_size > resp_message_size)
+    if(resp_message_calc_size > resp_message_max_size)
     {
         ocall_free(resp_data, resp_data_length);
         SAFE_FREE(decrypted_data);
@@ -305,8 +306,9 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
         return status;
     }
 
-    memset(resp_message, 0, sizeof(secure_message_t)+ resp_data_length);
-    memcpy(resp_message, temp_resp_message, sizeof(secure_message_t)+ resp_data_length);
+    *resp_message_size = sizeof(secure_message_t) + resp_data_length;
+    memset(resp_message, 0, resp_message_max_size);
+    memcpy(resp_message, temp_resp_message, *resp_message_size);
 
     SAFE_FREE(decrypted_data);
     ocall_free(resp_data, resp_data_length);
