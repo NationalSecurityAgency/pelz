@@ -110,7 +110,8 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/test_pelz_uri_helpers.c \
 		 test/src/util/table_test_suite.c \
 		 test/src/util/request_test_suite.c \
-		 test/src/util/cmd_interface_test_suite.c
+		 test/src/util/cmd_interface_test_suite.c \
+		 test/src/util/request_test_helpers.c 
 
 App_Cpp_Files_for_Test := src/util/common_table.c \
 		 src/util/key_table.c \
@@ -374,7 +375,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 				 sgx/log_ocall.o \
 				 sgx/ecdh_ocall.o \
 				 sgx/ecdh_util.o \
-				 sgx/memory_ocall.o
+				 sgx/memory_ocall.o 
 	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \

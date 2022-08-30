@@ -1,23 +1,14 @@
-#include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
-#include <openssl/x509v3.h>
-#include <stdbool.h>
-#include <string.h>
-
-
-#include ENCLAVE_HEADER_TRUSTED
-#include "kmyth_enclave_trusted.h"
+#include "request_test_helpers.h"
 #include "charbuf.h"
-#include "enclave_request_signing.h"
-#include "pelz_enclave.h"
-#include "common_table.h"
-#include "ca_table.h"
+#include "kmyth/formatting_tools.h"
+#include "pelz_request_handler.h"
 #include "ecdh_util.h"
 
+#include <openssl/x509.h>
+#include <openssl/bio.h>
+#include <openssl/pem.h>
 
-
-
-charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert)
+charbuf serialize_request_helper(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert)
 {
   uint64_t num_fields = 5;
   if(request_type == REQ_DEC_SIGNED || request_type == REQ_DEC)
@@ -138,46 +129,11 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf ciph
   memcpy(dst, requestor_cert.chars, requestor_cert.len);
   return serialized;
 }
-  
-bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf signature, charbuf cert)
+
+charbuf sign_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert, EVP_PKEY* requestor_privkey)
 {
-  bool result = false;
-  X509* requestor_x509;
-  EVP_PKEY *requestor_pubkey;
-  charbuf serialized;
-
-  requestor_x509 = d2i_X509(NULL, (const unsigned char**)&(cert.chars), cert.len);
-  if(requestor_x509 == NULL)
-  {
-    return result;
-  }
-
-  /* Check that the requestors cert is signed by a known CA */
-  /* if(validate_cert(requestor_x509) != true) */
-  /* { */
-  /*   X509_free(requestor_x509); */
-  /*   return result; */
-  /* } */
-
-  /* Now validate the signature over the request */
-  requestor_pubkey = X509_get_pubkey(requestor_x509);
-  if(requestor_pubkey == NULL)
-  {
-    X509_free(requestor_x509);
-    return result;
-  }
-
-  serialized = serialize_request(request_type, key_id, cipher_name, data, iv, tag, cert);
-  if(serialized.chars == NULL)
-  {
-    X509_free(requestor_x509);
-    EVP_PKEY_free(requestor_pubkey);
-    return result;
-  }
-
-  result = verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len);
-  free_charbuf(&serialized);
-  X509_free(requestor_x509);
-  EVP_PKEY_free(requestor_pubkey);
-  return result;
+  charbuf serialized = serialize_request_helper(request_type, key_id, cipher_name, data, iv, tag, requestor_cert);
+  charbuf signature = new_charbuf(0);
+  sign_buffer(requestor_privkey, serialized.chars, serialized.len, &(signature.chars), (unsigned int*)&(signature.len));
+  return signature;
 }

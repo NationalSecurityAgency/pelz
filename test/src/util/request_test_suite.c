@@ -16,9 +16,14 @@
 #include <common_table.h>
 #include <pelz_request_handler.h>
 
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
 #include "test_enclave_u.h"
+#include "request_test_helpers.h"
+#include "kmyth/formatting_tools.h"
 
 static const char* cipher_names[] = {"AES/KeyWrap/RFC3394NoPadding/256",
 				     "AES/KeyWrap/RFC3394NoPadding/192",
@@ -32,148 +37,6 @@ static const char* cipher_names[] = {"AES/KeyWrap/RFC3394NoPadding/256",
 // encrypt/decrypt cycle, but the code to extract them from the cipher
 // is only built in the enclave.
 static const size_t cipher_key_bytes[] = {32, 24, 16, 32, 24, 16, 0};
-
-charbuf serialize_request_helper(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert)
-{
-  uint64_t num_fields = 5;
-  if(request_type == REQ_DEC_SIGNED || request_type == REQ_DEC)
-  {
-    // If there's a mismatch between NULL chars and length in tag or IV
-    // that's an indication something odd is happening, so error out.
-    if((iv.chars == NULL && iv.len != 0) ||
-       (iv.chars != NULL && iv.len == 0) ||
-       (tag.chars == NULL && tag.len != 0) ||
-       (tag.chars != NULL && tag.len == 0))
-    {
-      return new_charbuf(0);
-    }
-
-    // Decrypt requests have 2 extra fields, IV and tag (which can be empty).
-    num_fields = 7;
-  }
-
-  // If it's not a decrypt request there shouldn't be an IV or tag.
-  else{
-    if(tag.chars != NULL || tag.len != 0 || iv.chars != NULL || iv.len != 0)
-    {
-      return new_charbuf(0);
-    }
-  }
-  uint64_t request_type_int = (uint64_t)request_type;
-
-  uint64_t total_size = ((num_fields+1)*sizeof(uint64_t));
-  if(total_size + key_id.len < total_size)
-  {
-    return new_charbuf(0);
-  }
-  total_size += key_id.len;
-
-  if(total_size + cipher_name.len < total_size)
-  {
-    return new_charbuf(0);
-  }
-  total_size += cipher_name.len;
-
-  if(total_size + data.len < total_size)
-  {
-    return new_charbuf(0);
-  }
-  total_size += data.len;
-
-  if(total_size + iv.len < total_size)
-  {
-    return new_charbuf(0);
-  }
-  total_size += iv.len;
-
-  if(total_size + tag.len < total_size)
-  {
-    return new_charbuf(0);
-  }
-  total_size += tag.len;
-
-  if(total_size + requestor_cert.len < total_size)
-  {
-    return new_charbuf(0);
-  }
-  total_size += requestor_cert.len;
-
-  
-  charbuf serialized = new_charbuf(total_size);
-  if(serialized.chars == NULL)
-  {
-    return serialized;
-  }
-
-  unsigned char* dst = serialized.chars;
-
-  memcpy(dst, &total_size, sizeof(uint64_t));
-  dst += sizeof(uint64_t);
-  
-  memcpy(dst, &request_type_int, sizeof(uint64_t));
-  dst += sizeof(uint64_t);
-
-  memcpy(dst, (uint64_t*)(&key_id.len), sizeof(uint64_t));
-  dst += sizeof(uint64_t);
-
-  memcpy(dst, key_id.chars, key_id.len);
-  dst += key_id.len;
-
-  memcpy(dst, (uint64_t*)(&cipher_name.len), sizeof(uint64_t));
-  dst += sizeof(uint64_t);
-
-  memcpy(dst, cipher_name.chars, cipher_name.len);
-  dst += cipher_name.len;
-
-  memcpy(dst, (uint64_t*)(&data.len), sizeof(uint64_t));
-  dst += sizeof(uint64_t);
-
-  memcpy(dst, data.chars, data.len);
-  dst += data.len;
-
-  // Decrypt requests always serialize iv and tag fields,
-  // although they may be empty.
-  if(request_type == REQ_DEC_SIGNED)
-  {
-    memcpy(dst, (uint64_t*)(&iv.len), sizeof(uint64_t));
-    dst += sizeof(uint64_t);
-
-    memcpy(dst, iv.chars, iv.len);
-    dst += iv.len;
-
-    memcpy(dst, (uint64_t*)(&tag.len), sizeof(uint64_t));
-    dst += sizeof(uint64_t);
-
-    memcpy(dst, tag.chars, tag.len);
-    dst += tag.len;
-  }
-
-  memcpy(dst, (uint64_t*)(&requestor_cert.len), sizeof(uint64_t));
-  dst += sizeof(uint64_t);
-
-  memcpy(dst, requestor_cert.chars, requestor_cert.len);
-  return serialized;
-}
-
-static charbuf sign_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert, EVP_PKEY* requestor_privKey)
-{
-  charbuf serialized_request = serialize_request_helper(request_type, key_id, cipher_name, data, iv, tag, requestor_cert);
-  charbuf signature;
-  size_t sig_len;
-  
-  EVP_MD_CTX *ctx = NULL;
-  signature.chars = NULL;
-
-  ctx = EVP_MD_CTX_create();
-  EVP_DigestSignInit(ctx, NULL, EVP_sha384(), NULL, requestor_privKey);
-  EVP_DigestSignUpdate(ctx, serialized_request.chars, serialized_request.len);
-  EVP_DigestSignFinal(ctx, NULL, &sig_len);
-  signature = new_charbuf(sig_len);
-  EVP_DigestSignFinal(ctx, signature.chars, &sig_len);
-
-  return signature;
-}
-
 
 // Adds all request handler tests to main test runner.
 int request_suite_add_tests(CU_pSuite suite)
@@ -376,6 +239,8 @@ void test_invalid_cipher_name(void)
   RequestResponseStatus request_status;
   TableResponseStatus table_status;
 
+  table_destroy(eid, &table_status, KEY);
+
   const char* key_id_str = "file:/test/data/key1.txt";
   charbuf key_id = new_charbuf(strlen(key_id_str));
   memcpy(key_id.chars, key_id_str, key_id.len);
@@ -520,5 +385,67 @@ void test_missing_input_data(void)
 
 void test_signed_request_handling(void)
 {
-  CU_ASSERT(1);
+  TableResponseStatus table_status;
+  RequestResponseStatus response_status;
+
+  // Wipe out the key table in case any other test didn't clean
+  // itself up appropriately.
+  table_destroy(eid, &table_status, KEY);
+
+  const char* key_id_str = "file:/test/data/key125.txt";
+  charbuf key_id = new_charbuf(strlen(key_id_str));
+  memcpy(key_id.chars, key_id_str, key_id.len);
+
+  const char*  full_key_data = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  charbuf key_data = new_charbuf(cipher_key_bytes[0]);
+  memcpy(key_data.chars, full_key_data, key_data.len);
+  key_table_add_key(eid, &table_status, key_id, key_data);
+  
+  const char* data_str = "abcdefghijklmnopqrstuvwxyz012345";
+  charbuf data = new_charbuf(strlen(data_str));
+  memcpy(data.chars, data_str, data.len);
+
+  /* charbuf output; */
+  charbuf iv = new_charbuf(0);
+  charbuf tag = new_charbuf(0);
+
+  BIO *cert_bio = BIO_new_file("test/data/worker_pub.pem", "r");
+  BIO *key_bio = BIO_new_file("test/data/worker_priv.pem", "r");
+
+  X509* requestor_cert_x509 = PEM_read_bio_X509(cert_bio, NULL, 0, NULL);
+  BIO_free(cert_bio);
+
+  EVP_PKEY* requestor_privkey = PEM_read_bio_PrivateKey(key_bio, NULL, 0, NULL);
+  BIO_free(key_bio);
+
+  // Convert X509 version certificate to DER and base64-encode
+  charbuf der;
+  charbuf requestor_cert_encoded;
+  charbuf output;
+
+  der.len = i2d_X509(requestor_cert_x509, &(der.chars));
+  encodeBase64Data(der.chars, der.len,
+                         &requestor_cert_encoded.chars, &requestor_cert_encoded.len);
+
+  charbuf cipher_name = new_charbuf(strlen(cipher_names[0]));
+  memcpy(cipher_name.chars, cipher_names[0], cipher_name.len);
+  charbuf signature = sign_request(REQ_ENC_SIGNED, key_id, cipher_name, data, iv, tag, requestor_cert_encoded, requestor_privkey);
+
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, der);
+  CU_ASSERT(response_status == REQUEST_OK);
+
+  table_destroy(eid, &table_status, KEY);
+  
+  free_charbuf(&output);
+  free_charbuf(&iv);
+  free_charbuf(&tag);
+  free_charbuf(&signature);
+  free_charbuf(&cipher_name);
+  free_charbuf(&der);
+  free_charbuf(&requestor_cert_encoded);
+  free_charbuf(&key_id);
+  free_charbuf(&data);
+  X509_free(requestor_cert_x509);
+  EVP_PKEY_free(requestor_privkey);
+  free_charbuf(&key_data);
 }
