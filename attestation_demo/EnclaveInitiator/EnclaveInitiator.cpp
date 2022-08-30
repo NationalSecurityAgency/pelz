@@ -71,54 +71,32 @@ extern "C" uint32_t test_create_session()
 uint32_t test_message_exchange()
 {
     ATTESTATION_STATUS ke_status = SUCCESS;
-    uint32_t target_fn_id, msg_type;
-    char* marshalled_inp_buff;
-    size_t marshalled_inp_buff_len;
     char* out_buff;
     size_t out_buff_len;
     size_t max_out_buff_size;
-    char* secret_response;
-    uint32_t secret_data;
 
-    target_fn_id = 0;
-    msg_type = MESSAGE_EXCHANGE;
-    max_out_buff_size = 50; // it's assumed the maximum payload size in response message is 50 bytes, it's for demonstration purpose
-    secret_data = 0x12345678; //Secret Data here is shown only for purpose of demonstration.
+    max_out_buff_size = 4096;
 
     // TODO: 1. Change this placeholder message to an unsigned pelz request.
     // TODO: 2. Change the message to a signed pelz request.
     // TODO: 3. Change the message to a signed pelz request with individually encrypted fields.
     // TODO: 4. Generate the request signature using a double-wrapped signing key (using kmyth).
 
-    //Marshals the secret data into a buffer
-    ke_status = marshal_message_exchange_request(target_fn_id, msg_type, secret_data, &marshalled_inp_buff, &marshalled_inp_buff_len);
-    if(ke_status != SUCCESS)
-    {
-        return ke_status;
-    }
+    char *req_msg = "placeholder pelz request message";
+    size_t req_len = strlen(req_msg);
 
     //Core Reference Code function
-    ke_status = send_request_receive_response(&g_session, marshalled_inp_buff,
-                                                marshalled_inp_buff_len, max_out_buff_size, &out_buff, &out_buff_len);
+    ke_status = send_request_receive_response(&g_session, req_msg, req_len,
+                                                max_out_buff_size, &out_buff, &out_buff_len);
     if(ke_status != SUCCESS)
     {
-        SAFE_FREE(marshalled_inp_buff);
         SAFE_FREE(out_buff);
         return ke_status;
     }
 
-    //Un-marshal the secret response data
-    ke_status = umarshal_message_exchange_response(out_buff, &secret_response);
-    if(ke_status != SUCCESS)
-    {
-        SAFE_FREE(marshalled_inp_buff);
-        SAFE_FREE(out_buff);
-        return ke_status;
-    }
+    // TODO: Display the pelz server's response
 
-    SAFE_FREE(marshalled_inp_buff);
     SAFE_FREE(out_buff);
-    SAFE_FREE(secret_response);
     return SUCCESS;
 }
 
