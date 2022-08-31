@@ -669,4 +669,4 @@ clean:
 	@rm -f test/data/*.nkl
 	@rm -f test/data/*.txt
 	@cd kmyth/sgx && make clean
-
+	@cd attestation_demo && make clean
