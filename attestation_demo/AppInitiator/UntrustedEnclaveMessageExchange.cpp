@@ -59,8 +59,7 @@ extern "C" ATTESTATION_STATUS session_request_ocall(sgx_dh_msg1_t* dh_msg1, uint
 	msg1_request.header.type = FIFO_DH_REQ_MSG1;
 	msg1_request.header.size = 0;
 
-	// Previous versions used sizeof(FIFO_MSG) here, which seems incorrect with a message size of 0.
-	if ((client_send_receive(&msg1_request, sizeof(FIFO_MSG_HEADER), &msg1_response, &msg1_resp_size) != 0)
+	if ((client_send_receive(&msg1_request, sizeof(FIFO_MSG), &msg1_response, &msg1_resp_size) != 0)
 		|| (msg1_response == NULL))
 	{
 		printf("fail to send and receive message.\n");

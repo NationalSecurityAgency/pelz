@@ -60,7 +60,7 @@ typedef struct _fifomsgheader
 typedef struct _fifomsg
 {
 	FIFO_MSG_HEADER header;
-	unsigned char msgbuf[1];
+	unsigned char msgbuf[0];
 }FIFO_MSG;
 
 
