@@ -42,7 +42,7 @@
 
 #define UNUSED(val) (void)(val)
 
-#define RESPONDER_PRODID 1
+#define RESPONDER_PRODID 0
 
 std::map<sgx_enclave_id_t, dh_session_t>g_src_session_info_map;
 
@@ -126,9 +126,10 @@ extern "C" uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t*
     if (!peer_enclave_identity)
         return INVALID_PARAMETER_ERROR;
 
+    // TODO: possibly compare peer enclave's MRSIGNER to known value
     // check peer enclave's MRSIGNER
-    if (memcmp((uint8_t *)&peer_enclave_identity->mr_signer, (uint8_t*)&g_responder_mrsigner, sizeof(sgx_measurement_t)))
-        return ENCLAVE_TRUST_ERROR;
+    // if (memcmp((uint8_t *)&peer_enclave_identity->mr_signer, (uint8_t*)&g_responder_mrsigner, sizeof(sgx_measurement_t)))
+    //     return ENCLAVE_TRUST_ERROR;
 
     // check peer enclave's product ID and enclave attribute (should be INITIALIZED'ed)
     if (peer_enclave_identity->isv_prod_id != RESPONDER_PRODID || !(peer_enclave_identity->attributes.flags & SGX_FLAGS_INITTED))
