@@ -222,7 +222,7 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     decrypted_data = (uint8_t*)malloc(decrypted_data_length);
     if(!decrypted_data)
     {
-            return MALLOC_ERROR;
+        return MALLOC_ERROR;
     }
 
     memset(decrypted_data, 0, decrypted_data_length);
@@ -249,16 +249,15 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
 
     // Call Pelz request message handler
     status = ocall_handle_pelz_request_msg(&ret, (char*)decrypted_data, decrypted_data_length, &resp_data, &resp_data_length);
+    SAFE_FREE(decrypted_data);
     if(SGX_SUCCESS != status)
     {
-        SAFE_FREE(decrypted_data);
         return INVALID_SESSION;
     }
 
     if(resp_data_length > max_payload_size)
     {
         ocall_free(resp_data, resp_data_length);
-        SAFE_FREE(decrypted_data);
         return OUT_BUFFER_LENGTH_ERROR;
     }
 
@@ -267,7 +266,6 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     if(resp_message_calc_size > resp_message_max_size)
     {
         ocall_free(resp_data, resp_data_length);
-        SAFE_FREE(decrypted_data);
         return OUT_BUFFER_LENGTH_ERROR;
     }
 
@@ -276,7 +274,6 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     if(!temp_resp_message)
     {
         ocall_free(resp_data, resp_data_length);
-        SAFE_FREE(decrypted_data);
         return MALLOC_ERROR;
     }
 
@@ -301,7 +298,6 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     if(SGX_SUCCESS != status)
     {
         ocall_free(resp_data, resp_data_length);
-        SAFE_FREE(decrypted_data);
         SAFE_FREE(temp_resp_message);
         return status;
     }
@@ -310,7 +306,6 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     memset(resp_message, 0, resp_message_max_size);
     memcpy(resp_message, temp_resp_message, *resp_message_size);
 
-    SAFE_FREE(decrypted_data);
     ocall_free(resp_data, resp_data_length);
     SAFE_FREE(temp_resp_message);
 
