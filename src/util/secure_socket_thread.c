@@ -111,7 +111,7 @@ int recv_message(int socket_id, FIFO_MSG ** message)
 
   header.sockfd = socket_id;  // Save current socket fd in header
 
-  msg = (FIFO_MSG *) malloc(sizeof(FIFO_MSG_HEADER) + header.size + 1);
+  msg = (FIFO_MSG *) malloc(sizeof(FIFO_MSG_HEADER) + header.size);
 
   memcpy(msg, &header, sizeof(FIFO_MSG_HEADER));
 
@@ -124,8 +124,6 @@ int recv_message(int socket_id, FIFO_MSG ** message)
       return (1);
     }
   }
-
-  msg->msgbuf[header.size] = '\0';  // Add null terminator
 
   pelz_log(LOG_INFO, "%d::Received message with %d bytes.", socket_id, header.size);
 
