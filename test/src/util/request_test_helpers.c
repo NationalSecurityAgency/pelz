@@ -75,7 +75,7 @@ charbuf serialize_request_helper(RequestType request_type, charbuf key_id, charb
 
   
   charbuf serialized = new_charbuf(total_size);
-  if(serialized.chars == NULL)
+  if(serialized.chars == NULL || serialized.len == 0)
   {
     return serialized;
   }
@@ -127,13 +127,17 @@ charbuf serialize_request_helper(RequestType request_type, charbuf key_id, charb
   dst += sizeof(uint64_t);
 
   memcpy(dst, requestor_cert.chars, requestor_cert.len);
-  return serialized;
+  return serialized;  
 }
 
 charbuf sign_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert, EVP_PKEY* requestor_privkey)
 {
   charbuf serialized = serialize_request_helper(request_type, key_id, cipher_name, data, iv, tag, requestor_cert);
   charbuf signature = new_charbuf(0);
-  sign_buffer(requestor_privkey, serialized.chars, serialized.len, &(signature.chars), (unsigned int*)&(signature.len));
+  if(sign_buffer(requestor_privkey, serialized.chars, serialized.len, &(signature.chars), (unsigned int*)&(signature.len)) != EXIT_SUCCESS)
+  {
+    free_charbuf(&signature);
+  }
+  free_charbuf(&serialized);
   return signature;
 }

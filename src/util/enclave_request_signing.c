@@ -153,11 +153,11 @@ bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher
   }
 
   /* Check that the requestors cert is signed by a known CA */
-  /* if(validate_cert(requestor_x509) != true) */
-  /* { */
-  /*   X509_free(requestor_x509); */
-  /*   return result; */
-  /* } */
+  if(validate_cert(requestor_x509) != true)
+  {
+    X509_free(requestor_x509);
+    return result;
+  }
 
   /* Now validate the signature over the request */
   requestor_pubkey = X509_get_pubkey(requestor_x509);
@@ -168,14 +168,16 @@ bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher
   }
 
   serialized = serialize_request(request_type, key_id, cipher_name, data, iv, tag, cert);
-  if(serialized.chars == NULL)
+  if(serialized.chars == NULL || serialized.len == 0)
   {
     X509_free(requestor_x509);
     EVP_PKEY_free(requestor_pubkey);
     return result;
   }
-
-  result = verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len);
+  if(verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len) == EXIT_SUCCESS)
+  {
+    result = true;
+  }
   free_charbuf(&serialized);
   X509_free(requestor_x509);
   EVP_PKEY_free(requestor_pubkey);

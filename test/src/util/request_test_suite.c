@@ -25,6 +25,7 @@
 #include "request_test_helpers.h"
 #include "kmyth/formatting_tools.h"
 #include "ca_table.h"
+#include "pelz_loaders.h"
 
 static const char* cipher_names[] = {"AES/KeyWrap/RFC3394NoPadding/256",
 				     "AES/KeyWrap/RFC3394NoPadding/192",
@@ -410,10 +411,9 @@ void test_signed_request_handling(void)
   charbuf tag = new_charbuf(0);
 
   // TODO: Come back here and figure out how to handle this
-  BIO *ca_cert_bio = BIO_new_file("test/data/ca_pub.pem", "r");
-  X509* ca_cert_x509 = PEM_read_bio_X509(ca_cert_bio, NULL, 0, NULL);
-  BIO_free(ca_cert_bio);
-  add_ca_cert(eid, &table_status, ca_cert_x509);
+  uint64_t handle;
+  pelz_load_file_to_enclave((char*)"test/data/ca_pub.der.nkl", &handle);
+  add_cert_to_table(eid, &table_status, CA_TABLE, handle);
   
   BIO *cert_bio = BIO_new_file("test/data/worker_pub.pem", "r");
   BIO *key_bio = BIO_new_file("test/data/worker_priv.pem", "r");
@@ -424,31 +424,36 @@ void test_signed_request_handling(void)
   EVP_PKEY* requestor_privkey = PEM_read_bio_PrivateKey(key_bio, NULL, 0, NULL);
   BIO_free(key_bio);
 
-  // Convert X509 version certificate to DER and base64-encode
+  // Convert X509 version certificate to DER
   charbuf der;
-  charbuf requestor_cert_encoded;
   charbuf output;
-
   der.len = i2d_X509(requestor_cert_x509, &(der.chars));
-  encodeBase64Data(der.chars, der.len,
-                         &requestor_cert_encoded.chars, &requestor_cert_encoded.len);
 
   charbuf cipher_name = new_charbuf(strlen(cipher_names[0]));
   memcpy(cipher_name.chars, cipher_names[0], cipher_name.len);
-  charbuf signature = sign_request(REQ_ENC_SIGNED, key_id, cipher_name, data, iv, tag, requestor_cert_encoded, requestor_privkey);
+  charbuf signature = sign_request(REQ_ENC_SIGNED, key_id, cipher_name, data, iv, tag, der, requestor_privkey);
 
+  // Test where everything (should be) valid
   pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, der);
   CU_ASSERT(response_status == REQUEST_OK);
 
+  // Test with an invalid thing for the cert
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, signature);
+  CU_ASSERT(response_status == ENCRYPT_ERROR);
+
+  // Test with a signature that should fail
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, der, der);
+  CU_ASSERT(response_status == ENCRYPT_ERROR);
+
+  
   table_destroy(eid, &table_status, KEY);
-  X509_free(ca_cert_x509);
+  table_destroy(eid, &table_status, CA_TABLE);
   free_charbuf(&output);
   free_charbuf(&iv);
   free_charbuf(&tag);
   free_charbuf(&signature);
   free_charbuf(&cipher_name);
   free_charbuf(&der);
-  free_charbuf(&requestor_cert_encoded);
   free_charbuf(&key_id);
   free_charbuf(&data);
   X509_free(requestor_cert_x509);
