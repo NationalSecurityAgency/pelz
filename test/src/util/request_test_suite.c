@@ -24,6 +24,7 @@
 #include "test_enclave_u.h"
 #include "request_test_helpers.h"
 #include "kmyth/formatting_tools.h"
+#include "ca_table.h"
 
 static const char* cipher_names[] = {"AES/KeyWrap/RFC3394NoPadding/256",
 				     "AES/KeyWrap/RFC3394NoPadding/192",
@@ -392,7 +393,7 @@ void test_signed_request_handling(void)
   // itself up appropriately.
   table_destroy(eid, &table_status, KEY);
 
-  const char* key_id_str = "file:/test/data/key125.txt";
+  const char* key_id_str = "file:/test/data/key1.txt";
   charbuf key_id = new_charbuf(strlen(key_id_str));
   memcpy(key_id.chars, key_id_str, key_id.len);
 
@@ -405,10 +406,15 @@ void test_signed_request_handling(void)
   charbuf data = new_charbuf(strlen(data_str));
   memcpy(data.chars, data_str, data.len);
 
-  /* charbuf output; */
   charbuf iv = new_charbuf(0);
   charbuf tag = new_charbuf(0);
 
+  // TODO: Come back here and figure out how to handle this
+  BIO *ca_cert_bio = BIO_new_file("test/data/ca_pub.pem", "r");
+  X509* ca_cert_x509 = PEM_read_bio_X509(ca_cert_bio, NULL, 0, NULL);
+  BIO_free(ca_cert_bio);
+  add_ca_cert(eid, &table_status, ca_cert_x509);
+  
   BIO *cert_bio = BIO_new_file("test/data/worker_pub.pem", "r");
   BIO *key_bio = BIO_new_file("test/data/worker_priv.pem", "r");
 
@@ -435,7 +441,7 @@ void test_signed_request_handling(void)
   CU_ASSERT(response_status == REQUEST_OK);
 
   table_destroy(eid, &table_status, KEY);
-  
+  X509_free(ca_cert_x509);
   free_charbuf(&output);
   free_charbuf(&iv);
   free_charbuf(&tag);
