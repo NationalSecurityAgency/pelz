@@ -98,7 +98,7 @@ int seal_nkl(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t *data_
   pelz_log(LOG_DEBUG, "Seal_nkl function");        
   sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
 
-  uint16_t key_policy = SGX_KEYPOLICY_MRSIGNER;
+  uint16_t key_policy = SGX_KEYPOLICY_MRENCLAVE;
   sgx_attributes_t attribute_mask;
 
   attribute_mask.flags = 0;
