@@ -18,6 +18,7 @@
 #include "cmd_interface_test_suite.h"
 #include "test_pelz_uri_helpers.h"
 #include "pelz_log.h"
+#include "test_seal.h"
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
@@ -54,6 +55,10 @@ int main(int argc, char **argv)
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
   };
 
+  const char *unsealed_cert_name[5] = { "test/data/node_pub.der", "test/data/node_priv.der", "test/data/proxy_pub.der", "test/data/ca_pub.der", "test/data/key1.txt" };
+
+  const char *sealed_cert_name[5] = { "test/data/node_pub.der.nkl", "test/data/node_priv.der.nkl", "test/data/proxy_pub.der.nkl", "test/data/ca_pub.der.nkl", "test/data/key1.txt.nkl" };
+
   set_app_name("pelz");
   set_app_version("0.0.0");
   set_applog_max_msg_len(1024);
@@ -68,10 +73,15 @@ int main(int argc, char **argv)
     fclose(fp);
   }
 
-  status = system("./bin/pelz seal test/data/key1.txt -o test/data/key1.txt.nkl");
-  if (status != 0)
+  //Seal test items
+  for (int i = 0; i < 5; i++)
   {
-    pelz_log(LOG_INFO, "Seal key1.txt to .nkl failed");
+    if (seal_for_testing((char*) unsealed_cert_name[i], (char **) sealed_cert_name[i], (strlen(sealed_cert_name[i]) + 1), false))
+    {
+      pelz_log(LOG_ERR, "Failure to seal cert.");
+      return (1);
+    }
+    pelz_log(LOG_DEBUG, "Seal: %s", sealed_cert_name[i]);
   }
 
   pelz_log(LOG_DEBUG, "Start Unit Test");
