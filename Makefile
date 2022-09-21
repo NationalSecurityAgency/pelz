@@ -111,7 +111,7 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/table_test_suite.c \
 		 test/src/util/request_test_suite.c \
 		 test/src/util/cmd_interface_test_suite.c \
-		 test/src/util/request_test_helpers.c 
+		 test/src/util/request_test_helpers.c \
 		 test/src/util/test_seal.c
 
 App_Cpp_Files_for_Test := src/util/common_table.c \

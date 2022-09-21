@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
 
-  sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
   kmyth_unsealed_data_table_initialize(eid, &status);
   if (status)
   {
