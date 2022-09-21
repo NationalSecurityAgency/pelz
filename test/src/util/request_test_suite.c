@@ -410,11 +410,6 @@ void test_signed_request_handling(void)
   charbuf iv = new_charbuf(0);
   charbuf tag = new_charbuf(0);
 
-  // TODO: Come back here and figure out how to handle this
-  uint64_t handle;
-  pelz_load_file_to_enclave((char*)"test/data/ca_pub.der.nkl", &handle);
-  add_cert_to_table(eid, &table_status, CA_TABLE, handle);
-  
   BIO *cert_bio = BIO_new_file("test/data/worker_pub.pem", "r");
   BIO *key_bio = BIO_new_file("test/data/worker_priv.pem", "r");
 
@@ -433,7 +428,16 @@ void test_signed_request_handling(void)
   memcpy(cipher_name.chars, cipher_names[0], cipher_name.len);
   charbuf signature = sign_request(REQ_ENC_SIGNED, key_id, cipher_name, data, iv, tag, der, requestor_privkey);
 
-  // Test where everything (should be) valid
+  // Test with cert whose signature doesn't match any known authority
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, der);
+  CU_ASSERT(response_status == ENCRYPT_ERROR);
+
+  // Add an authority to the CA table
+  uint64_t handle;
+  pelz_load_file_to_enclave((char*)"test/data/ca_pub.der.nkl", &handle);
+  add_cert_to_table(eid, &table_status, CA_TABLE, handle);
+
+  // Test a good signature
   pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, der);
   CU_ASSERT(response_status == REQUEST_OK);
 
