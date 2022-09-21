@@ -146,7 +146,9 @@ bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher
   EVP_PKEY *requestor_pubkey;
   charbuf serialized;
 
-  requestor_x509 = d2i_X509(NULL, (const unsigned char**)&(cert.chars), cert.len);
+  const unsigned char* cert_ptr = cert.chars;
+  
+  requestor_x509 = d2i_X509(NULL, &cert_ptr, cert.len);
   if(requestor_x509 == NULL)
   {
     return result;
@@ -174,6 +176,7 @@ bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher
     EVP_PKEY_free(requestor_pubkey);
     return result;
   }
+
   if(verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len) == EXIT_SUCCESS)
   {
     result = true;
