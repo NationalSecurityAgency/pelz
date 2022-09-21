@@ -17,7 +17,7 @@ extern "C"
  * </pre>
  *
  * The serialized data starts with:
- * 8 bytes little-ending encoding of the total size of the serialized request
+ * 8 bytes little-endian encoding of the total size of the serialized request
  * 8 bytes encoding a uint64_t little-endian encoding of the request_type
  *
  * Then each field present is serialized as
