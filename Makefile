@@ -90,6 +90,7 @@ App_Pipe_File := src/pelz/main.c
 
 App_Cpp_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
+		 src/util/request_signing.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
 		 src/util/fifo_thread.c \
@@ -106,15 +107,18 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/util_test_suite.c \
 		 test/src/util/aes_keywrap_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
+		 test/src/util/request_signing_test_suite.c \
 		 test/src/util/test_helper_functions.c \
 		 test/src/util/test_pelz_uri_helpers.c \
 		 test/src/util/table_test_suite.c \
 		 test/src/util/request_test_suite.c \
-		 test/src/util/cmd_interface_test_suite.c
+		 test/src/util/cmd_interface_test_suite.c \
+		 test/src/util/test_seal.c
 
 App_Cpp_Files_for_Test := src/util/common_table.c \
 		 src/util/key_table.c \
 		 src/util/server_table.c \
+		 src/util/ca_table.c \
 		 src/util/aes_keywrap_3394nopad.c \
 		 src/util/pelz_request_handler.c
 
@@ -310,6 +314,10 @@ endif
 
 ######## Common Objects ########
 
+sgx/ec_key_cert_marshal.o: kmyth/sgx/common/src/ec_key_cert_marshal.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -363,8 +371,10 @@ sgx/test_enclave_u.o: test/include/test_enclave_u.c
 test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			   $(App_Cpp_Files) \
 				 src/util/cmd_interface.c \
+				 src/util/seal.c \
 			   $(App_Cpp_Kmyth_Files) \
 				 sgx/test_enclave_u.o \
+				 sgx/ec_key_cert_marshal.o \
 				 sgx/ec_key_cert_unmarshal.o \
 				 sgx/log_ocall.o \
 				 sgx/ecdh_ocall.o \
@@ -375,6 +385,7 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 			 -Isgx \
 			 -Itest/include \
 			 $(App_C_Flags) \
+			 -g \
 			 $(ENCLAVE_HEADERS) \
 			 $(App_Link_Flags) \
 			 -lcrypto \
@@ -500,6 +511,10 @@ sgx/server_table.o: src/util/server_table.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/ca_table.o: src/util/ca_table.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
 sgx/channel_table.o: src/util/channel_table.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
@@ -520,6 +535,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
 		     sgx/server_table.o \
+		     sgx/ca_table.o \
 				 sgx/channel_table.o \
 		     sgx/aes_keywrap_3394nopad.o \
 		     sgx/pelz_request_handler.o \
@@ -555,6 +571,7 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 						sgx/common_table.o \
      			  sgx/key_table.o \
      			  sgx/server_table.o \
+     			  sgx/ca_table.o \
 						sgx/channel_table.o \
      			  sgx/aes_keywrap_3394nopad.o \
      			  sgx/pelz_request_handler.o \
@@ -600,9 +617,7 @@ test: all test-all
 	@openssl x509 -in test/data/node_pub.pem -inform pem -out test/data/node_pub.der -outform der
 	@openssl x509 -in test/data/proxy_pub.pem -inform pem -out test/data/proxy_pub.der -outform der
 	@openssl pkey -in test/data/node_priv.pem -inform pem -out test/data/node_priv.der -outform der
-	@./bin/pelz seal test/data/node_pub.der -o test/data/node_pub.der.nkl
-	@./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
-	@./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
+	@openssl x509 -in test/data/ca_pub.pem -inform pem -out test/data/ca_pub.der -outform der
 	@echo "GEN => Test Key/Cert Files"
 	@cd kmyth/sgx && make demo-pre demo/bin/ecdh-server --eval="Demo_App_C_Flags += -DDEMO_LOG_LEVEL=LOG_WARNING"
 	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -m 1 2> /dev/null &
@@ -611,6 +626,8 @@ test: all test-all
 	@rm -f test/data/*.pem
 	@rm -f test/data/*.der
 	@rm -f test/data/*.nkl
+	@rm -f test/data/*.csr
+	@rm -f test/data/*.srl
 
 .PHONY: install-test-vectors
 
@@ -642,5 +659,7 @@ clean:
 	@rm -f test/data/*.der
 	@rm -f test/data/*.nkl
 	@rm -f test/data/*.txt
+	@rm -f test/data/*.csr
+	@rm -f test/data/*.srl
 	@cd kmyth/sgx && make clean
 
