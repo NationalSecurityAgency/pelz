@@ -93,7 +93,7 @@ charbuf create_signature(EVP_PKEY * sign_pkey, RequestType * request_type, charb
 X509 * load_pem_cert(charbuf * requestor_cert)
 {
   // create BIO wrapper for cert string
-  BIO *cert_bio = BIO_new_mem_buf(requestor_cert->chars, requestor_cert->len);
+  BIO *cert_bio = BIO_new_mem_buf(requestor_cert->chars, (long unsigned int) requestor_cert->len);
   if (cert_bio == NULL)
   {
     pelz_log(LOG_ERR, "BIO creation failed");

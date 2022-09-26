@@ -43,7 +43,7 @@ int clean_suite(void)
 }
 
 //Main function for the unit testing of the Pelz Service application
-int main(int argc, char **argv)
+int main(void)
 {
   int status;
 
@@ -55,9 +55,9 @@ int main(int argc, char **argv)
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
   };
 
-  const char *unsealed_cert_name[5] = { "test/data/node_pub.der", "test/data/node_priv.der", "test/data/proxy_pub.der", "test/data/ca_pub.der", "test/data/key1.txt" };
+  char unsealed_cert_name[5][29] = { "test/data/node_pub.der", "test/data/node_priv.der", "test/data/proxy_pub.der", "test/data/ca_pub.der", "test/data/key1.txt" };
 
-  const char *sealed_cert_name[5] = { "test/data/node_pub.der.nkl", "test/data/node_priv.der.nkl", "test/data/proxy_pub.der.nkl", "test/data/ca_pub.der.nkl", "test/data/key1.txt.nkl" };
+  char sealed_cert_name[5][29] = { "test/data/node_pub.der.nkl", "test/data/node_priv.der.nkl", "test/data/proxy_pub.der.nkl", "test/data/ca_pub.der.nkl", "test/data/key1.txt.nkl" };
 
   set_app_name("pelz");
   set_app_version("0.0.0");
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
   //Seal test items
   for (int i = 0; i < 5; i++)
   {
-    if (seal_for_testing((char*) unsealed_cert_name[i], (char **) sealed_cert_name[i], (strlen(sealed_cert_name[i]) + 1), false))
+    if (seal_for_testing(unsealed_cert_name[i], sealed_cert_name[i], (strlen(sealed_cert_name[i]) + 1), false))
     {
       pelz_log(LOG_ERR, "Failure to seal cert.");
       return (1);
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     return (1);
   }
 
-  // Add utility suite --- tests util/util.h functions
+  // Add utility suite --- tests utility functions
   CU_pSuite utility_Suite = NULL;
 
   utility_Suite = CU_add_suite("Utility Suite", init_suite, clean_suite);

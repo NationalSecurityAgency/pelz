@@ -129,6 +129,7 @@ void test_create_validate_signature(void)
   charbuf key_id, data, requestor_cert_encoded, signature, signature_encoded;
   unsigned char *der_buf = NULL;
   int der_len = -1;
+  char cert_name_nkl[25] = "test/data/ca_pub.der.nkl";
 
   // initialize request data
   key_id = new_charbuf(strlen(TEST_KEY_ID));
@@ -143,7 +144,7 @@ void test_create_validate_signature(void)
   // load CA key to enclave
   table_destroy(eid, &status, CA_TABLE);
   CU_ASSERT(status == OK);
-  ret = pelz_load_file_to_enclave((char *) "test/data/ca_pub.der.nkl", &handle);
+  ret = pelz_load_file_to_enclave(cert_name_nkl, &handle);
   CU_ASSERT(ret == 0);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
@@ -226,6 +227,7 @@ void test_verify_cert_chain_enclave(void)
   unsigned char *der_buf = NULL;
   int der_len = -1;
   charbuf der_cert = new_charbuf(0);
+  char cert_name_nkl[25] = "test/data/ca_pub.der.nkl";
 
   // initialize CA table
   table_destroy(eid, &status, CA_TABLE);
@@ -244,7 +246,7 @@ void test_verify_cert_chain_enclave(void)
   CU_ASSERT(status != OK);
 
   // load CA key to enclave
-  ret = pelz_load_file_to_enclave((char *) "test/data/ca_pub.der.nkl", &handle);
+  ret = pelz_load_file_to_enclave(cert_name_nkl, &handle);
   CU_ASSERT(ret == 0);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
@@ -266,9 +268,10 @@ void test_invalid_cert_chain_enclave(void)
   unsigned char *der_buf = NULL;
   int der_len = -1;
   charbuf der_cert = new_charbuf(0);
+  char cert_name_nkl[25] = "test/data/ca_pub.der.nkl";
 
   // load CA key to enclave
-  ret = pelz_load_file_to_enclave((char *) "test/data/ca_pub.der.nkl", &handle);
+  ret = pelz_load_file_to_enclave(cert_name_nkl, &handle);
   CU_ASSERT(ret == 0);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);

@@ -17,7 +17,7 @@
 
 #define ENCLAVE_PATH "sgx/pelz_test_enclave.signed.so"
 
-int seal_for_testing(char *filename, char **outpath, size_t outpath_size, bool tpm)
+int seal_for_testing(char *filename, char *outpath, size_t outpath_size, bool tpm)
 {
   uint8_t *data = NULL;
   size_t data_len = 0;
@@ -54,7 +54,7 @@ int seal_for_testing(char *filename, char **outpath, size_t outpath_size, bool t
   }
 
   //Checking and/or setting output path
-  if (outpath_validate(filename, outpath, outpath_size, tpm))
+  if (outpath_validate(filename, &outpath, outpath_size, tpm))
   {
     return 1;
   }
@@ -63,7 +63,7 @@ int seal_for_testing(char *filename, char **outpath, size_t outpath_size, bool t
   if (tpm)
   {
     pelz_log(LOG_DEBUG, "Write file to .ski");
-    if (write_bytes_to_file(*outpath, tpm_seal, tpm_seal_len))
+    if (write_bytes_to_file(outpath, tpm_seal, tpm_seal_len))
     {
       pelz_log(LOG_ERR, "error writing data to .ski file ... exiting");
       free(tpm_seal);

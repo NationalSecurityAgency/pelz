@@ -29,6 +29,7 @@ int send_table_id_list(char *pipe_name, TableType table_type, const char *resp_m
   size_t count;
   charbuf id;
   int fd = -1;
+  char end[5] ="END\n";
 
   fd = open_write_pipe(pipe_name);
   if (fd == -1)
@@ -74,7 +75,7 @@ int send_table_id_list(char *pipe_name, TableType table_type, const char *resp_m
       err = 1;
     }
   }
-  if (write_to_pipe_fd(fd, (char *) "END\n"))
+  if (write_to_pipe_fd(fd, end))
   {
     pelz_log(LOG_ERR, "Unable to send response to pelz cmd.");
     err = 1;
@@ -150,7 +151,7 @@ void *fifo_thread_process(void *arg)
   do
   {
     pthread_mutex_lock(&lock);
-    if (read_from_pipe((char *) PELZSERVICE, &msg))
+    if (read_from_pipe(PELZSERVICE, &msg))
     {
       break;
     }

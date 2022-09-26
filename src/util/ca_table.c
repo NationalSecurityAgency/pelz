@@ -28,7 +28,9 @@ TableResponseStatus verify_cert(charbuf target_der)
     return ERR;
   }
 
-  X509 *target = d2i_X509(NULL, (const unsigned char **) &target_der.chars, target_der.len);
+  const unsigned char* target_der_ptr = target_der.chars;
+
+  X509 *target = d2i_X509(NULL, &target_der_ptr, target_der.len);
   if (target == NULL)
   {
     kmyth_sgx_log(LOG_ERR, "DER to X509 format conversion failed");

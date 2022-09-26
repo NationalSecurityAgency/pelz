@@ -8,7 +8,6 @@ enclave {
   include "channel_table.h"
 	include "key_load.h"
 	include "charbuf.h"
-	include "util.h"
 	trusted {
 
 /**
