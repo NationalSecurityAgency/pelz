@@ -2,7 +2,7 @@ enclave {
 	from "sgx_tsgxssl.edl" import *;
 	from "sgx_pthread.edl" import *;
 	from "kmyth_enclave.edl" import *;
-	include "aes_keywrap_3394nopad.h"
+	include "cipher/pelz_aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "common_table.h"
   include "channel_table.h"
@@ -77,18 +77,6 @@ public TableResponseStatus table_id(TableType type, int index, [out] charbuf* id
  *                    error otherwise.
  */
 public TableResponseStatus add_cert_to_table(TableType type, uint64_t handle);
-
-/**
- * <pre>
- * Verify a certificate using the trusted CA certs in the CA table.
- * </pre>
- *
- * @param[in] target The certificate to be verified, as a DER charbuf.
- *
- * @return OK on success, an error message indicating the type of
- *                    error otherwise.
- */
-public TableResponseStatus verify_cert(charbuf target_der);
 
 /**
  * <pre>
@@ -205,7 +193,7 @@ public TableResponseStatus chan_table_destroy();
 
 /**
  * <pre>
- * This function implements the request handling by looking if pelz already has
+ * This function implements encrypt request handling by looking if pelz already has
  * the key and if not then adding the key to the key table. Along with the
  * key lookup, this function checks the request type then based on the request
  * type it calls the wrap or unwrap functions to return requested key value.
@@ -213,14 +201,45 @@ public TableResponseStatus chan_table_destroy();
  *
  * @param[in] request_type the type of the request (encrypt or decrypt)
  * @param[in] key_id       the key_id of the key to be used for the request
- * @param[in] data         the input data
- * @param[out] output      a pointer to a charbuf to hold the output, will
+ * @param[in] cipher_name  the name of the cipher used for the request
+ * @param[in] plain_data   the input data
+ * @param[out] cipher_data a pointer to a charbuf to hold the output, will
  *                         be created inside the call
+ * @param[out] iv          a pointer to a charbuf to hold the IV, will
+ *                         be allocated inside the call if necessary
+ * @param[out] tag         the MAC tag produced by the encryption, will
+ *                         be allocated inside the call if necessary
+ * @param[in] signature    the signature over the request
+ * @param[in] cert         the certificate used to validate the signature
  *
  * @return REQUEST_OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public RequestResponseStatus pelz_request_handler(RequestType request_type, charbuf key_id, charbuf data, [out] charbuf* output);
+public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, [out] charbuf* cipher_data, [out] charbuf* iv, [out] charbuf* tag, charbuf signature, charbuf cert);
+
+/**
+ * <pre>
+ * This function implements decrypt handling by looking if pelz already has
+ * the key and if not then adding the key to the key table. Along with the
+ * key lookup, this function checks the request type then based on the request
+ * type it calls the wrap or unwrap functions to return requested key value.
+ * <pre>
+ *
+ * @param[in] request_type the type of the request (encrypt or decrypt)
+ * @param[in] key_id       the key_id of the key to be used for the request
+ * @param[in] cipher_name  the name of the cipher used for the request
+ * @param[in] cipher_data  the input data
+ * @param[in] iv           the iv used to encrypt the data, may be empty.
+ * @param[in] tag          the MAC tag for the encryption, may be empty.
+ * @param[out] plain_data  a pointer to a charbuf to hold the output, will
+ *                         be created inside the call
+ * @param[in] signature    the signature over the request
+ * @param[in] cert         the certificate used to validate the signature
+ *
+ * @return REQUEST_OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, [out] charbuf* plain_data, charbuf signature, charbuf cert);
 	};
 	untrusted {
 /**

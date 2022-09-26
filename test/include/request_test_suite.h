@@ -11,5 +11,10 @@
 int request_suite_add_tests(CU_pSuite suite);
 
 // Tests
-void test_request(void);
+void test_invalid_key_id(void);
+void test_encrypt_decrypt(void);
+void test_missing_key_id(void);
+void test_invalid_cipher_name(void);
+void test_missing_input_data(void);
+void test_signed_request_handling(void);
 #endif /* REQUEST_TEST_SUITE_H_ */
