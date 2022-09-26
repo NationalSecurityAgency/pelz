@@ -6,10 +6,10 @@ extern "C"
 {
 #endif
 
-#include <stdbool.h>
 #include <openssl/x509.h>
 
-bool validate_cert(X509* cert);
+  
+int validate_cert(X509* cert);
 
 
 #ifdef __cplusplus

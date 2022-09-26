@@ -154,7 +154,7 @@ int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_
   }
 
   /* Check that the requestors cert is signed by a known CA */
-  if(validate_cert(requestor_x509) != true)
+  if(validate_cert(requestor_x509) != 0)
   {
     X509_free(requestor_x509);
     return result;

@@ -20,9 +20,9 @@
 #include "kmyth_enclave_trusted.h"
 
 
-bool validate_cert(X509* cert)
+int validate_cert(X509* cert)
 {
-  bool result = false;
+  bool result = 1;
   Table* table = get_table_by_type(CA_TABLE);
   if(table == NULL)
   {
@@ -57,7 +57,9 @@ bool validate_cert(X509* cert)
     return result;
   }
 
-  result = X509_verify_cert(store_ctx) == 1;
+  if(X509_verify_cert(store_ctx) == 1){
+    result = 0;
+  }
   X509_STORE_CTX_free(store_ctx);
   X509_STORE_free(store);
   return result;
