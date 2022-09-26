@@ -118,16 +118,17 @@ void *secure_socket_process(void *arg)
     RequestType request_type = REQ_UNK;
 
     charbuf key_id;
-    charbuf data_in;        
-    charbuf data_out;       
     charbuf request_sig;
     charbuf requestor_cert;
+    charbuf cipher_name;
 
-    charbuf data;
-    charbuf output;
+    charbuf output = new_charbuf(0);
+    charbuf input_data = new_charbuf(0);
+    charbuf tag = new_charbuf(0);
+    charbuf iv = new_charbuf(0);
 
     //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &data_in, &request_sig, &requestor_cert))
+    if (request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &input_data, &request_sig, &requestor_cert))
     {
       err_message = "Missing Data";
       error_message_encoder(&message, err_message);
@@ -136,27 +137,43 @@ void *secure_socket_process(void *arg)
       free_charbuf(&request);
       return NULL;
     }
-
     free_charbuf(&request);
 
-    decodeBase64Data(data_in.chars, data_in.len, &data.chars, &data.len);
-    free_charbuf(&data_in);
-
     pthread_mutex_lock(&lock);
-    pelz_request_handler(eid, &status, request_type, key_id, data, &output);
-    if (status == KEK_NOT_LOADED)
+    switch(request_type)
     {
-      if (key_load(key_id) == 0)
+    case REQ_ENC:
+      pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+      if (status == KEK_NOT_LOADED)
       {
-        pelz_request_handler(eid, &status, request_type, key_id, data, &output);
+	if (key_load(key_id) == 0)
+        {
+          pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+        }
+        else
+        {
+          status = KEK_LOAD_ERROR;
+        }
       }
-      else
+      break;
+    case REQ_DEC:
+      pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+      if (status == KEK_NOT_LOADED)
       {
-        status = KEK_LOAD_ERROR;
+	if (key_load(key_id) == 0)
+        {
+          pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+        }
+        else
+        {
+          status = KEK_LOAD_ERROR;
+        }
       }
+      break;
+    default:
+      status = REQUEST_TYPE_ERROR;
     }
     pthread_mutex_unlock(&lock);
-    free_charbuf(&data);
 
     if (status != REQUEST_OK)
     {
@@ -188,18 +205,15 @@ void *secure_socket_process(void *arg)
     }
     else
     {
-      encodeBase64Data(output.chars, output.len, &data_out.chars, &data_out.len);
-      if (strlen((char *) data_out.chars) != data_out.len)
-      {
-        data_out.chars[data_out.len] = 0;
-      }
-      message_encoder(request_type, key_id, data_out, &message);
+      message_encoder(request_type, key_id, cipher_name, iv, tag, output, &message);
       pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
       pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     }
     free_charbuf(&key_id);
-    free_charbuf(&data_out);
     free_charbuf(&output);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    free_charbuf(&cipher_name);
 
     pelz_log(LOG_DEBUG, "%d::Message & Length: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
     //Send processed request back to client
