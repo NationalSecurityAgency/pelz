@@ -6,7 +6,6 @@ extern "C"
 {
 #endif
 
-#include <stdbool.h>
 #include "charbuf.h"
 #include "pelz_request_handler.h"
 #include "pelz_enclave.h"
@@ -50,9 +49,9 @@ extern "C"
  * @param[in] signature      The signature data extracted from the request
  * @param[in] requestor_cert The requestor_cert extracted from the request
  *
- * @return true if valid, false if invalid
+ * @return 0 if valid, 1 if invalid
  */
-  bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf signature, charbuf cert);
+  int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf signature, charbuf cert);
   
   
 

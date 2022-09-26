@@ -1,7 +1,6 @@
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
 #include <openssl/x509v3.h>
-#include <stdbool.h>
 #include <string.h>
 
 
@@ -139,9 +138,9 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf ciph
   return serialized;
 }
   
-bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf signature, charbuf cert)
+int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf signature, charbuf cert)
 {
-  bool result = false;
+  int result = 1;
   X509* requestor_x509;
   EVP_PKEY *requestor_pubkey;
   charbuf serialized;
@@ -179,7 +178,7 @@ bool validate_signature(RequestType request_type, charbuf key_id, charbuf cipher
 
   if(verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len) == EXIT_SUCCESS)
   {
-    result = true;
+    result = 0;
   }
   free_charbuf(&serialized);
   X509_free(requestor_x509);
