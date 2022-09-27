@@ -229,6 +229,8 @@ Enclave_Include_Paths += -Ikmyth/utils/include/kmyth
 Enclave_Include_Paths += -Itest/include
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) 
+Enclave_C_Flags += -fPIC
+Enclave_C_Flags += -Wno-attributes
 Enclave_C_Flags += -nostdinc 
 Enclave_C_Flags += -fvisibility=hidden 
 Enclave_C_Flags += -fpie 
