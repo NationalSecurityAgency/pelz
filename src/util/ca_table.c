@@ -29,10 +29,8 @@ int validate_cert(X509* cert)
     return result;
   }
 
-  const unsigned char* target_der_ptr = target_der.chars;
-
-  X509 *target = d2i_X509(NULL, &target_der_ptr, target_der.len);
-  if (target == NULL)
+  X509_STORE* store = X509_STORE_new();
+  if(store == NULL)
   {
     return result;
   }
