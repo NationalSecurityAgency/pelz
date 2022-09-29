@@ -44,7 +44,7 @@ int table_suite_add_tests(CU_pSuite suite)
   return (0);
 }
 
-int get_file_handle(const char *path, uint64_t* handle)
+int get_file_handle(char *path, uint64_t* handle)
 {
   uint8_t *data = NULL;
   size_t data_len = 0;

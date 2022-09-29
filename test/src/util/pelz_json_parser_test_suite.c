@@ -58,7 +58,7 @@ void test_request_decoder(void)
   };
   unsigned int json_key_id_len = 19;
 
-  const char *enc_data[6] = {
+  char enc_data[6][47] = {
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=\n",
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldY\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n",
     "QUJDREVGR0hJSktMTU5PUA==\n", "YWJjZGVmZ2hpamtsbW5vcA==\n"
@@ -66,7 +66,7 @@ void test_request_decoder(void)
   unsigned int enc_data_len[6] = {
     45, 45, 33, 33, 25, 25
   };
-  const char *dec_data[6] = {
+  char dec_data[6][57] = {
     "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n",
     "txQhouR/i5+lycST2QXuN39gQqVQYVy9mWf3RdSdXfZNUy4CsQqwBg==\n",
     "+n4yYCmMXyNbyEtsJuFlBtkCbVDXhjVRON/osW5dbz8=\n", "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n",
@@ -131,10 +131,7 @@ void test_request_decoder(void)
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   CU_ASSERT(request_type == REQ_DEC_SIGNED);
   free_charbuf(&request);
-  request_type = REQ_UNK;
-
-  
-       
+  request_type = REQ_UNK;       
 
   for (int i = 0; i < 6; i++)
   {
@@ -146,7 +143,6 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec, "tag", cJSON_CreateString(dec_data[i]));
     cJSON_AddItemToObject(json_enc, "cipher", cJSON_CreateString(cipher_name_str));
     cJSON_AddItemToObject(json_dec, "cipher", cJSON_CreateString(cipher_name_str));
-
 
     cJSON_AddItemToObject(json_enc_signed, "key_id", cJSON_CreateString(json_key_id[i]));
     cJSON_AddItemToObject(json_dec_signed, "key_id", cJSON_CreateString(json_key_id[i]));
@@ -162,9 +158,7 @@ void test_request_decoder(void)
     cJSON_AddItemToObject(json_dec_signed, "request_sig", cJSON_CreateString("ValueEncrypt\n"));
     cJSON_AddItemToObject(json_dec_signed, "requestor_cert", cJSON_CreateString("ValueEncrypt\n"));
     cJSON_AddItemToObject(json_enc_signed, "cipher", cJSON_CreateString(cipher_name_str));
-    cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str));
-
-    
+    cJSON_AddItemToObject(json_dec_signed, "cipher", cJSON_CreateString(cipher_name_str)); 
     
     //Creating the request charbuf for the JSON then testing request_decoder for encryption
     tmp = cJSON_PrintUnformatted(json_enc);
@@ -177,7 +171,7 @@ void test_request_decoder(void)
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
 
     charbuf raw_data;
-    decodeBase64Data((unsigned char*)enc_data[i], enc_data_len[i], &(raw_data.chars), &(raw_data.len));
+    decodeBase64Data((unsigned char *) enc_data[i], enc_data_len[i], &(raw_data.chars), &(raw_data.len));
     CU_ASSERT(data.len == raw_data.len);
     CU_ASSERT(memcmp(data.chars, raw_data.chars, data.len) == 0);
     free_charbuf(&raw_data);
@@ -203,7 +197,7 @@ void test_request_decoder(void)
     CU_ASSERT(request_type == REQ_DEC);
     CU_ASSERT(key_id.len == json_key_id_len);
     CU_ASSERT(memcmp(key_id.chars, json_key_id[i], key_id.len) == 0);
-    decodeBase64Data((unsigned char*)dec_data[i], dec_data_len[i], &(raw_data.chars), &(raw_data.len));
+    decodeBase64Data((unsigned char *) dec_data[i], dec_data_len[i], &(raw_data.chars), &(raw_data.len));
     CU_ASSERT(data.len == raw_data.len);
     CU_ASSERT(memcmp(data.chars, raw_data.chars, data.len) == 0);
 

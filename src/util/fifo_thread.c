@@ -20,6 +20,8 @@
 #define BUFSIZE 1024
 #define MODE 0600
 
+bool global_pipe_reader_active;
+
 int send_table_id_list(char *pipe_name, TableType table_type, const char *resp_msg)
 {
   int err = 0;
