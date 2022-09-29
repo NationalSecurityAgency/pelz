@@ -58,7 +58,7 @@ void test_request_decoder(void)
   };
   unsigned int json_key_id_len = 19;
 
-  char enc_data[6][47] = {
+  char enc_data[6][46] = {
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVoxMjM0NTY=\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=\n",
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldY\n", "YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4\n",
     "QUJDREVGR0hJSktMTU5PUA==\n", "YWJjZGVmZ2hpamtsbW5vcA==\n"
@@ -66,7 +66,7 @@ void test_request_decoder(void)
   unsigned int enc_data_len[6] = {
     45, 45, 33, 33, 25, 25
   };
-  char dec_data[6][57] = {
+  char dec_data[6][58] = {
     "SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\n",
     "txQhouR/i5+lycST2QXuN39gQqVQYVy9mWf3RdSdXfZNUy4CsQqwBg==\n",
     "+n4yYCmMXyNbyEtsJuFlBtkCbVDXhjVRON/osW5dbz8=\n", "BtIjIgvCaVBwUi5jTOZyIx2yJamqvrR0BZWLFVufz9w=\n",
@@ -99,6 +99,7 @@ void test_request_decoder(void)
   cJSON_AddItemToObject(json_enc_signed, "request_type", cJSON_CreateNumber(3));
   cJSON_AddItemToObject(json_dec_signed, "request_type", cJSON_CreateNumber(4));
 
+  pelz_log(LOG_DEBUG, "Start Testing Request Unknown Decode");
   tmp = cJSON_PrintUnformatted(json_enc);
   request = new_charbuf(strlen(tmp));
   memcpy(request.chars, tmp, request.len);
@@ -132,6 +133,11 @@ void test_request_decoder(void)
   CU_ASSERT(request_type == REQ_DEC_SIGNED);
   free_charbuf(&request);
   request_type = REQ_UNK;       
+
+  pelz_log(LOG_DEBUG, "Start Testing Request Decoder");
+
+  iv.len = 0;
+  tag.len = 0;
 
   for (int i = 0; i < 6; i++)
   {
@@ -277,6 +283,7 @@ void test_request_decoder(void)
   cJSON_Delete(json_dec);
   cJSON_Delete(json_enc_signed);
   cJSON_Delete(json_dec_signed);
+  pelz_log(LOG_DEBUG, "Finish Testing Request Decoder");
 }
 
 void test_message_encoder(void)

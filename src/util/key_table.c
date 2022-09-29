@@ -99,6 +99,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   uint8_t *retrieved_key;
   size_t retrieved_key_len = 0;
 
+  pelz_log(LOG_DEBUG, "Add key from server to key table");
   if (key_table.mem_size >= MAX_MEM_SIZE)
   {
     pelz_log(LOG_ERR, "Key Table memory allocation greater then specified limit.");
@@ -110,12 +111,14 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
     pelz_log(LOG_ERR, "Server ID not found");
     return NO_MATCH;
   }
+  pelz_log(LOG_DEBUG, "Server name lookup success");
 
   if (private_pkey == NULL)
   {
     pelz_log(LOG_ERR, "Private key not found");
     return NO_MATCH;
   }
+  pelz_log(LOG_DEBUG, "Found private key");
 
   //charbuf server_name is transformed into a null terminated string common_name because the socket calls require a null terminated string
   common_name = null_terminated_string_from_charbuf(server_name);
@@ -128,6 +131,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
     pelz_log(LOG_ERR, "Retrieve Key function failure");
     return RET_FAIL;
   }
+  pelz_log(LOG_DEBUG, "Retrieve Key from Server");
 
   if (server_key_id.len != retrieved_key_id_len || memcmp(retrieved_key_id, server_key_id.chars, retrieved_key_id_len) != 0)
   {	
@@ -149,5 +153,6 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   }
   memcpy(key.chars, retrieved_key, key.len);
   status = key_table_add_key(key_id, key);
+  pelz_log(LOG_DEBUG, "Successfully added key from server to key table");
   return status;
 }
