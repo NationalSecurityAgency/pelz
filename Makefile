@@ -241,6 +241,7 @@ Enclave_C_Flags += -Wall
 Enclave_C_Flags += -DKMYTH_SGX
 
 Enclave_Cpp_Flags := $(SGX_COMMON_CXXFLAGS)
+Enclave_Cpp_Flags += -fpie
 Enclave_Cpp_Flags += -std=c++03 
 Enclave_Cpp_Flags += -std=c++11
 Enclave_Cpp_Flags += -nostdinc++ 
