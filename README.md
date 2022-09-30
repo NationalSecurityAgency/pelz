@@ -16,7 +16,7 @@ The source code comes a script to install or uninstall the java files required t
 Pelz has been tested against Apache Accumulo commit a1a1b72.
 
 ## Installing Kmyth to run pelz
-Pelz has been tested against Kmyth commit 246a5c2.
+Pelz has been tested against Kmyth commit f2c818e.
 
 ----
 
