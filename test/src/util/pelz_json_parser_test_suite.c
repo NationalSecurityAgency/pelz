@@ -132,7 +132,7 @@ void test_request_decoder(void)
   CU_ASSERT(request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &data, &request_sig, &requestor_cert) == 1);
   CU_ASSERT(request_type == REQ_DEC_SIGNED);
   free_charbuf(&request);
-  request_type = REQ_UNK;       
+  request_type = REQ_UNK;
 
   pelz_log(LOG_DEBUG, "Start Testing Request Decoder");
 

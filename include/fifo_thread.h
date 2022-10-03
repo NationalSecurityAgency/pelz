@@ -1,7 +1,6 @@
 #ifndef INCLUDE_FIFO_THREAD_H_
 #define INCLUDE_FIFO_THREAD_H_
 
-#include <stdbool.h>
 #include <pthread.h>
 #include <secure_socket_thread.h>
 
