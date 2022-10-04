@@ -14,65 +14,54 @@
 #include <charbuf.h>
 #include <pelz_enclave_log.h>
 
+#include "ca_table.h"
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 #include "kmyth_enclave_trusted.h"
 
 
-TableResponseStatus verify_cert(charbuf target_der)
+int validate_cert(X509* cert)
 {
-  Table *table = get_table_by_type(CA_TABLE);
-  if (table == NULL)
+  bool result = 1;
+  Table* table = get_table_by_type(CA_TABLE);
+  if(table == NULL)
   {
-    kmyth_sgx_log(LOG_ERR, "get_table_by_type failed");
-    return ERR;
+    return result;
   }
 
-  X509 *target = d2i_X509(NULL, (const unsigned char **) &target_der.chars, target_der.len);
-  if (target == NULL)
+  X509_STORE* store = X509_STORE_new();
+  if(store == NULL)
   {
-    kmyth_sgx_log(LOG_ERR, "DER to X509 format conversion failed");
-    return ERR;
+    return result;
   }
 
-  // Create cert store
-  X509_STORE *store = X509_STORE_new();
-  if (store == NULL)
+  for(size_t i = 0; i < table->num_entries; i++)
   {
-    kmyth_sgx_log(LOG_ERR, "X509_STORE_new failed");
-    return ERR;
-  }
-
-  // Put all ca certs in the store
-  for (unsigned int i = 0; i < table->num_entries; i++)
-  {
-    X509 *cert = table->entries[i].value.cert;
-    if (X509_STORE_add_cert(store, cert) != 1)
+    if(X509_STORE_add_cert(store, (X509*)(table->entries[i].value.cert)) != 1)
     {
-      kmyth_sgx_log(LOG_ERR, "X509_STORE_add_cert failed");
-      return ERR;
+      return result;
     }
   }
 
-  // Create store context
-  X509_STORE_CTX *store_ctx = X509_STORE_CTX_new();
-  if (store_ctx == NULL)
+  X509_STORE_CTX* store_ctx = X509_STORE_CTX_new();
+  if(store_ctx == NULL)
   {
-    kmyth_sgx_log(LOG_ERR, "X509_STORE_CTX_new failed");
-    return ERR;
+    X509_STORE_free(store);
+    return result;
+  }
+  
+  if(X509_STORE_CTX_init(store_ctx, store, cert, NULL) != 1)
+  {
+    X509_STORE_CTX_free(store_ctx);
+    X509_STORE_free(store);
+    return result;
   }
 
-  if (X509_STORE_CTX_init(store_ctx, store, target, NULL) != 1)
-  {
-    kmyth_sgx_log(LOG_ERR, "X509_STORE_CTX_init failed");
-    return ERR;
+  if(X509_verify_cert(store_ctx) == 1){
+    result = 0;
   }
-
-  int success = X509_verify_cert(store_ctx);
-
   X509_STORE_CTX_free(store_ctx);
   X509_STORE_free(store);
-  X509_free(target);
-
-  return (success == 1) ? OK : NO_MATCH;
+  return result;
 }
+

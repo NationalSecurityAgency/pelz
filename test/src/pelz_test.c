@@ -12,12 +12,12 @@
 #include "util_test_suite.h"
 #include "aes_keywrap_test_suite.h"
 #include "pelz_json_parser_test_suite.h"
-#include "request_signing_test_suite.h"
 #include "table_test_suite.h"
 #include "request_test_suite.h"
 #include "cmd_interface_test_suite.h"
 #include "test_pelz_uri_helpers.h"
 #include "pelz_log.h"
+#include "test_seal.h"
 
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
@@ -54,6 +54,10 @@ int main(int argc, char **argv)
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
   };
 
+  const char *unsealed_cert_name[5] = { "test/data/node_pub.der", "test/data/node_priv.der", "test/data/proxy_pub.der", "test/data/ca_pub.der", "test/data/key1.txt" };
+
+  const char *sealed_cert_name[5] = { "test/data/node_pub.der.nkl", "test/data/node_priv.der.nkl", "test/data/proxy_pub.der.nkl", "test/data/ca_pub.der.nkl", "test/data/key1.txt.nkl" };
+
   set_app_name("pelz");
   set_app_version("0.0.0");
   set_applog_max_msg_len(1024);
@@ -68,10 +72,15 @@ int main(int argc, char **argv)
     fclose(fp);
   }
 
-  status = system("./bin/pelz seal test/data/key1.txt -o test/data/key1.txt.nkl");
-  if (status != 0)
+  //Seal test items
+  for (int i = 0; i < 5; i++)
   {
-    pelz_log(LOG_INFO, "Seal key1.txt to .nkl failed");
+    if (seal_for_testing((char*) unsealed_cert_name[i], (char **) sealed_cert_name[i], (strlen(sealed_cert_name[i]) + 1), false))
+    {
+      pelz_log(LOG_ERR, "Failure to seal cert.");
+      return (1);
+    }
+    pelz_log(LOG_DEBUG, "Seal: %s", sealed_cert_name[i]);
   }
 
   pelz_log(LOG_DEBUG, "Start Unit Test");
@@ -81,7 +90,7 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
 
-  sgx_create_enclave(ENCLAVE_PATH, 0, NULL, NULL, &eid, NULL);
+  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
   kmyth_unsealed_data_table_initialize(eid, &status);
   if (status)
   {
@@ -130,21 +139,6 @@ int main(int argc, char **argv)
     return CU_get_error();
   }
   if (pelz_json_parser_suite_add_tests(pelz_json_parser_Suite))
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
-
-  // Add request signing test suite ---- tests request signing/validation operations
-  CU_pSuite request_signing_Suite = NULL;
-
-  request_signing_Suite = CU_add_suite("Pelz Request Signing Suite", init_suite, clean_suite);
-  if (NULL == request_signing_Suite)
-  {
-    CU_cleanup_registry();
-    return CU_get_error();
-  }
-  if (request_signing_suite_add_tests(request_signing_Suite))
   {
     CU_cleanup_registry();
     return CU_get_error();

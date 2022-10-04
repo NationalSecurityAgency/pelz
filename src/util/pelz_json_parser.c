@@ -11,7 +11,7 @@
 #include <pelz_request_handler.h>
 #include <charbuf.h>
 #include <pelz_log.h>
-#include <request_signing.h>
+#include "kmyth/formatting_tools.h"
 
 /**
  * <pre>
@@ -29,7 +29,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   charbuf field;
   if(!cJSON_HasObjectItem(json, field_name) || !cJSON_IsString(cJSON_GetObjectItem(json, field_name)))
   {
-    pelz_log(LOG_ERR, "Missing JSON field %s.", field_name);
+    pelz_log(LOG_WARNING, "Missing JSON field %s.", field_name);
     return new_charbuf(0);
   } 
   if(cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring != NULL)
@@ -44,7 +44,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
   }
   else
   {
-    pelz_log(LOG_ERR, "No value in JSON field %s.", field_name);
+    pelz_log(LOG_WARNING, "No value in JSON field %s.", field_name);
     return new_charbuf(0);
   }
   return field;
@@ -73,10 +73,12 @@ static int get_JSON_int_field(cJSON* json, const char* field_name, int* value)
 }
 
 
-int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int request_decoder(charbuf request, RequestType * request_type, charbuf * key_id, charbuf* cipher_name, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   cJSON *json;
   char *str = NULL;
+
+  charbuf encoded = new_charbuf(0);
 
   str = (char *) calloc((request.len + 1), sizeof(char));
   memcpy(str, request.chars, request.len);
@@ -89,7 +91,7 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return (1);
   }
 
-  // We always parse out key_id and data. Other parsing may
+  // We always parse out key_id, cipher, and data. Other parsing may
   // happen depending on the request type.
   *key_id = get_JSON_string_field(json, "key_id");
   if(key_id->len == 0 || key_id->chars == NULL)
@@ -100,33 +102,66 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     return 1;
   }
 
-  *data = get_JSON_string_field(json, "data");
-  if(data->len == 0 || data->chars == NULL)
+  *cipher_name = get_JSON_string_field(json, "cipher");
+  if(cipher_name->len == 0 || cipher_name->chars == NULL)
   {
-    pelz_log(LOG_ERR, "Failed to exract data from JSON.");
+    pelz_log(LOG_ERR, "Failed to extract cipher from JSON.");
     cJSON_Delete(json);
     free_charbuf(key_id);
-    free_charbuf(data);
+    free_charbuf(cipher_name);
     return 1;
+  }
+
+  // The following fields are base-64 encoded, so we parse and
+  // decode them
+  encoded = get_JSON_string_field(json, "data");
+  if(encoded.len == 0 || encoded.chars == NULL)
+  {
+    pelz_log(LOG_ERR, "Failed to extract data from JSON.");
+    cJSON_Delete(json);
+    free_charbuf(key_id);
+    free_charbuf(cipher_name);
+    free_charbuf(&encoded);
+    return 1;
+  }
+  decodeBase64Data(encoded.chars, encoded.len, &(data->chars), &(data->len));
+  free_charbuf(&encoded);
+
+  // The iv and tag fields are not always present, and at this point
+  // we don't know if they're necessary or not so if they're not there
+  // we just move on.
+  if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
+  {
+    encoded = get_JSON_string_field(json, "iv");
+    decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
+    free_charbuf(&encoded);
+    
+    encoded = get_JSON_string_field(json, "tag");
+    decodeBase64Data(encoded.chars, encoded.len, &(tag->chars), &(tag->len));
+    free_charbuf(&encoded);
   }
 
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
-    // TODO: Remove this once signed requests are supported.
-    pelz_log(LOG_ERR, "Signed requests are not fully implemented.");
-    return 1;
-
-    *request_sig = get_JSON_string_field(json, "request_sig");
+    encoded = get_JSON_string_field(json, "request_sig");
+    decodeBase64Data(encoded.chars, encoded.len, &(request_sig->chars), &(request_sig->len));
+    free_charbuf(&encoded);
     if(request_sig->len == 0 || request_sig->chars == NULL)
     {
       cJSON_Delete(json);
       free_charbuf(key_id);
       free_charbuf(data);
       free_charbuf(request_sig);
+      free_charbuf(iv);
+      free_charbuf(tag);
+      free_charbuf(cipher_name);
       return 1;
     }
 
-    *requestor_cert = get_JSON_string_field(json, "requestor_cert");
+    encoded = get_JSON_string_field(json, "requestor_cert");
+    decodeBase64Data(encoded.chars, encoded.len, &(requestor_cert->chars), &(requestor_cert->len));
+    free_charbuf(&encoded);
+
     if(requestor_cert->len == 0 || requestor_cert->chars == NULL)
     {
       cJSON_Delete(json);
@@ -134,26 +169,13 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
       free_charbuf(data);
       free_charbuf(request_sig);
       free_charbuf(requestor_cert);
+      free_charbuf(iv);
+      free_charbuf(tag);
+      free_charbuf(cipher_name);
       return 1;
     }
-
-    if ( validate_signature(request_type, key_id, data, request_sig, requestor_cert) )
-    {
-      pelz_log(LOG_ERR, "Signature Validation Error");
-      cJSON_Delete(json);
-      free_charbuf(key_id);
-      free_charbuf(data);
-      free_charbuf(request_sig);
-      free_charbuf(requestor_cert);
-      return (1);
-    }
   }
-  else
-  {
-    *request_sig = new_charbuf(0);
-    *requestor_cert = new_charbuf(0);
-  }
-
+ 
   cJSON_Delete(json);
   return (0);
 }
@@ -179,41 +201,51 @@ int error_message_encoder(charbuf * message, const char *err_message)
   return (0);
 }
 
-int message_encoder(RequestType request_type, charbuf key_id, charbuf data, charbuf * message)
+int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf iv, charbuf tag, charbuf data, charbuf * message)
 {
+
   cJSON *root;
   char *tmp = NULL;
+  charbuf encoded;
 
   root = cJSON_CreateObject();
-  switch (request_type)
+  tmp = (char *) calloc((key_id.len + 1), sizeof(char));
+  memcpy(tmp, key_id.chars, key_id.len);
+  cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
+  free(tmp);
+
+  tmp = (char*)null_terminated_string_from_charbuf(cipher_name);
+  cJSON_AddItemToObject(root, "cipher", cJSON_CreateString(tmp));
+
+  encodeBase64Data(data.chars, data.len, &encoded.chars, &encoded.len);
+  tmp = (char *) calloc((encoded.len + 1), sizeof(char));
+  memcpy(tmp, encoded.chars, encoded.len);
+  cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
+  free_charbuf(&encoded);
+  free(tmp);
+  
+  if(request_type == REQ_ENC || request_type == REQ_ENC_SIGNED)
   {
-  case REQ_ENC:
-    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
-    memcpy(tmp, key_id.chars, key_id.len);
-    cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
-    free(tmp);
-
-    tmp = (char *) calloc((data.len + 1), sizeof(char));
-    memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
-    free(tmp);
-    break;
-  case REQ_DEC:
-    tmp = (char *) calloc((key_id.len + 1), sizeof(char));
-    memcpy(tmp, key_id.chars, key_id.len);
-    cJSON_AddItemToObject(root, "key_id", cJSON_CreateString(tmp));
-    free(tmp);
-
-    tmp = (char *) calloc((data.len + 1), sizeof(char));
-    memcpy(tmp, data.chars, data.len);
-    cJSON_AddItemToObject(root, "data", cJSON_CreateString(tmp));
-    free(tmp);
-    break;
-  default:
-    pelz_log(LOG_ERR, "Request Type not recognized.");
-    cJSON_Delete(root);
-    return (1);
+    if(tag.chars != NULL && tag.len != 0)
+    {
+      encodeBase64Data(tag.chars, tag.len, &encoded.chars, &encoded.len);
+      tmp = (char *)calloc(encoded.len+1, sizeof(char));
+      memcpy(tmp, encoded.chars, encoded.len);
+      cJSON_AddItemToObject(root, "tag", cJSON_CreateString(tmp));
+      free_charbuf(&encoded);
+      free(tmp);
+    }
+    if(iv.chars != NULL && iv.len != 0)
+    {
+      encodeBase64Data(iv.chars, iv.len, &encoded.chars, &encoded.len);
+      tmp = (char *)calloc(encoded.len+1, sizeof(char));
+      memcpy(tmp, encoded.chars, encoded.len);
+      cJSON_AddItemToObject(root, "iv", cJSON_CreateString(tmp));
+      free_charbuf(&encoded);
+      free(tmp);
+    }
   }
+  
   if (cJSON_IsInvalid(root))
   {
     pelz_log(LOG_ERR, "JSON Message Creation Failed");
