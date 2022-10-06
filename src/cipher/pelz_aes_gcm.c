@@ -80,7 +80,7 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   // Create the IV. At the moment if you ask Pelz to encrypt for you
   // it'll only use the default IV length, but decrypt will work
   // with any valid IV length.
-  cipher_data->iv_len     = PELZ_GCM_IV_LEN;
+  cipher_data->iv_len  = PELZ_GCM_IV_LEN;
   cipher_data->iv = malloc(cipher_data->iv_len);
   if(cipher_data->iv == NULL)
   {
@@ -145,7 +145,7 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   }
 
   // verify that the resultant CT length matches the input PT length
-  if (ciphertext_len != plain_len)
+  if ((size_t) ciphertext_len != plain_len)
   {
     free(cipher_data->cipher);
     free(cipher_data->iv);
@@ -249,7 +249,7 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   // variables to hold/accumulate length returned by EVP library calls
   //   - OpenSSL insists this be an int
   int len = 0;
-  int plaintext_len = 0;
+  size_t plaintext_len = 0;
 
   // initialize the cipher context to match cipher suite being used
   EVP_CIPHER_CTX *ctx;

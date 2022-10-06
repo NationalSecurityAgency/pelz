@@ -5,7 +5,6 @@
 #ifndef UTIL_TEST_SUITE_H_
 #define UTIL_TEST_SUITE_H_
 
-#include <util.h>
 #include <key_load.h>
 #include <CUnit/CUnit.h>
 

@@ -15,6 +15,7 @@
 #include <uriparser/Uri.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
+#include <kmyth/memory_util.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -23,7 +24,6 @@
 #include "pelz_request_handler.h"
 #include "pelz_uri_helpers.h"
 #include "pelz_loaders.h"
-#include "util.h"
 
 #include "sgx_urts.h"
 #include "sgx_seal_unseal_impl.h"
@@ -302,7 +302,7 @@ int key_load(charbuf key_id)
   return return_value;
 }
 
-int file_check(char *file_path)
+int file_check(const char *file_path)
 {
   pelz_log(LOG_DEBUG, "File Check Key ID: %s", file_path);
   if (file_path == NULL)

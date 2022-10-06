@@ -15,11 +15,11 @@
 #include <uriparser/Uri.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
+#include <kmyth/memory_util.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
 #include "pipe_io.h"
-#include "util.h"
 #include "fifo_thread.h"
 #include "cmd_interface.h"
 
@@ -48,7 +48,7 @@ int write_to_pipe_fd(int fd, char *msg)
   }
 }
 
-int write_to_pipe(char *pipe, char *msg)
+int write_to_pipe(const char *pipe, char *msg)
 {
   int fd;
   int ret;
@@ -70,7 +70,7 @@ int write_to_pipe(char *pipe, char *msg)
   return ret;
 }
 
-int read_from_pipe(char *pipe, char **msg)
+int read_from_pipe(const char *pipe, char **msg)
 {
   int fd;
   int ret;
@@ -270,7 +270,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   memcpy(ret_tokens[0], token, strlen(token) + 1);  //copy the '\0'
   for (size_t i = 1; i < token_count; i++)
   {
-    char *token = strtok(NULL, " ");
+    token = strtok(NULL, " ");
 
     if (token == NULL)
     {
@@ -313,7 +313,7 @@ int tokenize_pipe_message(char ***tokens, size_t * num_tokens, char *message, si
   return 0;
 }
 
-int open_read_pipe(char *name)
+int open_read_pipe(const char *name)
 {
   if (file_check(name))
   {
@@ -324,7 +324,7 @@ int open_read_pipe(char *name)
   return open(name, O_RDONLY | O_NONBLOCK);
 }
 
-int open_write_pipe(char *name)
+int open_write_pipe(const char *name)
 {
   if (file_check(name))
   {
@@ -336,7 +336,7 @@ int open_write_pipe(char *name)
   return open(name, O_WRONLY | O_NONBLOCK);
 }
 
-int remove_pipe(char *name)
+int remove_pipe(const char *name)
 {
   //Exit and remove FIFO
   if (unlink(name) == 0)
