@@ -1,6 +1,8 @@
 #ifndef _SEAL_H_
 #define _SEAL_H_
 
+#include <stdbool.h>
+
 /**
  * @brief Reads a file then will call seal_ski and/or seal_nkl to seal the
  * data.  The sealed data will be written to a new file with the extension type

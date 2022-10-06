@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
+#include <kmyth/memory_util.h>
 
-#include "util.h"
 #include "pelz_log.h"
 #include "pelz_loaders.h"
 #include "pelz_request_handler.h"

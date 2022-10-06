@@ -32,7 +32,7 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
   int index = 0;
   int lastpos = 0;
   size_t len = 0;
-  char *tmp_id;
+  const unsigned char *tmp_id;
   Table *table = get_table_by_type(type);
 
   if (table == NULL)
@@ -85,7 +85,7 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
   ASN1_STRING *entry_data = X509_NAME_ENTRY_get_data(entry);
 
   len = ASN1_STRING_length(entry_data);
-  tmp_id = (char *) ASN1_STRING_get0_data(entry_data);
+  tmp_id = ASN1_STRING_get0_data(entry_data);
 
   tmp_entry.id = new_charbuf(len);
   if (len != tmp_entry.id.len)
