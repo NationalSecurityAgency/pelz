@@ -49,14 +49,14 @@ extern "C"
 #endif
 
 // macro for generic logging call
-#define pelz_log(severity, message)\
+#define pelz_sgx_log(severity, message)\
 {\
   const char *src_file = __FILE__;\
   const char *src_func = __func__;\
   const int src_line = __LINE__;\
   int log_level = severity;\
   const char *log_msg = message;\
-  log_event_ocall(&src_file, &src_func, &src_line, &log_level, &log_msg);\
+  log_event_ocall(src_file, src_func, &src_line, &log_level, log_msg);\
 }
 
 #ifdef __cplusplus
