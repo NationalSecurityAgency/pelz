@@ -33,7 +33,7 @@ extern "C"
  *
  * @return 0 if success, 1 if error
  */
-  int write_to_pipe(char *pipe, char *msg);
+  int write_to_pipe(const char *pipe, char *msg);
 
 /**
  * <pre>
@@ -45,7 +45,7 @@ extern "C"
  *
  * @return 0 if success, 1 if error
  */
-  int read_from_pipe(char *pipe, char **msg);
+  int read_from_pipe(const char *pipe, char **msg);
 
 /**
  * <pre>
@@ -81,7 +81,7 @@ extern "C"
  *
  * @return the pipe's file descriptor number if success, -1 if error
  */
-  int open_read_pipe(char *name);
+  int open_read_pipe(const char *name);
 
 /**
  * <pre>
@@ -92,7 +92,7 @@ extern "C"
  *
  * @return the pipe's file descriptor number if success, -1 if error
  */
-  int open_write_pipe(char *name);
+  int open_write_pipe(const char *name);
 
 /**
  * <pre>
@@ -103,7 +103,7 @@ extern "C"
  *
  * @return 0 if success, 1 if error
  */
-  int remove_pipe(char *name);
+  int remove_pipe(const char *name);
 
 #ifdef __cplusplus
 }

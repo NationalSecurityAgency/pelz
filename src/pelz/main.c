@@ -29,7 +29,7 @@ sgx_enclave_id_t eid = 0;
 #define BUFSIZE 1024
 #define MODE 0600
 
-static void pki_usage()
+static void pki_usage(void)
 {
   fprintf(stdout,
     "pki commands:\n\n"
@@ -53,7 +53,7 @@ static void pki_usage()
     "                                    removed. The private key will not be removed.\n");
 }
 
-static void ca_usage()
+static void ca_usage(void)
 {
   fprintf(stdout,
     "ca commands:\n\n"
@@ -67,7 +67,7 @@ static void ca_usage()
     "    -a, --all                       If -a or --all is selected, all CA certificates will be removed.\n\n");
 }
 
-static void keytable_usage()
+static void keytable_usage(void)
 {
   fprintf(stdout,
     "keytable commands:\n\n"
@@ -78,7 +78,7 @@ static void keytable_usage()
     "                                    not provide the actual key values of keys within the key table.\n");
 }
 
-static void seal_usage()
+static void seal_usage(void)
 {
   fprintf(stdout,
     "seal <path> [options]               Seals the input file to the pelz-service enclave. This creates\n"
@@ -351,10 +351,10 @@ int main(int argc, char **argv)
 
   char fifo_name[BUFSIZE];
   size_t fifo_name_len = 0;
-  int pid_t = getpid();
+  int pid = getpid();
   
   //Creating fifo name for pipe creations and use
-  sprintf(fifo_name, "%s%d", PELZINTERFACE, pid_t);
+  sprintf(fifo_name, "%s%d", PELZINTERFACE, pid);
   fifo_name_len = strlen(fifo_name);
   pelz_log(LOG_DEBUG, "FIFO Name: %.*s, %d", fifo_name_len, fifo_name, fifo_name_len );
   

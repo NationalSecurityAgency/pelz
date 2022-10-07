@@ -5,17 +5,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <kmyth/memory_util.h>
 
 #include <key_load.h>
 #include <common_table.h>
-#include <util.h>
 #include <pelz_request_handler.h>
 #include <charbuf.h>
 #include <pelz_enclave_log.h>
 
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
-#include "kmyth_enclave_trusted.h"
 
 Table key_table = {
   .entries = NULL,

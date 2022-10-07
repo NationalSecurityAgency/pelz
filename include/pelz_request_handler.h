@@ -1,5 +1,5 @@
 /*
- * pelz_data_handler.h
+ * pelz_request_handler.h
  */
 
 #ifndef INCLUDE_PELZ_REQUEST_HANDLER_H_
