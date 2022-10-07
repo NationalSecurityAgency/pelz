@@ -43,7 +43,7 @@ extern "C"
  *
  * @return 0 on success, 1 on error
  */
-  int file_check(char *file_path);
+  int file_check(const char *file_path);
 
 #ifdef __cplusplus
 }

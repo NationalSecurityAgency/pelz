@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <libgen.h>
 #include <sys/stat.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
@@ -161,18 +162,18 @@ int outpath_validate(char *filename, char **outpath, size_t outpath_size, bool t
 
 int outpath_create(char *filename, char **outpath, bool tpm)
 {
-  char *ext;
+  const char *ext;
   const char *TPM_EXT = ".ski";
   const char *NKL_EXT = ".nkl";
 
   pelz_log(LOG_DEBUG, "Outpath_create function");
   if (tpm)
   {
-    ext = (char *) TPM_EXT;
+    ext = TPM_EXT;
   }
   else
   {
-    ext = (char *) NKL_EXT;
+    ext = NKL_EXT;
   }
 
   // If output file not specified, set output path to basename(filename) with

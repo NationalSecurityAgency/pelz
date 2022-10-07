@@ -23,25 +23,25 @@ int cmd_interface_suite_add_tests(CU_pSuite suite)
 
 void test_check_arg(void)
 {
-  const char *args[18] = { NULL, "seal", "exit", "keytable", "pki", "remove",
+  char args[17][9] = { "seal", "exit", "keytable", "pki", "remove",
           "list", "load", "cert", "private", "ca",
           "SEAL", "sea", "seal ", "seala",
           "remvoe", "PRIVATE", "Private" };
 
-  CU_ASSERT(check_arg((char *) args[0]) == EMPTY);
-  CU_ASSERT(check_arg((char *) args[1]) == SEAL);
-  CU_ASSERT(check_arg((char *) args[2]) == EX);
-  CU_ASSERT(check_arg((char *) args[3]) == KEYTABLE);
-  CU_ASSERT(check_arg((char *) args[4]) == PKI);
-  CU_ASSERT(check_arg((char *) args[5]) == REMOVE);
-  CU_ASSERT(check_arg((char *) args[6]) == LIST);
-  CU_ASSERT(check_arg((char *) args[7]) == LOAD);
-  CU_ASSERT(check_arg((char *) args[8]) == CERT);
-  CU_ASSERT(check_arg((char *) args[9]) == PRIVATE);
-  CU_ASSERT(check_arg((char *) args[10]) == CA);
+  CU_ASSERT(check_arg(NULL) == EMPTY);
+  CU_ASSERT(check_arg(args[0]) == SEAL);
+  CU_ASSERT(check_arg(args[1]) == EX);
+  CU_ASSERT(check_arg(args[2]) == KEYTABLE);
+  CU_ASSERT(check_arg(args[3]) == PKI);
+  CU_ASSERT(check_arg(args[4]) == REMOVE);
+  CU_ASSERT(check_arg(args[5]) == LIST);
+  CU_ASSERT(check_arg(args[6]) == LOAD);
+  CU_ASSERT(check_arg(args[7]) == CERT);
+  CU_ASSERT(check_arg(args[8]) == PRIVATE);
+  CU_ASSERT(check_arg(args[9]) == CA);
 
-  for (int i = 11; i < 18; i++)
+  for (int i = 10; i < 17; i++)
   {
-    CU_ASSERT(check_arg((char *) args[i]) == OTHER);
+    CU_ASSERT(check_arg(args[i]) == OTHER);
   }
 }

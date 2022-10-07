@@ -62,7 +62,8 @@ int utility_suite_add_tests(CU_pSuite suite)
 void test_file_check(void)
 {
   // create "testfile", with sample data, as test input file path
-  FILE *fp = fopen("testfile", "w");
+  char file[9] = "testfile";
+  FILE *fp = fopen(file, "w");
 
   fprintf(fp, "Testing...");
   fclose(fp);
@@ -71,21 +72,21 @@ void test_file_check(void)
   CU_ASSERT(file_check(NULL) == 1);
 
   // real file input path without read permission should error
-  chmod("testfile", 0333);
-  CU_ASSERT(file_check((char *) "testfile") == 1);
+  chmod(file, 0333);
+  CU_ASSERT(file_check(file) == 1);
 
   // real file input path with read permission should verify successfully
-  chmod("testfile", 0444);
-  CU_ASSERT(file_check((char *) "testfile") == 0);
+  chmod(file, 0444);
+  CU_ASSERT(file_check(file) == 0);
 
   // non-existing input file path should error
-  remove("testfile");
-  CU_ASSERT(file_check((char *) "testfile") == 1);
+  remove(file);
+  CU_ASSERT(file_check(file) == 1);
 }
 
 void test_decodeEncodeBase64Data(void)
 {
-  unsigned char *known_raw_data = (unsigned char *) "Hello World";
+  unsigned char known_raw_data[12] = "Hello World";
   size_t known_raw_data_size = strlen((char *) known_raw_data);
   unsigned char *base64_data = NULL;
   size_t base64_data_size = 0;
