@@ -56,7 +56,7 @@ extern "C"
   const int src_line = __LINE__;\
   int log_level = severity;\
   const char *log_msg = message;\
-  log_event_ocall(src_file, src_func, &src_line, &log_level, log_msg);\
+  log_event_ocall(src_file, src_func, src_line, log_level, log_msg);\
 }
 
 #ifdef __cplusplus
