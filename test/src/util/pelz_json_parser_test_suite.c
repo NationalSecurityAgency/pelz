@@ -11,6 +11,7 @@
 
 #include <charbuf.h>
 #include <pelz_log.h>
+#include <pelz_request_handler.h>
 #include "kmyth/formatting_tools.h"
 
 // Adds all key table tests to main test runner.
@@ -94,10 +95,10 @@ void test_request_decoder(void)
   json_dec = cJSON_CreateObject();
   json_enc_signed = cJSON_CreateObject();
   json_dec_signed = cJSON_CreateObject();
-  cJSON_AddItemToObject(json_enc, "request_type", cJSON_CreateNumber(1));
-  cJSON_AddItemToObject(json_dec, "request_type", cJSON_CreateNumber(2));
-  cJSON_AddItemToObject(json_enc_signed, "request_type", cJSON_CreateNumber(3));
-  cJSON_AddItemToObject(json_dec_signed, "request_type", cJSON_CreateNumber(4));
+  cJSON_AddItemToObject(json_enc, "request_type", cJSON_CreateNumber(REQ_ENC));
+  cJSON_AddItemToObject(json_dec, "request_type", cJSON_CreateNumber(REQ_DEC));
+  cJSON_AddItemToObject(json_enc_signed, "request_type", cJSON_CreateNumber(REQ_ENC_SIGNED));
+  cJSON_AddItemToObject(json_dec_signed, "request_type", cJSON_CreateNumber(REQ_DEC_SIGNED));
 
   pelz_log(LOG_DEBUG, "Start Testing Request Unknown Decode");
   tmp = cJSON_PrintUnformatted(json_enc);
