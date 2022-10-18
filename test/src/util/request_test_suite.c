@@ -168,8 +168,12 @@ void test_encrypt_decrypt(void)
     charbuf signature = new_charbuf(0);
     charbuf cert = new_charbuf(0);
 
+    pelz_log(LOG_DEBUG, "Plaintext: %ld, %.*s", plaintext.len, plaintext.len, plaintext.chars);
     pelz_encrypt_request_handler(eid, &request_status, REQ_ENC, key_id, cipher_name, plaintext, &ciphertext, &iv, &tag, signature, cert);
     CU_ASSERT(request_status == REQUEST_OK);
+    pelz_log(LOG_DEBUG, "Request Status: %d", request_status);
+    pelz_log(LOG_DEBUG, "Plaintext: %ld, %.*s", plaintext.len, plaintext.len, plaintext.chars);
+    pelz_log(LOG_DEBUG, "Ciphertext Lenght: %ld", ciphertext.len);
 
     pelz_decrypt_request_handler(eid, &request_status, REQ_DEC, key_id, cipher_name, ciphertext, iv, tag, &decrypt, signature, cert);
     CU_ASSERT(request_status == REQUEST_OK);
