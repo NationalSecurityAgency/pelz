@@ -1,3 +1,7 @@
+#This is a python application to test the socket connection to pelz. This application appears to pelz to be like any application requesting key wrap from pelz-service.
+
+#To use this application you need to start pelz-service and run the gen_test_keys.bash under test/data/ before running this python application. The application will send 6 encrypt then decrypt requests to pelz. The application will let you know if they were successful or failed.
+
 import time
 import os
 import base64
@@ -12,7 +16,7 @@ port = 10600
 path = os.getcwd()
 success = 0
 failure = 0
-key_id = ['file:%s/test/data/key1.txt' % (path), 'file:%s/test/data/key2.txt' % (path), 'file:%s/test/data/key3.txt' % (path), 'file:%s/test/data/key4.txt' % (path),'file:%s/test/data/key5.txt' % (path),'file:%s/test/data/key6.txt' % (path)]
+key_id = ['file:%s/data/key1.txt' % (path), 'file:%s/data/key2.txt' % (path), 'file:%s/data/key3.txt' % (path), 'file:%s/data/key4.txt' % (path),'file:%s/data/key5.txt' % (path),'file:%s/data/key6.txt' % (path)]
 cipher = 'AES/KeyWrap/RFC3394NoPadding/128'
 data = base64.encodestring('abcdefghijklmnopqrstuvwx')
 requestEncrypt = {'request_type' : 1, 'cipher' : cipher, 'data' : data}
