@@ -60,7 +60,7 @@ TableResponseStatus table_destroy(TableType type)
     return ERR;
   }
 
-  pelz_log(LOG_DEBUG, "Table Destroy Function Starting");
+  pelz_sgx_log(LOG_DEBUG, "Table Destroy Function Starting");
 
   for (unsigned int i = 0; i < table->num_entries; i++)
   {
@@ -87,7 +87,7 @@ TableResponseStatus table_destroy(TableType type)
   table->num_entries = 0;
   table->mem_size = 0;
 
-  pelz_log(LOG_DEBUG, "Table Destroy Function Complete");
+  pelz_sgx_log(LOG_DEBUG, "Table Destroy Function Complete");
   return OK;
 }
 
@@ -132,7 +132,7 @@ TableResponseStatus table_delete(TableType type, charbuf id)
   }
   if (index == 0)
   {
-    pelz_log(LOG_ERR, "ID not found.");
+    pelz_sgx_log(LOG_ERR, "ID not found.");
     return NO_MATCH;
   }
   else if (table->mem_size == 0)
@@ -153,7 +153,7 @@ TableResponseStatus table_delete(TableType type, charbuf id)
 
     if ((temp = (Entry *) realloc(table->entries, (table->num_entries) * sizeof(Entry))) == NULL)
     {
-      pelz_log(LOG_ERR, "List Space Reallocation Error");
+      pelz_sgx_log(LOG_ERR, "List Space Reallocation Error");
       return ERR_REALLOC;
     }
     else
