@@ -19,6 +19,7 @@ charbuf copy_CWD_to_id(const char *prefix, const char *postfix)
   if (pointer == NULL)
   {
     pelz_log(LOG_ERR, "Get Current Working Directory Failure");
+    newBuf = new_charbuf(0);
     return (newBuf);
   }
   newBuf = new_charbuf(strlen(prefix) + strlen(cwd) + strlen(postfix));

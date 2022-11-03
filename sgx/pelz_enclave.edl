@@ -9,7 +9,6 @@ enclave {
   include "channel_table.h"
 	include "key_load.h"
 	include "charbuf.h"
-	include "util.h"
 	include "dh_datatypes.h"
 	trusted {
 
@@ -263,7 +262,7 @@ public uint32_t end_session(uint32_t session_id);
  *
  * @return none
  */
-void ocall_malloc(size_t size, [user_check] unsigned char** buf);
+void ocall_malloc(size_t size, [out] unsigned char** buf);
 
 
 /**

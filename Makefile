@@ -47,21 +47,21 @@ ENCLAVE_HEADER_UNTRUSTED ?= '"pelz_enclave_u.h"'
 
 
 ifeq ($(shell getconf LONG_BIT), 32)
-	SGX_ARCH := x86
+  SGX_ARCH := x86
 else ifeq ($(findstring -m32, $(CXXFLAGS)), -m32)
-	SGX_ARCH := x86
+  SGX_ARCH := x86
 endif
 
 ifeq ($(SGX_ARCH), x86)
-	SGX_COMMON_CFLAGS := -m32
-	SGX_LIBRARY_PATH := $(SGX_SDK)/lib
-	SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x86/sgx_sign
-	SGX_EDGER8R := $(SGX_SDK)/bin/x86/sgx_edger8r
+  SGX_COMMON_FLAGS := -m32
+  SGX_LIBRARY_PATH := $(SGX_SDK)/lib
+  SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x86/sgx_sign
+  SGX_EDGER8R := $(SGX_SDK)/bin/x86/sgx_edger8r
 else
-	SGX_COMMON_CFLAGS := -m64
-	SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
-	SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
-	SGX_EDGER8R := $(SGX_SDK)/bin/x64/sgx_edger8r
+  SGX_COMMON_FLAGS := -m64
+  SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
+  SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
+  SGX_EDGER8R := $(SGX_SDK)/bin/x64/sgx_edger8r
 endif
 
 ifeq ($(SGX_DEBUG), 1)
@@ -71,24 +71,48 @@ endif
 endif
 
 ifeq ($(SGX_DEBUG), 1)
-		SGX_COMMON_CFLAGS += -O0 -g
+  SGX_COMMON_FLAGS += -O0 -g
 else
-		SGX_COMMON_CFLAGS += -O2
+  SGX_COMMON_FLAGS += -O2
 endif
+
+SGX_COMMON_FLAGS += -Wextra
+SGX_COMMON_FLAGS += -Winit-self
+SGX_COMMON_FLAGS += -Wpointer-arith
+SGX_COMMON_FLAGS += -Wreturn-type
+SGX_COMMON_FLAGS += -Waddress
+SGX_COMMON_FLAGS += -Wsequence-point
+SGX_COMMON_FLAGS += -Wformat-security
+SGX_COMMON_FLAGS += -Wmissing-include-dirs
+SGX_COMMON_FLAGS += -Wfloat-equal
+SGX_COMMON_FLAGS += -Wundef
+SGX_COMMON_FLAGS += -Wshadow
+SGX_COMMON_FLAGS += -Wcast-align
+SGX_COMMON_FLAGS += -Wcast-qual
+#SGX_COMMON_FLAGS += -Wconversion
+SGX_COMMON_FLAGS += -Wredundant-decls
+
+SGX_COMMON_CFLAGS := $(SGX_COMMON_FLAGS)
+SGX_COMMON_CFLAGS += -Wstrict-prototypes
+SGX_COMMON_CFLAGS += -Wunsuffixed-float-constants
+SGX_COMMON_CFLAGS += -Wjump-misses-init
+
+SGX_COMMON_CXXFLAGS := $(SGX_COMMON_FLAGS)
+SGX_COMMON_CXXFLAGS += -Wnon-virtual-dtor 
 
 ######## App Settings ########
 
 ifneq ($(SGX_MODE), HW)
-	Urts_Library_Name := sgx_urts_sim
+  Urts_Library_Name := sgx_urts_sim
 else
-	Urts_Library_Name := sgx_urts
+  Urts_Library_Name := sgx_urts
 endif
 
 App_Service_File := src/pelz-service/main.c
 
 App_Pipe_File := src/pelz/main.c
 
-App_Cpp_Files := src/util/charbuf.c \
+App_C_Files := src/util/charbuf.c \
 		 src/util/pelz_json_parser.c \
 		 src/util/pelz_service.c \
 		 src/util/pelz_socket.c \
@@ -96,14 +120,13 @@ App_Cpp_Files := src/util/charbuf.c \
 		 src/util/unsecure_socket_thread.c \
 		 src/util/secure_socket_thread.c \
 		 src/util/secure_socket_ecdh.c \
-		 src/util/util.c \
 		 src/util/key_load.c \
 		 src/util/parse_pipe_message.c \
 		 src/util/pipe_io.c \
 		 src/util/pelz_uri_helpers.c \
 		 src/util/pelz_loaders.c
 
-App_Cpp_Test_Files := test/src/pelz_test.c \
+App_C_Test_Files := test/src/pelz_test.c \
 		 test/src/util/util_test_suite.c \
 		 test/src/util/aes_keywrap_test_suite.c \
 		 test/src/util/pelz_json_parser_test_suite.c \
@@ -115,20 +138,19 @@ App_Cpp_Test_Files := test/src/pelz_test.c \
 		 test/src/util/request_test_helpers.c \
 		 test/src/util/test_seal.c
 
-App_Cpp_Files_for_Test := src/util/common_table.c \
+App_C_Files_for_Test := src/util/common_table.c \
 		 src/util/key_table.c \
 		 src/util/server_table.c \
 		 src/cipher/pelz_aes_keywrap_3394nopad.c \
 		 src/util/pelz_request_handler.c
 
-App_Cpp_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
+App_C_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
 
 App_Include_Paths := -Iinclude 
 App_Include_Paths += -Isgx 
 App_Include_Paths += -I$(SGX_SDK)/include 
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/wrapper
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/ocall
-App_Include_Paths += -Ikmyth/sgx/untrusted/include/util
 App_Include_Paths += -Ikmyth/sgx/common/include
 App_Include_Paths += -Ikmyth/include/network
 App_Include_Paths += -Ikmyth/include/protocol
@@ -153,10 +175,12 @@ else
 		App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
 endif
 
-App_Cpp_Flags := $(App_C_Flags) -std=c++11 -DPELZ_SGX_UNTRUSTED
+App_Cpp_Flags := $(SGX_COMMON_CXXFLAGS)
+App_Cpp_Flags += $(App_Include_Paths)
+App_Cpp_Flags += -std=c++11 
+App_Cpp_Flags += -DPELZ_SGX_UNTRUSTED
 
-App_Link_Flags := $(SGX_COMMON_CFLAGS) 
-App_Link_Flags += -L$(SGX_SSL_UNTRUSTED_LIB_PATH) 
+App_Link_Flags := -L$(SGX_SSL_UNTRUSTED_LIB_PATH) 
 App_Link_Flags += -L$(SGX_LIBRARY_PATH) 
 App_Link_Flags += -l$(Urts_Library_Name) 
 App_Link_Flags += -lsgx_usgxssl 
@@ -196,8 +220,8 @@ Enclave_Include_Paths += -I$(SGX_SDK)/include/tlibc
 Enclave_Include_Paths += -I$(SGX_SSL_INCLUDE_PATH) 
 Enclave_Include_Paths += -I/usr/local/include
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include
-Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/util
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/wrapper
+Enclave_Include_Paths += -Ikmyth/sgx/trusted/include/util
 Enclave_Include_Paths += -Ikmyth/sgx/common/include
 Enclave_Include_Paths += -Ikmyth/include
 Enclave_Include_Paths += -Ikmyth/include/protocol
@@ -206,6 +230,8 @@ Enclave_Include_Paths += -Ikmyth/utils/include/kmyth
 Enclave_Include_Paths += -Itest/include
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) 
+Enclave_C_Flags += -fPIC
+Enclave_C_Flags += -Wno-attributes
 Enclave_C_Flags += -nostdinc 
 Enclave_C_Flags += -fvisibility=hidden 
 Enclave_C_Flags += -fpie 
@@ -215,13 +241,17 @@ Enclave_C_Flags += -DPELZ_SGX_TRUSTED
 Enclave_C_Flags += -Wall 
 Enclave_C_Flags += -DKMYTH_SGX
 
-Enclave_Cpp_Flags := $(Enclave_C_Flags) 
+Enclave_Cpp_Flags := $(SGX_COMMON_CXXFLAGS)
+Enclave_Cpp_Flags += -fpie
 Enclave_Cpp_Flags += -std=c++03 
+Enclave_Cpp_Flags += -std=c++11
 Enclave_Cpp_Flags += -nostdinc++ 
 Enclave_Cpp_Flags += --include "tsgxsslio.h" 
+Enclave_Cpp_Flags += $(Enclave_Include_Paths)
+Enclave_Cpp_Flags += -DPELZ_SGX_TRUSTED
+Enclave_Cpp_Flags += -DKMYTH_SGX
 
-Enclave_Link_Flags := $(SGX_COMMON_CFLAGS) 
-Enclave_Link_Flags += -Wl,--no-undefined 
+Enclave_Link_Flags := -Wl,--no-undefined 
 Enclave_Link_Flags += -nostdlib 
 Enclave_Link_Flags += -nodefaultlibs 
 Enclave_Link_Flags += -nostartfiles 
@@ -368,19 +398,19 @@ sgx/test_enclave_u.o: test/include/test_enclave_u.c
 	@echo "CC   <=  $<"
 
 
-test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
-			   $(App_Cpp_Files) \
+test/bin/$(App_Name_Test): $(App_C_Test_Files) \
+			   $(App_C_Files) \
 				 src/util/cmd_interface.c \
 				 src/util/seal.c \
-			   $(App_Cpp_Kmyth_Files) \
+			   $(App_C_Kmyth_Files) \
 				 sgx/test_enclave_u.o \
 				 sgx/ec_key_cert_marshal.o \
 				 sgx/ec_key_cert_unmarshal.o \
 				 sgx/log_ocall.o \
 				 sgx/ecdh_ocall.o \
 				 sgx/ecdh_util.o \
-				 sgx/memory_ocall.o 
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
+				 sgx/memory_ocall.o
+	@$(CC) $^ -o $@ $(App_C_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
 			 -Itest/include \
@@ -395,15 +425,15 @@ test/bin/$(App_Name_Test): $(App_Cpp_Test_Files) \
 	@echo "LINK =>  $(App_Name_Test)"
 
 bin/$(App_Name_Service): $(App_Service_File) \
-			 $(App_Cpp_Files) \
-			 $(App_Cpp_Kmyth_Files) \
+			 $(App_C_Files) \
+			 $(App_C_Kmyth_Files) \
 			 sgx/pelz_enclave_u.o \
 			 sgx/ec_key_cert_unmarshal.o \
 			 sgx/log_ocall.o \
 			 sgx/ecdh_ocall.o \
 			 sgx/ecdh_util.o \
 			 sgx/memory_ocall.o 
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
+	@$(CC) $^ -o $@ $(App_C_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
 			 $(App_C_Flags) \
@@ -416,17 +446,17 @@ bin/$(App_Name_Service): $(App_Service_File) \
 	@echo "LINK =>  $(App_Name_Service)"
 
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
-		      $(App_Cpp_Files) \
+		      $(App_C_Files) \
 		      src/util/cmd_interface.c \
 		      src/util/seal.c \
-		      $(App_Cpp_Kmyth_Files) \
+		      $(App_C_Kmyth_Files) \
 		      sgx/pelz_enclave_u.o \
 		      sgx/ec_key_cert_unmarshal.o \
 		      sgx/log_ocall.o \
 		      sgx/ecdh_ocall.o \
 		      sgx/ecdh_util.o \
 		      sgx/memory_ocall.o 
-	@$(CXX) $^ -o $@ $(App_Cpp_Flags) \
+	@$(CC) $^ -o $@ $(App_C_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
 			 $(App_C_Flags) \

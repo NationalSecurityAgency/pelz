@@ -14,7 +14,7 @@
  *
  * @returns 0 on success, 1 on error
  */
-  int seal_for_testing(char *filename, char **outpath, size_t outpath_size, bool tpm);
+  int seal_for_testing(char *filename, char *outpath, size_t outpath_size, bool tpm);
 
 /**
  * @brief Takes data and calls the kmyth SGX seal function which provides back the SGX sealed data.

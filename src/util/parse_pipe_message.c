@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
+#include <kmyth/memory_util.h>
 
 #include "charbuf.h"
 #include "pelz_log.h"
@@ -21,7 +22,6 @@
 #include "pipe_io.h"
 #include "pelz_loaders.h"
 #include "common_table.h"
-#include "util.h"
 #include "cmd_interface.h"
 
 #include "sgx_urts.h"

@@ -4,8 +4,6 @@
 #include <pthread.h>
 #include <secure_socket_thread.h>
 
-extern bool global_pipe_reader_active;
-
 /**
  * <pre>
  * Function executed to read the fifo

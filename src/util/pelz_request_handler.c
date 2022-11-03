@@ -2,6 +2,7 @@
 #include "pelz_request_handler.h"
 #include "common_table.h"
 #include "cipher/pelz_cipher.h"
+#include "pelz_enclave_log.h"
 #include "enclave_request_signing.h"
 
 #include "sgx_trts.h"
@@ -15,11 +16,13 @@
 
 RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag, charbuf signature, charbuf cert)
 {
+  pelz_sgx_log(LOG_DEBUG, "Encrypt Request Handler");
   // Start by checking that the signature validates, if present (and required).
   if(request_type == REQ_ENC_SIGNED)
   {
     if(validate_signature(request_type, key_id, cipher_name, plain_data, *iv, *tag, signature, cert) == 1)
     {
+      pelz_sgx_log(LOG_DEBUG, "Validate Signature failure");
       return ENCRYPT_ERROR;
     }
   }
@@ -28,11 +31,13 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
   unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
   if(cipher_name_string == NULL)
   {
+    pelz_sgx_log(LOG_DEBUG, "Cipher name string missing");
     return ENCRYPT_ERROR;
   }
 
   if(key_id.chars == NULL || key_id.len == 0)
   {
+    pelz_sgx_log(LOG_DEBUG, "Key ID missing");
     return ENCRYPT_ERROR;
   }
   
@@ -41,14 +46,18 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 
   if(cipher_struct.cipher_name == NULL)
   {
+    pelz_sgx_log(LOG_DEBUG, "Cipher Name in struct missing");
     return ENCRYPT_ERROR;
   }
   
+  pelz_sgx_log(LOG_DEBUG, "KEK Load Check");
   if (table_lookup(KEY, key_id, &index))
   {
+    pelz_sgx_log(LOG_DEBUG, "KEK not loaded");
     return KEK_NOT_LOADED;
   }
 
+  pelz_sgx_log(LOG_DEBUG, "Cipher Encrypt");
   cipher_data_t cipher_data_st;
   if (cipher_struct.encrypt_fn(key_table.entries[index].value.key.chars,
 			       key_table.entries[index].value.key.len,
@@ -59,6 +68,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
     free(cipher_data_st.cipher);
     free(cipher_data_st.iv);
     free(cipher_data_st.tag);
+    pelz_sgx_log(LOG_DEBUG, "Encrypt Error");
     return ENCRYPT_ERROR;
   }
 
@@ -76,6 +86,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
       free(cipher_data_st.iv);
       
       cipher_data->len = 0;
+      pelz_sgx_log(LOG_DEBUG, "Cipher data alloctation error");
       return ENCRYPT_ERROR;
     }
     cipher_data->len = cipher_data_st.cipher_len;
@@ -86,6 +97,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
     free(cipher_data_st.cipher);
     free(cipher_data_st.tag);
     free(cipher_data_st.iv);
+    pelz_sgx_log(LOG_DEBUG, "Cipher data missing");
     return ENCRYPT_ERROR;
   }
   free(cipher_data_st.cipher);
@@ -103,6 +115,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
       
       free(cipher_data_st.iv);
       free(cipher_data_st.tag);
+      pelz_sgx_log(LOG_DEBUG, "IV alloctation error");
       return ENCRYPT_ERROR;
     }
     iv->len = cipher_data_st.iv_len;
@@ -126,23 +139,27 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
       tag->len = 0;
 
       free(cipher_data_st.tag);
+      pelz_sgx_log(LOG_DEBUG, "Tag alloctation error");
       return ENCRYPT_ERROR;
     }
     tag->len = cipher_data_st.tag_len;
     memcpy(tag->chars, cipher_data_st.tag, tag->len);
   }
   free(cipher_data_st.tag);
+  pelz_sgx_log(LOG_DEBUG, "Encrypt Request Handler Successful");
   return REQUEST_OK;
 }
 
 
 RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data, charbuf signature, charbuf cert)
 {
+  pelz_sgx_log(LOG_DEBUG, "Decrypt Request Handler");
   // Start by checking that the signature validates, if present (and required).
   if(request_type == REQ_DEC_SIGNED)
   {
     if(validate_signature(request_type, key_id, cipher_name, cipher_data, iv, tag, signature, cert) == 1)
     {
+      pelz_sgx_log(LOG_DEBUG, "Validate Signature failure");
       return DECRYPT_ERROR;
     }
   }
@@ -153,11 +170,13 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
   if(cipher_name_string == NULL)
   {
+    pelz_sgx_log(LOG_DEBUG, "Cipher name string missing");
     return DECRYPT_ERROR;
   }
 
   if(key_id.chars == NULL || key_id.len == 0)
   {
+    pelz_sgx_log(LOG_DEBUG, "Key ID missing");
     return DECRYPT_ERROR;
   }
   
@@ -166,10 +185,14 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
 
   if(cipher_struct.cipher_name == NULL)
   {
+    pelz_sgx_log(LOG_DEBUG, "Cipher Name in struct missing");
     return DECRYPT_ERROR;
   }
+
+  pelz_sgx_log(LOG_DEBUG, "KEK Load Check");
   if (table_lookup(KEY, key_id, &index))
   {
+    pelz_sgx_log(LOG_DEBUG, "KEK not loaded");
     return KEK_NOT_LOADED;
   }
 
@@ -180,13 +203,15 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   cipher_data_st.iv_len = iv.len;
   cipher_data_st.tag = tag.chars;
   cipher_data_st.tag_len = tag.len;
-  
+
+  pelz_sgx_log(LOG_DEBUG, "Cipher Decrypt");  
   if(cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars,
 			      key_table.entries[index].value.key.len,
 			      cipher_data_st,
 			      &plain_data_internal.chars,
 			      &plain_data_internal.len))
   {
+    pelz_sgx_log(LOG_DEBUG, "Decrypt Error");
     return DECRYPT_ERROR;
   }
   
@@ -196,9 +221,11 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   {
     plain_data->len = 0;
     free_charbuf(&plain_data_internal);
+    pelz_sgx_log(LOG_DEBUG, "Plain data missing");
     return DECRYPT_ERROR;
   }
   memcpy(plain_data->chars, plain_data_internal.chars, plain_data->len);
   free_charbuf(&plain_data_internal);
+  pelz_sgx_log(LOG_DEBUG, "Decrypt Request Handler Successful");
   return REQUEST_OK;
 }

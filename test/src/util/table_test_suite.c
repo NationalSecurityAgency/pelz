@@ -33,7 +33,7 @@ int table_suite_add_tests(CU_pSuite suite)
   {
     return (1);
   }
-  if (NULL == CU_add_test(suite, "Test Table Look-up", test_table_lookup))
+  if (NULL == CU_add_test(suite, "Test Table Look-up", test_table_lookup_func))
   {
     return (1);
   }
@@ -44,26 +44,26 @@ int table_suite_add_tests(CU_pSuite suite)
   return (0);
 }
 
-bool get_file_handle(const char *path, uint64_t* handle)
+int get_file_handle(char *path, uint64_t* handle)
 {
   uint8_t *data = NULL;
   size_t data_len = 0;
 
-  if (read_bytes_from_file((char *) path, &data, &data_len))
+  if (read_bytes_from_file(path, &data, &data_len))
   {
     pelz_log(LOG_ERR, "read_bytes_from_file function failure");
-    return false;
+    return 0;
   }
   if(data_len > 0)
     {
       if (kmyth_sgx_unseal_nkl(eid, data, data_len, handle))
 	{
 	  pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-	  return false;
+	  return 0;
 	}
       free(data);
     }
-  return true;
+  return 1;
 }
 
 void test_table_destroy(void)
@@ -90,13 +90,12 @@ void test_table_add(void)
   charbuf server_id;
   charbuf server_key_id;
   uint64_t handle = 0;
-  const char *prefix = "file:";
-
-  const char *valid_id[5] =
+  char prefix[6] = "file:";
+  char valid_id[5][28] =
     { "/test/data/key1.txt", "test/data/key1.txt.nkl", "fake_key_id", "test/data/proxy_pub.der.nkl",
     "test/data/node_priv.der.nkl"
   };
-  const char *key_str = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
+  char key_str[33] = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
 
   pelz_log(LOG_DEBUG, "Test Table Add Function Start");
 
@@ -176,28 +175,29 @@ void test_table_add(void)
   pelz_log(LOG_DEBUG, "Test Table Add Function Finish");
 }
 
-void test_table_lookup(void)
+void test_table_lookup_func(void)
 {
   TableResponseStatus status;
   charbuf tmp;
-  charbuf key;
   uint64_t handle = 0;
   int index = 0;
-  const char *prefix = "file:";
+  size_t count = 0;
+  char prefix[6] = "file:";
 
-  const char *valid_id[8] = {
+  char valid_id[8][28] = {
     "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt", "/test/data/key4.txt", "/test/data/key5.txt",
     "/test/data/key6.txt", "test/data/node_pub.der.nkl", "test/data/proxy_pub.der.nkl"
   };
-  const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
+  char key_str[6][33] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
   };
-  const char *tmp_id[2] = { "/test/data/key.txt", "/test/data/key1txt" };
+  char tmp_id[2][19] = { "/test/data/key.txt", "/test/data/key1txt" };
 
   pelz_log(LOG_DEBUG, "Test Table Look-up Function Start");
   //Initial load of keys into the key table
   for (int i = 0; i < 6; i++)
   {
+    charbuf key = new_charbuf(0);
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
     key = new_charbuf(strlen(key_str[i]));
     memcpy(key.chars, key_str[i], key.len);
@@ -223,6 +223,26 @@ void test_table_lookup(void)
   get_file_handle(valid_id[7],&handle);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
+
+  //Testing table count funcion
+  table_id_count(eid, &status, KEY, &count);
+  CU_ASSERT(status == OK);
+  CU_ASSERT(count == 6);
+  table_id_count(eid, &status, SERVER, &count);
+  CU_ASSERT(status == OK);
+  CU_ASSERT(count == 2);
+
+  //Testing table id funcion
+  for (int j = 0; j < 6; j++)
+  {
+    charbuf id = new_charbuf(0);
+    tmp = copy_CWD_to_id(prefix, valid_id[j]);
+    table_id(eid, &status, KEY, j, &id);
+    CU_ASSERT(status == OK);
+    CU_ASSERT(memcmp(id.chars, tmp.chars, id.len) == 0);
+    free_charbuf(&id);
+    free_charbuf(&tmp);
+  }
 
   //Testing the look-up function for key table
   for (int i = 0; i < 6; i++)
@@ -293,16 +313,16 @@ void test_table_delete(void)
   charbuf tmp;
   charbuf key;
   uint64_t handle = 0;
-  const char *prefix = "file:";
+  char prefix[6] = "file:";
 
-  const char *valid_id[8] = {
+  char valid_id[8][28] = {
     "/test/data/key1.txt", "/test/data/key2.txt", "/test/data/key3.txt", "/test/data/key4.txt", "/test/data/key5.txt",
     "/test/data/key6.txt", "test/data/node_pub.der.nkl", "test/data/proxy_pub.der.nkl"
   };
-  const char *key_str[6] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
+  char key_str[6][33] = { "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", "KALIENGVBIZSAIXKDNRUEHFMDDUHVKAN", "HVIJERLMALIDFKDN",
     "NGVBIZSAIXKDNRUE", "EKIUFDALVBIZSAIXKDNRUEHV", "ALIENGVBCDNHVIJESAIXEKIU"
   };
-  const char *tmp_id[2] = {
+  char tmp_id[2][19] = {
     "/test/data/key.txt", "/test/data/key1txt"
   };
   pelz_log(LOG_DEBUG, "Test  Table Delete Function Start");
