@@ -73,7 +73,7 @@ int generate_and_send_session_msg1_resp(int clientfd)
   ret = session_request(eid, &status, &msg1resp.dh_msg1, &msg1resp.sessionid);
   if (ret != SGX_SUCCESS)
   {
-    pelz_log(LOG_ERR, "failed to do ECALL session_request.\n");
+    pelz_log(LOG_ERR, "failed to do ECALL session_request.");
     return -1;
   }
 
@@ -81,7 +81,7 @@ int generate_and_send_session_msg1_resp(int clientfd)
   fifo_resp = (FIFO_MSG *)malloc(respmsgsize);
   if (!fifo_resp)
   {
-    pelz_log(LOG_ERR, "memory allocation failure.\n");
+    pelz_log(LOG_ERR, "memory allocation failure.");
     return -1;
   }
   memset(fifo_resp, 0, respmsgsize);
@@ -94,7 +94,7 @@ int generate_and_send_session_msg1_resp(int clientfd)
   //send message 1 to client
   if (send(clientfd, (char *)fifo_resp, respmsgsize, 0) == -1)
   {
-    pelz_log(LOG_ERR, "fail to send msg1 response.\n");
+    pelz_log(LOG_ERR, "fail to send msg1 response.");
     retcode = -1;
   }
   free(fifo_resp);
@@ -122,7 +122,7 @@ int process_exchange_report(int clientfd, SESSION_MSG2 * msg2)
   response = (FIFO_MSG *)malloc(msgsize);
   if (!response)
   {
-    pelz_log(LOG_ERR, "memory allocation failure\n");
+    pelz_log(LOG_ERR, "memory allocation failure");
     return -1;
   }
   memset(response, 0, msgsize);
@@ -137,7 +137,7 @@ int process_exchange_report(int clientfd, SESSION_MSG2 * msg2)
   ret = exchange_report(eid, &status, &msg2->dh_msg2, &msg3->dh_msg3, msg2->sessionid);
   if (ret != SGX_SUCCESS)
   {
-    pelz_log(LOG_ERR, "EnclaveResponse_exchange_report failure.\n");
+    pelz_log(LOG_ERR, "EnclaveResponse_exchange_report failure.");
     free(response);
     return -1;
   }
@@ -145,7 +145,7 @@ int process_exchange_report(int clientfd, SESSION_MSG2 * msg2)
   // send ECDH message 3 to client
   if (send(clientfd, (char *)response, msgsize, 0) == -1)
   {
-    pelz_log(LOG_ERR, "server_send() failure.\n");
+    pelz_log(LOG_ERR, "server_send() failure.");
     free(response);
     return -1;
   }
@@ -172,7 +172,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
 
   if (!req_msg)
   {
-    pelz_log(LOG_ERR, "invalid parameter.\n");
+    pelz_log(LOG_ERR, "invalid parameter.");
     return -1;
   }
 
@@ -181,7 +181,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
   resp_message = (secure_message_t*)malloc(resp_message_max_size);
   if (!resp_message)
   {
-    pelz_log(LOG_ERR, "memory allocation failure.\n");
+    pelz_log(LOG_ERR, "memory allocation failure.");
     return -1;
   }
   memset(resp_message, 0, resp_message_max_size);
@@ -189,7 +189,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
   ret = generate_response(eid, &status, (secure_message_t *)req_msg->buf, req_msg->size, req_msg->max_payload_size, resp_message, &resp_message_size, resp_message_max_size, req_msg->session_id);
   if (ret != SGX_SUCCESS)
   {
-    pelz_log(LOG_ERR, "EnclaveResponder_generate_response error.\n");
+    pelz_log(LOG_ERR, "EnclaveResponder_generate_response error.");
     free(resp_message);
     return -1;
   }
@@ -197,7 +197,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
   fifo_resp = (FIFO_MSG *)malloc(sizeof(FIFO_MSG) + resp_message_size);
   if (!fifo_resp)
   {
-    pelz_log(LOG_ERR, "memory allocation failure.\n");
+    pelz_log(LOG_ERR, "memory allocation failure.");
     free(resp_message);
     return -1;
   }
@@ -209,10 +209,10 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
 
   free(resp_message);
 
-  pelz_log(LOG_DEBUG, "sending %d byte message\n", resp_message_size);
+  pelz_log(LOG_DEBUG, "sending %d byte message", resp_message_size);
   if (send(clientfd, (char *)fifo_resp, sizeof(FIFO_MSG) + resp_message_size, 0) == -1)
   {
-    pelz_log(LOG_ERR, "server_send() failure.\n");
+    pelz_log(LOG_ERR, "server_send() failure.");
     free(fifo_resp);
     return -1;
   }
@@ -246,7 +246,7 @@ int process_close_req(int clientfd, SESSION_CLOSE_REQ * close_req)
 
   if (send(clientfd, (char *)&close_ack, sizeof(FIFO_MSG), 0) == -1)
   {
-    pelz_log(LOG_ERR, "server_send() failure.\n");
+    pelz_log(LOG_ERR, "server_send() failure.");
     return -1;
   }
 
@@ -262,7 +262,7 @@ int handle_message(int sockfd, FIFO_MSG * message)
       // process ECDH session connection request
       if (generate_and_send_session_msg1_resp(sockfd) != 0)
       {
-        pelz_log(LOG_ERR, "failed to generate and send session msg1 resp.\n");
+        pelz_log(LOG_ERR, "failed to generate and send session msg1 resp.");
         return -1;
       }
     }
@@ -273,7 +273,7 @@ int handle_message(int sockfd, FIFO_MSG * message)
       // process ECDH message 2
       if (process_exchange_report(sockfd, (SESSION_MSG2 *) message->msgbuf) != 0)
       {
-        pelz_log(LOG_ERR, "failed to process exchange_report request.\n");
+        pelz_log(LOG_ERR, "failed to process exchange_report request.");
         return -1;
       }
     }
@@ -284,7 +284,7 @@ int handle_message(int sockfd, FIFO_MSG * message)
       // process message transfer request
       if (process_msg_transfer(sockfd, (FIFO_MSGBODY_REQ *) message->msgbuf) != 0)
       {
-        pelz_log(LOG_ERR, "failed to process message transfer request.\n");
+        pelz_log(LOG_ERR, "failed to process message transfer request.");
         return -1;
       }
     }
@@ -295,7 +295,7 @@ int handle_message(int sockfd, FIFO_MSG * message)
       // process message close request
       if (process_close_req(sockfd, (SESSION_CLOSE_REQ *) message->msgbuf) != 0)
       {
-        pelz_log(LOG_ERR, "failed to close ecdh session.\n");
+        pelz_log(LOG_ERR, "failed to close ecdh session.");
         return -1;
       }
     }
@@ -303,7 +303,7 @@ int handle_message(int sockfd, FIFO_MSG * message)
 
     default:
     {
-      pelz_log(LOG_ERR, "Unknown message.\n");
+      pelz_log(LOG_ERR, "Unknown message.");
     }
     break;
   }
