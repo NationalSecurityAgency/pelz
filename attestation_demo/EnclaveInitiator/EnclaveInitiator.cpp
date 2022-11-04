@@ -82,7 +82,7 @@ uint32_t test_message_exchange()
     // TODO: 3. Change the message to a signed pelz request with individually encrypted fields.
     // TODO: 4. Generate the request signature using a double-wrapped signing key (using kmyth).
 
-    char *req_msg = "placeholder pelz request message";
+    char *req_msg = (char *) "{\"request_type\":1,\"key_id\":\"file:/tmp/key1.txt\",\"cipher\":\"AES/GCM/NoPadding/256\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}";
     size_t req_len = strlen(req_msg);
 
     //Core Reference Code function
