@@ -294,6 +294,6 @@ int ocall_encode_response(RequestType request_type, charbuf key_id, charbuf ciph
 int ocall_encode_error(charbuf * message, const char *err_message)
 {
   int ret = error_message_encoder(message, err_message);
-  pelz_log(LOG_INFO, "Encode error: %.*s, %d", (int) message->len, message->chars, (int) message->len);
+  pelz_log(LOG_INFO, "Encoded error message: %.*s, %d", (int) message->len, message->chars, (int) message->len);
   return ret;
 }

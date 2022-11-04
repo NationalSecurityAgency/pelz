@@ -46,6 +46,7 @@
 #include "pelz_request_handler.h"
 #include "secure_socket_ecdh.h"
 #include "pelz_json_parser.h"
+#include "pelz_enclave_log.h"
 
 #include ENCLAVE_HEADER_TRUSTED
 
@@ -403,11 +404,7 @@ charbuf get_error_response(const char *err_message)
   ret_ocall = ocall_encode_error(&ret_val, &message, err_message);
   if (ret_ocall != SGX_SUCCESS || ret_val != EXIT_SUCCESS)
   {
-    // Generate placeholder response if ocall fails.
-    int max_size = 1024;
-    message = new_charbuf(max_size);
-    snprintf((char *) message.chars, max_size, "{\"error\": \"%s\"}", err_message);
-    message.len = strnlen((char *) message.chars, max_size);
+    message = new_charbuf(0);
   }
   return message;
 }
@@ -533,14 +530,17 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, char** resp_buffe
     }
   }
 
-  free_charbuf(&key_id);
-  free_charbuf(&output);
-  free_charbuf(&iv);
-  free_charbuf(&tag);
-  free_charbuf(&cipher_name);
+  ocall_free(key_id.chars, key_id.len);
+  ocall_free(output.chars, output.len);
+  ocall_free(iv.chars, iv.len);
+  ocall_free(tag.chars, tag.len);
+  ocall_free(cipher_name.chars, tag.len);
 
   *resp_buffer = (char *) message.chars;
   *resp_length = message.len;
 
-  return 0;
+  // Return 1 if the response is empty, which can happen if an ocall fails.
+  ret_val = *resp_length == 0;
+
+  return ret_val;
 }
