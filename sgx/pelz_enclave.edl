@@ -280,8 +280,37 @@ void ocall_malloc(size_t size, [out] unsigned char** buf);
  */
 void ocall_free([user_check] void* ptr, size_t len);
 
-// TODO: Add docstring
-int ocall_handle_pelz_request_msg([in, size = req_length] char* req_data, size_t req_length, [out] char** resp_buffer, [out] size_t* resp_length);
+/**
+ * <pre>
+ * Ocall wrapper for decoding JSON requests.
+ * <pre>
+ *
+ */
+int ocall_decode_request(charbuf request, [out] RequestType * request_type, [out] charbuf * key_id, [out] charbuf* cipher_name, [out] charbuf* iv, [out] charbuf* tag, [out] charbuf * data, [out] charbuf * request_sig, [out] charbuf * requestor_cert);
+
+/**
+ * <pre>
+ * Ocall wrapper for encoding JSON responses.
+ * <pre>
+ *
+ */
+int ocall_encode_response(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf iv, charbuf tag, charbuf data, [out] charbuf * message);
+
+/**
+ * <pre>
+ * Ocall wrapper for encoding JSON error responses.
+ * <pre>
+ *
+ */
+int ocall_encode_error([out] charbuf * message, [in, string] const char *err_message);
+
+/**
+ * <pre>
+ * Ocall wrapper for loading external keys.
+ * <pre>
+ *
+ */
+int ocall_key_load(charbuf key_id);
 	};
 };	
 	

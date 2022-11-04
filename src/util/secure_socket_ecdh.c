@@ -209,6 +209,7 @@ int process_msg_transfer(int clientfd, FIFO_MSGBODY_REQ *req_msg)
 
   free(resp_message);
 
+  pelz_log(LOG_DEBUG, "sending %d byte message\n", resp_message_size);
   if (send(clientfd, (char *)fifo_resp, sizeof(FIFO_MSG) + resp_message_size, 0) == -1)
   {
     pelz_log(LOG_ERR, "server_send() failure.\n");

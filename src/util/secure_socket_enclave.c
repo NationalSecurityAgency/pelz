@@ -40,8 +40,13 @@
 #include "sgx_thread.h"
 #include "sgx_dh.h"
 #include "sgx_tcrypto.h"
-#include "secure_socket_ecdh.h"
+
+#include "charbuf.h"
 #include "dh_error_codes.h"
+#include "pelz_request_handler.h"
+#include "secure_socket_ecdh.h"
+#include "pelz_json_parser.h"
+
 #include ENCLAVE_HEADER_TRUSTED
 
 
@@ -51,8 +56,9 @@
 dh_session_t *dh_sessions[MAX_SESSION_COUNT] = { 0 };
 
 ATTESTATION_STATUS generate_session_id(uint32_t *session_id);
-ATTESTATION_STATUS end_session(uint32_t session_id);
 uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity);
+int handle_pelz_request_msg(char* req_data, size_t req_length, char** resp_buffer, size_t* resp_length);
+
 
 //Handle the request from Source Enclave for a session
 ATTESTATION_STATUS session_request(sgx_dh_msg1_t *dh_msg1,
@@ -174,7 +180,7 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
                                      secure_message_t* resp_message,
                                      size_t *resp_message_size,
                                      size_t resp_message_max_size,
-                				     uint32_t session_id)
+                                     uint32_t session_id)
 {
     const uint8_t* plaintext;
     uint32_t plaintext_length;
@@ -248,11 +254,11 @@ ATTESTATION_STATUS generate_response(secure_message_t* req_message,
     }
 
     // Call Pelz request message handler
-    status = ocall_handle_pelz_request_msg(&ret, (char*)decrypted_data, decrypted_data_length, &resp_data, &resp_data_length);
+    ret = handle_pelz_request_msg((char*)decrypted_data, decrypted_data_length, &resp_data, &resp_data_length);
     SAFE_FREE(decrypted_data);
-    if(SGX_SUCCESS != status)
+    if(ret)
     {
-        return INVALID_SESSION;
+        return ERROR_UNEXPECTED;
     }
 
     if(resp_data_length > max_payload_size)
@@ -387,4 +393,154 @@ uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_encla
 #endif
 
     return SUCCESS;
+}
+
+charbuf get_error_response(const char *err_message)
+{
+  int ret_ocall, ret_val;
+  charbuf message;
+
+  ret_ocall = ocall_encode_error(&ret_val, &message, err_message);
+  if (ret_ocall != SGX_SUCCESS || ret_val != EXIT_SUCCESS)
+  {
+    // Generate placeholder response if ocall fails.
+    int max_size = 1024;
+    message = new_charbuf(max_size);
+    snprintf((char *) message.chars, max_size, "{\"error\": \"%s\"}", err_message);
+    message.len = strnlen((char *) message.chars, max_size);
+  }
+  return message;
+}
+
+/* Function Description: Generates the response from the request message
+ * Parameter Description:
+ * [input] req_data: pointer to decrypted request message
+ * [input] req_length: request length
+ * [output] resp_buffer: pointer to response message, which is allocated in this function
+ * [output] resp_length: response length
+ *
+ * Note: The decode/encode ocalls are required because the JSON library
+ *       is currently only supported in unprotected code,
+ */
+int handle_pelz_request_msg(char* req_data, size_t req_length, char** resp_buffer, size_t* resp_length)
+{
+  int ret_ocall, ret_val;
+  charbuf request;
+  charbuf message;
+  RequestResponseStatus status;
+  const char *err_message;
+  RequestType request_type = REQ_UNK;
+
+  charbuf key_id;
+  charbuf request_sig;
+  charbuf requestor_cert;
+  charbuf cipher_name;
+
+  charbuf output = new_charbuf(0);
+  charbuf input_data = new_charbuf(0);
+  charbuf tag = new_charbuf(0);
+  charbuf iv = new_charbuf(0);
+
+  //Set placeholder results
+  *resp_buffer = NULL;
+  *resp_length = 0;
+
+  //Place input data in a charbuf
+  request = new_charbuf(0);
+  request.chars = (unsigned char*) req_data;
+  request.len = req_length;
+
+  //Parse request for processing
+  ret_ocall = ocall_decode_request(&ret_val, request, &request_type, &key_id, &cipher_name, &iv, &tag, &input_data, &request_sig, &requestor_cert);
+  if (ret_ocall != SGX_SUCCESS || ret_val != EXIT_SUCCESS)
+  {
+    err_message = "Missing Data";
+    message = get_error_response(err_message);
+    *resp_buffer = (char *) message.chars;
+    *resp_length = message.len;
+    return 0;
+  }
+
+  switch(request_type)
+  {
+  case REQ_ENC:
+    status = pelz_encrypt_request_handler(request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+    if (status == KEK_NOT_LOADED)
+    {
+      ret_ocall = ocall_key_load(&ret_val, key_id);
+      if (ret_ocall == SGX_SUCCESS && ret_val == EXIT_SUCCESS)
+      {
+        status = pelz_encrypt_request_handler(request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+      }
+      else
+      {
+        status = KEK_LOAD_ERROR;
+      }
+    }
+    break;
+  case REQ_DEC:
+    status = pelz_decrypt_request_handler(request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+    if (status == KEK_NOT_LOADED)
+    {
+      ret_ocall = ocall_key_load(&ret_val, key_id);
+      if (ret_ocall == SGX_SUCCESS && ret_val == EXIT_SUCCESS)
+      {
+        status = pelz_decrypt_request_handler(request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+      }
+      else
+      {
+        status = KEK_LOAD_ERROR;
+      }
+    }
+    break;
+  default:
+    status = REQUEST_TYPE_ERROR;
+  }
+
+  if (status != REQUEST_OK)
+  {
+    switch (status)
+    {
+    case KEK_LOAD_ERROR:
+      err_message = "Key not added";
+      break;
+    case KEY_OR_DATA_ERROR:
+      err_message = "Key or Data Error";
+      break;
+    case ENCRYPT_ERROR:
+      err_message = "Encrypt Error";
+      break;
+    case DECRYPT_ERROR:
+      err_message = "Decrypt Error";
+      break;
+    case REQUEST_TYPE_ERROR:
+      err_message = "Request Type Error";
+      break;
+    case CHARBUF_ERROR:
+      err_message = "Charbuf Error";
+      break;
+    default:
+      err_message = "Unrecognized response";
+    }
+    message = get_error_response(err_message);
+  }
+  else
+  {
+    ret_ocall = ocall_encode_response(&ret_val, request_type, key_id, cipher_name, iv, tag, output, &message);
+    if (ret_ocall != SGX_SUCCESS || ret_val != EXIT_SUCCESS)
+    {
+      message = get_error_response("Encode Error");
+    }
+  }
+
+  free_charbuf(&key_id);
+  free_charbuf(&output);
+  free_charbuf(&iv);
+  free_charbuf(&tag);
+  free_charbuf(&cipher_name);
+
+  *resp_buffer = (char *) message.chars;
+  *resp_length = message.len;
+
+  return 0;
 }

@@ -640,6 +640,7 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 			  sgx/enclave_helper_functions.o \
 			  sgx/pelz_cipher.o \
 			  sgx/ca_table.o \
+			  sgx/secure_socket_enclave.o \
 			  sgx/enclave_request_signing.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>	$@"

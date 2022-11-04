@@ -322,3 +322,14 @@ int file_check(const char *file_path)
   }
   return (0);
 }
+
+/**
+ * <pre>
+ * Ocall wrapper for loading external keys.
+ * <pre>
+ *
+ */
+int ocall_key_load(charbuf key_id)
+{
+  return key_load(key_id);
+}
