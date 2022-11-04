@@ -33,7 +33,7 @@ enclave {
     include "sgx_eid.h"
     include "datatypes.h"
     include "dh_session_protocol.h"
-    
+
     trusted{
             public uint32_t test_create_session();
             public uint32_t test_message_exchange();

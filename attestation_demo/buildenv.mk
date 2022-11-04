@@ -83,7 +83,7 @@ SGX_ARCH ?= x64
 SGX_DEBUG ?= 1
 
 #-------------------------------------------------------------------
-# Define common compile flags used for GCC and G++ 
+# Define common compile flags used for GCC and G++
 #-------------------------------------------------------------------
 COMMON_FLAGS = -ffunction-sections -fdata-sections
 
@@ -99,7 +99,7 @@ endif
 endif
 
 ifeq ($(SGX_DEBUG), 1)
-	COMMON_FLAGS += -ggdb -DDEBUG 
+	COMMON_FLAGS += -ggdb -DDEBUG
 	COMMON_FLAGS += -DDEBUG_LEVEL=TRACE_DEBUG
 else
 	COMMON_FLAGS += -o2 -UDEBUG
@@ -132,7 +132,7 @@ ifeq ($(CC_GREAT_EQUAL_8), 1)
     ENCLAVE_CFLAGS += -fcf-protection
 endif
 ENCLAVE_CXXFLAGS = $(ENCLAVE_CFLAGS) -nostdinc++
-ENCLAVE_LDFLAGS  = $(COMMON_LDFLAGS) 
+ENCLAVE_LDFLAGS  = $(COMMON_LDFLAGS)
 
 RM = rm -f
 
@@ -153,5 +153,5 @@ else
         SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
         SGX_EDGER8R := $(SGX_SDK)/bin/x64/sgx_edger8r
 endif
-        
+       
 SGX_COMMON_FLAGS += $(COMMON_FLAGS)

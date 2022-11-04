@@ -1,5 +1,5 @@
 ---------------------------
-The project aims to demo SGX local attestation flow. 
+The project aims to demo SGX local attestation flow.
 
 ------------------------------------
 How to Build the Sample Code
@@ -24,7 +24,7 @@ How to Build the Sample Code
 
 
 When build is successful, you can find executable binaries in "bin" sub-folder.
- 
+
 ------------------------------------
 How to Execute the Sample Code
 ------------------------------------

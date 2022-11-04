@@ -138,7 +138,7 @@ extern "C" uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t*
     // check the enclave isn't loaded in enclave debug mode, except that the project is built for debug purpose
 #if defined(NDEBUG)
     if (peer_enclave_identity->attributes.flags & SGX_FLAGS_DEBUG)
-    	return ENCLAVE_TRUST_ERROR;
+        return ENCLAVE_TRUST_ERROR;
 #endif
 
     return SUCCESS;

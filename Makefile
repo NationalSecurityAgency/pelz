@@ -378,7 +378,6 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path ../kmyth/sgx/trusted
 	@echo "GEN  =>  $@"
 
-
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
@@ -396,7 +395,6 @@ test/include/test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 sgx/test_enclave_u.o: test/include/test_enclave_u.c
 	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
-
 
 test/bin/$(App_Name_Test): $(App_C_Test_Files) \
 			   $(App_C_Files) \
@@ -576,7 +574,6 @@ sgx/enclave_request_signing.o: src/util/enclave_request_signing.c
 sgx/secure_socket_enclave.o: src/util/secure_socket_enclave.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
-
 
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
