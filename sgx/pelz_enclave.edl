@@ -253,7 +253,7 @@ public RequestResponseStatus pelz_decrypt_request_handler(RequestType request_ty
  *
  * @return none
  */
-void ocall_malloc(size_t size, [user_check] unsigned char** buf);
+void ocall_malloc(size_t size, [out] unsigned char** buf);
 
 
 /**

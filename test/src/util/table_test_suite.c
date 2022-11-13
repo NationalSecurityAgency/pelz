@@ -179,9 +179,9 @@ void test_table_lookup_func(void)
 {
   TableResponseStatus status;
   charbuf tmp;
-  charbuf key;
   uint64_t handle = 0;
   int index = 0;
+  size_t count = 0;
   char prefix[6] = "file:";
 
   char valid_id[8][28] = {
@@ -197,6 +197,7 @@ void test_table_lookup_func(void)
   //Initial load of keys into the key table
   for (int i = 0; i < 6; i++)
   {
+    charbuf key = new_charbuf(0);
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
     key = new_charbuf(strlen(key_str[i]));
     memcpy(key.chars, key_str[i], key.len);
@@ -222,6 +223,26 @@ void test_table_lookup_func(void)
   get_file_handle(valid_id[7],&handle);
   add_cert_to_table(eid, &status, CA_TABLE, handle);
   CU_ASSERT(status == OK);
+
+  //Testing table count funcion
+  table_id_count(eid, &status, KEY, &count);
+  CU_ASSERT(status == OK);
+  CU_ASSERT(count == 6);
+  table_id_count(eid, &status, SERVER, &count);
+  CU_ASSERT(status == OK);
+  CU_ASSERT(count == 2);
+
+  //Testing table id funcion
+  for (int j = 0; j < 6; j++)
+  {
+    charbuf id = new_charbuf(0);
+    tmp = copy_CWD_to_id(prefix, valid_id[j]);
+    table_id(eid, &status, KEY, j, &id);
+    CU_ASSERT(status == OK);
+    CU_ASSERT(memcmp(id.chars, tmp.chars, id.len) == 0);
+    free_charbuf(&id);
+    free_charbuf(&tmp);
+  }
 
   //Testing the look-up function for key table
   for (int i = 0; i < 6; i++)
