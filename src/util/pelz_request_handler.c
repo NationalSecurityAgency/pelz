@@ -17,7 +17,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
     if(validate_signature(request_type, key_id, cipher_name, plain_data, *iv, *tag, signature, cert) == 1)
     {
       pelz_sgx_log(LOG_DEBUG, "Validate Signature failure");
-      return ENCRYPT_ERROR;
+      return SIGNATURE_ERROR;
     }
   }
   int index;
@@ -154,7 +154,7 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
     if(validate_signature(request_type, key_id, cipher_name, cipher_data, iv, tag, signature, cert) == 1)
     {
       pelz_sgx_log(LOG_DEBUG, "Validate Signature failure");
-      return DECRYPT_ERROR;
+      return SIGNATURE_ERROR;
     }
   }
   

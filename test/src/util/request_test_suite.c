@@ -445,44 +445,76 @@ void test_signed_request_handling(void)
   // Convert X509 version certificate to DER
   charbuf der;
   charbuf output;
+  charbuf cipher_data;
   der.len = i2d_X509(requestor_cert_x509, &(der.chars));
 
   charbuf cipher_name = new_charbuf(strlen(cipher_names[0]));
   memcpy(cipher_name.chars, cipher_names[0], cipher_name.len);
-  charbuf signature = sign_request(REQ_ENC_SIGNED, key_id, cipher_name, data, iv, tag, der, requestor_privkey);
+
+  // Generate encrypt signature
+  charbuf enc_signature = sign_request(REQ_ENC_SIGNED, key_id, cipher_name, data, iv, tag, der, requestor_privkey);
+
+  // Generate decrypt cipher data
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC, key_id, cipher_name, data, &output, &iv, &tag, enc_signature, der);
+  cipher_data = copy_chars_from_charbuf(output, 0);
+  free_charbuf(&output);
+
+  // Generate decrypt signature
+  charbuf dec_signature = sign_request(REQ_DEC_SIGNED, key_id, cipher_name, cipher_data, iv, tag, der, requestor_privkey);
 
   // Test with cert whose signature doesn't match any known authority
-  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, der);
-  CU_ASSERT(response_status == ENCRYPT_ERROR);
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, enc_signature, der);
+  CU_ASSERT(response_status == SIGNATURE_ERROR);
+  pelz_decrypt_request_handler(eid, &response_status, REQ_DEC_SIGNED, key_id, cipher_name, cipher_data, iv, tag, &output, dec_signature, der);
+  CU_ASSERT(response_status == SIGNATURE_ERROR)
 
   // Add an authority to the CA table
   uint64_t handle;
   pelz_load_file_to_enclave((char*)"test/data/ca_pub.der.nkl", &handle);
   add_cert_to_table(eid, &table_status, CA_TABLE, handle);
 
-  // Test a good signature
-  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, der);
+  // Test a good signature for encrypt
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, enc_signature, der);
   CU_ASSERT(response_status == REQUEST_OK);
+  CU_ASSERT(output.len == cipher_data.len);
+  CU_ASSERT(memcmp(output.chars, cipher_data.chars, output.len) == 0);
+  free_charbuf(&output);
+
+  // Test a good signature for decrypt
+  pelz_decrypt_request_handler(eid, &response_status, REQ_DEC_SIGNED, key_id, cipher_name, cipher_data, iv, tag, &output, dec_signature, der);
+  CU_ASSERT(response_status == REQUEST_OK);
+  CU_ASSERT(output.len == data.len);
+  CU_ASSERT(memcmp(output.chars, data.chars, output.len) == 0);
+  free_charbuf(&output);
 
   // Test with an invalid thing for the cert
-  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, signature, signature);
-  CU_ASSERT(response_status == ENCRYPT_ERROR);
+  pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, enc_signature, enc_signature);
+  CU_ASSERT(response_status == SIGNATURE_ERROR);
+
+  // Test with an invalid thing for the cert
+  pelz_decrypt_request_handler(eid, &response_status, REQ_DEC_SIGNED, key_id, cipher_name, cipher_data, iv, tag, &output, dec_signature, dec_signature);
+  CU_ASSERT(response_status == SIGNATURE_ERROR)
 
   // Test with a signature that should fail
   pelz_encrypt_request_handler(eid, &response_status, REQ_ENC_SIGNED, key_id, cipher_name, data, &output, &iv, &tag, der, der);
-  CU_ASSERT(response_status == ENCRYPT_ERROR);
+  CU_ASSERT(response_status == SIGNATURE_ERROR);
 
+  // Test with a signature that should fail
+  pelz_decrypt_request_handler(eid, &response_status, REQ_DEC_SIGNED, key_id, cipher_name, cipher_data, iv, tag, &output, der, der);
+  CU_ASSERT(response_status == SIGNATURE_ERROR)
   
   table_destroy(eid, &table_status, KEY);
   table_destroy(eid, &table_status, CA_TABLE);
   free_charbuf(&output);
   free_charbuf(&iv);
   free_charbuf(&tag);
-  free_charbuf(&signature);
+  free_charbuf(&enc_signature);
+  free_charbuf(&dec_signature);
   free_charbuf(&cipher_name);
   free_charbuf(&der);
   free_charbuf(&key_id);
   free_charbuf(&data);
+  free_charbuf(&cipher_data);
   X509_free(requestor_cert_x509);
   EVP_PKEY_free(requestor_privkey);
   free_charbuf(&key_data);
