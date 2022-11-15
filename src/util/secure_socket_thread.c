@@ -132,7 +132,6 @@ int recv_message(int socket_id, FIFO_MSG ** message)
   return (0);
 }
 
-//This function will need to be changed with the attestation handshake and process flow
 void *secure_socket_process(void *arg)
 {
   ThreadArgs *processArgs = (ThreadArgs *) arg;
@@ -140,11 +139,6 @@ void *secure_socket_process(void *arg)
   pthread_mutex_t lock = processArgs->lock;
 
   int ret;
-
-  // TODO: keep track of session ID, and other unprotected session metadata
-
-  // TODO: Check attestation
-  // TODO: Check attestation cert
 
   FIFO_MSG * message = NULL;
 
