@@ -422,7 +422,6 @@ charbuf get_error_response(const char *err_message)
 int handle_pelz_request_msg(char* req_data, size_t req_length, char** resp_buffer, size_t* resp_length)
 {
   int ret_ocall, ret_val;
-  charbuf request;
   charbuf message;
   RequestResponseStatus status;
   const char *err_message;
@@ -442,13 +441,8 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, char** resp_buffe
   *resp_buffer = NULL;
   *resp_length = 0;
 
-  //Place input data in a charbuf
-  request = new_charbuf(0);
-  request.chars = (unsigned char*) req_data;
-  request.len = req_length;
-
   //Parse request for processing
-  ret_ocall = ocall_decode_request(&ret_val, request, &request_type, &key_id, &cipher_name, &iv, &tag, &input_data, &request_sig, &requestor_cert);
+  ret_ocall = ocall_decode_request(&ret_val, req_data, req_length, &request_type, &key_id, &cipher_name, &iv, &tag, &input_data, &request_sig, &requestor_cert);
   if (ret_ocall != SGX_SUCCESS || ret_val != EXIT_SUCCESS)
   {
     err_message = "Missing Data";

@@ -266,9 +266,14 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_nam
  * <pre>
  *
  */
-int ocall_decode_request(charbuf request, RequestType * request_type, charbuf * key_id, charbuf* cipher_name, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+int ocall_decode_request(char * request_msg, size_t request_len, RequestType * request_type, charbuf * key_id, charbuf* cipher_name, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
 {
   // TODO: Consider combining all the output parameters into a struct.
+  pelz_log(LOG_DEBUG, "Request Message & Length: %.*s, %d", (int) request_len, request_msg, (int) request_len);
+
+  charbuf request = new_charbuf(request_len);
+  memcpy(request.chars, request_msg, request_len);
+
   return request_decoder(request, request_type, key_id, cipher_name, iv, tag, data, request_sig, requestor_cert);
 }
 

@@ -264,7 +264,6 @@ public uint32_t end_session(uint32_t session_id);
  */
 void ocall_malloc(size_t size, [out] unsigned char** buf);
 
-
 /**
  * <pre>
  * Frees untrusted memory from within the enclave. If the length of the
@@ -286,7 +285,7 @@ void ocall_free([user_check] void* ptr, size_t len);
  * <pre>
  *
  */
-int ocall_decode_request(charbuf request, [out] RequestType * request_type, [out] charbuf * key_id, [out] charbuf* cipher_name, [out] charbuf* iv, [out] charbuf* tag, [out] charbuf * data, [out] charbuf * request_sig, [out] charbuf * requestor_cert);
+int ocall_decode_request([in, size = request_len] char * request, size_t request_len, [out] RequestType * request_type, [out] charbuf * key_id, [out] charbuf* cipher_name, [out] charbuf* iv, [out] charbuf* tag, [out] charbuf * data, [out] charbuf * request_sig, [out] charbuf * requestor_cert);
 
 /**
  * <pre>
