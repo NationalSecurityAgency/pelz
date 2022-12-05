@@ -54,15 +54,17 @@ int get_file_handle(char *path, uint64_t* handle)
     pelz_log(LOG_ERR, "read_bytes_from_file function failure");
     return 0;
   }
+
   if(data_len > 0)
+  {
+    if (kmyth_sgx_unseal_nkl(eid, data, data_len, handle))
     {
-      if (kmyth_sgx_unseal_nkl(eid, data, data_len, handle))
-	{
-	  pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
-	  return 0;
-	}
-      free(data);
-    }
+	    pelz_log(LOG_ERR, "kmyth_sgx_unseal_nkl function failure");
+	    return 0;
+	  }
+
+    free(data);
+  }
   return 1;
 }
 
@@ -93,10 +95,9 @@ void test_table_add(void)
   charbuf server_key_id;
   uint64_t handle = 0;
   char prefix[6] = "file:";
-  char valid_id[5][28] =
+  char valid_id[6][28] =
     { "/test/data/key1.txt", "test/data/key1.txt.nkl", "fake_key_id", "test/data/proxy_pub.der.nkl",
-    "test/data/node_priv.der.nkl"
-  };
+    "test/data/node_priv.der.nkl", "test/data/node_pub.der.nkl"  };
   char key_str[33] = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
 
   pelz_log(LOG_DEBUG, "Test Table Add Function Start");
@@ -124,34 +125,49 @@ void test_table_add(void)
     //Testing the server table add
     add_cert_to_table(eid, &status, SERVER, handle);
     CU_ASSERT(status == RET_FAIL);
+    handle = 0;
   }
   
   if(get_file_handle(valid_id[3], &handle))
   {
     add_cert_to_table(eid, &status, SERVER, handle);
     CU_ASSERT(status == OK);
-    pelz_log(LOG_INFO, "Server Table add complete");
+    pelz_log(LOG_INFO, "Server Table add Proxy complete");
+    handle = 0;
   }
 
   if(get_file_handle(valid_id[3], &handle))
   {
-    get_file_handle(valid_id[3], &handle);
     add_cert_to_table(eid, &status, CA_TABLE, handle);
     CU_ASSERT(status == OK);
     pelz_log(LOG_INFO, "CA Table add complete");
+    handle = 0;
+  }
 
+  if(get_file_handle(valid_id[3], &handle))
+  {
     //Testing the private pkey add
     private_pkey_init(eid, &status);
     CU_ASSERT(status == OK);
     private_pkey_add(eid, &status, handle);
     CU_ASSERT(status == ERR_X509);
+    handle = 0;
   }
-  
+
   if(get_file_handle(valid_id[4], &handle))
   {
     private_pkey_add(eid, &status, handle);
     CU_ASSERT(status == OK);
     pelz_log(LOG_INFO, "Private Pkey add success");
+    handle = 0;
+  }
+
+  if(get_file_handle(valid_id[5], &handle))
+  {
+    add_cert_to_table(eid, &status, SERVER, handle);
+    CU_ASSERT(status == OK);
+    pelz_log(LOG_INFO, "Server Table add Node complete");
+    handle = 0;
   }
     
   server_id = new_charbuf(strlen("localhost"));

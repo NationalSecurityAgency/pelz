@@ -686,10 +686,6 @@ pre:
 
 test: all test-all
 	@cd test/data && ./gen_test_keys_certs.bash
-	@openssl x509 -in test/data/node_pub.pem -inform pem -out test/data/node_pub.der -outform der
-	@openssl x509 -in test/data/proxy_pub.pem -inform pem -out test/data/proxy_pub.der -outform der
-	@openssl pkey -in test/data/node_priv.pem -inform pem -out test/data/node_priv.der -outform der
-	@openssl x509 -in test/data/ca_pub.pem -inform pem -out test/data/ca_pub.der -outform der
 	@echo "GEN => Test Key/Cert Files"
 	@cd kmyth/sgx && make demo-all demo-test-keys-certs 
 	@echo "\n"

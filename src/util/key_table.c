@@ -132,8 +132,8 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   common_name = null_terminated_string_from_charbuf(server_name);
 
   //the +1 is used for the len of common_name to account for the null terminater added to server_name
-  ret = enclave_retrieve_key(private_pkey, server_table.entries[server_index].value.cert, 
-    server_table.entries[client_index].value.cert, (const char *) common_name, 
+  ret = enclave_retrieve_key(private_pkey, server_table.entries[client_index].value.cert, 
+    server_table.entries[server_index].value.cert, (const char *) common_name, 
     (server_name.len + 1), port.chars, port.len, server_key_id.chars, server_key_id.len, 
     &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
   if (ret)
