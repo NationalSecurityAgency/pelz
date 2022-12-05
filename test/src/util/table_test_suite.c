@@ -88,6 +88,8 @@ void test_table_add(void)
   charbuf tmp;
   charbuf key;
   charbuf server_id;
+  charbuf client_id;
+  charbuf port;
   charbuf server_key_id;
   uint64_t handle = 0;
   char prefix[6] = "file:";
@@ -154,13 +156,19 @@ void test_table_add(void)
     
   server_id = new_charbuf(strlen("localhost"));
   memcpy(server_id.chars, "localhost", server_id.len);
+  client_id = new_charbuf(strlen("TestClient"));
+  memcpy(client_id.chars, "TestClient", client_id.len);
+  port = new_charbuf(strlen("7000"));
+  memcpy(port.chars, "7000", port.len);
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
   server_key_id = new_charbuf(strlen(valid_id[2]));
   memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
-  key_table_add_from_server(eid, &status, tmp, server_id, 7000, server_key_id);
+  key_table_add_from_server(eid, &status, tmp, server_id, client_id, port, server_key_id);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
   free_charbuf(&server_id);
+  free_charbuf(&client_id);
+  free_charbuf(&port);
   free_charbuf(&server_key_id);
   pelz_log(LOG_INFO, "Key Table add from Server complete");
 

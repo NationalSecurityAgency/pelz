@@ -176,7 +176,7 @@ int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_
     return result;
   }
 
-  if(verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len) == EXIT_SUCCESS)
+  if(ec_verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len) == EXIT_SUCCESS)
   {
     result = 0;
   }

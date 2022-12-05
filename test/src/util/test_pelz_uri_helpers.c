@@ -46,7 +46,7 @@ void test_scheme_extraction(void)
   pelz_log(LOG_DEBUG, "Finish URI functions");
 
   charbuf common_name;
-  int port = -1;
+  charbuf port;
   charbuf key_id;
   charbuf additional_data;
 
@@ -57,7 +57,8 @@ void test_scheme_extraction(void)
   pelz_log(LOG_DEBUG, "Finish URI hostname");
 
   get_pelz_uri_port(uri, &port);
-  CU_ASSERT(port == 0);
+  CU_ASSERT(port.len == 1);
+  CU_ASSERT(memcmp(port.chars, "0", port.len) == 0);
   pelz_log(LOG_DEBUG, "Finish URI port");
 
   get_pelz_uri_key_UID(uri, &key_id);
@@ -71,6 +72,7 @@ void test_scheme_extraction(void)
   pelz_log(LOG_DEBUG, "Finish URI Helper functions");
 
   free_charbuf(&common_name);
+  free_charbuf(&port);
   free_charbuf(&key_id);
   free_charbuf(&additional_data);
   uriFreeUriMembersA(&uri);

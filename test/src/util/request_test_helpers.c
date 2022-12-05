@@ -134,7 +134,7 @@ charbuf sign_request(RequestType request_type, charbuf key_id, charbuf cipher_na
 {
   charbuf serialized = serialize_request_helper(request_type, key_id, cipher_name, data, iv, tag, requestor_cert);
   charbuf signature = new_charbuf(0);
-  if(sign_buffer(requestor_privkey, serialized.chars, serialized.len, &(signature.chars), (unsigned int*)&(signature.len)) != EXIT_SUCCESS)
+  if(ec_sign_buffer(requestor_privkey, serialized.chars, serialized.len, &(signature.chars), (unsigned int*)&(signature.len)) != EXIT_SUCCESS)
   {
     free_charbuf(&signature);
   }

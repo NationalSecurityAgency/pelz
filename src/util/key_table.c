@@ -86,12 +86,13 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
   return status;
 }
 
-TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_name, int port,
-  charbuf server_key_id)
+TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_name, 
+  charbuf client_name, charbuf port, charbuf server_key_id)
 {
   TableResponseStatus status;
   charbuf key;
-  int index = 0;
+  int server_index = 0;
+  int client_index = 0;
   int ret;
   unsigned char *common_name;
   unsigned char *retrieved_key_id = NULL;
@@ -106,12 +107,19 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
     return ERR_MEM;
   }
 
-  if (table_lookup(SERVER, server_name, &index))
+  if (table_lookup(SERVER, server_name, &server_index))
   {
     pelz_sgx_log(LOG_ERR, "Server ID not found");
     return NO_MATCH;
   }
   pelz_sgx_log(LOG_DEBUG, "Server name lookup success");
+
+  if (table_lookup(SERVER, client_name, &client_index))
+  {
+    pelz_sgx_log(LOG_ERR, "Client ID not found");
+    return NO_MATCH;
+  }
+  pelz_sgx_log(LOG_DEBUG, "Client name lookup success");
 
   if (private_pkey == NULL)
   {
@@ -124,8 +132,10 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_nam
   common_name = null_terminated_string_from_charbuf(server_name);
 
   //the +1 is used for the len of common_name to account for the null terminater added to server_name
-  ret = enclave_retrieve_key(private_pkey, server_table.entries[index].value.cert, (const char *) common_name, (server_name.len + 1), port, 
-    server_key_id.chars, server_key_id.len, &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
+  ret = enclave_retrieve_key(private_pkey, server_table.entries[server_index].value.cert, 
+    server_table.entries[client_index].value.cert, (const char *) common_name, 
+    (server_name.len + 1), port.chars, port.len, server_key_id.chars, server_key_id.len, 
+    &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
   if (ret)
   {
     pelz_sgx_log(LOG_ERR, "Retrieve Key function failure");
