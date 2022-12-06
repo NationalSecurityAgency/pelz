@@ -96,7 +96,7 @@ void test_table_add(void)
   uint64_t handle = 0;
   char prefix[6] = "file:";
   char valid_id[6][28] =
-    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "fake_key_id", "test/data/proxy_pub.der.nkl",
+    { "/test/data/key1.txt", "test/data/key1.txt.nkl", "7", "test/data/proxy_pub.der.nkl",
     "test/data/node_priv.der.nkl", "test/data/node_pub.der.nkl"  };
   char key_str[33] = "KIENJCDNHVIJERLMALIDFEKIUFDALJFG";
 
@@ -115,6 +115,8 @@ void test_table_add(void)
   tmp = copy_CWD_to_id(prefix, valid_id[1]);
   key_table_add_from_handle(eid, &status, tmp, handle);
   CU_ASSERT(status == RET_FAIL);
+  free_charbuf(&tmp);
+  handle = 0;
 
   if(get_file_handle(valid_id[1], &handle)){
     key_table_add_from_handle(eid, &status, tmp, handle);
@@ -174,7 +176,7 @@ void test_table_add(void)
   memcpy(server_id.chars, "localhost", server_id.len);
   client_id = new_charbuf(strlen("TestClient"));
   memcpy(client_id.chars, "TestClient", client_id.len);
-  port = new_charbuf(strlen("7000"));
+  port = new_charbuf(4);
   memcpy(port.chars, "7000", port.len);
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
   server_key_id = new_charbuf(strlen(valid_id[2]));

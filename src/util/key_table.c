@@ -95,6 +95,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf client_nam
   int client_index = 0;
   int ret;
   unsigned char *common_name;
+  unsigned char *port_num;
   unsigned char *retrieved_key_id = NULL;
   size_t retrieved_key_id_len = 0;
   uint8_t *retrieved_key;
@@ -130,11 +131,12 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf client_nam
 
   //charbuf server_name is transformed into a null terminated string common_name because the socket calls require a null terminated string
   common_name = null_terminated_string_from_charbuf(server_name);
+  port_num = null_terminated_string_from_charbuf(port);
 
   //the +1 is used for the len of common_name to account for the null terminater added to server_name
   ret = enclave_retrieve_key(private_pkey, server_table.entries[client_index].value.cert, 
     server_table.entries[server_index].value.cert, (const char *) common_name, 
-    (server_name.len + 1), port.chars, port.len, server_key_id.chars, server_key_id.len, 
+    (server_name.len + 1), (const char *) port_num, (port.len + 1), server_key_id.chars, server_key_id.len, 
     &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
   if (ret)
   {
