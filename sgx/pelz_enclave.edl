@@ -167,8 +167,8 @@ public TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t ha
  *
  * @return 0 on success, 1 on error
  */
-public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_id,
-  charbuf client_id, charbuf port, charbuf server_key_id);
+public TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf client_id,
+  charbuf server_id, charbuf port, charbuf server_key_id);
 
 /**
  * <pre>

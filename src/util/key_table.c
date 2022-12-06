@@ -86,8 +86,8 @@ TableResponseStatus key_table_add_from_handle(charbuf key_id, uint64_t handle)
   return status;
 }
 
-TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf server_name, 
-  charbuf client_name, charbuf port, charbuf server_key_id)
+TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf client_name, 
+  charbuf server_name, charbuf port, charbuf server_key_id)
 {
   TableResponseStatus status;
   charbuf key;

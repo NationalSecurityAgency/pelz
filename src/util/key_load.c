@@ -246,7 +246,7 @@ int key_load(charbuf key_id)
       pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", server_name.len, server_name.chars, server_name.len);
       pelz_log(LOG_DEBUG, "Port Number: %.*s, %d", port.len, port.chars, port.len);
       pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id.len, server_key_id.chars);
-      key_table_add_from_server(eid, &status, key_id, server_name, client_name, port, server_key_id);
+      key_table_add_from_server(eid, &status, key_id, client_name, server_name, port, server_key_id);
       free_charbuf(&server_name);
       free_charbuf(&client_name);
       free_charbuf(&port);
