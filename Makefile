@@ -692,9 +692,9 @@ test: all test-all
 	@echo "==================================================================================================="
 	@echo "  DEMONSTRATION LOG:  Enclave (client) =>> - <<= TLS Proxy =>> - <<= KMIP Key Server (simplified)"
 	@echo "===================================================================================================\n"
-	@./kmyth/sgx/demo/bin/demo-kmip-server -k kmyth/sgx/demo/data/server_priv_test.pem -c kmyth/sgx/demo/data/server_cert_test.pem -C kmyth/sgx/demo/data/ca_cert_test.pem -p 7001 &
+	@./kmyth/sgx/demo/bin/demo-kmip-server -k test/data/server_priv.pem -c test/data/server_pub.pem -C test/data/ca_pub.pem -p 7001 &
 	@sleep 1
-	@./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -R test/data/proxy_priv.pem -U test/data/proxy_pub.pem -C kmyth/sgx/demo/data/ca_cert_test.pem -I 127.0.0.1 -P 7001 -m 1 &
+	@./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -R test/data/proxy_priv.pem -U test/data/proxy_pub.pem -C test/data/ca_pub.pem -I 127.0.0.1 -P 7001 -m 1 &
 	@sleep 1
 	@./test/bin/pelz-test
 	@rm -f test/data/*.pem
