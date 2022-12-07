@@ -92,7 +92,7 @@ int get_pelz_uri_port(UriUriA uri, charbuf *port)
 
   memcpy(port->chars, uri.pathHead->text.first, field_length);
 
-  long int port_long = strtol(port->chars, NULL, 10);
+  long int port_long = strtol((char *) port->chars, NULL, 10);
   if (port_long < 0 || port_long > INT_MAX)
   {
     pelz_log(LOG_ERR, "Invalid port specified: %ld", port_long);
