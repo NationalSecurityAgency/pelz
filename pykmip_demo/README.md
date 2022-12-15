@@ -69,13 +69,15 @@ are not guaranteed to work.
 
 ### Pelz Installation Steps
 1.  Open terminal
-2.	Clone pelz repo and follow install instructions
+2.	Clone pelz repo
 
 		git clone https://github.com/NationalSecurityAgency/pelz.git
 		cd pelz
 
+3.  Follow the install/build instuctions to make pelz 
+
 ### Accumulo and Accumulo Plugin Installation Steps 
-3. Download the Accumulo source and setup pelz plugin
+4. Download the Accumulo source and setup pelz plugin
 
 		cd ..
 		git clone https://github.com/apache/accumulo.git
@@ -85,50 +87,49 @@ are not guaranteed to work.
 		cd ..
 
 ### PyKMIP Server Installation/Setup Steps
-4.  Run PyKMIP Script
+5.  Run PyKMIP Script
 
 		./pykmip_demo/PyKMIP_setup.sh
 
-5.  Run the server in a separate terminal
+6.  Run the server in a separate terminal
 
 		pykmip-server
 
-6.  Register keys with the server
+7.  Register keys with the server
 
 		python3 pykmip_demo/register_keys_pykmip.py
 
 
 ### Certificate and PKey Creation/Installation Steps
-7.	Generate Certificates and PKeys for server and client then seal
+8.	Generate Certificates and PKeys for server and client then seal
 
 		cd test/data
 		./gen_test_keys_certs.bash
-		openssl x509 -in proxy_pub.pem -inform pem -out proxy_pub.der -outform der
-		openssl pkey -in node_priv.pem -inform pem -out node_priv.der -outform der
 		cd ../..
 		./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
 		./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
 
-8.	Run the pelz-service in a separate terminal
+9.	Run the pelz-service in a separate terminal
 
 		cd pelz
 		./bin/pelz-service -m 200 -v
 
-9.	Load server certificate and client PKey
+10.	Load server/client certificate and client PKey
 
 		./bin/pelz pki load cert test/data/proxy_pub.der.nkl
+    ./bin/pelz pki load cert test/data/node_pub.dir.nkl
 		./bin/pelz pki load private test/data/node_priv.der.nkl
 
 ### Proxy Server Setup Steps
-10.	Build and run the proxy server in a separate terminal
+11.	Build and run the proxy server in a separate terminal
 
 		cd pelz/kmyth/sgx
-		make clean demo-all
+		make clean demo-all demo-test-keys-certs 
 		cd ../..
-		./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem
+    ./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem -m 1
 
 ### End to End Demo Step
-11. Run Accumulo Test
+12. Run Accumulo Test
 
 		cd ../accumulo
 		mvn clean
