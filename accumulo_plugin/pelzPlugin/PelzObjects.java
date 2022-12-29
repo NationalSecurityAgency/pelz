@@ -20,6 +20,9 @@ public class PelzObjects {
 	  private int request_type = 0;
 	  private String key_id = null;
 	  private String data = null;
+    private String cipher = null;
+    private String iv = null;
+    private String tag = null;
 		
 	  public int getRequestType() {
           return request_type;
@@ -44,12 +47,39 @@ public class PelzObjects {
 	  public void setData(String data) {
 	        this.data = data;
 	  }
+
+    public String getCipher() {
+          return cipher;
+    }
+
+    public void setCipher(String cipher) {
+          this.cipher = cipher;
+    }
+
+    public String getIV() {
+          return iv;
+    }
+
+    public void setIV(String iv) {
+          this.iv = iv;
+    }
+
+    public String getTag() {
+          return tag;
+    }
+
+    public void setTag(String tag) {
+          this.tag = tag;
+    }
   }
 	
 	public static class Response {
 		private String key_id = null;
 		private String data = null;
 		private String error = null;
+    private String cipher = null;
+    private String iv = null;
+    private String tag = null;
 		
 		public String getKeyID() {
             return key_id;
@@ -66,6 +96,30 @@ public class PelzObjects {
 	  public void setData(String data) {
 	          this.data = data;
 	  }
+
+    public String getCipher() {
+          return cipher;
+    }
+
+    public void setCipher(String cipher) {
+          this.cipher = cipher;
+    }
+
+    public String getIV() {
+          return iv;
+    }
+
+    public void setIV(String iv) {
+          this.iv = iv;
+    }
+
+    public String getTag() {
+          return tag;
+    }
+
+    public void setTag(String tag) {
+          this.tag = tag;
+    }
 	    
 	  public String getError() {
 	          return error;

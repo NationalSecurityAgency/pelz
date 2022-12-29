@@ -106,6 +106,7 @@ public class PelzKeyUtils {
     String data = Base64.getEncoder().encodeToString(fek);
     data = data.concat(System.getProperty("line.separator"));
     req.setData(data);
+    req.setCipher("AES/KeyWrap/RFC3394NoPadding/256");
     try {
       result = pelzRequest(req);
     } catch (CryptoService.CryptoException e) {
@@ -125,6 +126,7 @@ public class PelzKeyUtils {
     String data = Base64.getEncoder().encodeToString(fek);
     data = data.concat(System.getProperty("line.separator"));
     req.setData(data);
+    req.setCipher("AES/KeyWrap/RFC3394NoPadding/256");
     try {
       result = pelzRequest(req);
     } catch (CryptoService.CryptoException e) {
