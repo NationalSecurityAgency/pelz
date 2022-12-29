@@ -84,13 +84,8 @@ public class PelzKeyUtils {
 	msg = gson.fromJson(receive, PelzObjects.Response.class);
 	if (msg.getError() != null)
 	  throw new CryptoService.CryptoException(msg.getError());
-	if (req.getRequestType() == 1) {
-	  msg.setEncOut(msg.getEncOut().substring(0, (msg.getEncOutLen() - 1)));
-	  resp = Base64.getDecoder().decode(msg.getEncOut());
-	}
-	else if(req.getRequestType() == 2){
-	  msg.setDecOut(msg.getDecOut().substring(0, (msg.getDecOutLen() - 1)));
-	  resp = Base64.getDecoder().decode(msg.getDecOut());
+  if ((req.getRequestType() >= 1) && (req.getRequestType() <= 4)) { 
+	  //resp = Base64.getDecoder().decode(msg.getData());
 	}
 	return resp;
   }
@@ -108,11 +103,9 @@ public class PelzKeyUtils {
     PelzObjects.Request req = new PelzObjects.Request();
     req.setRequestType(2);
     req.setKeyID(keyId);
-    req.setKeyIDLen(keyId.length());
-    String dec_data = Base64.getEncoder().encodeToString(fek);
-    dec_data = dec_data.concat(System.getProperty("line.separator"));
-    req.setDecData(dec_data);
-    req.setDecDataLen(dec_data.length());
+    String data = Base64.getEncoder().encodeToString(fek);
+    data = data.concat(System.getProperty("line.separator"));
+    req.setData(data);
     try {
       result = pelzRequest(req);
     } catch (CryptoService.CryptoException e) {
@@ -129,11 +122,9 @@ public class PelzKeyUtils {
     PelzObjects.Request req = new PelzObjects.Request();
     req.setRequestType(1);
     req.setKeyID(keyId);
-    req.setKeyIDLen(keyId.length());
-    String enc_data = Base64.getEncoder().encodeToString(fek);
-    enc_data = enc_data.concat(System.getProperty("line.separator"));
-    req.setEncData(enc_data);
-    req.setEncDataLen(enc_data.length());
+    String data = Base64.getEncoder().encodeToString(fek);
+    data = data.concat(System.getProperty("line.separator"));
+    req.setData(data);
     try {
       result = pelzRequest(req);
     } catch (CryptoService.CryptoException e) {

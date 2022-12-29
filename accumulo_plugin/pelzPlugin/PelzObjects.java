@@ -17,134 +17,62 @@ package org.apache.accumulo.core.pelz;
 public class PelzObjects {
 
 	public static class Request {
-		private int request_type = 0;
-		private String key_id = null;
-		private int key_id_len = 0;
-		private String enc_data = null;
-		private int enc_data_len = 0;
-		private String dec_data = null;
-		private int dec_data_len = 0;
+	  private int request_type = 0;
+	  private String key_id = null;
+	  private String data = null;
 		
-	    public int getRequestType() {
-	        return request_type;
-	      }
+	  public int getRequestType() {
+          return request_type;
+    }
 
-	    public void setRequestType(int request_type) {
+	  public void setRequestType(int request_type) {
 	        this.request_type = request_type;
-	      }
+	  }
 		
-	    public String getKeyID() {
+	  public String getKeyID() {
 	        return key_id;
-	      }
+	  }
 
-	    public void setKeyID(String key_id) {
+	  public void setKeyID(String key_id) {
 	        this.key_id = key_id;
-	      }
-	      
-	    public int getKeyIDLen() {
-	        return key_id_len;
-	      }
+	  }
+	     
+	  public String getData() {
+	        return data;
+	  }
 
-	    public void setKeyIDLen(int key_id_len) {
-	        this.key_id_len = key_id_len;
-	      }
-
-	    public String getEncData() {
-	        return enc_data;
-	      }
-
-	    public void setEncData(String enc_data) {
-	        this.enc_data = enc_data;
-	      }
-	      
-	    public int getEncDataLen() {
-	        return enc_data_len;
-	      }
-
-	    public void setEncDataLen(int enc_data_len) {
-	        this.enc_data_len = enc_data_len;
-	    }
-	    
-	    public String getDecData() {
-	        return dec_data;
-	      }
-
-	    public void setDecData(String dec_data) {
-	        this.dec_data = dec_data;
-	      }
-	      
-	    public int getDecDataLen() {
-	        return dec_data_len;
-	      }
-
-	    public void setDecDataLen(int dec_data_len) {
-	        this.dec_data_len = dec_data_len;
-	    }
-	}
+	  public void setData(String data) {
+	        this.data = data;
+	  }
+  }
 	
 	public static class Response {
 		private String key_id = null;
-		private int key_id_len = 0;
-		private String enc_out = null;
-		private int enc_out_len = 0;
-		private String dec_out = null;
-		private int dec_out_len = 0;
+		private String data = null;
 		private String error = null;
 		
 		public String getKeyID() {
-	        return key_id;
-	      }
+            return key_id;
+	  }
 
-	    public void setKeyID(String key_id) {
-	        this.key_id = key_id;
-	      }
+    public void setKeyID(String key_id) {
+            this.key_id = key_id;
+	  }
 	      
-	    public int getKeyIDLen() {
-	        return key_id_len;
-	      }
+	  public String getData() {
+            return data;
+	  }
 
-	    public void setKeyIDLen(int key_id_len) {
-	        this.key_id_len = key_id_len;
-	      }
-
-	    public String getEncOut() {
-	        return enc_out;
-	      }
-
-	    public void setEncOut(String enc_out) {
-	        this.enc_out = enc_out;
-	      }
-	      
-	    public int getEncOutLen() {
-	        return enc_out_len;
-	      }
-
-	    public void setEncOutLen(int enc_out_len) {
-	        this.enc_out_len = enc_out_len;
-	    }
+	  public void setData(String data) {
+	          this.data = data;
+	  }
 	    
-	    public String getDecOut() {
-	        return dec_out;
-	      }
+	  public String getError() {
+	          return error;
+	  }
 
-	    public void setDecOut(String dec_out) {
-	        this.dec_out = dec_out;
-	      }
-	      
-	    public int getDecOutLen() {
-	        return dec_out_len;
-	      }
-
-	    public void setDecOutLen(int dec_out_len) {
-	        this.dec_out_len = dec_out_len;
-	    }
-	    
-	    public String getError() {
-	        return error;
-	      }
-
-	    public void setError(String error) {
-	        this.error = error;
-	      }
+	  public void setError(String error) {
+	          this.error = error;
+	  }
 	}
 }

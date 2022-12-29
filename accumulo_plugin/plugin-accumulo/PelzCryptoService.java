@@ -30,6 +30,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -42,52 +46,72 @@ import java.util.Objects;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.accumulo.core.crypto.CryptoUtils;
 import org.apache.accumulo.core.crypto.streams.BlockedInputStream;
 import org.apache.accumulo.core.crypto.streams.BlockedOutputStream;
 import org.apache.accumulo.core.crypto.streams.DiscardCloseOutputStream;
 import org.apache.accumulo.core.crypto.streams.RFileCipherOutputStream;
-import org.apache.accumulo.core.spi.crypto.CryptoEnvironment;
-import org.apache.accumulo.core.spi.crypto.CryptoService;
-import org.apache.accumulo.core.spi.crypto.FileDecrypter;
-import org.apache.accumulo.core.spi.crypto.FileEncrypter;
-import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /*
- * Example implementation of AES encryption for Accumulo
+ * Example implementation of AES encryption for Accumulo with pelz keywrap
  */
 public class PelzCryptoService implements CryptoService {
+  private static final Logger log = LoggerFactory.getLogger(PelzCryptoService.class);
+  private volatile boolean initialized = false;
+
+  // properties required for using this service
+  public static final String KEY_URI_PROPERTY = "general.custom.crypto.key.uri";
+  // optional properties
+  // defaults to true
+  public static final String ENCRYPT_ENABLED_PROPERTY = "general.custom.crypto.enabled";
 
   // Hard coded NoCryptoService.VERSION - this permits the removal of NoCryptoService from the
   // core jar, allowing use of only one crypto service
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
+  private static final SecureRandom random = new SecureRandom();
 
   private String keyLocation = null;
   private String keyManager = null;
-  private SecureRandom sr = new SecureRandom();
+  private boolean encryptEnabled = true;
+
+  private static final FileEncrypter DISABLED = new NoFileEncrypter();
 
   @Override
   public void init(Map<String,String> conf) throws CryptoException {
-    String keyLocation = conf.get("instance.crypto.opts.key.uri");
+    ensureNotInit();
+    String keyLocation = Objects.requireNonNull(conf.get(KEY_URI_PROPERTY),
+        "Config property " + KEY_URI_PROPERTY + " is required.");
+    String enabledProp = conf.get(ENCRYPT_ENABLED_PROPERTY);
+    if (enabledProp != null) {
+      encryptEnabled = Boolean.parseBoolean(enabledProp);
+    }
+
     // get key from URI for now, keyMgr framework could be expanded on in the future
     String keyMgr = "pelz";
-    Objects.requireNonNull(keyLocation,
-        "Config property instance.crypto.opts.key.uri is required.");
     this.keyManager = keyMgr;
     this.keyLocation = keyLocation;
     if (!PelzKeyUtils.initSocket()) {
-      System.err.println("Failed to connect to Pelz.");
+      log.debug("Failed to connect to Pelz.");
     }
+    initialized = true;
   }
 
   @Override
   public FileEncrypter getFileEncrypter(CryptoEnvironment environment) {
+    ensureInit();
+    if (!encryptEnabled) {
+      return DISABLED;
+    }
     CryptoModule cm;
     switch (environment.getScope()) {
       case WAL:
@@ -105,9 +129,10 @@ public class PelzCryptoService implements CryptoService {
 
   @Override
   public FileDecrypter getFileDecrypter(CryptoEnvironment environment) {
+    ensureInit();
     CryptoModule cm;
-    byte[] decryptionParams = environment.getDecryptionParams();
-    if (decryptionParams == null || checkNoCrypto(decryptionParams))
+    var decryptionParams = environment.getDecryptionParams();
+    if (decryptionParams.isEmpty || checkNoCrypto(decryptionParams.get()))
       return new NoFileDecrypter();
 
     ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams);
