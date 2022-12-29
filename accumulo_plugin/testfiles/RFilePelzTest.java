@@ -56,8 +56,7 @@ import org.apache.accumulo.core.conf.AccumuloConfiguration;
 import org.apache.accumulo.core.conf.ConfigurationCopy;
 import org.apache.accumulo.core.conf.DefaultConfiguration;
 import org.apache.accumulo.core.conf.Property;
-import org.apache.accumulo.core.crypto.CryptoServiceFactory;
-import org.apache.accumulo.core.crypto.CryptoServiceFactory.ClassloaderType;
+import org.apache.accumulo.core.crypto.CryptoFactoryLoader;
 import org.apache.accumulo.core.pelz.PelzCryptoTest;
 import org.apache.accumulo.core.pelz.PelzCryptoTest.ConfigMode;
 import org.apache.accumulo.core.data.ArrayByteSequence;
@@ -86,6 +85,8 @@ import org.apache.accumulo.core.sample.impl.SamplerConfigurationImpl;
 import org.apache.accumulo.core.sample.impl.SamplerFactory;
 import org.apache.accumulo.core.spi.cache.BlockCacheManager;
 import org.apache.accumulo.core.spi.cache.CacheType;
+import org.apache.accumulo.core.spi.crypto.CryptoEnvironment;
+import org.apache.accumulo.core.spi.crypto.CryptoService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -249,8 +250,10 @@ public class RFilePelzTest {
     public void openWriter(boolean startDLG, int blockSize) throws IOException {
       baos = new ByteArrayOutputStream();
       dos = new FSDataOutputStream(baos, new FileSystem.Statistics("a"));
-      BCFile.Writer _cbw = new BCFile.Writer(dos, null, "gz", conf,
-          CryptoServiceFactory.newInstance(accumuloConfiguration, ClassloaderType.JAVA));
+      CryptoService cs = CryptoFactoryLoader.getServiceForClient(CryptoEnvironment.Scope.TABLE,
+              accumuloConfiguration.getAllCryptoProperties());
+      
+      BCFile.Writer _cbw = new BCFile.Writer(dos, null, "gz", conf, cs);
 
       SamplerConfigurationImpl samplerConfig =
           SamplerConfigurationImpl.newSamplerConfig(accumuloConfiguration);
@@ -307,13 +310,15 @@ public class RFilePelzTest {
       cc.set(Property.TSERV_DEFAULT_BLOCKSIZE, Long.toString(100000));
       cc.set(Property.TSERV_DATACACHE_SIZE, Long.toString(100000000));
       cc.set(Property.TSERV_INDEXCACHE_SIZE, Long.toString(100000000));
-      manager.start(new BlockCacheConfiguration(cc));
+      manager.start(BlockCacheConfiguration.forTabletServer(cc));
       LruBlockCache indexCache = (LruBlockCache) manager.getBlockCache(CacheType.INDEX);
       LruBlockCache dataCache = (LruBlockCache) manager.getBlockCache(CacheType.DATA);
 
+      CryptoService cs = CryptoFactoryLoader.getServiceForClient(CryptoEnvironment.Scope.TABLE,
+              accumuloConfiguration.getAllCryptoProperties());
+      
       CachableBuilder cb = new CachableBuilder().input(in, "source-1").length(fileLength).conf(conf)
-          .cacheProvider(new BasicCacheProvider(indexCache, dataCache)).cryptoService(
-              CryptoServiceFactory.newInstance(accumuloConfiguration, ClassloaderType.JAVA));
+          .cacheProvider(new BasicCacheProvider(indexCache, dataCache)).cryptoService(cs);
       reader = new RFile.Reader(cb);
       if (cfsi)
         iter = new ColumnFamilySkippingIterator(reader);
