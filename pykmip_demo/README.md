@@ -107,6 +107,7 @@ are not guaranteed to work.
 		./gen_test_keys_certs.bash
 		cd ../..
 		./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
+		./bin/pelz seal test/data/node_pub.der -o test/data/node_pub.der.nkl
 		./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
 
 9.	Run the pelz-service in a separate terminal
@@ -117,7 +118,7 @@ are not guaranteed to work.
 10.	Load server/client certificate and client PKey
 
 		./bin/pelz pki load cert test/data/proxy_pub.der.nkl
-		./bin/pelz pki load cert test/data/node_pub.dir.nkl
+		./bin/pelz pki load cert test/data/node_pub.der.nkl
 		./bin/pelz pki load private test/data/node_priv.der.nkl
 
 ### Proxy Server Setup Steps
