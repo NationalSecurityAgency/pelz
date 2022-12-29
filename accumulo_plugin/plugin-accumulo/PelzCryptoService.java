@@ -30,10 +30,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -46,7 +42,6 @@ import java.util.Objects;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
@@ -56,11 +51,15 @@ import org.apache.accumulo.core.crypto.streams.BlockedInputStream;
 import org.apache.accumulo.core.crypto.streams.BlockedOutputStream;
 import org.apache.accumulo.core.crypto.streams.DiscardCloseOutputStream;
 import org.apache.accumulo.core.crypto.streams.RFileCipherOutputStream;
+import org.apache.accumulo.core.spi.crypto.CryptoEnvironment;
+import org.apache.accumulo.core.spi.crypto.CryptoService;
+import org.apache.accumulo.core.spi.crypto.FileDecrypter;
+import org.apache.accumulo.core.spi.crypto.FileEncrypter;
+import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
+import org.apache.accumulo.core.spi.crypto.NoFileEncrypter;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /*
  * Example implementation of AES encryption for Accumulo with pelz keywrap
@@ -79,7 +78,7 @@ public class PelzCryptoService implements CryptoService {
   // core jar, allowing use of only one crypto service
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
   private static final SecureRandom random = new SecureRandom();
-
+  
   private String keyLocation = null;
   private String keyManager = null;
   private boolean encryptEnabled = true;
@@ -118,7 +117,7 @@ public class PelzCryptoService implements CryptoService {
         cm = new AESCBCCryptoModule(this.keyLocation, this.keyManager);
         return cm.getEncrypter();
 
-      case RFILE:
+      case TABLE:
         cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
         return cm.getEncrypter();
 
@@ -132,10 +131,10 @@ public class PelzCryptoService implements CryptoService {
     ensureInit();
     CryptoModule cm;
     var decryptionParams = environment.getDecryptionParams();
-    if (decryptionParams.isEmpty || checkNoCrypto(decryptionParams.get()))
+    if (decryptionParams.isEmpty() || checkNoCrypto(decryptionParams.get()))
       return new NoFileDecrypter();
 
-    ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams);
+    ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams.get());
     Key fek =
         new SecretKeySpec(PelzKeyUtils.unwrapKey(parsed.getEncFek(), parsed.getKekId()), "AES");
     switch (parsed.getCryptoServiceVersion()) {
@@ -291,8 +290,8 @@ public class PelzCryptoService implements CryptoService {
       private byte[] initVector = new byte[GCM_IV_LENGTH_IN_BYTES];
 
       AESGCMFileEncrypter() {
-        this.fek = PelzKeyUtils.generateKey(sr, KEY_LENGTH_IN_BYTES);
-        sr.nextBytes(initVector);
+        this.fek = PelzKeyUtils.generateKey(random, KEY_LENGTH_IN_BYTES);
+        random.nextBytes(initVector);
         this.firstInitVector = Arrays.copyOf(initVector, initVector.length);
       }
 
@@ -421,13 +420,13 @@ public class PelzCryptoService implements CryptoService {
 
     public class AESCBCFileEncrypter implements FileEncrypter {
 
-      private Key fek = PelzKeyUtils.generateKey(sr, KEY_LENGTH_IN_BYTES);
+      private Key fek = PelzKeyUtils.generateKey(random, KEY_LENGTH_IN_BYTES);
       private byte[] initVector = new byte[IV_LENGTH_IN_BYTES];
 
       @Override
       public OutputStream encryptStream(OutputStream outputStream) throws CryptoException {
 
-        sr.nextBytes(initVector);
+        random.nextBytes(initVector);
         try {
           outputStream.write(initVector);
         } catch (IOException e) {
@@ -480,7 +479,19 @@ public class PelzCryptoService implements CryptoService {
 
         CipherInputStream cis = new CipherInputStream(inputStream, cipher);
         return new BlockedInputStream(cis, cipher.getBlockSize(), 1024);
-      }
+      }           
     }
   }
+  
+  private void ensureInit() {
+	    if (!initialized) {
+	      throw new IllegalStateException("This Crypto Service has not been initialized.");
+	    }
+	  }
+
+	  private void ensureNotInit() {
+	    if (initialized) {
+	      throw new IllegalStateException("This Crypto Service has already been initialized.");
+	    }
+	  }
 }
