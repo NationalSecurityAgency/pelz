@@ -1689,7 +1689,7 @@ public class RFilePelzTest {
 
   @Test
   public void testOldVersionsWithCrypto() throws Exception {
-    ConfigurationCopy cryptoOnConf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    ConfigurationCopy cryptoOnConf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     runVersionTest(3, cryptoOnConf);
     runVersionTest(4, cryptoOnConf);
     runVersionTest(6, cryptoOnConf);
@@ -1713,12 +1713,12 @@ public class RFilePelzTest {
     aconf.set(Property.TSERV_DATACACHE_SIZE, Long.toString(100000000));
     aconf.set(Property.TSERV_INDEXCACHE_SIZE, Long.toString(100000000));
     BlockCacheManager manager = BlockCacheManagerFactory.getInstance(aconf);
-    manager.start(new BlockCacheConfiguration(aconf));
-    CachableBuilder cb =
-        new CachableBuilder().input(in2, "cache-1").length(data.length).conf(hadoopConf)
-            .cryptoService(CryptoServiceFactory.newInstance(aconf, ClassloaderType.JAVA))
-            .cacheProvider(new BasicCacheProvider(manager.getBlockCache(CacheType.INDEX),
-                manager.getBlockCache(CacheType.DATA)));
+    manager.start(BlockCacheConfiguration.forTabletServer(aconf));
+    CryptoService cs = CryptoFactoryLoader.getServiceForClient(CryptoEnvironment.Scope.TABLE,
+        aconf.getAllCryptoProperties());
+    CachableBuilder cb = new CachableBuilder().input(in2, "cache-1").length(data.length)
+        .conf(hadoopConf).cryptoService(cs).cacheProvider(new BasicCacheProvider(
+            manager.getBlockCache(CacheType.INDEX), manager.getBlockCache(CacheType.DATA)));
     Reader reader = new RFile.Reader(cb);
     checkIndex(reader);
 
@@ -1771,131 +1771,131 @@ public class RFilePelzTest {
 
   @Test
   public void testEncRFile1() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test1();
     conf = null;
   }
 
   @Test
   public void testEncRFile2() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test2();
     conf = null;
   }
 
   @Test
   public void testEncRFile3() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test3();
     conf = null;
   }
 
   @Test
   public void testEncRFile4() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test4();
     conf = null;
   }
 
   @Test
   public void testEncRFile5() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test5();
     conf = null;
   }
 
   @Test
   public void testEncRFile6() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test6();
     conf = null;
   }
 
   @Test
   public void testEncRFile7() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test7();
     conf = null;
   }
 
   @Test
   public void testEncRFile8() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test8();
     conf = null;
   }
 
   @Test
   public void testEncRFile9() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test9();
     conf = null;
   }
 
   @Test
   public void testEncRFile10() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test10();
     conf = null;
   }
 
   @Test
   public void testEncRFile11() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test11();
     conf = null;
   }
 
   @Test
   public void testEncRFile12() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test12();
     conf = null;
   }
 
   @Test
   public void testEncRFile13() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test13();
     conf = null;
   }
 
   @Test
   public void testEncRFile14() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test14();
     conf = null;
   }
 
   @Test
   public void testEncRFile16() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test16();
   }
 
   @Test
   public void testEncRFile17() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test17();
   }
 
   @Test
   public void testEncRFile18() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test18();
     conf = null;
   }
 
   @Test
   public void testEncRFile19() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test19();
     conf = null;
   }
 
   @Test
   public void testEncryptedRFiles() throws Exception {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     test1();
     test2();
     test3();
@@ -2193,7 +2193,7 @@ public class RFilePelzTest {
 
   @Test
   public void testEncSample() throws IOException {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     testSample();
     testSampleLG();
     conf = null;
@@ -2251,7 +2251,7 @@ public class RFilePelzTest {
 
   @Test
   public void testCryptoDoesntLeakSensitive() throws IOException {
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     // test an empty file
 
     TestRFile trf = new TestRFile(conf);
@@ -2274,7 +2274,7 @@ public class RFilePelzTest {
   public void testRootTabletEncryption() throws Exception {
 
     // This tests that the normal set of operations used to populate a root tablet
-    conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
 
     TestRFile testRfile = new TestRFile(conf);
     testRfile.openWriter();
