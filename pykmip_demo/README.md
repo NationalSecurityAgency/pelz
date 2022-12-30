@@ -146,42 +146,41 @@ are not guaranteed to work.
 1.  Open terminal
 2.  Clone pelz repo
 
-    git clone https://github.com/NationalSecurityAgency/pelz.git
-    cd pelz
+		git clone https://github.com/NationalSecurityAgency/pelz.git
+		cd pelz
 
 3.  Follow the install/build instuctions to make pelz
 
 ### PyKMIP Server Installation/Setup Steps
 4.  Run PyKMIP Script
 
-    ./pykmip_demo/PyKMIP_setup.sh
+		./pykmip_demo/PyKMIP_setup.sh
 
 5.  Run the server in a separate terminal
 
-    pykmip-server
+		pykmip-server
 
 6.  Register keys with the server
 
-    python3 pykmip_demo/register_keys_pykmip.py
-
+		python3 pykmip_demo/register_keys_pykmip.py
 
 ### Certificate and PKey Creation/Installation Steps
 8.  Generate Certificates and PKeys for server and client then seal
 
-    cd test/data
-    ./gen_test_keys_certs.bash
-    cd ../..
+		cd test/data
+		./gen_test_keys_certs.bash
+		cd ../..
 
 ### Proxy Server Setup Steps
 11. Build and run the proxy server in a separate terminal
 
-    cd kmyth/sgx
-    make clean demo-all demo-test-keys-certs
-    cd ../..
-    ./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem -m 1
+		cd kmyth/sgx
+		make clean demo-all demo-test-keys-certs
+		cd ../..
+		./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem -m 1
 
 ### Demo PyKMIP and pelz
 12. Run pelz test
 
-    ./test/bin/pelz-test
+		./test/bin/pelz-test
 
