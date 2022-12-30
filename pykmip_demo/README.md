@@ -142,28 +142,31 @@ this demonstration on Ubuntu 18. These instructions omit the installation and se
 be done prior to executing the demo. If the demo is attempted on another Linux distribution, the following steps
 are not guaranteed to work.
 
-### Pelz Installation Steps
+### Pelz Installation and Build Steps
 1.  Open terminal
 2.  Clone pelz repo
 
 		git clone https://github.com/NationalSecurityAgency/pelz.git
 		cd pelz
 
-3.  Follow the install/build instuctions to make pelz
+3.  Follow the install/build instuctions for pelz
+4.  After install/build instuctions
+
+		make test
 
 ### PyKMIP Server Installation/Setup Steps
-4.  Run PyKMIP Script
+5.  Run PyKMIP Script
 
 		./pykmip_demo/PyKMIP_setup.sh
 
-5.  Run the server in a separate terminal
+6.  Run the server in a separate terminal
 
 		pykmip-server
 
-6.  Register keys with the server
+7.  Register keys with the server
 
 		python3 pykmip_demo/register_keys_pykmip.py
-
+		
 ### Certificate and PKey Creation/Installation Steps
 8.  Generate Certificates and PKeys for server and client then seal
 
@@ -172,7 +175,7 @@ are not guaranteed to work.
 		cd ../..
 
 ### Proxy Server Setup Steps
-11. Build and run the proxy server in a separate terminal
+9. Build and run the proxy server in a separate terminal
 
 		cd kmyth/sgx
 		make clean demo-all demo-test-keys-certs
@@ -180,7 +183,6 @@ are not guaranteed to work.
 		./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem -m 1
 
 ### Demo PyKMIP and pelz
-12. Run pelz test
+10. Run pelz test
 
 		./test/bin/pelz-test
-
