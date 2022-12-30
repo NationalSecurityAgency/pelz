@@ -107,6 +107,7 @@ are not guaranteed to work.
 		./gen_test_keys_certs.bash
 		cd ../..
 		./bin/pelz seal test/data/proxy_pub.der -o test/data/proxy_pub.der.nkl
+		./bin/pelz seal test/data/node_pub.der -o test/data/node_pub.der.nkl
 		./bin/pelz seal test/data/node_priv.der -o test/data/node_priv.der.nkl
 
 9.	Run the pelz-service in a separate terminal
@@ -117,7 +118,7 @@ are not guaranteed to work.
 10.	Load server/client certificate and client PKey
 
 		./bin/pelz pki load cert test/data/proxy_pub.der.nkl
-    ./bin/pelz pki load cert test/data/node_pub.dir.nkl
+		./bin/pelz pki load cert test/data/node_pub.der.nkl
 		./bin/pelz pki load private test/data/node_priv.der.nkl
 
 ### Proxy Server Setup Steps
@@ -126,7 +127,7 @@ are not guaranteed to work.
 		cd pelz/kmyth/sgx
 		make clean demo-all demo-test-keys-certs 
 		cd ../..
-    ./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem -m 1
+		./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -I localhost -P 5690 -C /etc/pykmip/certs/root_certificate.pem -R /etc/pykmip/certs/proxy_priv.pem -U /etc/pykmip/certs/proxy_pub.pem -m 1
 
 ### End to End Demo Step
 12. Run Accumulo Test
