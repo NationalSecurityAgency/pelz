@@ -85,7 +85,8 @@ public class PelzKeyUtils {
 	if (msg.getError() != null)
 	  throw new CryptoService.CryptoException(msg.getError());
   if ((req.getRequestType() >= 1) && (req.getRequestType() <= 4)) { 
-	  //resp = Base64.getDecoder().decode(msg.getData());
+    msg.setData(msg.getData().substring(0, (msg.getData().length() - 1)));      
+	  resp = Base64.getDecoder().decode(msg.getData());
 	}
 	return resp;
   }
