@@ -55,7 +55,7 @@ extern "C"
  *
  * @return 0 on success, 1 on error
  */
-  int get_pelz_uri_port(UriUriA uri, int *port);
+  int get_pelz_uri_port(UriUriA uri, charbuf * port);
 
 /**
  * @brief Extracts the necessary parts from a parsed pelz uri.
