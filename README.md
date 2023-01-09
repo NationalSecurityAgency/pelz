@@ -41,7 +41,7 @@ The JSON objects can be in two forms: requests and responses.
 * data : string of characters
     * Base64 encoded data to be processed based on request type.
 * cipher : string of characters
-    * The cipher type used to encrypt or decrypt the data
+    * The [cipher type](src/cipher/pelz_cipher.c) used to encrypt or decrypt the data
 
 Examples:
 
@@ -72,7 +72,7 @@ described above, signed requests include:
 * data : string of characters
     * Base-64 encoded, output data based on request type.
 * cipher : string of characters
-    * The cipher type used to encrypt or decrypt the data
+    * The [cipher type](src/cipher/pelz_cipher.c) used to encrypt or decrypt the data
 * error : string of characters
     * Error message for the service user
 
