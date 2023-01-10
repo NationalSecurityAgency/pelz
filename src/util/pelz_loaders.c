@@ -103,7 +103,7 @@ int pelz_load_file_to_enclave(char *filename, uint64_t * handle)
 
 int pelz_unseal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len)
 {
-  if (tpm2_kmyth_unseal(data, data_len, data_out, data_out_len, NULL, 0, NULL, 0))
+  if (tpm2_kmyth_unseal(data, data_len, data_out, data_out_len, NULL, 0, NULL, 0, false))
   {
     pelz_log(LOG_ERR, "TPM unseal failed");
     return (1);

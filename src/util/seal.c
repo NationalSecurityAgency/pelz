@@ -86,7 +86,7 @@ int seal(char *filename, char **outpath, size_t outpath_size, bool tpm)
 int seal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data_out_len)
 {
   pelz_log(LOG_DEBUG, "Seal_ski function");
-  if (tpm2_kmyth_seal(data, data_len, data_out, data_out_len, NULL, 0, NULL, 0, NULL, 0, NULL))
+  if (tpm2_kmyth_seal(data, data_len, data_out, data_out_len, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, false))
   {
     pelz_log(LOG_ERR, "Kmyth TPM seal failed");
     return 1;

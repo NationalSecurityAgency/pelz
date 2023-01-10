@@ -146,14 +146,17 @@ App_C_Files_for_Test := src/util/common_table.c \
 
 App_C_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
 
-App_Include_Paths := -Iinclude 
+App_Include_Paths := -Iinclude
+App_Include_Paths += -Iinclude/cipher
 App_Include_Paths += -Isgx 
 App_Include_Paths += -I$(SGX_SDK)/include 
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/wrapper
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/ocall
+App_Include_Paths += -Ikmyth/sgx/untrusted/include/util
 App_Include_Paths += -Ikmyth/sgx/common/include
 App_Include_Paths += -Ikmyth/include/network
 App_Include_Paths += -Ikmyth/include/protocol
+App_Include_Paths += -Ikmyth/include/cipher
 App_Include_Paths += -Itest/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) 
@@ -186,7 +189,8 @@ App_Link_Flags += -l$(Urts_Library_Name)
 App_Link_Flags += -lsgx_usgxssl 
 App_Link_Flags += -lkmyth-logger 
 App_Link_Flags += -lkmyth-utils 
-App_Link_Flags += -lkmyth-tpm 
+App_Link_Flags += -lkmyth-tpm
+App_Link_Flags += -lkmip
 App_Link_Flags += -lpthread 
 App_Link_Flags += -luriparser
 
@@ -214,9 +218,10 @@ endif
 Crypto_Library_Name := sgx_tcrypto
 
 Enclave_Include_Paths := -Iinclude
+Enclave_Include_Paths += -Iinclude/cipher
 Enclave_Include_Paths += -Isgx 
 Enclave_Include_Paths += -I$(SGX_SDK)/include 
-Enclave_Include_Paths += -I$(SGX_SDK)/include/tlibc 
+Enclave_Include_Paths += -I$(SGX_SDK)/include/tlibc
 Enclave_Include_Paths += -I$(SGX_SSL_INCLUDE_PATH) 
 Enclave_Include_Paths += -I/usr/local/include
 Enclave_Include_Paths += -Ikmyth/sgx/trusted/include
@@ -355,6 +360,10 @@ sgx/ecdh_util.o: kmyth/sgx/common/src/ecdh_util.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
+sgx/retrieve_key_protocol.o: kmyth/sgx/common/src/retrieve_key_protocol.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
 ######## App Objects ########
 
 sgx/log_ocall.o: kmyth/sgx/untrusted/src/ocall/log_ocall.c
@@ -365,7 +374,11 @@ sgx/memory_ocall.o: kmyth/sgx/untrusted/src/ocall/memory_ocall.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
-sgx/ecdh_ocall.o: kmyth/sgx/untrusted/src/ocall/ecdh_ocall.c
+sgx/protocol_ocall.o: kmyth/sgx/untrusted/src/ocall/protocol_ocall.c
+	@$(CC) $(App_C_Flags) -c $< -o $@
+	@echo "CC   <=  $<"
+
+sgx/msg_util.o: kmyth/sgx/untrusted/src/util/msg_util.c
 	@$(CC) $(App_C_Flags) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -375,7 +388,8 @@ sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted
+				  --search-path ../kmyth/sgx/trusted \
+					--search-path ../../sgx
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -404,10 +418,12 @@ test/bin/$(App_Name_Test): $(App_C_Test_Files) \
 				 sgx/test_enclave_u.o \
 				 sgx/ec_key_cert_marshal.o \
 				 sgx/ec_key_cert_unmarshal.o \
+				 sgx/retrieve_key_protocol.o \
 				 sgx/log_ocall.o \
-				 sgx/ecdh_ocall.o \
+				 sgx/memory_ocall.o \
+				 sgx/protocol_ocall.o \
 				 sgx/ecdh_util.o \
-				 sgx/memory_ocall.o
+				 sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -426,11 +442,14 @@ bin/$(App_Name_Service): $(App_Service_File) \
 			 $(App_C_Files) \
 			 $(App_C_Kmyth_Files) \
 			 sgx/pelz_enclave_u.o \
+			 sgx/ec_key_cert_marshal.o \
 			 sgx/ec_key_cert_unmarshal.o \
+			 sgx/retrieve_key_protocol.o \
 			 sgx/log_ocall.o \
-			 sgx/ecdh_ocall.o \
+			 sgx/memory_ocall.o \
+			 sgx/protocol_ocall.o \
 			 sgx/ecdh_util.o \
-			 sgx/memory_ocall.o 
+			 sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -449,11 +468,13 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      src/util/seal.c \
 		      $(App_C_Kmyth_Files) \
 		      sgx/pelz_enclave_u.o \
+					sgx/ec_key_cert_marshal.o \
 		      sgx/ec_key_cert_unmarshal.o \
 		      sgx/log_ocall.o \
-		      sgx/ecdh_ocall.o \
+					sgx/memory_ocall.o \
+		      sgx/protocol_ocall.o \
 		      sgx/ecdh_util.o \
-		      sgx/memory_ocall.o 
+					sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
 			 $(App_Include_Paths) \
 			 -Isgx \
@@ -589,6 +610,8 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/kmyth_enclave_unseal.o \
 		     sgx/kmyth_enclave_memory_util.o \
 		     sgx/kmyth_enclave_retrieve_key.o \
+				 sgx/retrieve_key_protocol.o \
+				 sgx/ec_key_cert_marshal.o \
 		     sgx/ec_key_cert_unmarshal.o \
 		     sgx/ecdh_util.o \
 		     sgx/sgx_retrieve_key_impl.o \
@@ -627,6 +650,8 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 			  sgx/kmyth_enclave_unseal.o \
 			  sgx/kmyth_enclave_memory_util.o \
 			  sgx/kmyth_enclave_retrieve_key.o \
+				sgx/retrieve_key_protocol.o \
+				sgx/ec_key_cert_marshal.o \
 			  sgx/ec_key_cert_unmarshal.o \
 			  sgx/ecdh_util.o \
 			  sgx/sgx_retrieve_key_impl.o \
@@ -666,15 +691,17 @@ pre:
 
 test: all test-all
 	@cd test/data && ./gen_test_keys_certs.bash
-	@openssl x509 -in test/data/node_pub.pem -inform pem -out test/data/node_pub.der -outform der
-	@openssl x509 -in test/data/proxy_pub.pem -inform pem -out test/data/proxy_pub.der -outform der
-	@openssl pkey -in test/data/node_priv.pem -inform pem -out test/data/node_priv.der -outform der
-	@openssl x509 -in test/data/ca_pub.pem -inform pem -out test/data/ca_pub.der -outform der
 	@echo "GEN => Test Key/Cert Files"
-	@cd kmyth/sgx && make demo-pre demo/bin/ecdh-server --eval="Demo_App_C_Flags += -DDEMO_LOG_LEVEL=LOG_WARNING"
-	@./kmyth/sgx/demo/bin/ecdh-server -r test/data/proxy_priv.pem -u test/data/node_pub.pem -p 7000 -m 1 2> /dev/null &
+	@cd kmyth/sgx && make demo-all demo-test-keys-certs 
+	@echo "\n"
+	@echo "==================================================================================================="
+	@echo "  DEMONSTRATION LOG:  Enclave (client) =>> - <<= TLS Proxy =>> - <<= KMIP Key Server (simplified)"
+	@echo "===================================================================================================\n"
+	@./kmyth/sgx/demo/bin/demo-kmip-server -k test/data/server_priv.pem -c test/data/server_pub.pem -C test/data/ca_pub.pem -p 7001 &
 	@sleep 1
-	@./test/bin/pelz-test 2> /dev/null
+	@./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -R test/data/proxy_priv.pem -U test/data/proxy_pub.pem -C test/data/ca_pub.pem -I 127.0.0.1 -P 7001 -m 1 &
+	@sleep 1
+	@./test/bin/pelz-test
 	@rm -f test/data/*.pem
 	@rm -f test/data/*.der
 	@rm -f test/data/*.nkl

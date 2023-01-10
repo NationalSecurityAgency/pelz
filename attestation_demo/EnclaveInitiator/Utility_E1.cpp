@@ -138,7 +138,6 @@ uint32_t marshal_retval_and_output_parameters_e1_foo1(char** resp_buffer, size_t
     memcpy(&ms->ret_outparam_buff, temp_buff, ret_param_len);
     *resp_buffer = (char*)ms;
     *resp_length = ms_len;
-
     SAFE_FREE(temp_buff);
     return SUCCESS;
 }

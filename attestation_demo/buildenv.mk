@@ -153,5 +153,5 @@ else
         SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
         SGX_EDGER8R := $(SGX_SDK)/bin/x64/sgx_edger8r
 endif
-       
+
 SGX_COMMON_FLAGS += $(COMMON_FLAGS)
