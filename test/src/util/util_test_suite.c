@@ -295,4 +295,6 @@ void test_copy_chars_from_charbuf(void)
   dest = copy_chars_from_charbuf(orig, 11);
   CU_ASSERT(dest.chars == NULL);
   CU_ASSERT(dest.len == 0);
+
+  free_charbuf(&orig);
 }

@@ -21,14 +21,17 @@
 
 package org.apache.accumulo.core.pelz;
 
-import static org.apache.accumulo.core.conf.Property.INSTANCE_CRYPTO_PREFIX;
+import static com.google.common.collect.MoreCollectors.onlyElement;
+import static org.apache.accumulo.core.conf.Property.INSTANCE_CRYPTO_FACTORY;
 import static org.apache.accumulo.core.crypto.CryptoUtils.getFileDecrypter;
+import static org.apache.accumulo.core.spi.crypto.CryptoEnvironment.Scope.TABLE;
+import static org.apache.accumulo.core.spi.crypto.CryptoEnvironment.Scope.WAL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -36,6 +39,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -43,11 +47,11 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.accumulo.core.classloader.ClassLoaderUtil;
 import org.apache.accumulo.core.client.Scanner;
@@ -59,29 +63,29 @@ import org.apache.accumulo.core.client.summary.Summary;
 import org.apache.accumulo.core.conf.AccumuloConfiguration;
 import org.apache.accumulo.core.conf.ConfigurationCopy;
 import org.apache.accumulo.core.conf.DefaultConfiguration;
-import org.apache.accumulo.core.conf.Property;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.pelz.PelzCryptoService;
 import org.apache.accumulo.core.crypto.CryptoEnvironmentImpl;
-import org.apache.accumulo.core.crypto.CryptoServiceFactory;
-import org.apache.accumulo.core.crypto.CryptoServiceFactory.ClassloaderType;
-import org.apache.accumulo.core.crypto.streams.NoFlushOutputStream;
 import org.apache.accumulo.core.crypto.CryptoUtils;
+import org.apache.accumulo.core.crypto.CryptoTest.ConfigMode;
+import org.apache.accumulo.core.crypto.streams.NoFlushOutputStream;
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.TableId;
+import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.spi.crypto.CryptoEnvironment;
 import org.apache.accumulo.core.spi.crypto.CryptoEnvironment.Scope;
 import org.apache.accumulo.core.spi.crypto.CryptoService;
-import org.apache.accumulo.core.spi.crypto.CryptoService.CryptoException;
+import org.apache.accumulo.core.spi.crypto.CryptoServiceFactory;
 import org.apache.accumulo.core.spi.crypto.FileDecrypter;
 import org.apache.accumulo.core.spi.crypto.FileEncrypter;
+import org.apache.accumulo.core.spi.crypto.GenericCryptoServiceFactory;
+import org.apache.accumulo.core.spi.crypto.NoCryptoService;
+import org.apache.accumulo.core.spi.crypto.NoCryptoServiceFactory;
+import org.apache.accumulo.core.spi.crypto.PerTableCryptoServiceFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.Iterables;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -93,7 +97,7 @@ public class PelzCryptoTest {
   private static Configuration hadoopConf = new Configuration();
 
   public enum ConfigMode {
-    CRYPTO_OFF, CRYPTO_ON, CRYPTO_ON_DISABLED
+	  CRYPTO_OFF, CRYPTO_TABLE_ON, CRYPTO_WAL_ON, CRYPTO_TABLE_ON_DISABLED, CRYPTO_WAL_ON_DISABLED
   }
 
   @BeforeAll
@@ -113,20 +117,39 @@ public class PelzCryptoTest {
     }
   }
 
-  @SuppressWarnings("fallthrough")
   public static ConfigurationCopy getAccumuloConfig(ConfigMode configMode, Class<?> testClass) {
     ConfigurationCopy cfg = new ConfigurationCopy(DefaultConfiguration.getInstance());
     switch (configMode) {
-      case CRYPTO_ON_DISABLED:
-        cfg.set(INSTANCE_CRYPTO_PREFIX.getKey() + "enabled", "false");
-        // fall through to set remaining config
-      case CRYPTO_ON:
-        cfg.set(Property.INSTANCE_CRYPTO_SERVICE,
-            "org.apache.accumulo.core.pelz.PelzCryptoService");
-        cfg.set(INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri", PelzCryptoTest.keyPath(testClass));
-        break;
-      case CRYPTO_OFF:
-        break;
+    case CRYPTO_TABLE_ON_DISABLED:
+      cfg.set(INSTANCE_CRYPTO_FACTORY, PerTableCryptoServiceFactory.class.getName());
+      cfg.set(PerTableCryptoServiceFactory.TABLE_SERVICE_NAME_PROP,
+          PelzCryptoService.class.getName());
+      cfg.set(PelzCryptoService.KEY_URI_PROPERTY, PelzCryptoTest.keyPath(testClass));
+      cfg.set(PelzCryptoService.ENCRYPT_ENABLED_PROPERTY, "false");
+      break;
+    case CRYPTO_TABLE_ON:
+      cfg.set(INSTANCE_CRYPTO_FACTORY, PerTableCryptoServiceFactory.class.getName());
+      cfg.set(PerTableCryptoServiceFactory.TABLE_SERVICE_NAME_PROP,
+          PelzCryptoService.class.getName());
+      cfg.set(PelzCryptoService.KEY_URI_PROPERTY, PelzCryptoTest.keyPath(testClass));
+      cfg.set(PelzCryptoService.ENCRYPT_ENABLED_PROPERTY, "true");
+      break;
+    case CRYPTO_WAL_ON_DISABLED:
+      cfg.set(INSTANCE_CRYPTO_FACTORY, GenericCryptoServiceFactory.class.getName());
+      cfg.set(GenericCryptoServiceFactory.GENERAL_SERVICE_NAME_PROP,
+          PelzCryptoService.class.getName());
+      cfg.set(PelzCryptoService.KEY_URI_PROPERTY, PelzCryptoTest.keyPath(testClass));
+      cfg.set(PelzCryptoService.ENCRYPT_ENABLED_PROPERTY, "false");
+      break;
+    case CRYPTO_WAL_ON:
+      cfg.set(INSTANCE_CRYPTO_FACTORY, GenericCryptoServiceFactory.class.getName());
+      cfg.set(GenericCryptoServiceFactory.GENERAL_SERVICE_NAME_PROP,
+          PelzCryptoService.class.getName());
+      cfg.set(PelzCryptoService.KEY_URI_PROPERTY, PelzCryptoTest.keyPath(testClass));
+      cfg.set(PelzCryptoService.ENCRYPT_ENABLED_PROPERTY, "true");
+      break;
+    case CRYPTO_OFF:
+      break;
     }
     return cfg;
   }
@@ -135,6 +158,11 @@ public class PelzCryptoTest {
     return getAccumuloConfig(configMode, getClass());
   }
 
+  private Map<String,String> getAllCryptoProperties(ConfigMode configMode) {
+	    var cc = getAccumuloConfig(configMode);
+	    return cc.getAllCryptoProperties();
+	  } 
+  
   public static String keyPath(Class<?> testClass) {
     return "file:" + System.getProperty("user.dir") + "/target/CryptoTest-testkeyfile.key";
   }
@@ -149,11 +177,9 @@ public class PelzCryptoTest {
 
   @Test
   public void simpleGCMTest() throws Exception {
-    AccumuloConfiguration conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
-
-    CryptoService cs = new PelzCryptoService();
-    cs.init(conf.getAllPropertiesWithPrefix(Property.INSTANCE_CRYPTO_PREFIX));
-    CryptoEnvironment encEnv = new CryptoEnvironmentImpl(Scope.RFILE, null);
+    PelzCryptoService cs = new PelzCryptoService();
+    cs.init(getAllCryptoProperties(ConfigMode.CRYPTO_TABLE_ON));
+    CryptoEnvironment encEnv = new CryptoEnvironmentImpl(TABLE, null, null);
     FileEncrypter encrypter = cs.getFileEncrypter(encEnv);
     byte[] params = encrypter.getDecryptionParameters();
     assertNotNull(params);
@@ -177,7 +203,7 @@ public class PelzCryptoTest {
 
     // decrypt
     ByteArrayInputStream in = new ByteArrayInputStream(cipherText);
-    FileDecrypter decrypter = getFileDecrypter(cs, Scope.RFILE, new DataInputStream(in));
+    FileDecrypter decrypter = getFileDecrypter(cs, TABLE, null, new DataInputStream(in));
     DataInputStream decrypted = new DataInputStream(decrypter.decryptStream(in));
     String plainText = decrypted.readUTF();
     decrypted.close();
@@ -189,14 +215,16 @@ public class PelzCryptoTest {
   @Test
   public void testPelzCryptoServiceWAL() throws Exception {
     PelzCryptoService cs = new PelzCryptoService();
-    byte[] resultingBytes = encrypt(cs, Scope.WAL, ConfigMode.CRYPTO_ON);
+    cs.init(getAllCryptoProperties(ConfigMode.CRYPTO_WAL_ON));
+    
+    byte[] resultingBytes = encrypt(cs, Scope.WAL);
 
     String stringifiedBytes = Arrays.toString(resultingBytes);
     String stringifiedMarkerBytes = getStringifiedBytes(null, MARKER_STRING, MARKER_INT);
 
     assertNotEquals(stringifiedBytes, stringifiedMarkerBytes);
 
-    decrypt(resultingBytes, Scope.WAL, ConfigMode.CRYPTO_ON);
+    decrypt(cs, resultingBytes, Scope.WAL);
   }
 
   /**
@@ -204,57 +232,94 @@ public class PelzCryptoTest {
    */
   @Test
   public void testPelzCryptoServiceWALDisabled() throws Exception {
-    PelzCryptoService cs = new PelzCryptoService();
+    PelzCryptoService csEnabled = new PelzCryptoService();
+    PelzCryptoService csDisabled = new PelzCryptoService();
+    csEnabled.init(getAllCryptoProperties(ConfigMode.CRYPTO_WAL_ON));
+    csDisabled.init(getAllCryptoProperties(ConfigMode.CRYPTO_WAL_ON_DISABLED));
+    
     // make sure we can read encrypted
-    byte[] encryptedBytes = encrypt(cs, Scope.WAL, ConfigMode.CRYPTO_ON);
+    byte[] encryptedBytes = encrypt(csEnabled, Scope.WAL);
     String stringEncryptedBytes = Arrays.toString(encryptedBytes);
     String stringifiedMarkerBytes = getStringifiedBytes(null, MARKER_STRING, MARKER_INT);
     assertNotEquals(stringEncryptedBytes, stringifiedMarkerBytes);
-    decrypt(encryptedBytes, Scope.WAL, ConfigMode.CRYPTO_ON_DISABLED);
+    decrypt(csDisabled, encryptedBytes, Scope.WAL);
 
     // make sure we don't encrypt when disabled
-    byte[] plainBytes = encrypt(cs, Scope.WAL, ConfigMode.CRYPTO_ON_DISABLED);
+    byte[] plainBytes = encrypt(csDisabled, Scope.WAL);
     String stringPlainBytes = Arrays.toString(plainBytes);
     assertNotEquals(stringEncryptedBytes, stringPlainBytes);
-    decrypt(plainBytes, Scope.WAL, ConfigMode.CRYPTO_ON_DISABLED);
+    decrypt(csDisabled, plainBytes, Scope.WAL);
   }
 
   @Test
   public void testPelzCryptoServiceRFILE() throws Exception {
     PelzCryptoService cs = new PelzCryptoService();
-    byte[] resultingBytes = encrypt(cs, Scope.RFILE, ConfigMode.CRYPTO_ON);
+    cs.init(getAllCryptoProperties(ConfigMode.CRYPTO_TABLE_ON));
+    
+    byte[] resultingBytes = encrypt(cs, TABLE);
 
     String stringifiedBytes = Arrays.toString(resultingBytes);
     String stringifiedMarkerBytes = getStringifiedBytes(null, MARKER_STRING, MARKER_INT);
 
     assertNotEquals(stringifiedBytes, stringifiedMarkerBytes);
 
-    decrypt(resultingBytes, Scope.RFILE, ConfigMode.CRYPTO_ON);
+    decrypt(cs, resultingBytes, TABLE);
   }
 
   /**
    * PelzCryptoService is configured but only for reading
    */
   @Test
-  public void testPelzCryptoServiceRFILEDisabled() throws Exception {
-    PelzCryptoService cs = new PelzCryptoService();
+  public void testPelzCryptoServiceTableDisabled() throws Exception {
+    PelzCryptoService csEnabled = new PelzCryptoService();
+    PelzCryptoService csDisabled = new PelzCryptoService();
+    csEnabled.init(getAllCryptoProperties(ConfigMode.CRYPTO_TABLE_ON));
+    csDisabled.init(getAllCryptoProperties(ConfigMode.CRYPTO_TABLE_ON_DISABLED));
+	  
     // make sure we can read encrypted
-    byte[] encryptedBytes = encrypt(cs, Scope.RFILE, ConfigMode.CRYPTO_ON);
+    byte[] encryptedBytes = encrypt(csEnabled, TABLE);
     String stringEncryptedBytes = Arrays.toString(encryptedBytes);
     String stringifiedMarkerBytes = getStringifiedBytes(null, MARKER_STRING, MARKER_INT);
     assertNotEquals(stringEncryptedBytes, stringifiedMarkerBytes);
-    decrypt(encryptedBytes, Scope.RFILE, ConfigMode.CRYPTO_ON_DISABLED);
+    decrypt(csDisabled, encryptedBytes, TABLE);
 
     // make sure we don't encrypt when disabled
-    byte[] plainBytes = encrypt(cs, Scope.RFILE, ConfigMode.CRYPTO_ON_DISABLED);
+    byte[] plainBytes = encrypt(csDisabled, TABLE);
     String stringPlainBytes = Arrays.toString(plainBytes);
     assertNotEquals(stringEncryptedBytes, stringPlainBytes);
-    decrypt(plainBytes, Scope.RFILE, ConfigMode.CRYPTO_ON_DISABLED);
+    decrypt(csDisabled, plainBytes, TABLE);
   }
 
   @Test
-  public void testRFileEncrypted() throws Exception {
-    AccumuloConfiguration cryptoOnConf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+  public void testNoEncryptionWAL() throws Exception {
+    CryptoService cs = NoCryptoServiceFactory.NONE;
+    byte[] encryptedBytes = encrypt(cs, Scope.WAL);
+
+    String stringifiedBytes = Arrays.toString(encryptedBytes);
+    String stringifiedMarkerBytes =
+        getStringifiedBytes("U+1F47B".getBytes(), MARKER_STRING, MARKER_INT);
+
+    assertEquals(stringifiedBytes, stringifiedMarkerBytes);
+
+    decrypt(cs, encryptedBytes, Scope.WAL);
+  }
+
+  @Test
+  public void testNoEncryptionRFILE() throws Exception {
+    CryptoService cs = new NoCryptoService();
+    byte[] encryptedBytes = encrypt(cs, TABLE);
+
+    String stringifiedBytes = Arrays.toString(encryptedBytes);
+    String stringifiedMarkerBytes =
+        getStringifiedBytes("U+1F47B".getBytes(), MARKER_STRING, MARKER_INT);
+
+    assertEquals(stringifiedBytes, stringifiedMarkerBytes);
+
+    decrypt(cs, encryptedBytes, TABLE);
+  }
+  @Test
+  public void testRFileClientEncrypted() throws Exception {
+    AccumuloConfiguration cryptoOnConf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     FileSystem fs = FileSystem.getLocal(hadoopConf);
     ArrayList<Key> keys = testData();
     SummarizerConfiguration sumConf =
@@ -271,27 +336,35 @@ public class PelzCryptoTest {
       }
     }
 
-    Scanner iter =
-        RFile.newScanner().from(file).withFileSystem(fs).withTableProperties(cryptoOnConf).build();
+ // test to make sure the RFile is encrypted
     ArrayList<Key> keysRead = new ArrayList<>();
-    iter.forEach(e -> keysRead.add(e.getKey()));
+    try (Scanner iter = RFile.newScanner().from(file).withFileSystem(fs).build()) {
+      assertThrows(UncheckedIOException.class, () -> iter.forEach(e -> keysRead.add(e.getKey())),
+          "The file was expected to be encrypted but was not");
+      assertEquals(0, keysRead.size());
+    }
+    
+    keysRead.clear();
+    try (Scanner iter = RFile.newScanner().from(file).withFileSystem(fs)
+        .withTableProperties(cryptoOnConf).build()) {
+      iter.forEach(e -> keysRead.add(e.getKey()));
+    }
     assertEquals(keys, keysRead);
 
     Collection<Summary> summaries =
         RFile.summaries().from(file).withFileSystem(fs).withTableProperties(cryptoOnConf).read();
-    Summary summary = Iterables.getOnlyElement(summaries);
+    Summary summary = summaries.stream().collect(onlyElement());
     assertEquals(keys.size(), (long) summary.getStatistics().get("keys"));
     assertEquals(1, summary.getStatistics().size());
     assertEquals(0, summary.getFileStatistics().getInaccurate());
     assertEquals(1, summary.getFileStatistics().getTotal());
-
   }
 
   @Test
   // This test is to ensure when Crypto is configured that it can read unencrypted files
   public void testReadNoCryptoWithCryptoConfigured() throws Exception {
     AccumuloConfiguration cryptoOffConf = getAccumuloConfig(ConfigMode.CRYPTO_OFF);
-    AccumuloConfiguration cryptoOnConf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
+    AccumuloConfiguration cryptoOnConf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
     FileSystem fs = FileSystem.getLocal(hadoopConf);
     ArrayList<Key> keys = testData();
 
@@ -306,30 +379,35 @@ public class PelzCryptoTest {
       }
     }
 
-    Scanner iter =
-        RFile.newScanner().from(file).withFileSystem(fs).withTableProperties(cryptoOnConf).build();
-    ArrayList<Key> keysRead = new ArrayList<>();
-    iter.forEach(e -> keysRead.add(e.getKey()));
+    ArrayList<Key> keysRead;
+    try (Scanner iter = RFile.newScanner().from(file).withFileSystem(fs)
+        .withTableProperties(cryptoOnConf).build()) {
+      keysRead = new ArrayList<>();
+      iter.forEach(e -> keysRead.add(e.getKey()));
+    }
     assertEquals(keys, keysRead);
   }
 
   @Test
   public void testMissingConfigProperties() throws ReflectiveOperationException {
-    ConfigurationCopy aconf = new ConfigurationCopy(DefaultConfiguration.getInstance());
-    Configuration conf = new Configuration(false);
-    for (Map.Entry<String,String> e : conf) {
-      aconf.set(e.getKey(), e.getValue());
-    }
-    aconf.set(Property.INSTANCE_CRYPTO_SERVICE,
-        "org.apache.accumulo.core.pelz.PelzCryptoService");
-    String configuredClass = aconf.get(Property.INSTANCE_CRYPTO_SERVICE.getKey());
-    Class<? extends CryptoService> clazz =
-        ClassLoaderUtil.loadClass(configuredClass, CryptoService.class);
-    CryptoService cs = clazz.getDeclaredConstructor().newInstance();
+    var cryptoProps = getAllCryptoProperties(ConfigMode.CRYPTO_TABLE_ON);
+    var droppedProperty = cryptoProps.remove(PelzCryptoService.KEY_URI_PROPERTY);
+    assertNotNull(droppedProperty);
 
-    assertEquals(PelzCryptoService.class, cs.getClass());
-    assertThrows(NullPointerException.class,
-        () -> cs.init(aconf.getAllPropertiesWithPrefix(Property.TABLE_PREFIX)));
+    String configuredClass = cryptoProps.get(INSTANCE_CRYPTO_FACTORY.getKey());
+    CryptoEnvironment env = new CryptoEnvironmentImpl(TABLE, TableId.of("5"), null);
+    Class<? extends CryptoServiceFactory> clazz =
+        ClassLoaderUtil.loadClass(configuredClass, CryptoServiceFactory.class);
+    CryptoServiceFactory factory = clazz.getDeclaredConstructor().newInstance();
+
+    assertThrows(NullPointerException.class, () -> factory.getService(env, cryptoProps));
+
+    CryptoEnvironment env2 = new CryptoEnvironmentImpl(WAL);
+    var cryptoProps2 = getAllCryptoProperties(ConfigMode.CRYPTO_WAL_ON);
+    droppedProperty = cryptoProps2.remove(GenericCryptoServiceFactory.GENERAL_SERVICE_NAME_PROP);
+    assertNotNull(droppedProperty);
+
+    assertThrows(NullPointerException.class, () -> factory.getService(env2, cryptoProps2));
   }
 
   @Test
@@ -358,14 +436,38 @@ public class PelzCryptoTest {
   public void testPelzKeyUtilsWrapAndUnwrap()
       throws NoSuchAlgorithmException, NoSuchProviderException {
     java.security.Key fek = PelzKeyUtils.generateKey(random, 32);
-    AccumuloConfiguration conf = getAccumuloConfig(ConfigMode.CRYPTO_ON);
-    String kekPath = conf.get(Property.INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri");
+    AccumuloConfiguration conf = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
+    String kekPath = conf.get(PelzCryptoService.KEY_URI_PROPERTY);
     byte[] wrapped = PelzKeyUtils.wrapKey(fek.getEncoded(), kekPath);
     assertFalse(Arrays.equals(fek.getEncoded(), wrapped));
     byte[] unwrapped = PelzKeyUtils.unwrapKey(wrapped, kekPath);
     assertTrue(Arrays.equals(unwrapped, fek.getEncoded()));
   }
+  
+  @Test
+  public void testPerTableFactory() {
+    PerTableCryptoServiceFactory factory = new PerTableCryptoServiceFactory();
+    CryptoEnvironment env = new CryptoEnvironmentImpl(TABLE, TableId.of("5"), null);
+    HashMap<String,String> props = new HashMap<>();
 
+    // empty properties returns NoCrypto
+    CryptoService cs = factory.getService(env, props);
+    assertEquals(NoCryptoService.class, cs.getClass());
+
+    var config = getAccumuloConfig(ConfigMode.CRYPTO_TABLE_ON);
+    props.putAll(config.getAllCryptoProperties());
+    cs = factory.getService(env, props);
+    assertEquals(PelzCryptoService.class, cs.getClass());
+
+    CryptoEnvironment env2 = new CryptoEnvironmentImpl(TABLE, TableId.of("6"), null);
+    props.put(PerTableCryptoServiceFactory.TABLE_SERVICE_NAME_PROP,
+        NoCryptoService.class.getName());
+    cs = factory.getService(env2, props);
+    assertEquals(NoCryptoService.class, cs.getClass());
+
+    assertEquals(2, factory.getCount());
+  }
+  
   private ArrayList<Key> testData() {
     ArrayList<Key> keys = new ArrayList<>();
     keys.add(new Key("a", "cf", "cq"));
@@ -375,11 +477,8 @@ public class PelzCryptoTest {
     return keys;
   }
 
-  private <C extends CryptoService> byte[] encrypt(C cs, Scope scope, ConfigMode configMode)
-      throws Exception {
-    AccumuloConfiguration conf = getAccumuloConfig(configMode);
-    cs.init(conf.getAllPropertiesWithPrefix(Property.INSTANCE_CRYPTO_PREFIX));
-    CryptoEnvironmentImpl env = new CryptoEnvironmentImpl(scope, null);
+  private <C extends CryptoService> byte[] encrypt(C cs, Scope scope) throws Exception {
+    CryptoEnvironment env = new CryptoEnvironmentImpl(scope, null, null);
     FileEncrypter encrypter = cs.getFileEncrypter(env);
     byte[] params = encrypter.getDecryptionParameters();
 
@@ -400,11 +499,9 @@ public class PelzCryptoTest {
     return out.toByteArray();
   }
 
-  private void decrypt(byte[] resultingBytes, Scope scope, ConfigMode configMode) throws Exception {
-    try (DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(resultingBytes))) {
-      AccumuloConfiguration conf = getAccumuloConfig(configMode);
-      CryptoService cs = CryptoServiceFactory.newInstance(conf, ClassloaderType.JAVA);
-      FileDecrypter decrypter = getFileDecrypter(cs, scope, dataIn);
+  private void decrypt(CryptoService cs, byte[] resultingBytes, Scope scope) throws Exception {
+	    try (DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(resultingBytes))) {
+	      FileDecrypter decrypter = getFileDecrypter(cs, scope, null, dataIn);
 
       try (DataInputStream decrypted = new DataInputStream(decrypter.decryptStream(dataIn))) {
         String markerString = decrypted.readUTF();

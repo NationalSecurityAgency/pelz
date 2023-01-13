@@ -21,12 +21,13 @@
 
 package org.apache.accumulo.test.functional;
 
-import static org.apache.accumulo.core.conf.Property.INSTANCE_CRYPTO_PREFIX;
 import static org.apache.accumulo.test.functional.WriteAheadLogIT.testWAL;
 
 import org.apache.accumulo.core.client.Accumulo;
 import org.apache.accumulo.core.client.AccumuloClient;
 import org.apache.accumulo.core.conf.Property;
+import org.apache.accumulo.core.pelz.PelzCryptoService;
+import org.apache.accumulo.core.spi.crypto.GenericCryptoServiceFactory;
 import org.apache.accumulo.harness.AccumuloClusterHarness;
 import org.apache.accumulo.miniclusterImpl.MiniAccumuloConfigImpl;
 import org.apache.hadoop.conf.Configuration;
@@ -45,10 +46,10 @@ public class WriteAheadLogPelzEncryptedIT extends AccumuloClusterHarness {
   public void configureMiniCluster(MiniAccumuloConfigImpl cfg, Configuration hadoopCoreSite) {
     String keyPath =
         System.getProperty("user.dir") + "/target/mini-tests/WriteAheadLogEncryptedIT-testkeyfile";
-    cfg.setProperty(Property.INSTANCE_CRYPTO_SERVICE,
-        "org.apache.accumulo.core.pelz.PelzCryptoService");
-    cfg.setProperty(INSTANCE_CRYPTO_PREFIX.getKey() + "key.uri", keyPath);
-
+    cfg.setProperty(Property.INSTANCE_CRYPTO_FACTORY, GenericCryptoServiceFactory.class.getName());
+    cfg.setProperty(GenericCryptoServiceFactory.GENERAL_SERVICE_NAME_PROP,
+            PelzCryptoService.class.getName());
+    cfg.setProperty(PelzCryptoService.KEY_URI_PROPERTY, keyPath);
     WriteAheadLogIT.setupConfig(cfg, hadoopCoreSite);
 
     // setup key file
@@ -67,11 +68,6 @@ public class WriteAheadLogPelzEncryptedIT extends AccumuloClusterHarness {
     } catch (Exception e) {
       log.error("Exception during configure", e);
     }
-  }
-
-  @Override
-  protected int defaultTimeoutSeconds() {
-    return 10 * 60;
   }
 
   @Test

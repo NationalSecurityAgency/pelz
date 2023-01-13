@@ -26,7 +26,7 @@ EVP_PKEY *private_pkey;
 TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
 {
   Entry tmp_entry;
-  uint8_t *data = NULL;
+  uint8_t * data = NULL;
   size_t data_size = 0;
   int ret;
   int index = 0;
@@ -53,7 +53,7 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
     return RET_FAIL;
   }
 
-  ret = unmarshal_ec_der_to_x509(&data, &data_size, &tmp_entry.value.cert);
+  ret = unmarshal_ec_der_to_x509(data, data_size, &tmp_entry.value.cert);
   if (ret)
   {
     pelz_sgx_log(LOG_ERR, "Unmarshal DER to X509 Failure");
@@ -159,7 +159,7 @@ TableResponseStatus private_pkey_add(uint64_t handle)
     pelz_sgx_log(LOG_ERR, "Failure to retrieve data from unseal table.");
     return RET_FAIL;
   }
-  if (unmarshal_ec_der_to_pkey(&data, &data_size, &private_pkey) != EXIT_SUCCESS)
+  if (unmarshal_ec_der_to_pkey(data, data_size, &private_pkey) != EXIT_SUCCESS)
   {
     pelz_sgx_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
     free(data);

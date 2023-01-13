@@ -38,6 +38,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
     if(field.len == 0 || field.chars == NULL)
     {  
       pelz_log(LOG_ERR, "Failed to allocate memory to extract JSON field %s.", field_name);
+      free_charbuf(&field);
       return new_charbuf(0);
     }
     memcpy(field.chars, cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring, field.len);

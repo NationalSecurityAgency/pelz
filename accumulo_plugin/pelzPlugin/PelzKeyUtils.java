@@ -35,6 +35,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class PelzKeyUtils {
 
+  private static String cipher = "AES/KeyWrap/RFC3394NoPadding/256";
   private static String hostname = "127.0.0.1";  //Pelz socket server address
   private static int port = 10600; // Pelz socket port address
   private static Object delay = new Object();
@@ -48,15 +49,15 @@ public class PelzKeyUtils {
   }
 
   public static void startSocket() {
-	do {
-	  PelzClientSocket.connectClient(hostname, port);
-	} while (!PelzClientSocket.getClientStatus());
+	  do {
+	    PelzClientSocket.connectClient(hostname, port);
+	  } while (!PelzClientSocket.getClientStatus());
   }
   
   public static void endSocket() {
-	do {
-	  PelzClientSocket.closeClient();
-	} while (PelzClientSocket.getClientStatus());
+	  do {
+	    PelzClientSocket.closeClient();
+	  } while (PelzClientSocket.getClientStatus());
   }
 	  
   public static boolean initSocket() {
@@ -65,35 +66,34 @@ public class PelzKeyUtils {
   }
 	  
   public static byte[] pelzRequest(PelzObjects.Request req) {
-	byte[] resp = null;
-	String receive = null;
-	PelzObjects.Response msg = new PelzObjects.Response();
-	Gson gson = new Gson();
-	String send = gson.toJson(req);
-	if (!PelzClientSocket.checkClient()) {
-	  startSocket();
-	  System.out.println("Restart Socket Connection");
-	  staticWait(500);
-	  System.out.println("Socket Connection Restarted");
-	}
-	receive = PelzClientSocket.sendRequest(send);
-	if (receive == null) {
-	  System.out.println("Message is NULL");
+	  byte[] resp = null;
+	  String receive = null;
+	  PelzObjects.Response msg = new PelzObjects.Response();
+	  Gson gson = new Gson();
+	  String send = gson.toJson(req);
+	  if (!PelzClientSocket.checkClient()) {
+	    startSocket();
+	    System.out.println("Restart Socket Connection");
+	    staticWait(500);
+	    System.out.println("Socket Connection Restarted");
+	  }
+	  receive = PelzClientSocket.sendRequest(send);
+	  if (receive == null) {
+	    System.out.println("Message is NULL");
+	    return resp;
+	  }
+	  msg = gson.fromJson(receive, PelzObjects.Response.class);
+	  if (msg.getError() != null)
+	    throw new CryptoService.CryptoException(msg.getError());
+    if ((req.getRequestType() >= 1) && (req.getRequestType() <= 4)) {
+      msg.setData(msg.getData().substring(0, (msg.getData().length() - 1)));      
+	    resp = Base64.getDecoder().decode(msg.getData());
+    }
+    else
+      throw new CryptoService.CryptoException("Invalid request response");
 	  return resp;
-	}
-	msg = gson.fromJson(receive, PelzObjects.Response.class);
-	if (msg.getError() != null)
-	  throw new CryptoService.CryptoException(msg.getError());
-	if (req.getRequestType() == 1) {
-	  msg.setEncOut(msg.getEncOut().substring(0, (msg.getEncOutLen() - 1)));
-	  resp = Base64.getDecoder().decode(msg.getEncOut());
-	}
-	else if(req.getRequestType() == 2){
-	  msg.setDecOut(msg.getDecOut().substring(0, (msg.getDecOutLen() - 1)));
-	  resp = Base64.getDecoder().decode(msg.getDecOut());
-	}
-	return resp;
   }
+
 
   public static Key generateKey(SecureRandom sr, int size) {
     byte[] bytes = new byte[size];
@@ -102,17 +102,16 @@ public class PelzKeyUtils {
   }
 
   @SuppressFBWarnings(value = "CIPHER_INTEGRITY",
-      justification = "integrity not needed for key wrap")
+    justification = "integrity not needed for key wrap")
   public static byte[] unwrapKey(byte[] fek, String keyId) {
     byte[] result = null;
     PelzObjects.Request req = new PelzObjects.Request();
     req.setRequestType(2);
     req.setKeyID(keyId);
-    req.setKeyIDLen(keyId.length());
-    String dec_data = Base64.getEncoder().encodeToString(fek);
-    dec_data = dec_data.concat(System.getProperty("line.separator"));
-    req.setDecData(dec_data);
-    req.setDecDataLen(dec_data.length());
+    String data = Base64.getEncoder().encodeToString(fek);
+    data = data.concat(System.getProperty("line.separator"));
+    req.setData(data);
+    req.setCipher(cipher);
     try {
       result = pelzRequest(req);
     } catch (CryptoService.CryptoException e) {
@@ -123,17 +122,16 @@ public class PelzKeyUtils {
   }
 
   @SuppressFBWarnings(value = "CIPHER_INTEGRITY",
-      justification = "integrity not needed for key wrap")
+    justification = "integrity not needed for key wrap")
   public static byte[] wrapKey(byte[] fek, String keyId) {
     byte[] result = null;
     PelzObjects.Request req = new PelzObjects.Request();
     req.setRequestType(1);
     req.setKeyID(keyId);
-    req.setKeyIDLen(keyId.length());
-    String enc_data = Base64.getEncoder().encodeToString(fek);
-    enc_data = enc_data.concat(System.getProperty("line.separator"));
-    req.setEncData(enc_data);
-    req.setEncDataLen(enc_data.length());
+    String data = Base64.getEncoder().encodeToString(fek);
+    data = data.concat(System.getProperty("line.separator"));
+    req.setData(data);
+    req.setCipher(cipher);
     try {
       result = pelzRequest(req);
     } catch (CryptoService.CryptoException e) {
