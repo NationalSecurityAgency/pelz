@@ -134,12 +134,17 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
   {
     encoded = get_JSON_string_field(json, "iv");
-    decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
-    free_charbuf(&encoded);
-    
+    if(encoded.chars != NULL && encoded.len > 0)
+    {
+	decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
+	free_charbuf(&encoded);
+    }
     encoded = get_JSON_string_field(json, "tag");
-    decodeBase64Data(encoded.chars, encoded.len, &(tag->chars), &(tag->len));
-    free_charbuf(&encoded);
+    if(encoded.chars != NULL && encoded.len > 0)
+    {
+      decodeBase64Data(encoded.chars, encoded.len, &(tag->chars), &(tag->len));
+      free_charbuf(&encoded);
+    }
   }
 
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
