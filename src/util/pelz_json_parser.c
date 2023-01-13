@@ -150,6 +150,19 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
     encoded = get_JSON_string_field(json, "request_sig");
+    if(encoded.chars == NULL || encoded.len == 0)
+    {
+      pelz_log(LOG_ERR, "Failed to extract signature from signed request.");
+      cJSON_Delete(json);
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      free_charbuf(iv);
+      free_charbuf(tag);
+      free_charbuf(cipher_name);
+      free_charbuf(&encoded);
+      return 1;
+    }
     decodeBase64Data(encoded.chars, encoded.len, &(request_sig->chars), &(request_sig->len));
     free_charbuf(&encoded);
     if(request_sig->len == 0 || request_sig->chars == NULL)
