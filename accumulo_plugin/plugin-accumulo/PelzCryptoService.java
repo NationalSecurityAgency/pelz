@@ -47,7 +47,6 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.accumulo.core.crypto.CryptoUtils;
 import org.apache.accumulo.core.crypto.streams.BlockedInputStream;
 import org.apache.accumulo.core.crypto.streams.BlockedOutputStream;
 import org.apache.accumulo.core.crypto.streams.DiscardCloseOutputStream;
@@ -57,44 +56,68 @@ import org.apache.accumulo.core.spi.crypto.CryptoService;
 import org.apache.accumulo.core.spi.crypto.FileDecrypter;
 import org.apache.accumulo.core.spi.crypto.FileEncrypter;
 import org.apache.accumulo.core.spi.crypto.NoFileDecrypter;
+import org.apache.accumulo.core.spi.crypto.NoFileEncrypter;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
- * Example implementation of AES encryption for Accumulo
+ * Example implementation of AES encryption for Accumulo with pelz keywrap
  */
 public class PelzCryptoService implements CryptoService {
+  private static final Logger log = LoggerFactory.getLogger(PelzCryptoService.class);
+  private volatile boolean initialized = false;
+
+  // properties required for using this service
+  public static final String KEY_URI_PROPERTY = "general.custom.crypto.key.uri";
+  // optional properties
+  // defaults to true
+  public static final String ENCRYPT_ENABLED_PROPERTY = "general.custom.crypto.enabled";
 
   // Hard coded NoCryptoService.VERSION - this permits the removal of NoCryptoService from the
   // core jar, allowing use of only one crypto service
   private static final String NO_CRYPTO_VERSION = "U+1F47B";
-
+  private static final SecureRandom random = new SecureRandom();
+  
   private String keyLocation = null;
   private String keyManager = null;
-  private SecureRandom sr = new SecureRandom();
+  private boolean encryptEnabled = true;
+
+  private static final FileEncrypter DISABLED = new NoFileEncrypter();
 
   @Override
   public void init(Map<String,String> conf) throws CryptoException {
-    String keyLocation = conf.get("instance.crypto.opts.key.uri");
+    ensureNotInit();
+    String keyLocation = Objects.requireNonNull(conf.get(KEY_URI_PROPERTY),
+        "Config property " + KEY_URI_PROPERTY + " is required.");
+    String enabledProp = conf.get(ENCRYPT_ENABLED_PROPERTY);
+    if (enabledProp != null) {
+      encryptEnabled = Boolean.parseBoolean(enabledProp);
+    }
+
     // get key from URI for now, keyMgr framework could be expanded on in the future
     String keyMgr = "pelz";
-    Objects.requireNonNull(keyLocation,
-        "Config property instance.crypto.opts.key.uri is required.");
     this.keyManager = keyMgr;
     this.keyLocation = keyLocation;
     if (!PelzKeyUtils.initSocket()) {
-      System.err.println("Failed to connect to Pelz.");
+      log.debug("Failed to connect to Pelz.");
     }
+    initialized = true;
   }
 
   @Override
   public FileEncrypter getFileEncrypter(CryptoEnvironment environment) {
+    ensureInit();
+    if (!encryptEnabled) {
+      return DISABLED;
+    }
     CryptoModule cm;
     switch (environment.getScope()) {
       case WAL:
         cm = new AESCBCCryptoModule(this.keyLocation, this.keyManager);
         return cm.getEncrypter();
 
-      case RFILE:
+      case TABLE:
         cm = new AESGCMCryptoModule(this.keyLocation, this.keyManager);
         return cm.getEncrypter();
 
@@ -105,12 +128,13 @@ public class PelzCryptoService implements CryptoService {
 
   @Override
   public FileDecrypter getFileDecrypter(CryptoEnvironment environment) {
+    ensureInit();
     CryptoModule cm;
-    byte[] decryptionParams = environment.getDecryptionParams();
-    if (decryptionParams == null || checkNoCrypto(decryptionParams))
+    var decryptionParams = environment.getDecryptionParams();
+    if (decryptionParams.isEmpty() || checkNoCrypto(decryptionParams.get()))
       return new NoFileDecrypter();
 
-    ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams);
+    ParsedCryptoParameters parsed = parseCryptoParameters(decryptionParams.get());
     Key fek =
         new SecretKeySpec(PelzKeyUtils.unwrapKey(parsed.getEncFek(), parsed.getKekId()), "AES");
     switch (parsed.getCryptoServiceVersion()) {
@@ -266,8 +290,8 @@ public class PelzCryptoService implements CryptoService {
       private byte[] initVector = new byte[GCM_IV_LENGTH_IN_BYTES];
 
       AESGCMFileEncrypter() {
-        this.fek = PelzKeyUtils.generateKey(sr, KEY_LENGTH_IN_BYTES);
-        sr.nextBytes(initVector);
+        this.fek = PelzKeyUtils.generateKey(random, KEY_LENGTH_IN_BYTES);
+        random.nextBytes(initVector);
         this.firstInitVector = Arrays.copyOf(initVector, initVector.length);
       }
 
@@ -396,13 +420,13 @@ public class PelzCryptoService implements CryptoService {
 
     public class AESCBCFileEncrypter implements FileEncrypter {
 
-      private Key fek = PelzKeyUtils.generateKey(sr, KEY_LENGTH_IN_BYTES);
+      private Key fek = PelzKeyUtils.generateKey(random, KEY_LENGTH_IN_BYTES);
       private byte[] initVector = new byte[IV_LENGTH_IN_BYTES];
 
       @Override
       public OutputStream encryptStream(OutputStream outputStream) throws CryptoException {
 
-        sr.nextBytes(initVector);
+        random.nextBytes(initVector);
         try {
           outputStream.write(initVector);
         } catch (IOException e) {
@@ -455,7 +479,19 @@ public class PelzCryptoService implements CryptoService {
 
         CipherInputStream cis = new CipherInputStream(inputStream, cipher);
         return new BlockedInputStream(cis, cipher.getBlockSize(), 1024);
-      }
+      }           
     }
   }
+  
+  private void ensureInit() {
+	    if (!initialized) {
+	      throw new IllegalStateException("This Crypto Service has not been initialized.");
+	    }
+	  }
+
+	  private void ensureNotInit() {
+	    if (initialized) {
+	      throw new IllegalStateException("This Crypto Service has already been initialized.");
+	    }
+	  }
 }

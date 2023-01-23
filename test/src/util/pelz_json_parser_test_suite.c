@@ -219,6 +219,7 @@ void test_request_decoder(void)
     free_charbuf(&request);
     free_charbuf(&iv);
     free_charbuf(&tag);
+    free_charbuf(&cipher_name);
     request_type = REQ_UNK;
     free_charbuf(&key_id);
     free_charbuf(&data);
@@ -237,6 +238,7 @@ void test_request_decoder(void)
     free_charbuf(&data);
     free_charbuf(&request_sig);
     free_charbuf(&requestor_cert);
+    free_charbuf(&cipher_name);
     request_type = REQ_UNK;
 
 
@@ -253,6 +255,7 @@ void test_request_decoder(void)
     free_charbuf(&data);
     free_charbuf(&request_sig);
     free_charbuf(&requestor_cert);
+    free_charbuf(&cipher_name);
     request_type = REQ_UNK;
     
 
@@ -342,7 +345,9 @@ void test_message_encoder(void)
   free_charbuf(&requestor_cert);
   CU_ASSERT(message_encoder(REQ_ENC, key_id, cipher_name, iv, tag, data, &message) == 0);
 
+  free_charbuf(&message);
   free_charbuf(&key_id);
+  
   charbuf decoded_iv;
   charbuf decoded_tag;
   charbuf decoded_data;
@@ -375,7 +380,8 @@ void test_message_encoder(void)
   memcpy(requestor_cert.chars, "PelzProject\n", requestor_cert.len);
   free_charbuf(&request_sig);
   free_charbuf(&requestor_cert);
-
+  free_charbuf(&tag);
+  free_charbuf(&iv);
   free_charbuf(&data);
 }
 

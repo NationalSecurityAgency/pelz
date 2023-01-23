@@ -216,11 +216,12 @@ int key_load(charbuf key_id)
   case PELZ_URI:
     {
       pelz_log(LOG_DEBUG, "Pelz Scheme Start");
-      charbuf common_name;
+      charbuf server_name;
+      charbuf client_name;
       charbuf server_key_id;
-      int port;
+      charbuf port;
 
-      if (get_pelz_uri_hostname(key_id_data, &common_name) != 0)
+      if (get_pelz_uri_hostname(key_id_data, &server_name) != 0)
       {
         pelz_log(LOG_ERR, "Failed to extract hostname from pelz uri");
         break;
@@ -238,11 +239,18 @@ int key_load(charbuf key_id)
         break;
       }
 
-      pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", common_name.len, common_name.chars, common_name.len);
-      pelz_log(LOG_DEBUG, "Port Number: %d", port);
+      //TODO: Change this to be an input from somewhere
+      client_name = new_charbuf(10);
+      memcpy(client_name.chars, "TestClient", 10);
+
+      pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", server_name.len, server_name.chars, server_name.len);
+      pelz_log(LOG_DEBUG, "Port Number: %.*s, %d", port.len, port.chars, port.len);
       pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id.len, server_key_id.chars);
-      key_table_add_from_server(eid, &status, key_id, common_name, port, server_key_id);
-      free_charbuf(&common_name);
+      pelz_log(LOG_DEBUG, "Client Name: %.*s. %d", client_name.len, client_name.chars, client_name.len);
+      key_table_add_from_server(eid, &status, key_id, client_name, server_name, port, server_key_id);
+      free_charbuf(&server_name);
+      free_charbuf(&client_name);
+      free_charbuf(&port);
       free_charbuf(&server_key_id);
       switch (status)
       {

@@ -71,7 +71,7 @@ int get_pelz_uri_hostname(UriUriA uri, charbuf * common_name)
   return 0;
 }
 
-int get_pelz_uri_port(UriUriA uri, int *port)
+int get_pelz_uri_port(UriUriA uri, charbuf *port)
 {
   ptrdiff_t field_length;
 
@@ -82,23 +82,23 @@ int get_pelz_uri_port(UriUriA uri, int *port)
     pelz_log(LOG_ERR, "Invalid URI field length.");
     return 1;
   }
-  char *port_text = (char *) calloc((1 + field_length), sizeof(char));
 
-  if (port_text == NULL)
+  *port = new_charbuf((size_t) field_length);
+  if (port->chars == NULL)
   {
-    pelz_log(LOG_ERR, "Failed to initialize memory.");
+    pelz_log(LOG_ERR, "Failed to initialize charbuf.");
     return 1;
   }
-  memcpy(port_text, uri.pathHead->text.first, field_length);
-  long int port_long = strtol(port_text, NULL, 10);
 
-  free(port_text);
+  memcpy(port->chars, uri.pathHead->text.first, field_length);
+
+  long int port_long = strtol((char *) port->chars, NULL, 10);
   if (port_long < 0 || port_long > INT_MAX)
   {
     pelz_log(LOG_ERR, "Invalid port specified: %ld", port_long);
     return 1;
   }
-  *port = (int) port_long;
+
   return 0;
 }
 

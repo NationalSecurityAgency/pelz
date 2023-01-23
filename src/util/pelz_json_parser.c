@@ -38,6 +38,7 @@ static charbuf get_JSON_string_field(cJSON* json, const char* field_name)
     if(field.len == 0 || field.chars == NULL)
     {  
       pelz_log(LOG_ERR, "Failed to allocate memory to extract JSON field %s.", field_name);
+      free_charbuf(&field);
       return new_charbuf(0);
     }
     memcpy(field.chars, cJSON_GetObjectItemCaseSensitive(json, field_name)->valuestring, field.len);
@@ -133,17 +134,35 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
   if(*request_type == REQ_DEC || *request_type == REQ_DEC_SIGNED)
   {
     encoded = get_JSON_string_field(json, "iv");
-    decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
-    free_charbuf(&encoded);
-    
+    if(encoded.chars != NULL && encoded.len > 0)
+    {
+	decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
+	free_charbuf(&encoded);
+    }
     encoded = get_JSON_string_field(json, "tag");
-    decodeBase64Data(encoded.chars, encoded.len, &(tag->chars), &(tag->len));
-    free_charbuf(&encoded);
+    if(encoded.chars != NULL && encoded.len > 0)
+    {
+      decodeBase64Data(encoded.chars, encoded.len, &(tag->chars), &(tag->len));
+      free_charbuf(&encoded);
+    }
   }
 
   if(*request_type == REQ_ENC_SIGNED || *request_type == REQ_DEC_SIGNED)
   {
     encoded = get_JSON_string_field(json, "request_sig");
+    if(encoded.chars == NULL || encoded.len == 0)
+    {
+      pelz_log(LOG_ERR, "Failed to extract signature from signed request.");
+      cJSON_Delete(json);
+      free_charbuf(key_id);
+      free_charbuf(data);
+      free_charbuf(request_sig);
+      free_charbuf(iv);
+      free_charbuf(tag);
+      free_charbuf(cipher_name);
+      free_charbuf(&encoded);
+      return 1;
+    }
     decodeBase64Data(encoded.chars, encoded.len, &(request_sig->chars), &(request_sig->len));
     free_charbuf(&encoded);
     if(request_sig->len == 0 || request_sig->chars == NULL)

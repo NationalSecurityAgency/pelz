@@ -114,6 +114,7 @@ void test_invalid_key_id(void)
     free_charbuf(&ciphertext);
     free_charbuf(&iv);
     free_charbuf(&tag);
+    free_charbuf(&plaintext);
 
     pelz_decrypt_request_handler(eid, &response_status, REQ_DEC, key_id, cipher_name, ciphertext, iv, tag, &plaintext, signature, cert);
     CU_ASSERT(response_status == KEK_NOT_LOADED);
@@ -124,6 +125,7 @@ void test_invalid_key_id(void)
     free_charbuf(&ciphertext);
     free_charbuf(&iv);
     free_charbuf(&tag);
+    free_charbuf(&plaintext);
   }
   table_destroy(eid, &table_status, KEY);
   free_charbuf(&key_id);
@@ -340,6 +342,7 @@ void test_invalid_cipher_name(void)
   table_destroy(eid, &table_status, KEY);
   free_charbuf(&plaintext);
   free_charbuf(&key_id);
+  free_charbuf(&key_data);
   pelz_log(LOG_DEBUG, "Finish Invalid Cipher Name Test");
 }
 
