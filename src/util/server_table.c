@@ -20,6 +20,7 @@
 #include ENCLAVE_HEADER_TRUSTED
 #include "kmyth_enclave_trusted.h"
 #include "ec_key_cert_unmarshal.h"
+#include "server_table.h"
 
 EVP_PKEY *private_pkey;
 
@@ -149,11 +150,11 @@ TableResponseStatus private_pkey_free(void)
   return OK;
 }
 
-TableResponseStatus private_pkey_add(uint64_t handle)
+TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle)
 {
   uint8_t *data;
   size_t data_size = 0;
-  data_size = retrieve_from_unseal_table(handle, &data);
+  data_size = retrieve_from_unseal_table(pkey_handle, &data);
   if (data_size == 0)
   {
     pelz_sgx_log(LOG_ERR, "Failure to retrieve data from unseal table.");

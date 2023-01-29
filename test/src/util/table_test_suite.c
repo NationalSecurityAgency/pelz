@@ -94,6 +94,7 @@ void test_table_add(void)
   charbuf port;
   charbuf server_key_id;
   uint64_t handle = 0;
+  uint64_t cert_handle = 0;
   char prefix[6] = "file:";
   char valid_id[6][28] =
     { "/test/data/key1.txt", "test/data/key1.txt.nkl", "7", "test/data/proxy_pub.der.nkl",
@@ -151,14 +152,14 @@ void test_table_add(void)
     //Testing the private pkey add
     private_pkey_init(eid, &status);
     CU_ASSERT(status == OK);
-    private_pkey_add(eid, &status, handle);
+    private_pkey_add(eid, &status, handle, cert_handle);
     CU_ASSERT(status == ERR_X509);
     handle = 0;
   }
 
   if(get_file_handle(valid_id[4], &handle))
   {
-    private_pkey_add(eid, &status, handle);
+    private_pkey_add(eid, &status, handle, cert_handle);
     CU_ASSERT(status == OK);
     pelz_log(LOG_INFO, "Private Pkey add success");
     handle = 0;

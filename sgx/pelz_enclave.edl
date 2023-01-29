@@ -114,7 +114,7 @@ public TableResponseStatus private_pkey_free(void);
  * @return OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public TableResponseStatus private_pkey_add(uint64_t handle);
+public TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle);
 
 /**
  * <pre>
