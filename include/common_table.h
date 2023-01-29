@@ -14,6 +14,7 @@
 #include <openssl/bn.h>
 
 #include "charbuf.h"
+#include "server_table.h"
 
 #define MAX_MEM_SIZE 1000000
 
@@ -62,7 +63,7 @@ extern Table key_table;
 
 extern Table server_table;
 
-extern EVP_PKEY *private_pkey;
+extern pelz_identity_t pelz_id;
 
 #ifdef __cplusplus
 extern "C"

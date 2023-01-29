@@ -22,7 +22,8 @@
 #include "ec_key_cert_unmarshal.h"
 #include "server_table.h"
 
-EVP_PKEY *private_pkey;
+pelz_identity_t pelz_id;
+//EVP_PKEY *private_pkey;
 
 TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
 {
@@ -135,8 +136,8 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
 
 TableResponseStatus private_pkey_init(void)
 {
-  private_pkey = EVP_PKEY_new();
-  if (private_pkey == NULL)
+  pelz_id.private_pkey = EVP_PKEY_new();
+  if (pelz_id.private_pkey == NULL)
   {
     pelz_sgx_log(LOG_ERR, "Error allocating EVP_PKEY");
     return MEM_ALLOC_FAIL;
@@ -146,7 +147,7 @@ TableResponseStatus private_pkey_init(void)
 
 TableResponseStatus private_pkey_free(void)
 {
-  EVP_PKEY_free(private_pkey);
+  EVP_PKEY_free(pelz_id.private_pkey);
   return OK;
 }
 
@@ -160,7 +161,7 @@ TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle)
     pelz_sgx_log(LOG_ERR, "Failure to retrieve data from unseal table.");
     return RET_FAIL;
   }
-  if (unmarshal_ec_der_to_pkey(data, data_size, &private_pkey) != EXIT_SUCCESS)
+  if (unmarshal_ec_der_to_pkey(data, data_size, &(pelz_id.private_pkey)) != EXIT_SUCCESS)
   {
     pelz_sgx_log(LOG_ERR, "Failure to unmarshal ec_der to pkey");
     free(data);

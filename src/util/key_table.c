@@ -18,6 +18,7 @@
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 #include "sgx_retrieve_key_impl.h"
+#include "server_table.h"
 
 TableResponseStatus key_table_add_key(charbuf key_id, charbuf key)
 {
@@ -122,7 +123,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf client_nam
   }
   pelz_sgx_log(LOG_DEBUG, "Client name lookup success");
 
-  if (private_pkey == NULL)
+  if (pelz_id.private_pkey == NULL)
   {
     pelz_sgx_log(LOG_ERR, "Private key not found");
     return NO_MATCH;
@@ -134,7 +135,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id, charbuf client_nam
   port_num = null_terminated_string_from_charbuf(port);
 
   //the +1 is used for the len of common_name to account for the null terminater added to server_name
-  ret = enclave_retrieve_key(private_pkey, server_table.entries[client_index].value.cert, 
+  ret = enclave_retrieve_key(pelz_id.private_pkey, server_table.entries[client_index].value.cert, 
     server_table.entries[server_index].value.cert, (const char *) common_name, 
     (server_name.len + 1), (const char *) port_num, (port.len + 1), server_key_id.chars, server_key_id.len, 
     &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
