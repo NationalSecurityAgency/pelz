@@ -228,7 +228,6 @@ int key_load(charbuf key_id)
   case PELZ_URI:
     {
       pelz_log(LOG_DEBUG, "Pelz Scheme Start");
-      charbuf common_name;
       charbuf server_name;
       charbuf client_name;
       charbuf server_key_id;
@@ -259,16 +258,20 @@ int key_load(charbuf key_id)
       pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", server_name.len, server_name.chars, server_name.len);
       pelz_log(LOG_DEBUG, "Port Number: %.*s, %d", port.len, port.chars, port.len);
       pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id.len, server_key_id.chars);
+      pelz_log(LOG_DEBUG, "Client Name: %.*s. %d", client_name.len, client_name.chars, client_name.len);
 
-      sgx_ret = key_table_add_from_server(eid, &status, key_id, client_name, common_name, port, server_key_id);
+      sgx_ret = key_table_add_from_server(eid, &status, key_id, client_name, server_name, port, server_key_id);
       if (sgx_ret != SGX_SUCCESS)
       {
         pelz_log(LOG_ERR, "ECALL Failure: key_table_add_from_server");
         break;
       }
 
-      free_charbuf(&common_name);
+      free_charbuf(&server_name);
+      free_charbuf(&client_name);
+      free_charbuf(&port);
       free_charbuf(&server_key_id);
+
       switch (status)
       {
       case ERR:

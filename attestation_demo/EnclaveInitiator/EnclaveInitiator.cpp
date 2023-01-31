@@ -71,7 +71,6 @@ extern "C" uint32_t test_create_session()
 uint32_t test_message_exchange()
 {
     ATTESTATION_STATUS ke_status = SUCCESS;
-    
     char* out_buff;
     size_t out_buff_len;
     size_t max_out_buff_size;
@@ -95,11 +94,9 @@ uint32_t test_message_exchange()
         return ke_status;
     }
 
-
     // TODO: Display the pelz server's response
 
     SAFE_FREE(out_buff);
-
     return SUCCESS;
 }
 
@@ -128,7 +125,6 @@ extern "C" uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t*
 {
     if (!peer_enclave_identity)
         return INVALID_PARAMETER_ERROR;
-
 
     // TODO: possibly compare peer enclave's MRSIGNER to known value
     // check peer enclave's MRSIGNER

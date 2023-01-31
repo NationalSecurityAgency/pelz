@@ -111,7 +111,6 @@ ENCLAVE_CPP_OBJECTS := $(Enclave_Cpp_Files:.cpp=.o)
 
 target = $(SIGNED_ENCLAVE_NAME)
 
-
 all:
 	@make target
 

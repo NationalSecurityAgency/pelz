@@ -65,7 +65,6 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-
     // create ECDH initiator enclave
     status = sgx_create_enclave(ENCLAVE_INITIATOR_NAME, SGX_DEBUG_FLAG, &token, &update, &initiator_enclave_id, NULL);
     if (status != SGX_SUCCESS) {
