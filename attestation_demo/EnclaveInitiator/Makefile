@@ -44,10 +44,22 @@ Crypto_Library_Name := sgx_tcrypto
 ENCLAVE_NAME := libenclave_initiator.so
 SIGNED_ENCLAVE_NAME := libenclave_initiator.signed.so
 
-$(SIGNED_ENCLAVE_NAME) : $(ENCLAVE_NAME)
-	@$(SGX_ENCLAVE_SIGNER) sign -key EnclaveInitiator_private_test.pem -enclave $(ENCLAVE_NAME) -out $@ -config EnclaveInitiator.config.xml
+SIGNING_KEY := EnclaveInitiator_private_test.pem
+
+# Message for missing Enclave Signing Key - Fatal Build Error
+define err_no_enclave_signing_key
+FAIL - No Enclave Signing Key found.
+Generate or install $(SIGNING_KEY)
+e.g., run 'openssl genrsa -out $(shell pwd)/$(SIGNING_KEY) -3 3072'
+endef
+
+$(SIGNED_ENCLAVE_NAME) : $(ENCLAVE_NAME) $(SIGNING_KEY)
+	@$(SGX_ENCLAVE_SIGNER) sign -key $(SIGNING_KEY) -enclave $(ENCLAVE_NAME) -out $@ -config EnclaveInitiator.config.xml
 	@cp $(SIGNED_ENCLAVE_NAME) $(TOPDIR)/$(OUTDIR)/
 	@echo "SIGN =>  $@"
+
+$(SIGNING_KEY):
+	$(error $(err_no_enclave_signing_key))
 
 # Enable the security flags
 Enclave_Security_Link_Flags := -Wl,-z,relro,-z,now,-z,noexecstack
@@ -99,7 +111,7 @@ ENCLAVE_CPP_OBJECTS := $(Enclave_Cpp_Files:.cpp=.o)
 
 target = $(SIGNED_ENCLAVE_NAME)
 
-all: 
+all:
 	@make target
 
 clean:

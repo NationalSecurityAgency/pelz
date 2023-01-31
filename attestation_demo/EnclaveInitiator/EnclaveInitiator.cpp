@@ -42,7 +42,7 @@
 
 #define UNUSED(val) (void)(val)
 
-#define RESPONDER_PRODID 1
+#define RESPONDER_PRODID 0
 
 std::map<sgx_enclave_id_t, dh_session_t>g_src_session_info_map;
 
@@ -71,49 +71,32 @@ extern "C" uint32_t test_create_session()
 uint32_t test_message_exchange()
 {
     ATTESTATION_STATUS ke_status = SUCCESS;
-    uint32_t target_fn_id, msg_type;
-    char* marshalled_inp_buff;
-    size_t marshalled_inp_buff_len;
     char* out_buff;
     size_t out_buff_len;
     size_t max_out_buff_size;
-    char* secret_response;
-    uint32_t secret_data;
 
-    target_fn_id = 0;
-    msg_type = MESSAGE_EXCHANGE;
-    max_out_buff_size = 50; // it's assumed the maximum payload size in response message is 50 bytes, it's for demonstration purpose
-    secret_data = 0x12345678; //Secret Data here is shown only for purpose of demonstration.
+    max_out_buff_size = 4096;
 
-    //Marshals the secret data into a buffer
-    ke_status = marshal_message_exchange_request(target_fn_id, msg_type, secret_data, &marshalled_inp_buff, &marshalled_inp_buff_len);
-    if(ke_status != SUCCESS)
-    {
-        return ke_status;
-    }
+    // TODO: 1. Change this placeholder message to an unsigned pelz request.
+    // TODO: 2. Change the message to a signed pelz request.
+    // TODO: 3. Change the message to a signed pelz request with individually encrypted fields.
+    // TODO: 4. Generate the request signature using a double-wrapped signing key (using kmyth).
+
+    char *req_msg = (char *) "{\"request_type\":1,\"key_id\":\"file:/tmp/key1.txt\",\"cipher\":\"AES/GCM/NoPadding/256\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}";
+    size_t req_len = strlen(req_msg);
 
     //Core Reference Code function
-    ke_status = send_request_receive_response(&g_session, marshalled_inp_buff,
-                                                marshalled_inp_buff_len, max_out_buff_size, &out_buff, &out_buff_len);
+    ke_status = send_request_receive_response(&g_session, req_msg, req_len,
+                                                max_out_buff_size, &out_buff, &out_buff_len);
     if(ke_status != SUCCESS)
     {
-        SAFE_FREE(marshalled_inp_buff);
         SAFE_FREE(out_buff);
         return ke_status;
     }
 
-    //Un-marshal the secret response data
-    ke_status = umarshal_message_exchange_response(out_buff, &secret_response);
-    if(ke_status != SUCCESS)
-    {
-        SAFE_FREE(marshalled_inp_buff);
-        SAFE_FREE(out_buff);
-        return ke_status;
-    }
+    // TODO: Display the pelz server's response
 
-    SAFE_FREE(marshalled_inp_buff);
     SAFE_FREE(out_buff);
-    SAFE_FREE(secret_response);
     return SUCCESS;
 }
 
@@ -143,9 +126,10 @@ extern "C" uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t*
     if (!peer_enclave_identity)
         return INVALID_PARAMETER_ERROR;
 
+    // TODO: possibly compare peer enclave's MRSIGNER to known value
     // check peer enclave's MRSIGNER
-    if (memcmp((uint8_t *)&peer_enclave_identity->mr_signer, (uint8_t*)&g_responder_mrsigner, sizeof(sgx_measurement_t)))
-        return ENCLAVE_TRUST_ERROR;
+    // if (memcmp((uint8_t *)&peer_enclave_identity->mr_signer, (uint8_t*)&g_responder_mrsigner, sizeof(sgx_measurement_t)))
+    //     return ENCLAVE_TRUST_ERROR;
 
     // check peer enclave's product ID and enclave attribute (should be INITIALIZED'ed)
     if (peer_enclave_identity->isv_prod_id != RESPONDER_PRODID || !(peer_enclave_identity->attributes.flags & SGX_FLAGS_INITTED))
@@ -154,7 +138,7 @@ extern "C" uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t*
     // check the enclave isn't loaded in enclave debug mode, except that the project is built for debug purpose
 #if defined(NDEBUG)
     if (peer_enclave_identity->attributes.flags & SGX_FLAGS_DEBUG)
-    	return ENCLAVE_TRUST_ERROR;
+        return ENCLAVE_TRUST_ERROR;
 #endif
 
     return SUCCESS;

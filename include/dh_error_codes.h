@@ -28,82 +28,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef _FIFO_DEF_H_
-#define _FIFO_DEF_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
+// This file is copied from
+// linux-sgx/SampleCode/LocalAttestation/Include/error_codes.h
 
-#include "sgx_eid.h"
-#include "sgx_dh.h"
+#ifndef ERROR_CODES_H_
+#define ERROR_CODES_H_
 
-typedef enum{
-	FIFO_DH_REQ_MSG1,
-	FIFO_DH_RESP_MSG1,
-	FIFO_DH_MSG2,
-	FIFO_DH_MSG3,
-	FIFO_DH_MSG_REQ,
-	FIFO_DH_MSG_RESP,
-	FIFO_DH_CLOSE_REQ,
-	FIFO_DH_CLOSE_RESP
-}FIFO_MSG_TYPE;
+typedef uint32_t ATTESTATION_STATUS;
 
-typedef struct _fifomsgheader
-{
-	FIFO_MSG_TYPE type;
-	size_t size; // demonstrate FIFO message content size
-	int sockfd;
-}FIFO_MSG_HEADER;
-
-typedef struct _fifomsg
-{
-	FIFO_MSG_HEADER header;
-	unsigned char msgbuf[0];
-}FIFO_MSG;
-
-
-typedef struct _session_close
-{
-	uint32_t session_id;
-}SESSION_CLOSE_REQ;
-
-typedef struct _session_msg1_response
-{
-	uint32_t sessionid;   // responder create a session ID and input here
-	sgx_dh_msg1_t dh_msg1; // responder returns msg1
-}SESSION_MSG1_RESP;
-
-typedef struct _session_msg2
-{
-	uint32_t sessionid;
-	sgx_dh_msg2_t dh_msg2;
-}SESSION_MSG2;
-
-typedef struct _session_msg3
-{
-	uint32_t sessionid;
-	sgx_dh_msg3_t dh_msg3;
-}SESSION_MSG3;
-
-typedef struct _fifo_msg_req
-{
-	uint32_t session_id;
-	size_t max_payload_size;
-	size_t size;
-	unsigned char buf[1];
-}FIFO_MSGBODY_REQ;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int connect_to_server(char* server_name, char* server_port);
-int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG **fiforesponse, size_t *fiforesponse_size);
-
-#ifdef __cplusplus
-}
-#endif
-
+#define SUCCESS                          0x00
+#define INVALID_PARAMETER                0xE1
+#define VALID_SESSION                    0xE2
+#define INVALID_SESSION                  0xE3
+#define ATTESTATION_ERROR                0xE4
+#define ATTESTATION_SE_ERROR             0xE5
+#define IPP_ERROR                        0xE6
+#define NO_AVAILABLE_SESSION_ERROR       0xE7
+#define MALLOC_ERROR                     0xE8
+#define ERROR_TAG_MISMATCH               0xE9
+#define OUT_BUFFER_LENGTH_ERROR          0xEA
+#define INVALID_REQUEST_TYPE_ERROR       0xEB
+#define INVALID_PARAMETER_ERROR          0xEC
+#define ENCLAVE_TRUST_ERROR              0xED
+#define ENCRYPT_DECRYPT_ERROR            0xEE
+#define DUPLICATE_SESSION                0xEF
+#define ERROR_OUT_OF_MEMORY              0xF0
+#define ERROR_UNEXPECTED                 0xF1
 #endif

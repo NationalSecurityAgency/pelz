@@ -31,7 +31,7 @@
 
 include ../buildenv.mk
 
-TARGET = appinitiator 
+TARGET = appinitiator
 
 RM = rm -f
 
@@ -89,7 +89,7 @@ EnclaveInitiator_u.o: EnclaveInitiator_u.c
 	@$(CC) $(CFLAGS) -I../Include -c $< -o $@
 	@echo "CC   <=  $<"
 
-EnclaveInitiator_u.c: 
+EnclaveInitiator_u.c:
 	@$(SGX_EDGER8R) --untrusted ../EnclaveInitiator/EnclaveInitiator.edl --search-path $(SGX_SDK)/include
 
 $(TARGET): EnclaveInitiator_u.o $(SRC_OBJ)

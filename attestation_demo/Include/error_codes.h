@@ -51,5 +51,5 @@ typedef uint32_t ATTESTATION_STATUS;
 #define ENCRYPT_DECRYPT_ERROR            0xEE
 #define DUPLICATE_SESSION                0xEF
 #define ERROR_OUT_OF_MEMORY              0xF0
-#define ERROR_UNEXPECTED		 0xF1
+#define ERROR_UNEXPECTED                 0xF1
 #endif
