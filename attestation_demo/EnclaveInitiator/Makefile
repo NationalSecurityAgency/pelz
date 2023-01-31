@@ -50,7 +50,7 @@ SIGNING_KEY := EnclaveInitiator_private_test.pem
 define err_no_enclave_signing_key
 FAIL - No Enclave Signing Key found.
 Generate or install $(SIGNING_KEY)
-e.g., run 'openssl genrsa -out $(SIGNING_KEY) -3 3072'
+e.g., run 'openssl genrsa -out $(shell pwd)/$(SIGNING_KEY) -3 3072'
 endef
 
 $(SIGNED_ENCLAVE_NAME) : $(ENCLAVE_NAME) $(SIGNING_KEY)
