@@ -28,12 +28,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+// This file is copied from
+// linux-sgx/SampleCode/LocalAttestation/Include/fifo_def.h
+
 #ifndef _FIFO_DEF_H_
 #define _FIFO_DEF_H_
 
 #include <stdio.h>
 #include <string.h>
-#include <fcntl.h>
+// #include <fcntl.h>
 #include <unistd.h>
 
 #include "sgx_eid.h"

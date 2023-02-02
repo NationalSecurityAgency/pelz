@@ -28,82 +28,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef _FIFO_DEF_H_
-#define _FIFO_DEF_H_
 
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <unistd.h>
+// This file is copied from
+// linux-sgx/SampleCode/LocalAttestation/Include/dh_session_protocol.h
 
-#include "sgx_eid.h"
-#include "sgx_dh.h"
+#ifndef _DH_SESSION_PROROCOL_H
+#define _DH_SESSION_PROROCOL_H
 
-typedef enum{
-	FIFO_DH_REQ_MSG1,
-	FIFO_DH_RESP_MSG1,
-	FIFO_DH_MSG2,
-	FIFO_DH_MSG3,
-	FIFO_DH_MSG_REQ,
-	FIFO_DH_MSG_RESP,
-	FIFO_DH_CLOSE_REQ,
-	FIFO_DH_CLOSE_RESP
-}FIFO_MSG_TYPE;
+#include "sgx_ecp_types.h"
+#include "sgx_key.h"
+#include "sgx_report.h"
+#include "sgx_attributes.h"
 
-typedef struct _fifomsgheader
+#define NONCE_SIZE         16
+#define MAC_SIZE           16
+
+#define MSG_BUF_LEN        sizeof(ec_pub_t)*2
+#define MSG_HASH_SZ        32
+
+
+//Session information structure
+typedef struct _la_dh_session_t
 {
-	FIFO_MSG_TYPE type;
-	size_t size; // demonstrate FIFO message content size
-	int sockfd;
-}FIFO_MSG_HEADER;
+    uint32_t  session_id; //Identifies the current session
+    uint32_t  status; //Indicates session is in progress, active or closed
+    union
+    {
+        struct
+        {
+			sgx_dh_session_t dh_session;
+        }in_progress;
 
-typedef struct _fifomsg
-{
-	FIFO_MSG_HEADER header;
-	unsigned char msgbuf[0];
-}FIFO_MSG;
+        struct
+        {
+            sgx_key_128bit_t AEK; //Session Key
+            uint32_t counter; //Used to store Message Sequence Number
+        }active;
+    };
+} dh_session_t;
 
-
-typedef struct _session_close
-{
-	uint32_t session_id;
-}SESSION_CLOSE_REQ;
-
-typedef struct _session_msg1_response
-{
-	uint32_t sessionid;   // responder create a session ID and input here
-	sgx_dh_msg1_t dh_msg1; // responder returns msg1
-}SESSION_MSG1_RESP;
-
-typedef struct _session_msg2
-{
-	uint32_t sessionid;
-	sgx_dh_msg2_t dh_msg2;
-}SESSION_MSG2;
-
-typedef struct _session_msg3
-{
-	uint32_t sessionid;
-	sgx_dh_msg3_t dh_msg3;
-}SESSION_MSG3;
-
-typedef struct _fifo_msg_req
-{
-	uint32_t session_id;
-	size_t max_payload_size;
-	size_t size;
-	unsigned char buf[1];
-}FIFO_MSGBODY_REQ;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int connect_to_server(char* server_name, char* server_port);
-int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG **fiforesponse, size_t *fiforesponse_size);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

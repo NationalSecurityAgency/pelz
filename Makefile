@@ -119,6 +119,7 @@ App_C_Files := src/util/charbuf.c \
 		 src/util/fifo_thread.c \
 		 src/util/unsecure_socket_thread.c \
 		 src/util/secure_socket_thread.c \
+		 src/util/secure_socket_ecdh.c \
 		 src/util/key_load.c \
 		 src/util/parse_pipe_message.c \
 		 src/util/pipe_io.c \
@@ -409,7 +410,6 @@ sgx/test_enclave_u.o: test/include/test_enclave_u.c
 	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
-
 test/bin/$(App_Name_Test): $(App_C_Test_Files) \
 			   $(App_C_Files) \
 				 src/util/cmd_interface.c \
@@ -592,6 +592,10 @@ sgx/enclave_request_signing.o: src/util/enclave_request_signing.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
+sgx/secure_socket_enclave.o: src/util/secure_socket_enclave.c
+	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@echo "CC  <=  $<"
+
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 		     sgx/common_table.o \
 		     sgx/key_table.o \
@@ -599,7 +603,7 @@ sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
 	 	     sgx/channel_table.o \
 		     sgx/pelz_aes_keywrap_3394nopad.o \
 		     sgx/ca_table.o \
-		     sgx/channel_table.o \
+		     sgx/secure_socket_enclave.o \
 		     sgx/pelz_request_handler.o \
 		     sgx/charbuf.o \
 		     sgx/kmyth_enclave_seal.o \
@@ -658,6 +662,7 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 			  sgx/enclave_helper_functions.o \
 			  sgx/pelz_cipher.o \
 			  sgx/ca_table.o \
+			  sgx/secure_socket_enclave.o \
 			  sgx/enclave_request_signing.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>	$@"
@@ -736,4 +741,4 @@ clean:
 	@rm -f test/data/*.csr
 	@rm -f test/data/*.srl
 	@cd kmyth/sgx && make clean
-
+	@cd attestation_demo && make clean

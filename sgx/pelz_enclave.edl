@@ -2,12 +2,14 @@ enclave {
 	from "sgx_tsgxssl.edl" import *;
 	from "sgx_pthread.edl" import *;
 	from "kmyth_enclave.edl" import *;
+	include "sgx_dh.h"
 	include "cipher/pelz_aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "common_table.h"
   include "channel_table.h"
 	include "key_load.h"
 	include "charbuf.h"
+	include "dh_datatypes.h"
 	trusted {
 
 /**
@@ -240,6 +242,13 @@ public RequestResponseStatus pelz_encrypt_request_handler(RequestType request_ty
  *                    error otherwise.
  */
 public RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, [out] charbuf* plain_data, charbuf signature, charbuf cert);
+
+
+// TODO: Add docstrings
+public uint32_t session_request([out] sgx_dh_msg1_t *dh_msg1, [out] uint32_t *session_id);
+public uint32_t exchange_report([in] sgx_dh_msg2_t *dh_msg2, [out] sgx_dh_msg3_t *dh_msg3, uint32_t session_id);
+public uint32_t generate_response([in, size = req_message_size] secure_message_t* req_message, size_t req_message_size, size_t max_payload_size, [out, size=resp_message_max_size] secure_message_t* resp_message, [out] size_t *resp_message_size, size_t resp_message_max_size, uint32_t session_id);
+public uint32_t end_session(uint32_t session_id);
 	};
 	untrusted {
 /**
@@ -256,7 +265,6 @@ public RequestResponseStatus pelz_decrypt_request_handler(RequestType request_ty
  */
 void ocall_malloc(size_t size, [out] unsigned char** buf);
 
-
 /**
  * <pre>
  * Frees untrusted memory from within the enclave. If the length of the
@@ -271,6 +279,38 @@ void ocall_malloc(size_t size, [out] unsigned char** buf);
  * @return none
  */
 void ocall_free([user_check] void* ptr, size_t len);
+
+/**
+ * <pre>
+ * Ocall wrapper for decoding JSON requests.
+ * <pre>
+ *
+ */
+int ocall_decode_request([in, size = request_len] char * request, size_t request_len, [out] RequestType * request_type, [out] charbuf * key_id, [out] charbuf* cipher_name, [out] charbuf* iv, [out] charbuf* tag, [out] charbuf * data, [out] charbuf * request_sig, [out] charbuf * requestor_cert);
+
+/**
+ * <pre>
+ * Ocall wrapper for encoding JSON responses.
+ * <pre>
+ *
+ */
+int ocall_encode_response(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf iv, charbuf tag, charbuf data, [out] charbuf * message);
+
+/**
+ * <pre>
+ * Ocall wrapper for encoding JSON error responses.
+ * <pre>
+ *
+ */
+int ocall_encode_error([out] charbuf * message, [in, string] const char *err_message);
+
+/**
+ * <pre>
+ * Ocall wrapper for loading external keys.
+ * <pre>
+ *
+ */
+int ocall_key_load(charbuf key_id);
 	};
 };	
 	

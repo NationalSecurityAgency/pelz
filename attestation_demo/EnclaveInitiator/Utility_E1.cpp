@@ -41,7 +41,7 @@ uint32_t marshal_input_parameters_e2_foo1(uint32_t target_fn_id, uint32_t msg_ty
     ms_in_msg_exchange_t *ms;
     size_t param_len, ms_len;
     char *temp_buff;
-        
+
     param_len = sizeof(var1)+sizeof(var2);
     temp_buff = (char*)malloc(param_len);
     if(!temp_buff)
@@ -96,7 +96,7 @@ uint32_t unmarshal_input_parameters_e1_foo1(external_param_struct_t *pstruct, ms
 
     memcpy(&pstruct->var1, buff, sizeof(pstruct->var1));
     memcpy(&pstruct->var2, buff + sizeof(pstruct->var1), sizeof(pstruct->var2));
-    memcpy(&pstruct->p_internal_struct->ivar1, buff+(sizeof(pstruct->var1)+sizeof(pstruct->var2)), sizeof(pstruct->p_internal_struct->ivar1)); 
+    memcpy(&pstruct->p_internal_struct->ivar1, buff+(sizeof(pstruct->var1)+sizeof(pstruct->var2)), sizeof(pstruct->p_internal_struct->ivar1));
     memcpy(&pstruct->p_internal_struct->ivar2, buff+(sizeof(pstruct->var1)+sizeof(pstruct->var2)+sizeof(pstruct->p_internal_struct->ivar1)), sizeof(pstruct->p_internal_struct->ivar2));
 
     return SUCCESS;
@@ -110,12 +110,12 @@ uint32_t marshal_retval_and_output_parameters_e1_foo1(char** resp_buffer, size_t
     int* addr;
     char* struct_data;
     size_t retval_len;
-    
+
     if(!resp_length || !p_struct_var)
         return INVALID_PARAMETER_ERROR;
 
     retval_len = sizeof(retval);
-    struct_data = (char*)p_struct_var;    
+    struct_data = (char*)p_struct_var;
     param_len = len_data + len_ptr_data;
     ret_param_len = param_len + retval_len;
     addr = *(int **)(struct_data + len_data);
@@ -123,7 +123,7 @@ uint32_t marshal_retval_and_output_parameters_e1_foo1(char** resp_buffer, size_t
     if(!temp_buff)
         return MALLOC_ERROR;
 
-    memcpy(temp_buff, &retval, sizeof(retval)); 
+    memcpy(temp_buff, &retval, sizeof(retval));
     memcpy(temp_buff + sizeof(retval), struct_data, len_data);
     memcpy(temp_buff + sizeof(retval) + len_data, addr, len_ptr_data);
     ms_len = sizeof(ms_out_msg_exchange_t) + ret_param_len;
@@ -138,7 +138,6 @@ uint32_t marshal_retval_and_output_parameters_e1_foo1(char** resp_buffer, size_t
     memcpy(&ms->ret_outparam_buff, temp_buff, ret_param_len);
     *resp_buffer = (char*)ms;
     *resp_length = ms_len;
-    
     SAFE_FREE(temp_buff);
     return SUCCESS;
 }
@@ -175,7 +174,7 @@ uint32_t umarshal_message_exchange_request(uint32_t* inp_secret_data, ms_in_msg_
     if(len != sizeof(uint32_t))
         return ATTESTATION_ERROR;
 
-    memcpy(inp_secret_data, buff, sizeof(uint32_t));    
+    memcpy(inp_secret_data, buff, sizeof(uint32_t));
 
     return SUCCESS;
 }

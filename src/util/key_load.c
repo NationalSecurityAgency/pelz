@@ -102,12 +102,14 @@ ExtensionType get_file_ext(char *filename)
   return NO_EXT;
 }
 
+// TODO: Move key_load() into trusted code to avoid nested ECALL issues.
 int key_load(charbuf key_id)
 {
   charbuf key;
   int return_value = 1;
   TableResponseStatus status;
   UriUriA key_id_data;
+  int sgx_ret;
 
   const char *error_pos = NULL;
   char *key_uri_to_parse = NULL;
@@ -154,7 +156,12 @@ int key_load(charbuf key_id)
           pelz_log(LOG_ERR, "Failed to read key file %s", filename);
           break;
         }
-        key_table_add_key(eid, &status, key_id, key);
+        sgx_ret = key_table_add_key(eid, &status, key_id, key);
+        if (sgx_ret != SGX_SUCCESS)
+        {
+          pelz_log(LOG_ERR, "ECALL Failure: key_table_add_key");
+          break;
+        }
         secure_free_charbuf(&key);
       }
       else
@@ -164,7 +171,12 @@ int key_load(charbuf key_id)
           pelz_log(LOG_ERR, "Failed to read key file %s", filename);
           break;
         }
-        key_table_add_from_handle(eid, &status, key_id, handle);
+        sgx_ret = key_table_add_from_handle(eid, &status, key_id, handle);
+        if (sgx_ret != SGX_SUCCESS)
+        {
+          pelz_log(LOG_ERR, "ECALL Failure: key_table_add_from_handle");
+          break;
+        }
       }
       free(filename);
       switch (status)
@@ -241,10 +253,16 @@ int key_load(charbuf key_id)
       pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", server_name.len, server_name.chars, server_name.len);
       pelz_log(LOG_DEBUG, "Port Number: %.*s, %d", port.len, port.chars, port.len);
       pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id.len, server_key_id.chars);
-      key_table_add_from_server(eid, &status, key_id, server_name, port, server_key_id);
+      sgx_ret = key_table_add_from_server(eid, &status, key_id, server_name, port, server_key_id);
+      if (sgx_ret != SGX_SUCCESS)
+      {
+        pelz_log(LOG_ERR, "ECALL Failure: key_table_add_from_server");
+        break;
+      }
       free_charbuf(&server_name);
       free_charbuf(&port);
       free_charbuf(&server_key_id);
+
       switch (status)
       {
       case ERR:
@@ -322,4 +340,15 @@ int file_check(const char *file_path)
     return (1);
   }
   return (0);
+}
+
+/**
+ * <pre>
+ * Ocall wrapper for loading external keys.
+ * <pre>
+ *
+ */
+int ocall_key_load(charbuf key_id)
+{
+  return key_load(key_id);
 }

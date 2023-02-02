@@ -278,3 +278,50 @@ int message_encoder(RequestType request_type, charbuf key_id, charbuf cipher_nam
   free(tmp);
   return (0);
 }
+
+/**
+ * <pre>
+ * Ocall wrapper for decoding JSON requests.
+ * <pre>
+ *
+ */
+int ocall_decode_request(char * request_msg, size_t request_len, RequestType * request_type, charbuf * key_id, charbuf* cipher_name, charbuf* iv, charbuf* tag, charbuf * data, charbuf * request_sig, charbuf * requestor_cert)
+{
+  // TODO: Consider combining all the output parameters into a struct.
+  pelz_log(LOG_DEBUG, "Request Message & Length: %.*s, %d", (int) request_len, request_msg, (int) request_len);
+
+  charbuf request = new_charbuf(request_len);
+  memcpy(request.chars, request_msg, request_len);
+
+  return request_decoder(request, request_type, key_id, cipher_name, iv, tag, data, request_sig, requestor_cert);
+}
+
+/**
+ * <pre>
+ * Ocall wrapper for encoding JSON responses.
+ * <pre>
+ *
+ */
+int ocall_encode_response(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf iv, charbuf tag, charbuf data, charbuf * message)
+{
+  // FIXME: Change the charbuf inputs to pointer+size parameter pairs (or combine them into a struct).
+
+  int ret = message_encoder(request_type, key_id, cipher_name, iv, tag, data, message);
+  pelz_log(LOG_DEBUG, "Response Message & Length: %.*s, %d", (int) message->len, message->chars, (int) message->len);
+  return ret;
+}
+
+/**
+ * <pre>
+ * Ocall wrapper for encoding JSON error responses.
+ * <pre>
+ *
+ */
+int ocall_encode_error(charbuf * message, const char *err_message)
+{
+  // FIXME: Change the charbuf input to a pointer+size parameter pair.
+
+  int ret = error_message_encoder(message, err_message);
+  pelz_log(LOG_INFO, "Encoded error message: %.*s, %d", (int) message->len, message->chars, (int) message->len);
+  return ret;
+}

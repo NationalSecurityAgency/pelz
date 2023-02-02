@@ -1,0 +1,5 @@
+bin
+EnclaveInitiator_u.c
+EnclaveInitiator_u.h
+EnclaveInitiator_t.c
+EnclaveInitiator_t.h
