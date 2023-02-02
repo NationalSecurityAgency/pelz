@@ -196,10 +196,12 @@ static charbuf get_common_name_from_cert(X509* cert)
     return new_charbuf(0);
   }
 
-  int lastpos = 0;
+  int lastpos = -1;
   size_t len;
   const unsigned char* tmp_id;
-  
+
+  // We want the last NID_commonName entry in the certificate in accordance
+  // with RFC 6125.
   for(;;)
   {
     int count = X509_NAME_get_index_by_NID(subj, NID_commonName, lastpos);
