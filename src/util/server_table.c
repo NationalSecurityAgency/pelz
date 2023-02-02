@@ -158,9 +158,11 @@ TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle)
   }
   free(data);
 
-  char* client_name = "TestClient";
-  pelz_id.common_name = calloc(11, sizeof(char));
-  pelz_id.common_name = memcpy(pelz_id.common_name, client_name, strlen(client_name));
+  charbuf common_name = get_common_name_from_cert(pelz_id.cert);
+  free_charbuf(&common_name);
+  
+  pelz_id.common_name = calloc(common_name.len+1, sizeof(char));
+  pelz_id.common_name = memcpy(pelz_id.common_name, common_name.chars, common_name.len);
   return OK;
 }
 
