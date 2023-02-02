@@ -217,7 +217,6 @@ int key_load(charbuf key_id)
     {
       pelz_log(LOG_DEBUG, "Pelz Scheme Start");
       charbuf server_name;
-      charbuf client_name;
       charbuf server_key_id;
       charbuf port;
 
@@ -239,17 +238,11 @@ int key_load(charbuf key_id)
         break;
       }
 
-      //TODO: Change this to be an input from somewhere
-      client_name = new_charbuf(10);
-      memcpy(client_name.chars, "TestClient", 10);
-
       pelz_log(LOG_DEBUG, "Common Name: %.*s, %d", server_name.len, server_name.chars, server_name.len);
       pelz_log(LOG_DEBUG, "Port Number: %.*s, %d", port.len, port.chars, port.len);
       pelz_log(LOG_DEBUG, "Key UID: %.*s", server_key_id.len, server_key_id.chars);
-      pelz_log(LOG_DEBUG, "Client Name: %.*s. %d", client_name.len, client_name.chars, client_name.len);
-      key_table_add_from_server(eid, &status, key_id, client_name, server_name, port, server_key_id);
+      key_table_add_from_server(eid, &status, key_id, server_name, port, server_key_id);
       free_charbuf(&server_name);
-      free_charbuf(&client_name);
       free_charbuf(&port);
       free_charbuf(&server_key_id);
       switch (status)
