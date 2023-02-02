@@ -157,7 +157,7 @@ void test_table_add(void)
     handle = 0;
   }
 
-  if(get_file_handle(valid_id[4], &handle))
+  if(get_file_handle(valid_id[4], &handle) && get_file_handle(valid_id[5], &cert_handle))
   {
     private_pkey_add(eid, &status, handle, cert_handle);
     CU_ASSERT(status == OK);

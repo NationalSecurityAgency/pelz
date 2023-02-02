@@ -148,6 +148,7 @@ TableResponseStatus private_pkey_init(void)
 TableResponseStatus private_pkey_free(void)
 {
   EVP_PKEY_free(pelz_id.private_pkey);
+  X509_free(pelz_id.cert);
   return OK;
 }
 
@@ -168,6 +169,19 @@ TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle)
     return ERR_X509;
   }
 
+  data_size = 0;
+  data_size = retrieve_from_unseal_table(cert_handle, &data);
+  if(data_size == 0)
+  {
+    pelz_sgx_log(LOG_ERR, "Failed to retrieve pelz cert from unseal table.");
+    return RET_FAIL;
+  }
+  if(unmarshal_ec_der_to_x509(data, data_size, &(pelz_id.cert)))
+  {
+    free(data);
+    pelz_sgx_log(LOG_ERR, "Failed to parse pelz cert.");
+    return ERR_X509;
+  }
   free(data);
   return OK;
 }
