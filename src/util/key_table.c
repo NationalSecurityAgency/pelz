@@ -93,7 +93,6 @@ TableResponseStatus key_table_add_from_server(charbuf key_id,
   TableResponseStatus status;
   charbuf key;
   int server_index = 0;
-  int client_index = 0;
   int ret;
   unsigned char *common_name;
   unsigned char *port_num;
