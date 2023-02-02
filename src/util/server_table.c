@@ -22,7 +22,9 @@
 #include "ec_key_cert_unmarshal.h"
 #include "server_table.h"
 
-pelz_identity_t pelz_id;
+pelz_identity_t pelz_id = {.private_pkey = NULL,
+			   .cert         = NULL,
+			   .common_name  = NULL};
 
 static charbuf get_common_name_from_cert(X509* cert);
 
@@ -123,6 +125,10 @@ TableResponseStatus private_pkey_free(void)
 {
   EVP_PKEY_free(pelz_id.private_pkey);
   X509_free(pelz_id.cert);
+  free(pelz_id.common_name);
+  pelz_id.private_pkey = NULL;
+  pelz_id.cert        = NULL;
+  pelz_id.common_name = NULL;
   return OK;
 }
 
@@ -158,7 +164,20 @@ TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle)
   }
   free(data);
 
+  if(X509_check_private_key(pelz_id.cert, pelz_id.private_pkey) != 1)
+  {
+    pelz_sgx_log(LOG_ERR, "Certificate/private key mismatch.");
+    private_pkey_free();
+    return ERR_X509;
+  }
   charbuf common_name = get_common_name_from_cert(pelz_id.cert);
+  if(common_name.chars == NULL || common_name.len == 0)
+  {
+    pelz_sgx_log(LOG_ERR, "Failed to extract pelz common name from certificate.");
+    private_pkey_free();
+    return RET_FAIL;
+  }
+  
   pelz_id.common_name = calloc(common_name.len+1, sizeof(char));
   pelz_id.common_name = memcpy(pelz_id.common_name, common_name.chars, common_name.len);
   free_charbuf(&common_name);
