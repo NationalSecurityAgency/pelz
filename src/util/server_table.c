@@ -23,7 +23,8 @@
 #include "server_table.h"
 
 pelz_identity_t pelz_id;
-//EVP_PKEY *private_pkey;
+
+static charbuf get_common_name_from_cert(X509* cert);
 
 TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
 {
@@ -32,9 +33,6 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
   size_t data_size = 0;
   int ret;
   int index = 0;
-  int lastpos = 0;
-  size_t len = 0;
-  const unsigned char *tmp_id;
   Table *table = get_table_by_type(type);
 
   if (table == NULL)
@@ -63,39 +61,15 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
     return ERR_X509;
   }
   free(data);
-
-  X509_NAME *subj = X509_get_subject_name(tmp_entry.value.cert);
-  if (subj == NULL)
+  tmp_entry.id = get_common_name_from_cert(tmp_entry.value.cert);
+  if(tmp_entry.id.chars == NULL || tmp_entry.id.len == 0)
   {
-    pelz_sgx_log(LOG_ERR, "Could not parse certificate data");
+    pelz_sgx_log(LOG_ERR, "Failed to extract common name from certificate.");
+    free_charbuf(&tmp_entry.id);
+    X509_free(tmp_entry.value.cert);
     return ERR_X509;
   }
-
-  //extract the common name from the X509 subject name by the index location
-  //by iterating over the subject name to the last position
-  for (;;)
-  {
-    int count = X509_NAME_get_index_by_NID(subj, NID_commonName, lastpos);
-
-    if (count == -1)
-    {
-      break;
-    }
-    lastpos = count;
-  }
-  X509_NAME_ENTRY *entry = X509_NAME_get_entry(subj, lastpos);
-  ASN1_STRING *entry_data = X509_NAME_ENTRY_get_data(entry);
-
-  len = ASN1_STRING_length(entry_data);
-  tmp_id = ASN1_STRING_get0_data(entry_data);
-
-  tmp_entry.id = new_charbuf(len);
-  if (len != tmp_entry.id.len)
-  {
-    pelz_sgx_log(LOG_ERR, "Charbuf creation error.");
-    return ERR_BUF;
-  }
-  memcpy(tmp_entry.id.chars, tmp_id, tmp_entry.id.len);
+  
   if (table_lookup(type, tmp_entry.id, &index) == 0)
   {
     if (X509_cmp(table->entries[index].value.cert, tmp_entry.value.cert) == 0)
@@ -188,4 +162,46 @@ TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle)
   pelz_id.common_name = calloc(11, sizeof(char));
   pelz_id.common_name = memcpy(pelz_id.common_name, client_name, strlen(client_name));
   return OK;
+}
+
+static charbuf get_common_name_from_cert(X509* cert)
+{
+  if(cert == NULL)
+  {
+    return new_charbuf(0);
+  }
+  X509_NAME *subj = X509_get_subject_name(cert);
+  if(subj == NULL)
+  {
+    return new_charbuf(0);
+  }
+
+  int lastpos = 0;
+  size_t len;
+  const unsigned char* tmp_id;
+  
+  for(;;)
+  {
+    int count = X509_NAME_get_index_by_NID(subj, NID_commonName, lastpos);
+    if(count == -1)
+    {
+      break;
+    }
+    lastpos = count;
+  }
+
+  X509_NAME_ENTRY* entry = X509_NAME_get_entry(subj, lastpos);
+  ASN1_STRING *entry_data = X509_NAME_ENTRY_get_data(entry);
+
+  len = ASN1_STRING_length(entry_data);
+  tmp_id = ASN1_STRING_get0_data(entry_data);
+  charbuf common_name = new_charbuf(len);
+  if(len != common_name.len)
+  {
+    pelz_sgx_log(LOG_ERR, "Charbuf creation error.");
+    free_charbuf(&common_name);
+    return new_charbuf(0);
+  }
+  memcpy(common_name.chars, tmp_id, common_name.len);
+  return common_name;  
 }
