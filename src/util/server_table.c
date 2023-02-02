@@ -183,5 +183,9 @@ TableResponseStatus private_pkey_add(uint64_t pkey_handle, uint64_t cert_handle)
     return ERR_X509;
   }
   free(data);
+
+  char* client_name = "TestClient";
+  pelz_id.common_name = calloc(11, sizeof(char));
+  pelz_id.common_name = memcpy(pelz_id.common_name, client_name, strlen(client_name));
   return OK;
 }
