@@ -90,10 +90,10 @@ void test_table_add(void)
   charbuf tmp;
   charbuf key;
   charbuf server_id;
-  charbuf client_id;
   charbuf port;
   charbuf server_key_id;
   uint64_t handle = 0;
+  uint64_t cert_handle = 0;
   char prefix[6] = "file:";
   char valid_id[6][28] =
     { "/test/data/key1.txt", "test/data/key1.txt.nkl", "7", "test/data/proxy_pub.der.nkl",
@@ -151,14 +151,14 @@ void test_table_add(void)
     //Testing the private pkey add
     private_pkey_init(eid, &status);
     CU_ASSERT(status == OK);
-    private_pkey_add(eid, &status, handle);
+    private_pkey_add(eid, &status, handle, cert_handle);
     CU_ASSERT(status == ERR_X509);
     handle = 0;
   }
 
-  if(get_file_handle(valid_id[4], &handle))
+  if(get_file_handle(valid_id[4], &handle) && get_file_handle(valid_id[5], &cert_handle))
   {
-    private_pkey_add(eid, &status, handle);
+    private_pkey_add(eid, &status, handle, cert_handle);
     CU_ASSERT(status == OK);
     pelz_log(LOG_INFO, "Private Pkey add success");
     handle = 0;
@@ -174,18 +174,15 @@ void test_table_add(void)
     
   server_id = new_charbuf(strlen("localhost"));
   memcpy(server_id.chars, "localhost", server_id.len);
-  client_id = new_charbuf(strlen("TestClient"));
-  memcpy(client_id.chars, "TestClient", client_id.len);
   port = new_charbuf(4);
   memcpy(port.chars, "7000", port.len);
   tmp = copy_CWD_to_id(prefix, valid_id[2]);
   server_key_id = new_charbuf(strlen(valid_id[2]));
   memcpy(server_key_id.chars, valid_id[2], server_key_id.len);
-  key_table_add_from_server(eid, &status, tmp, client_id, server_id, port, server_key_id);
+  key_table_add_from_server(eid, &status, tmp, server_id, port, server_key_id);
   CU_ASSERT(status == OK);
   free_charbuf(&tmp);
   free_charbuf(&server_id);
-  free_charbuf(&client_id);
   free_charbuf(&port);
   free_charbuf(&server_key_id);
   pelz_log(LOG_INFO, "Key Table add from Server complete");
