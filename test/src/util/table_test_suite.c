@@ -268,7 +268,7 @@ void test_table_lookup_func(void)
   }
 
   //Testing the look-up function for key table
-  for (int i = 0; i < 6; i++)
+  for (size_t i = 0; i < 6; i++)
   {
     tmp = copy_CWD_to_id(prefix, valid_id[i]);
     test_table_lookup(eid, &status, KEY, tmp, &index);
