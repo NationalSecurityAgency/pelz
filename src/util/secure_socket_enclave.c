@@ -354,11 +354,13 @@ ATTESTATION_STATUS generate_session_id(uint32_t *session_id)
     }
 
     // find the first unused entry in the session info array, and use the index as the session id
-    for (int i = 0; i < MAX_SESSION_COUNT; i++)
+    for (size_t i = 0; i < MAX_SESSION_COUNT; i++)
     {
         if (dh_sessions[i] == NULL)
         {
-            *session_id = i;
+	    // We know MAX_SESSION_COUNT does not exceed the UINT32_MAX (it's
+	    // hard coded at the top of this file) so the conversion here is safe.
+            *session_id = (uint32_t)i;
             return status;
         }
     }

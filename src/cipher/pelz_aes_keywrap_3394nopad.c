@@ -116,7 +116,7 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
   // the output ciphertext length we actually end up with is as expected.
   //   - ciphertext_len: integer variable used to accumulate length result
   //   - tmp_len: integer variable used to get output size from EVP functions
-  unsigned int ciphertext_len = 0;
+  size_t ciphertext_len = 0;
   int tmp_len = 0;
 
   // encrypt (wrap) the input PT, put result in the output CT buffer

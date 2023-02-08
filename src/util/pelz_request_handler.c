@@ -26,7 +26,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
       return SIGNATURE_ERROR;
     }
   }
-  int index;
+  size_t index;
   
   unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
   if(cipher_name_string == NULL)
@@ -165,7 +165,7 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   }
   
   charbuf plain_data_internal;
-  int index;
+  size_t index;
 
   unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
   if(cipher_name_string == NULL)
