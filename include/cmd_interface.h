@@ -1,6 +1,8 @@
 #ifndef _CMD_INTERFACE_PELZ_H_
 #define _CMD_INTERFACE_PELZ_H_
 
+#include <stddef.h>
+
 /*
  *  0    seal <path>               Seals a file in .nkl format (pelz-service is not involved)
  *  1    exit                      Terminates running pelz-service
