@@ -97,7 +97,7 @@ int recv_message(int socket_id, FIFO_MSG ** message)
 
   bytes_received = recv(socket_id, &header, sizeof(FIFO_MSG_HEADER), 0);
 
-  if ((bytes_received <= 0) || ((unsigned int)bytes_received != sizeof(FIFO_MSG_HEADER)))
+  if ((bytes_received <= 0) || ((size_t)bytes_received != sizeof(FIFO_MSG_HEADER)))
   {
     pelz_log(LOG_ERR, "%d::Received incomplete message header.", socket_id);
     return (1);
