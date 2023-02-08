@@ -34,7 +34,7 @@ TableResponseStatus add_cert_to_table(TableType type, uint64_t handle)
   uint8_t * data = NULL;
   size_t data_size = 0;
   int ret;
-  int index = 0;
+  size_t index = 0;
   Table *table = get_table_by_type(type);
 
   if (table == NULL)
@@ -197,7 +197,7 @@ static charbuf get_common_name_from_cert(X509* cert)
   }
 
   int lastpos = -1;
-  size_t len;
+  int len;
   const unsigned char* tmp_id;
 
   // We want the last NID_commonName entry in the certificate in accordance
@@ -216,9 +216,15 @@ static charbuf get_common_name_from_cert(X509* cert)
   ASN1_STRING *entry_data = X509_NAME_ENTRY_get_data(entry);
 
   len = ASN1_STRING_length(entry_data);
+  if(len <= 0)
+  {
+    pelz_sgx_log(LOG_ERR, "Failed to parse X509 string.")
+      return new_charbuf(0);
+  }
+  
   tmp_id = ASN1_STRING_get0_data(entry_data);
-  charbuf common_name = new_charbuf(len);
-  if(len != common_name.len)
+  charbuf common_name = new_charbuf((size_t)len);
+  if((size_t)len != common_name.len)
   {
     pelz_sgx_log(LOG_ERR, "Charbuf creation error.");
     free_charbuf(&common_name);

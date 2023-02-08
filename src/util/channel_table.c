@@ -20,7 +20,7 @@ ChanTable chan_table = {
   .num_entries = 0
 };
 
-TableResponseStatus chan_table_init(int entry_num)
+TableResponseStatus chan_table_init(size_t entry_num)
 {
   chan_table.num_entries = entry_num;
   

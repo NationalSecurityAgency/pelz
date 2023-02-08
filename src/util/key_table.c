@@ -92,7 +92,7 @@ TableResponseStatus key_table_add_from_server(charbuf key_id,
 {
   TableResponseStatus status;
   charbuf key;
-  int server_index = 0;
+  size_t server_index = 0;
   int ret;
   unsigned char *common_name;
   unsigned char *port_num;
@@ -127,9 +127,12 @@ TableResponseStatus key_table_add_from_server(charbuf key_id,
   port_num = null_terminated_string_from_charbuf(port);
 
   //the +1 is used for the len of common_name to account for the null terminater added to server_name
+
+  // Note the length type conversions are not carefully checked because once we fix kmyth they
+  // should mostly be removable.
   ret = enclave_retrieve_key(pelz_id.private_pkey, pelz_id.cert, 
     server_table.entries[server_index].value.cert, (const char *) common_name, 
-    (server_name.len + 1), (const char *) port_num, (port.len + 1), server_key_id.chars, server_key_id.len, 
+    (int)(server_name.len + 1), (const char *) port_num, (int)(port.len + 1), server_key_id.chars, server_key_id.len, 
     &retrieved_key_id, &retrieved_key_id_len, &retrieved_key, &retrieved_key_len);
   if (ret)
   {
