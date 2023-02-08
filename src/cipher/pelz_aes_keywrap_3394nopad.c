@@ -52,7 +52,11 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
     pelz_sgx_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
     return 1;
   }
-
+  if (plain_len > INT_MAX)
+  {
+    pelz_sgx_log(LOG_ERR, "Input cipher data cannot exceed INT_MAX bytes in size.");
+    return 1;
+  }
   // initialize the cipher context to match cipher suite being used
   //   - OpenSSL requires the WRAP_ALLOW flag be explicitly set to use key
   //     wrap modes through EVP.
@@ -116,7 +120,9 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
   int tmp_len = 0;
 
   // encrypt (wrap) the input PT, put result in the output CT buffer
-  if (!EVP_EncryptUpdate(ctx, cipher_data->cipher, &tmp_len, plain, plain_len))
+  // The type conversion on plain_len is safe because we know it is
+  // less than INT_MAX.
+  if (!EVP_EncryptUpdate(ctx, cipher_data->cipher, &tmp_len, plain, (int)plain_len) || tmp_len <= 0)
   {
     pelz_sgx_log(LOG_ERR, "encryption error ... exiting");
     free(cipher_data->cipher);
@@ -125,11 +131,11 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  ciphertext_len = tmp_len;
+  ciphertext_len = (size_t)tmp_len;
   pelz_sgx_log(LOG_DEBUG, "key wrap produced output CT bytes");
   
   // OpenSSL requires a "finalize" operation
-  if (!EVP_EncryptFinal_ex(ctx, (cipher_data->cipher) + ciphertext_len, &tmp_len))
+  if (!EVP_EncryptFinal_ex(ctx, (cipher_data->cipher) + ciphertext_len, &tmp_len) || tmp_len <= 0)
   {
     pelz_sgx_log(LOG_ERR, "finalization error ... exiting");
     free(cipher_data->cipher);
@@ -138,7 +144,7 @@ int pelz_aes_keywrap_3394nopad_encrypt(unsigned char *key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  ciphertext_len += tmp_len;
+  ciphertext_len += (size_t)tmp_len;
 
   // verify that the resultant CT length matches expected (input PT length plus
   // eight bytes for prepended integrity check value)
@@ -207,7 +213,11 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
     pelz_sgx_log(LOG_ERR, "bad data size - not div by 8/min 16 bytes ... exiting");
     return 1;
   }
-
+  if (cipher_data.cipher_len > INT_MAX)
+  {
+    pelz_sgx_log(LOG_ERR, "bad data size, exceeds INT_MAX bytes ... exiting");
+    return 1;
+  }
   // initialize the cipher context to match cipher suite being used
   //   - OpenSSL requires the WRAP_ALLOW flag be explicitly set to use key
   //     wrap modes through EVP.
@@ -269,7 +279,9 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
 
   // decrypt the input ciphertext, put result (with the prepended integrity
   // check value validated and removed) in the output plaintext buffer
-  if (!EVP_DecryptUpdate(ctx, *plain, &tmp_len, cipher_data.cipher, cipher_data.cipher_len))
+  // The size conversion on cipher_data.cipher_len is safe because we've already
+  // checked it does not exceed INT_MAX.
+  if (!EVP_DecryptUpdate(ctx, *plain, &tmp_len, cipher_data.cipher, (int)cipher_data.cipher_len) || tmp_len <= 0)
   {
     pelz_sgx_log(LOG_ERR, "key unwrapping error ... exiting");
     free(*plain);
@@ -278,11 +290,11 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  *plain_len = tmp_len;
+  *plain_len = (size_t)tmp_len;
   pelz_sgx_log(LOG_DEBUG, "key unwrap produced PT bytes");
 
   // "finalize" decryption
-  if (!EVP_DecryptFinal_ex(ctx, *plain + *plain_len, &tmp_len))
+  if (!EVP_DecryptFinal_ex(ctx, *plain + *plain_len, &tmp_len) || tmp_len <= 0)
   {
     pelz_sgx_log(LOG_ERR, "key unwrap 'finalize' error ... exiting");
     free(*plain);
@@ -291,7 +303,7 @@ int pelz_aes_keywrap_3394nopad_decrypt(unsigned char *key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  *plain_len += tmp_len;
+  *plain_len += (size_t)tmp_len;
 
   // verify that the resultant PT length matches the input CT length minus
   // the length of the 8-byte integrity check value
