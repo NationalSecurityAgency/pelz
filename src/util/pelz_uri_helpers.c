@@ -36,7 +36,9 @@ char *get_filename_from_key_id(UriUriA uri)
   }
 
   // The extra 2 bytes here are to prepend '/' and to append a null byte.
-  char *filename = (char *) calloc(field_length + 2, sizeof(char));
+  // The size conversion on field_length is safe because we already know
+  // it is non-negative.
+  char *filename = (char *) calloc((size_t)field_length + 2, sizeof(char));
 
   if (filename == NULL)
   {
@@ -44,7 +46,10 @@ char *get_filename_from_key_id(UriUriA uri)
     return NULL;
   }
   filename[0] = '/';
-  memcpy(filename + 1, uri.pathHead->text.first, field_length);
+
+  // The type conversion on field_length is safe because if it were negative
+  // we already would have errored out.
+  memcpy(filename + 1, uri.pathHead->text.first, (size_t)field_length);
   return filename;
 }
 
@@ -67,7 +72,9 @@ int get_pelz_uri_hostname(UriUriA uri, charbuf * common_name)
     return 1;
   }
 
-  memcpy(common_name->chars, uri.hostText.first, field_length);
+  // The type conversion on field_length is safe because if it were
+  // negative we already would have errored out.
+  memcpy(common_name->chars, uri.hostText.first, (size_t)field_length);
   return 0;
 }
 
@@ -90,7 +97,9 @@ int get_pelz_uri_port(UriUriA uri, charbuf *port)
     return 1;
   }
 
-  memcpy(port->chars, uri.pathHead->text.first, field_length);
+  // The type conversion on field_length is safe because if it were
+  // negative we already would have errored out.
+  memcpy(port->chars, uri.pathHead->text.first, (size_t)field_length);
 
   long int port_long = strtol((char *) port->chars, NULL, 10);
   if (port_long < 0 || port_long > INT_MAX)
@@ -121,7 +130,9 @@ int get_pelz_uri_key_UID(UriUriA uri, charbuf * key_id)
     return 1;
   }
 
-  memcpy(key_id->chars, uri.pathHead->next->text.first, field_length);
+  // The type conversion on field_length is safe because were it negative
+  // we already would have errored out.
+  memcpy(key_id->chars, uri.pathHead->next->text.first, (size_t)field_length);
   return 0;
 }
 
@@ -145,8 +156,9 @@ int get_pelz_uri_additional_data(UriUriA uri, charbuf * additional_data)
       pelz_log(LOG_ERR, "Failed to initialize charbuf.");
       return 1;
     }
-
-    memcpy(additional_data->chars, uri.pathHead->next->next->text.first, field_length);
+    // The type conversion on field_length is safe because if it were negative
+    // we'd have already errored-out.
+    memcpy(additional_data->chars, uri.pathHead->next->next->text.first, (size_t)field_length);
   }
   return 0;
 }
