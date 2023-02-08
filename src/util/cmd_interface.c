@@ -106,7 +106,7 @@ static int msg_cmd(char *pipe, char *msg)
   return ret;
 }
 
-int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
+int msg_arg(char *pipe, size_t pipe_len, int cmd, char *arg, int arg_len)
 {
   int ret;
   char *msg = (char *) calloc((10 + pipe_len + arg_len), sizeof(char));
@@ -117,7 +117,7 @@ int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
   return ret;
 }
 
-int msg_list(char *pipe, int pipe_len, int cmd)
+int msg_list(char *pipe, size_t pipe_len, int cmd)
 {
   int ret;
   char *msg = (char *) calloc((10 + pipe_len), sizeof(char));
