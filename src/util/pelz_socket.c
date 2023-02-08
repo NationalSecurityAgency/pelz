@@ -117,7 +117,7 @@ int pelz_key_socket_recv(int socket_id, charbuf * message)
   char client_request[MAX_SOC_DATA_SIZE];
 
   pelz_log(LOG_INFO, "%d::Reading request...", socket_id);
-  int bytes_received = recv(socket_id, &client_request, MAX_SOC_DATA_SIZE, 0);
+  ssize_t bytes_received = recv(socket_id, &client_request, MAX_SOC_DATA_SIZE, 0);
 
   if (bytes_received == -1)
   {
@@ -130,18 +130,22 @@ int pelz_key_socket_recv(int socket_id, charbuf * message)
     return (1);
   }
 
-  pelz_log(LOG_INFO, "%d::Received %d bytes.", socket_id, bytes_received);
-  *message = new_charbuf(bytes_received);
-  memcpy(message->chars, client_request, bytes_received);
+  pelz_log(LOG_INFO, "%d::Received %ld bytes.", socket_id, bytes_received);
+
+  // bytes_received can't be negative because it's a return value of
+  // recv, and so the only negative possibility is -1. That means these
+  // type conversions are safe.
+  *message = new_charbuf((size_t)bytes_received);
+  memcpy(message->chars, client_request, (size_t)bytes_received);
   return (0);
 }
 
 //Send response to client
 int pelz_key_socket_send(int socket_id, charbuf response)
 {
-  int bytes_sent = send(socket_id, response.chars, response.len, 0);
+  ssize_t bytes_sent = send(socket_id, response.chars, response.len, 0);
 
-  pelz_log(LOG_INFO, "%d::Sent %d of %d bytes.", socket_id, bytes_sent, (int) response.len);
+  pelz_log(LOG_INFO, "%d::Sent %ld of %d bytes.", socket_id, bytes_sent, (int) response.len);
   return (0);
 }
 
