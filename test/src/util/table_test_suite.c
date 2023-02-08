@@ -203,7 +203,7 @@ void test_table_lookup_func(void)
   TableResponseStatus status;
   charbuf tmp;
   uint64_t handle = 0;
-  int index = 0;
+  size_t index = 0;
   size_t count = 0;
   char prefix[6] = "file:";
 
@@ -256,7 +256,7 @@ void test_table_lookup_func(void)
   CU_ASSERT(count == 2);
 
   //Testing table id funcion
-  for (int j = 0; j < 6; j++)
+  for (size_t j = 0; j < 6; j++)
   {
     charbuf id = new_charbuf(0);
     tmp = copy_CWD_to_id(prefix, valid_id[j]);

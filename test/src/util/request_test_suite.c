@@ -449,7 +449,14 @@ void test_signed_request_handling(void)
   charbuf der;
   charbuf output;
   charbuf cipher_data;
-  der.len = i2d_X509(requestor_cert_x509, &(der.chars));
+
+  int der_len = i2d_X509(requestor_cert_x509, &(der.chars));
+  if(der_len < 0)
+  {
+    CU_ASSERT(0);
+    return;
+  }
+  der.len = (size_t)der_len;
 
   charbuf cipher_name = new_charbuf(strlen(cipher_names[0]));
   memcpy(cipher_name.chars, cipher_names[0], cipher_name.len);

@@ -43,7 +43,7 @@ int aes_keywrap_suite_add_tests(CU_pSuite suite)
 //----------------------------------------------------------------------------
 // convert_HexString_to_ByteArray()
 //----------------------------------------------------------------------------
-int convert_HexString_to_ByteArray(char **result, char *hex_str, int str_size)
+int convert_HexString_to_ByteArray(char **result, char *hex_str, size_t str_size)
 {
   if ((str_size % 2) != 0)
   {
@@ -80,11 +80,11 @@ int get_aes_keywrap_vector_from_file(FILE * fid,
 
   // create variables to buffer the components in a single test vector
   char *K_str;
-  int K_str_len = 0;
+  size_t K_str_len = 0;
   char *P_str;
-  int P_str_len = 0;
+  size_t P_str_len = 0;
   char *C_str;
-  int C_str_len = 0;
+  size_t C_str_len = 0;
   bool pass_result = true;      // unless vector has a 'FAIL' line, should pass
 
   K_str = (char *) calloc(MAX_TEST_VECTOR_COMPONENT_LENGTH, 1);
@@ -236,7 +236,7 @@ int get_aes_keywrap_vector_from_file(FILE * fid,
 void test_aes_keywrap_parameters(void)
 {
   unsigned char *key = NULL;
-  int key_len = 0;
+  size_t key_len = 0;
 
   unsigned char *inData = NULL;
   size_t inData_len = 0;
@@ -364,7 +364,7 @@ void test_aes_keywrap_vectors(void)
     if (test_vector_fd[i] != NULL)
     {
       // counter to track number of test vectors applied from this file
-      int test_vector_count = 0;
+      size_t test_vector_count = 0;
 
       // flag used to signal stop processing test vector file
       //   - invalid kmyth "function to test" associated with vector set

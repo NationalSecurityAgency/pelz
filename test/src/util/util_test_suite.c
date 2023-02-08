@@ -127,9 +127,6 @@ void test_new_charbuf(void)
   CU_ASSERT(buf.chars == NULL);
   CU_ASSERT(buf.len == 0);
 
-  buf = new_charbuf(-5);
-  CU_ASSERT(buf.chars == NULL);
-  CU_ASSERT(buf.len == 0);
 }
 
 void test_free_charbuf(void)
