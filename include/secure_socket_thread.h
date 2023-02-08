@@ -3,6 +3,10 @@
 
 #include <pthread.h>
 
+#include "sgx_eid.h"
+#include "sgx_dh.h"
+
+
 typedef struct
 {
   int socket_id;

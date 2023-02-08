@@ -163,7 +163,6 @@ ATTESTATION_STATUS send_request_ocall(uint32_t session_id, secure_message_t* req
 		return INVALID_SESSION;
 	}
 
-	//TODO copy to output message pointer
 	memcpy(resp_message, msgresp->msgbuf, msgresp->header.size < resp_message_size ? msgresp->header.size : resp_message_size);
 
 	free(msgresp);

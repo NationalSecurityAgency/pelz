@@ -41,7 +41,12 @@
 
 #include "EnclaveInitiator_u.h"
 
+#include "fifo_def.h"
+
 #define ENCLAVE_INITIATOR_NAME "libenclave_initiator.signed.so"
+
+#define SERVER_ADDR "127.0.0.1"
+#define SERVER_PORT "10601"
 
 int main(int argc, char* argv[])
 {
@@ -54,6 +59,11 @@ int main(int argc, char* argv[])
     (void)argc;
     (void)argv;
 
+    // Establish the socket connection that will be used to communicate with Pelz
+    if (connect_to_server(SERVER_ADDR, SERVER_PORT) == -1) {
+        printf("failed to connect to the Pelz server.\n");
+        return -1;
+    }
 
     // create ECDH initiator enclave
     status = sgx_create_enclave(ENCLAVE_INITIATOR_NAME, SGX_DEBUG_FLAG, &token, &update, &initiator_enclave_id, NULL);
@@ -94,4 +104,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
- 
