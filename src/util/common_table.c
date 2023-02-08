@@ -201,7 +201,7 @@ TableResponseStatus table_id_count(TableType type, size_t *count)
   return OK;
 }
 
-TableResponseStatus table_id(TableType type, int index, charbuf *id)
+TableResponseStatus table_id(TableType type, size_t index, charbuf *id)
 {
   Table *table = get_table_by_type(type);
 
