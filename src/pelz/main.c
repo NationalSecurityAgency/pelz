@@ -392,7 +392,7 @@ int main(int argc, char **argv)
       break;
     case CMD_REMOVE_KEY:
       //Execute the keytable remove <ID> command
-      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]));
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], strlen(argv[cmd_param_index]));
       break;
     case CMD_REMOVE_ALL_KEYS:
       //Execute the keytable remove all command
@@ -404,11 +404,11 @@ int main(int argc, char **argv)
       break;
     case CMD_LOAD_CERT:
       //Execute the pki load cert <path> command
-      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]));
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], strlen(argv[cmd_param_index]));
       break;
     case CMD_LOAD_PRIV:
       //Execute the pki load private <path> command
-      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]));
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], strlen(argv[cmd_param_index]));
       break;
     case CMD_LIST_CERTS:
       //Execute the pki cert list command
@@ -416,7 +416,7 @@ int main(int argc, char **argv)
       break;
     case CMD_REMOVE_CERT:
       //Execute the pki remove <CN> command
-      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]));
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], strlen(argv[cmd_param_index]));
       break;
     case CMD_REMOVE_ALL_CERTS:
       //Execute the pki remove --all command
@@ -428,7 +428,7 @@ int main(int argc, char **argv)
       break;
     case CMD_LOAD_CA:
       //Execute the ca load <path> command
-      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]));
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], strlen(argv[cmd_param_index]));
       break;
     case CMD_LIST_CA:
       //Execute the ca list command
@@ -436,7 +436,7 @@ int main(int argc, char **argv)
       break;
     case CMD_REMOVE_CA:
       //Execute the ca remove <CN> command
-      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]));
+      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], strlen(argv[cmd_param_index]));
       break;
     case CMD_REMOVE_ALL_CA:
       //Execute the ca remove --all command
