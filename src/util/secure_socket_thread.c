@@ -89,7 +89,7 @@ void *secure_socket_thread(void *arg)
 //Receive message from client
 int recv_message(int socket_id, FIFO_MSG ** message)
 {
-  size_t bytes_received;
+  ssize_t bytes_received;
   FIFO_MSG_HEADER header;
   FIFO_MSG *msg;
 
@@ -97,7 +97,7 @@ int recv_message(int socket_id, FIFO_MSG ** message)
 
   bytes_received = recv(socket_id, &header, sizeof(FIFO_MSG_HEADER), 0);
 
-  if (bytes_received != sizeof(FIFO_MSG_HEADER))
+  if ((bytes_received <= 0) || ((unsigned int)bytes_received != sizeof(FIFO_MSG_HEADER)))
   {
     pelz_log(LOG_ERR, "%d::Received incomplete message header.", socket_id);
     return (1);
@@ -118,7 +118,9 @@ int recv_message(int socket_id, FIFO_MSG ** message)
   if (header.size > 0)
   {
     bytes_received = recv(socket_id, msg->msgbuf, header.size, 0);
-    if (bytes_received != header.size)
+    // If bytes_received is non-negative it can safely be converted to
+    // a size_t for the second comparison.
+    if ((bytes_received <= 0) || ((size_t)bytes_received != header.size))
     {
       pelz_log(LOG_ERR, "%d::Received incomplete message content.", socket_id);
       return (1);
