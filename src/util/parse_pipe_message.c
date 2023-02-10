@@ -157,6 +157,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     {
       return INVALID;
     }
+    printf("CMD_LOAD_PRIV %s, %s\n", tokens[3], tokens[4]);
     if (pelz_load_file_to_enclave(tokens[3], &priv_handle))
     {
       pelz_log(LOG_INFO, "Invalid extension for load private call");
