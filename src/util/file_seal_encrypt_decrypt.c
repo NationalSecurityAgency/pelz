@@ -1,5 +1,5 @@
 /*
- * seal.c
+ * file_seal_encrypt_decrypt.c
  */
 
 #include <stdlib.h>
@@ -10,10 +10,11 @@
 #include <kmyth/file_io.h>
 
 #include "pelz_log.h"
-#include "seal.h"
+#include "file_seal_encrypt_decrypt.h"
 
 #include "pelz_enclave.h"
 #include "sgx_seal_unseal_impl.h"
+#include "pelz_request_handler.h"
 
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
@@ -80,6 +81,153 @@ int seal(char *filename, char **outpath, size_t outpath_size, bool tpm)
     }
     free(sgx_seal);
   }
+  return 0;
+}
+
+//Encrypt key for file is hard coded
+int file_encrypt(char *filename, char **outpath, size_t outpath_size)
+{
+  uint8_t *data = NULL;
+  size_t data_len = 0;
+
+  pelz_log(LOG_DEBUG, "File Encryption function");
+  //Validating filename and data from file
+  if (read_validate(filename, &data, &data_len))
+  {
+    return 1;
+  }
+
+  charbuf plain_data = new_charbuf(data_len);
+  memcpy(plain_data.chars, data, plain_data.len);
+  free(data);
+
+  charbuf cipher_data;
+  charbuf iv;
+  charbuf tag;
+  RequestResponseStatus status;
+
+
+  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  file_encrypt_in_enclave(eid, &status, plain_data, &cipher_data, &iv, &tag);
+  if (status != REQUEST_OK)
+  {
+    free_charbuf(&plain_data);
+    sgx_destroy_enclave(eid);
+    return 1;
+  }
+  free_charbuf(&plain_data);
+  sgx_destroy_enclave(eid);
+
+
+  //Checking and/or setting output path
+  if (outpath_validate(filename, outpath, outpath_size, false))
+  {
+    free_charbuf(&cipher_data);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    return 1;
+  }
+
+  //Write bytes to file based on outpath
+  if (write_bytes_to_file(*outpath, cipher_data.chars, cipher_data.len))
+  {
+    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
+    free_charbuf(&cipher_data);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    return 1;
+  }
+  free_charbuf(&cipher_data);
+
+  //Write bytes to file for IV
+  if (write_bytes_to_file("KEY_IV", iv.chars, iv.len))
+  {
+    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    return 1;
+  }
+  free_charbuf(&iv);
+
+  //Write bytes to file for Tag
+  if (write_bytes_to_file("KEY_TAG", tag.chars, tag.len))
+  {
+    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
+    free_charbuf(&tag);
+    return 1;
+  }
+  free_charbuf(&tag);
+  return 0;
+}
+
+//Decrypt key for file is hard coded
+int file_decrypt(char *filename, char **outpath, size_t outpath_size)
+{
+  uint8_t *data = NULL;
+  size_t data_len = 0;
+  
+  pelz_log(LOG_DEBUG, "File decryption function");
+  //Validating filename and data from file
+  if (read_validate(filename, &data, &data_len))
+  { 
+    return 1;
+  }
+  charbuf cipher_data = new_charbuf(data_len);
+  memcpy(cipher_data.chars, data, cipher_data.len);
+  free(data);
+  data_len = 0;
+
+  if (read_validate("KEY_IV", &data, &data_len))
+  {
+    return 1;
+  }
+  charbuf iv = new_charbuf(data_len);
+  memcpy(iv.chars, data, iv.len);
+  free(data);
+  data_len = 0;
+ 
+  if (read_validate("KEY_TAG", &data, &data_len))
+  {
+    return 1;
+  }
+  charbuf tag = new_charbuf(data_len);
+  memcpy(tag.chars, data, tag.len);
+  free(data);
+  data_len = 0;
+
+  charbuf plain_data;
+  RequestResponseStatus status;
+  
+  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  file_decrypt_in_enclave(eid, &status, cipher_data, iv, tag, &plain_data);
+  if (status != REQUEST_OK)
+  {
+    free_charbuf(&cipher_data);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    sgx_destroy_enclave(eid);
+    return 1;
+  }
+  free_charbuf(&cipher_data);
+  free_charbuf(&iv);
+  free_charbuf(&tag);
+  sgx_destroy_enclave(eid);
+
+  //Checking and/or setting output path
+  if (outpath_validate(filename, outpath, outpath_size, false))
+  {
+    free_charbuf(&plain_data);
+    return 1;
+  }
+  
+  //Write bytes to file based on outpath
+  if (write_bytes_to_file(*outpath, plain_data.chars, plain_data.len))
+  { 
+    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
+    free_charbuf(&plain_data);
+    return 1;
+  }
+  free_charbuf(&plain_data);
   return 0;
 }
 

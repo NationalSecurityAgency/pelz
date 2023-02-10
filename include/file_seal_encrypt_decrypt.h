@@ -1,5 +1,5 @@
-#ifndef _SEAL_H_
-#define _SEAL_H_
+#ifndef _FILE_SEAL_ENCRYPT_DECRYPT_H_
+#define _FILE_SEAL_ENCLRYT_DECRYPT_H_
 
 #include <stdbool.h>
 
@@ -17,6 +17,33 @@
  * @returns 0 on success, 1 on error
  */
   int seal(char *filename, char **outpath, size_t outpath_size, bool tpm);
+
+/**
+ * @brief Reads a file then will encrypt the file with hard coded key. The encrypted
+ * file data will be written to a new file.
+ *
+ * @param[in]   filename     The filename in a null-terminated string
+ * @param[in]   outpath      The filename for the written output of the sealed data
+ * @param[in]   outpath_size The outpath character size
+ * @param[in]   tpm          The boolen to determine if to use seal_ski
+ * @param[out]  outpath      The determined default filename for the written output sealed data
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int file_encrypt(char *filename, char **outpath, size_t outpath_size);
+
+/**
+ * @brief Reads a file then will decrypt the file with hard coded key. The decrypted
+ * file data will be written to a new file.
+ *
+ * @param[in]   filename     The filename in a null-terminated string
+ * @param[in]   outpath      The filename for the written output of the sealed data
+ * @param[in]   outpath_size The outpath character size
+ * @param[out]  outpath      The determined default filename for the written output sealed data
+ *
+ * @returns 0 on success, 1 on error
+ */
+  int file_decrypt(char *filename, char **outpath, size_t outpath_size);
 
 /**
  * @brief Takes data and calls the kmyth TPM seal function which provides back the TPM sealed data.

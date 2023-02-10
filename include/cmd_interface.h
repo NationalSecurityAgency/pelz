@@ -34,6 +34,8 @@ typedef enum
   CMD_LIST_CA,
   CMD_REMOVE_CA,
   CMD_REMOVE_ALL_CA,
+  CMD_ENCRYPT,
+  CMD_DECRYPT,
 } CmdType;
 
 typedef enum
@@ -48,6 +50,8 @@ typedef enum
   CERT,     
   PRIVATE,  
   CA,
+  ENC,
+  DEC,
   OTHER     //Non-null value other then the ones listed above
 }CmdArgValue;
 
