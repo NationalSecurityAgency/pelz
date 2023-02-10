@@ -8,6 +8,12 @@
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 
+
+// TODO:
+// Decrypt individual parameters from signed JSON requests
+// Encrypt individual parameters in response JSON
+
+
 RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag, charbuf signature, charbuf cert)
 {
   pelz_sgx_log(LOG_DEBUG, "Encrypt Request Handler");

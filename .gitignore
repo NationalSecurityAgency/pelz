@@ -1,7 +1,13 @@
 *.pem
 *.o
 *.so
+bin
+test/log
 sgx/pelz_enclave_t.c
 sgx/pelz_enclave_t.h
 sgx/pelz_enclave_u.c
 sgx/pelz_enclave_u.h
+test_enclave_t.c
+test_enclave_t.h
+test_enclave_u.c
+test_enclave_u.h

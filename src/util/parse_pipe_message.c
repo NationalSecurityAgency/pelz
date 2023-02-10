@@ -150,17 +150,26 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
     }
     return LOAD_CERT;
   case CMD_LOAD_PRIV:
-    if (num_tokens != 4)
+    {
+    uint64_t priv_handle;
+    uint64_t cert_handle;
+    if (num_tokens != 5)
     {
       return INVALID;
     }
-    if (pelz_load_file_to_enclave(tokens[3], &handle))
+    if (pelz_load_file_to_enclave(tokens[3], &priv_handle))
     {
       pelz_log(LOG_INFO, "Invalid extension for load private call");
       pelz_log(LOG_DEBUG, "Path: %s", tokens[3]);
       return INVALID_EXT_PRIV;
     }
-    private_pkey_add(eid, &ret, handle);
+    if (pelz_load_file_to_enclave(tokens[4], &cert_handle))
+    {
+      pelz_log(LOG_INFO, "Invalid extension for load private cal");
+      pelz_log(LOG_DEBUG, "Path: %s", tokens[4]);
+      return INVALID_EXT_PRIV;
+    }
+    private_pkey_add(eid, &ret, priv_handle, cert_handle);
     if (ret != OK)
     {
       pelz_log(LOG_ERR, "Add private pkey failure");
@@ -178,6 +187,7 @@ ParseResponseStatus parse_pipe_message(char **tokens, size_t num_tokens)
       return ADD_PRIV_FAIL;
     }
     return LOAD_PRIV;
+    }
   case CMD_LIST_CERTS:
     //Get the number of server table entries
     table_id_count(eid, &ret, SERVER, &count);

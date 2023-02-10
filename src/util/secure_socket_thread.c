@@ -1,3 +1,5 @@
+/* Note: much of this code is adapted from linux-sgx/SampleCode/LocalAttestation/AppResponder/CPTask.cpp */
+
 #include <string.h>
 #include <pthread.h>
 #include <sys/types.h>
@@ -14,13 +16,12 @@
 #include "pelz_service.h"
 #include "pelz_request_handler.h"
 #include "secure_socket_thread.h"
+#include "secure_socket_ecdh.h"
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
 #include ENCLAVE_HEADER_UNTRUSTED
 
-#define BUFSIZE 1024
-#define MODE 0600
 
 static void *secure_process_wrapper(void *arg)
 {
@@ -85,152 +86,96 @@ void *secure_socket_thread(void *arg)
   return NULL;
 }
 
-//This function will need to be changed with the attestation handshake and process flow
+//Receive message from client
+int recv_message(int socket_id, FIFO_MSG ** message)
+{
+  size_t bytes_received;
+  FIFO_MSG_HEADER header;
+  FIFO_MSG *msg;
+
+  pelz_log(LOG_DEBUG, "%d::Reading message header...", socket_id);
+
+  bytes_received = recv(socket_id, &header, sizeof(FIFO_MSG_HEADER), 0);
+
+  if (bytes_received != sizeof(FIFO_MSG_HEADER))
+  {
+    pelz_log(LOG_ERR, "%d::Received incomplete message header.", socket_id);
+    return (1);
+  }
+
+  if (header.size > MAX_MSG_SIZE)
+  {
+    pelz_log(LOG_ERR, "%d::Received message with invalid size.", socket_id);
+    return (1);
+  }
+
+  header.sockfd = socket_id;  // Save current socket fd in header
+
+  msg = (FIFO_MSG *) malloc(sizeof(FIFO_MSG_HEADER) + header.size);
+
+  memcpy(msg, &header, sizeof(FIFO_MSG_HEADER));
+
+  if (header.size > 0)
+  {
+    bytes_received = recv(socket_id, msg->msgbuf, header.size, 0);
+    if (bytes_received != header.size)
+    {
+      pelz_log(LOG_ERR, "%d::Received incomplete message content.", socket_id);
+      return (1);
+    }
+  }
+
+  pelz_log(LOG_INFO, "%d::Received message with %d bytes.", socket_id, header.size);
+
+  *message = msg;
+
+  return (0);
+}
+
 void *secure_socket_process(void *arg)
 {
   ThreadArgs *processArgs = (ThreadArgs *) arg;
-  int new_socket = processArgs->socket_id;
+  int sockfd = processArgs->socket_id;
   pthread_mutex_t lock = processArgs->lock;
 
-  charbuf request;
-  charbuf message;
-  RequestResponseStatus status;
-  const char *err_message;
+  int ret;
 
-  //Attestation handshake function should be added here in the process flow
+  FIFO_MSG * message = NULL;
 
-  while (!pelz_key_socket_check(new_socket))
+  while (!pelz_key_socket_check(sockfd))
   {
     //Receiving request and Error Checking
-    if (pelz_key_socket_recv(new_socket, &request))
+    if (recv_message(sockfd, &message))
     {
-      pelz_log(LOG_ERR, "%d::Error Receiving Request", new_socket);
-      while (!pelz_key_socket_check(new_socket))
+      pelz_log(LOG_ERR, "%d::Error receiving message", sockfd);
+      while (!pelz_key_socket_check(sockfd))
       {
         continue;
       }
-      pelz_key_socket_close(new_socket);
+      pelz_key_socket_close(sockfd);
       return NULL;
     }
 
-    pelz_log(LOG_DEBUG, "%d::Request & Length: %.*s, %d", new_socket, (int) request.len, request.chars, (int) request.len);
-
-    RequestType request_type = REQ_UNK;
-
-    charbuf key_id;
-    charbuf request_sig;
-    charbuf requestor_cert;
-    charbuf cipher_name;
-
-    charbuf output = new_charbuf(0);
-    charbuf input_data = new_charbuf(0);
-    charbuf tag = new_charbuf(0);
-    charbuf iv = new_charbuf(0);
-
-    //Parse request for processing
-    if (request_decoder(request, &request_type, &key_id, &cipher_name, &iv, &tag, &input_data, &request_sig, &requestor_cert))
-    {
-      err_message = "Missing Data";
-      error_message_encoder(&message, err_message);
-      pelz_log(LOG_DEBUG, "%d::Error: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
-      pelz_key_socket_close(new_socket);
-      free_charbuf(&request);
-      return NULL;
-    }
-    free_charbuf(&request);
+    pelz_log(LOG_DEBUG, "%d::Request type & Length: %d, %d", sockfd, message->header.type, message->header.size);
 
     pthread_mutex_lock(&lock);
-    switch(request_type)
-    {
-    case REQ_ENC:
-      pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
-      if (status == KEK_NOT_LOADED)
-      {
-	if (key_load(key_id) == 0)
-        {
-          pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
-        }
-        else
-        {
-          status = KEK_LOAD_ERROR;
-        }
-      }
-      break;
-    case REQ_DEC:
-      pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
-      if (status == KEK_NOT_LOADED)
-      {
-	if (key_load(key_id) == 0)
-        {
-          pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
-        }
-        else
-        {
-          status = KEK_LOAD_ERROR;
-        }
-      }
-      break;
-    default:
-      status = REQUEST_TYPE_ERROR;
-    }
+    ret = handle_message(sockfd, message);
     pthread_mutex_unlock(&lock);
 
-    if (status != REQUEST_OK)
-    {
-      pelz_log(LOG_ERR, "%d::Service Error\nSend error message.", new_socket);
-      switch (status)
-      {
-      case KEK_LOAD_ERROR:
-        err_message = "Key not added";
-        break;
-      case KEY_OR_DATA_ERROR:
-        err_message = "Key or Data Error";
-        break;
-      case ENCRYPT_ERROR:
-        err_message = "Encrypt Error";
-        break;
-      case DECRYPT_ERROR:
-        err_message = "Decrypt Error";
-        break;
-      case REQUEST_TYPE_ERROR:
-        err_message = "Request Type Error";
-        break;
-      case CHARBUF_ERROR:
-        err_message = "Charbuf Error";
-        break;
-      default:
-        err_message = "Unrecognized response";
-      }
-      error_message_encoder(&message, err_message);
-    }
-    else
-    {
-      message_encoder(request_type, key_id, cipher_name, iv, tag, output, &message);
-      pelz_log(LOG_DEBUG, "%d::Message Encode Complete", new_socket);
-      pelz_log(LOG_DEBUG, "%d::Message: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
-    }
-    free_charbuf(&key_id);
-    free_charbuf(&output);
-    free_charbuf(&iv);
-    free_charbuf(&tag);
-    free_charbuf(&cipher_name);
+    free(message);
+    message = NULL;
 
-    pelz_log(LOG_DEBUG, "%d::Message & Length: %.*s, %d", new_socket, (int) message.len, message.chars, (int) message.len);
-    //Send processed request back to client
-    if (pelz_key_socket_send(new_socket, message))
+    if (ret)
     {
-      pelz_log(LOG_ERR, "%d::Socket Send Error", new_socket);
-      free_charbuf(&message);
-      while (!pelz_key_socket_check(new_socket))
+      pelz_log(LOG_ERR, "%d::Error handling message", sockfd);
+      while (!pelz_key_socket_check(sockfd))
       {
         continue;
       }
-      pelz_key_socket_close(new_socket);
+      pelz_key_socket_close(sockfd);
       return NULL;
     }
-    free_charbuf(&message);
   }
-  pelz_key_socket_close(new_socket);
+
   return NULL;
 }
-
