@@ -112,7 +112,6 @@ int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
   char *msg = (char *) calloc((10 + pipe_len + arg_len), sizeof(char));
 
   sprintf(msg, "pelz %d %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg);
-  printf("%s\n", msg);
   ret = msg_cmd(pipe, msg);
   free(msg);
   return ret;
@@ -124,7 +123,6 @@ int msg_two_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len, char 
   char *msg = (char *) calloc((11 + pipe_len + arg_len + arg2_len), sizeof(char));
 
   sprintf(msg, "pelz %d %.*s %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg, arg2_len, arg2);
-  printf("%s\n", msg);
   ret = msg_cmd(pipe, msg);
   free(msg);
   return ret;
