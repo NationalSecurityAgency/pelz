@@ -81,7 +81,7 @@ typedef enum
  * @param[in]   pipe      The pipe to receive a response on
  * @param[in]   pipe_len  The character length of the pipe value
  * @param[in]   cmd       The value of the command to be sent on the pipe
- * @param[in]   arg       The command line argument to sent on the pipe
+ * @param[in]   arg       The command line argument to be sent on the pipe
  * @param[in]   arg_len   The character length of the argument to be sent
  * @param[in]   arg2      The second command line argument to sent on the pipe
  * @param[in]   arg2_len  The character length of the second argument to be sent
