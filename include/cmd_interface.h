@@ -76,7 +76,7 @@ typedef enum
 
 /**
  * @brief Creates and sends message then listens for response on the pipe provided.
- *        Message includes an agrument to be passed to the service.
+ *        Message includes an argument to be passed to the service.
  *
  * @param[in]   pipe      The pipe to receive a response on
  * @param[in]   pipe_len  The character length of the pipe value
