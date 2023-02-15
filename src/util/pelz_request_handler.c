@@ -5,6 +5,8 @@
 #include "pelz_enclave_log.h"
 #include "enclave_request_signing.h"
 
+#include <openssl/rand.h>
+
 #include "sgx_trts.h"
 #include ENCLAVE_HEADER_TRUSTED
 
@@ -230,15 +232,25 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   return REQUEST_OK;
 }
 
-RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag)
+RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher_name, charbuf * cipher_data, charbuf * key, charbuf * iv, charbuf * tag)
 {
   pelz_sgx_log(LOG_DEBUG, "File Encryption");
-  char* cipher_name_string = "AES/GCM/NoPadding/256";
+  key->len = 32;
+  ocall_malloc(key->len, &key->chars);
+  if(RAND_priv_bytes(key->chars, key->len) != 1)
+  {
+    pelz_sgx_log(LOG_DEBUG, "Key generation failed");
+    return ENCRYPT_ERROR;
+  }
 
-  charbuf key = new_charbuf(32);
-  memcpy(key.chars, "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", key.len);
+  unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
+  if(cipher_name_string == NULL)
+  {
+    pelz_sgx_log(LOG_DEBUG, "Cipher name string missing");
+    return ENCRYPT_ERROR;
+  }
 
-  cipher_t cipher_struct = pelz_get_cipher_t_from_string(cipher_name_string);
+  cipher_t cipher_struct = pelz_get_cipher_t_from_string((char*)cipher_name_string);
 
   if(cipher_struct.cipher_name == NULL)
   {
@@ -248,8 +260,8 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf * ciph
 
   pelz_sgx_log(LOG_DEBUG, "Cipher Encrypt");
   cipher_data_t cipher_data_st;
-  if (cipher_struct.encrypt_fn(key.chars,
-             key.len,
+  if (cipher_struct.encrypt_fn(key->chars,
+             key->len,
              plain_data.chars,
              plain_data.len,
              &cipher_data_st))
@@ -338,16 +350,19 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf * ciph
   return REQUEST_OK;
 }
 
-RequestResponseStatus file_decrypt_in_enclave(charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data)
+RequestResponseStatus file_decrypt_in_enclave(charbuf cipher_name, charbuf cipher_data, charbuf key, charbuf iv, charbuf tag, charbuf * plain_data)
 {
   pelz_sgx_log(LOG_DEBUG, "File Decryption");
   charbuf plain_data_internal;
-  char* cipher_name_string = "AES/GCM/NoPadding/256";
-  
-  charbuf key = new_charbuf(32);
-  memcpy(key.chars, "KIENJCDNHVIJERLMALIDFEKIUFDALJFG", key.len);
 
-  cipher_t cipher_struct = pelz_get_cipher_t_from_string(cipher_name_string);
+  unsigned char* cipher_name_string = null_terminated_string_from_charbuf(cipher_name);
+  if(cipher_name_string == NULL)
+  {
+    pelz_sgx_log(LOG_DEBUG, "Cipher name string missing");
+    return DECRYPT_ERROR;
+  }
+
+  cipher_t cipher_struct = pelz_get_cipher_t_from_string((char*)cipher_name_string);
 
   if(cipher_struct.cipher_name == NULL)
   {

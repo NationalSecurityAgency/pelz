@@ -101,14 +101,18 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   memcpy(plain_data.chars, data, plain_data.len);
   free(data);
 
+  charbuf cipher_name = new_charbuf(21);
+  memcpy(cipher_name.chars, "AES/GCM/NoPadding/256", cipher_name.len);
+
   charbuf cipher_data;
+  charbuf key;
   charbuf iv;
   charbuf tag;
   RequestResponseStatus status;
 
 
   sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
-  file_encrypt_in_enclave(eid, &status, plain_data, &cipher_data, &iv, &tag);
+  file_encrypt_in_enclave(eid, &status, plain_data, cipher_name, &cipher_data, &key, &iv, &tag);
   if (status != REQUEST_OK)
   {
     free_charbuf(&plain_data);
@@ -133,11 +137,23 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   {
     pelz_log(LOG_ERR, "error writing data to output file ... exiting");
     free_charbuf(&cipher_data);
+    free_charbuf(&key);
     free_charbuf(&iv);
     free_charbuf(&tag);
     return 1;
   }
   free_charbuf(&cipher_data);
+
+  //Write bytes to file for KEY
+  if (write_bytes_to_file("KEY", key.chars, key.len))
+  {
+    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
+    free_charbuf(&key);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    return 1;
+  }
+  free_charbuf(&key);
 
   //Write bytes to file for IV
   if (write_bytes_to_file("KEY_IV", iv.chars, iv.len))
@@ -172,8 +188,21 @@ int file_decrypt(char *filename, char **outpath, size_t outpath_size)
   { 
     return 1;
   }
+
   charbuf cipher_data = new_charbuf(data_len);
   memcpy(cipher_data.chars, data, cipher_data.len);
+  free(data);
+  data_len = 0;
+
+  charbuf cipher_name = new_charbuf(21);
+  memcpy(cipher_name.chars, "AES/GCM/NoPadding/256", cipher_name.len);
+
+  if (read_validate("KEY", &data, &data_len))
+  {
+    return 1;
+  }
+  charbuf key = new_charbuf(data_len);
+  memcpy(key.chars, data, key.len);
   free(data);
   data_len = 0;
 
@@ -199,16 +228,20 @@ int file_decrypt(char *filename, char **outpath, size_t outpath_size)
   RequestResponseStatus status;
   
   sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
-  file_decrypt_in_enclave(eid, &status, cipher_data, iv, tag, &plain_data);
+  file_decrypt_in_enclave(eid, &status, cipher_name, cipher_data, key, iv, tag, &plain_data);
   if (status != REQUEST_OK)
   {
+    free_charbuf(&cipher_name);
     free_charbuf(&cipher_data);
+    free_charbuf(&key);
     free_charbuf(&iv);
     free_charbuf(&tag);
     sgx_destroy_enclave(eid);
     return 1;
   }
+  free_charbuf(&cipher_name);
   free_charbuf(&cipher_data);
+  free_charbuf(&key);
   free_charbuf(&iv);
   free_charbuf(&tag);
   sgx_destroy_enclave(eid);
