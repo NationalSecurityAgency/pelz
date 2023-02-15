@@ -286,7 +286,7 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher
       free(cipher_data_st.iv);
 
       cipher_data->len = 0;
-      pelz_sgx_log(LOG_DEBUG, "Cipher data alloctation error");
+      pelz_sgx_log(LOG_ERR, "Cipher data allocation error");
       return ENCRYPT_ERROR;
     }
     cipher_data->len = cipher_data_st.cipher_len;
