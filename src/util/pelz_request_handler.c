@@ -366,7 +366,7 @@ RequestResponseStatus file_decrypt_in_enclave(charbuf cipher_name, charbuf ciphe
 
   if(cipher_struct.cipher_name == NULL)
   {
-    pelz_sgx_log(LOG_DEBUG, "Cipher Name in struct missing");
+    pelz_sgx_log(LOG_ERR, "Cipher Name in struct missing");
     return DECRYPT_ERROR;
   }
 
