@@ -339,7 +339,7 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher
       tag->len = 0;
 
       free(cipher_data_st.tag);
-      pelz_sgx_log(LOG_DEBUG, "Tag alloctation error");
+      pelz_sgx_log(LOG_ERR, "Tag allocation error");
       return ENCRYPT_ERROR;
     }
     tag->len = cipher_data_st.tag_len;
