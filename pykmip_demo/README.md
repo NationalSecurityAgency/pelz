@@ -118,8 +118,7 @@ are not guaranteed to work.
 10.	Load server/client certificate and client PKey
 
 		./bin/pelz pki load cert test/data/proxy_pub.der.nkl
-		./bin/pelz pki load cert test/data/node_pub.der.nkl
-		./bin/pelz pki load private test/data/node_priv.der.nkl
+		./bin/pelz pki load private test/data/node_priv.der.nkl test/data/node_pub.der.nkl
 
 ### Proxy Server Setup Steps
 11.	Build and run the proxy server in a separate terminal
