@@ -395,7 +395,7 @@ RequestResponseStatus file_decrypt_in_enclave(charbuf cipher_name, charbuf ciphe
   {
     plain_data->len = 0;
     free_charbuf(&plain_data_internal);
-    pelz_sgx_log(LOG_DEBUG, "Plain data missing");
+    pelz_sgx_log(LOG_ERR, "Plaintext buffer allocation failed");
     return DECRYPT_ERROR;
   }
   memcpy(plain_data->chars, plain_data_internal.chars, plain_data->len);
