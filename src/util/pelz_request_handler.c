@@ -269,7 +269,7 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher
     free(cipher_data_st.cipher);
     free(cipher_data_st.iv);
     free(cipher_data_st.tag);
-    pelz_sgx_log(LOG_DEBUG, "Encrypt Error");
+    pelz_sgx_log(LOG_ERR, "Encrypt Error");
     return ENCRYPT_ERROR;
   }
 
