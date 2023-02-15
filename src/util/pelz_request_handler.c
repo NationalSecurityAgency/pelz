@@ -297,7 +297,7 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher
     free(cipher_data_st.cipher);
     free(cipher_data_st.tag);
     free(cipher_data_st.iv);
-    pelz_sgx_log(LOG_DEBUG, "Cipher data missing");
+    pelz_sgx_log(LOG_ERR, "Cipher data missing");
     return ENCRYPT_ERROR;
   }
   free(cipher_data_st.cipher);
