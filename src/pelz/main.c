@@ -41,9 +41,9 @@ static void pki_usage(void)
     "                                    .ski files. Additionally, the original keys and certs must be\n"
     "                                    in the DER format prior to sealing.\n\n"
     "  pki load cert <path/to/file>      Loads a server certificate into the pelz-service enclave\n\n"
-    "  pki load private <path/to/file>   Loads a private key for connections to key servers into the\n"
-    "                                    pelz-service enclave. This will fail if a private key is already\n"
-    "                                    loaded.\n\n"
+    "  pki load private                  Loads a private key/cert pair for connections to key servers into\n"
+    "  <path/to/key/file>                the pelz-service enclave. This will fail if a private key and \n"
+    "  <path/to/cert/file>               cert are not a proper pair.\n\n"
     "  pki cert list                     Provides the Common Names of the certificates currently loaded\n"
     "                                    in the pelz-service.\n\n"
     "  pki remove <CN|private>           Removes the server certificate with Common Name (CN) from the\n"
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
   int arg_index = 0;
   int cmd = -1;
   int cmd_param_index = 0;  // index in argv of the first non-keyword command parameter
-  CmdArgValue cmd_arg[5] = { EMPTY, EMPTY, EMPTY, EMPTY, EMPTY };
+  CmdArgValue cmd_arg[6] = { EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY };
   bool all = false;
   bool tpm = false;
   bool out = false;
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
   }
 
   //Determine the command arguments
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 6; i++)
   {
     cmd_arg[i] = check_arg(argv[arg_index + 1 + i]);
     if (cmd_arg[i] == 0)
@@ -269,7 +269,7 @@ int main(int argc, char **argv)
           cmd = CMD_LOAD_CERT;
           cmd_param_index = arg_index + 4;
         }
-        else if (cmd_arg[2] == PRIVATE  && cmd_arg[3] == OTHER && cmd_arg[4] == EMPTY)
+        else if (cmd_arg[2] == PRIVATE  && cmd_arg[3] == OTHER && cmd_arg[4] == OTHER && cmd_arg[5] == EMPTY)
         {
           cmd = CMD_LOAD_PRIV;
           cmd_param_index = arg_index + 4;
@@ -422,7 +422,8 @@ int main(int argc, char **argv)
       break;
     case CMD_LOAD_PRIV:
       //Execute the pki load private <path> command
-      msg_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]));
+      msg_two_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]), 
+                  argv[cmd_param_index + 1], (int) strlen(argv[cmd_param_index + 1]));
       break;
     case CMD_LIST_CERTS:
       //Execute the pki cert list command
