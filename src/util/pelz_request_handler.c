@@ -315,7 +315,7 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher
 
       free(cipher_data_st.iv);
       free(cipher_data_st.tag);
-      pelz_sgx_log(LOG_DEBUG, "IV alloctation error");
+      pelz_sgx_log(LOG_ERR, "IV alloctation error");
       return ENCRYPT_ERROR;
     }
     iv->len = cipher_data_st.iv_len;
