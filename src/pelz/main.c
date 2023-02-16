@@ -390,7 +390,7 @@ int main(int argc, char **argv)
       if (seal(argv[cmd_param_index], &outPath, outPath_size, tpm))
       {
         pelz_log(LOG_ERR, "Error seal function");
-        if(outPath != NULL && outPath_size == 0)
+        if(outPath != NULL)
         {
           free(outPath);
         }
@@ -463,7 +463,7 @@ int main(int argc, char **argv)
       if (file_encrypt(argv[cmd_param_index], &outPath, outPath_size))
       {
         pelz_log(LOG_ERR, "Error encrypt function");
-        if(outPath != NULL && outPath_size == 0)
+        if(outPath != NULL)
         {
           free(outPath);
         }
@@ -479,7 +479,7 @@ int main(int argc, char **argv)
       if (file_decrypt(argv[cmd_param_index], &outPath, outPath_size))
       {
         pelz_log(LOG_ERR, "Error encrypt function");
-        if(outPath != NULL && outPath_size == 0)
+        if(outPath != NULL)
         {
           free(outPath);
         }
