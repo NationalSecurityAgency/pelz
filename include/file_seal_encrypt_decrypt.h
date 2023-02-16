@@ -23,10 +23,10 @@
  * file data will be written to a new file.
  *
  * @param[in]   filename     The filename in a null-terminated string
- * @param[in]   outpath      The filename for the written output of the sealed data
+ * @param[in/out]   outpath  The filename for the written output of the sealed data.
+ *                           If specified by the user as an input, that value is used.
+ *                           Otherwise, it is set to a default filename.
  * @param[in]   outpath_size The outpath character size
- * @param[in]   tpm          The boolen to determine if to use seal_ski
- * @param[out]  outpath      The determined default filename for the written output sealed data
  *
  * @returns 0 on success, 1 on error
  */
