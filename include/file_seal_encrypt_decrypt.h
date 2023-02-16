@@ -22,11 +22,11 @@
  * @brief Reads a file then will encrypt the file with hard coded key. The encrypted
  * file data will be written to a new file.
  *
- * @param[in]   filename     The filename in a null-terminated string
- * @param[in/out]   outpath  The filename for the written output of the sealed data.
- *                           If specified by the user as an input, that value is used.
- *                           Otherwise, it is set to a default filename.
- * @param[in]   outpath_size The outpath character size
+ * @param[in]     filename     The filename in a null-terminated string
+ * @param[in/out] outpath      The filename for the written output of the sealed data.
+ *                             If specified by the user as an input, that value is used.
+ *                             Otherwise, it is set to a default filename.
+ * @param[in]     outpath_size The outpath character size
  *
  * @returns 0 on success, 1 on error
  */
@@ -36,10 +36,11 @@
  * @brief Reads a file then will decrypt the file with hard coded key. The decrypted
  * file data will be written to a new file.
  *
- * @param[in]   filename     The filename in a null-terminated string
- * @param[in]   outpath      The filename for the written output of the sealed data
- * @param[in]   outpath_size The outpath character size
- * @param[out]  outpath      The determined default filename for the written output sealed data
+ * @param[in]     filename     The filename in a null-terminated string
+ * @param[in/out] outpath      The filename for the written output of the sealed data.
+ *                             If specified by the user as an input, that value is used.
+ *                             Otherwise, it is set to a default filename.
+ * @param[in]     outpath_size The outpath character size
  *
  * @returns 0 on success, 1 on error
  */
