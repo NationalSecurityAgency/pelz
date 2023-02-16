@@ -413,7 +413,7 @@ sgx/test_enclave_u.o: test/include/test_enclave_u.c
 test/bin/$(App_Name_Test): $(App_C_Test_Files) \
 			   $(App_C_Files) \
 				 src/util/cmd_interface.c \
-				 src/util/seal.c \
+				 src/util/file_seal_encrypt_decrypt.c \
 			   $(App_C_Kmyth_Files) \
 				 sgx/test_enclave_u.o \
 				 sgx/ec_key_cert_marshal.o \
@@ -465,7 +465,7 @@ bin/$(App_Name_Service): $(App_Service_File) \
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
 		      $(App_C_Files) \
 		      src/util/cmd_interface.c \
-		      src/util/seal.c \
+		      src/util/file_seal_encrypt_decrypt.c \
 		      $(App_C_Kmyth_Files) \
 		      sgx/pelz_enclave_u.o \
 					sgx/ec_key_cert_marshal.o \

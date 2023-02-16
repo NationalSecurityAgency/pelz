@@ -9,7 +9,7 @@
 #include <kmyth/file_io.h>
 
 #include "pelz_log.h"
-#include "seal.h"
+#include "file_seal_encrypt_decrypt.h"
 #include "test_seal.h"
 
 #include "pelz_enclave.h"
