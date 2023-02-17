@@ -1,0 +1,81 @@
+enclave {
+	from "sgx_tsgxssl.edl" import *;
+	include "sgx_dh.h"
+	include "charbuf.h"
+	trusted {
+
+/**
+ * <pre>
+ * This function implements encryption of a file.
+ * <pre>
+ *
+ * @param[in] plain_data   the input data
+ * @param[in] cipher_name  the name of the cipher used for the request
+ * @param[out] cipher_data a pointer to a charbuf to hold the output, will
+ *                         be created inside the call
+ * @param[out] key         a pointer to a charbuf to hold the key, will
+ *                         be allocated inside the call if necessary
+ * @param[out] iv          a pointer to a charbuf to hold the IV, will
+ *                         be allocated inside the call if necessary
+ * @param[out] tag         the MAC tag produced by the encryption, will
+ *                         be allocated inside the call if necessary
+ *
+ * @return REQUEST_OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher_name, [out] charbuf * cipher_data, [out] charbuf * key, [out] charbuf * iv, [out] charbuf * tag);
+
+/**
+ * <pre>
+ * This function implements decryption of a file.
+ * <pre>
+ *
+ * @param[in] cipher_name  the name of the cipher used for the request
+ * @param[in] cipher_data  the input data
+ * @param[in] key          the key used to encrypt the data
+ * @param[in] iv           the iv used to encrypt the data, may be empty.
+ * @param[in] tag          the MAC tag for the encryption, may be empty.
+ * @param[out] plain_data  a pointer to a charbuf to hold the output, will
+ *                         be created inside the call
+ *
+ * @return REQUEST_OK on success, an error message indicating the type of
+ *                    error otherwise.
+ */
+public RequestResponseStatus file_decrypt_in_enclave(charbuf cipher_name, charbuf cipher_data, charbuf key, charbuf iv, charbuf tag, [out] charbuf* plain_data);
+
+	};
+
+	untrusted {
+
+/**
+ * <pre>
+ * Malloc untrusted memory from within the enclave. The result must
+ * be checked to ensure it lies outside the enclave by calling
+ * sgx_is_outside_enclave(*buf, size);
+ * <pre>
+ *
+ * @param[in]     size the size to allocate (in bytes).
+ * @param[in,out] buf  a pointer to a pointer to hold the allocated space
+ *
+ * @return none
+ */
+void ocall_malloc(size_t size, [out] unsigned char** buf);
+
+/**
+ * <pre>
+ * Frees untrusted memory from within the enclave. If the length of the
+ * buffer is available the caller should check that it is entirely outside
+ * enclave memory by calling
+ * sgx_is_outside_enclave(ptr, len);
+ * <pre>
+ *
+ * @param[in] ptr the pointer to be freed
+ * @param[in] len the length of the buffer pointed to by ptr
+ *
+ * @return none
+ */
+void ocall_free([user_check] void* ptr, size_t len);
+
+	};
+};	
+	
