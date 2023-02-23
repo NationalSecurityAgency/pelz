@@ -1,7 +1,9 @@
 enclave {
+  from "sgx_tstdc.edl" import *;
 	from "sgx_tsgxssl.edl" import *;
-	include "sgx_dh.h"
+  from "kmyth_enclave.edl" import *;
 	include "charbuf.h"
+  include "file_encrypt_decrypt.h"
 	trusted {
 
 /**

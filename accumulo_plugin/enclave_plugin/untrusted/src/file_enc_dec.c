@@ -1,22 +1,22 @@
 /*
- * file_seal_encrypt_decrypt.c
+ * file_enc_dec.c
  */
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <libgen.h>
 #include <sys/stat.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 
 #include "pelz_log.h"
-#include "file_seal_encrypt_decrypt.h"
+#include "charbuf.h"
+#include "file_enc_dec.h"
 
-#include "pelz_enclave.h"
-#include "sgx_seal_unseal_impl.h"
-#include "pelz_request_handler.h"
+#include "accumulo_enclave.h"
 
-#define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
+#define ENCLAVE_PATH "trusted/accumulo_enclave.signed.so"
 
 int file_encrypt(char *filename, char **outpath, size_t outpath_size)
 {

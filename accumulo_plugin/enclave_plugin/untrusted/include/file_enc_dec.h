@@ -1,6 +1,11 @@
 #ifndef _FILE_ENC_DEC_H_
 #define _FILE_ENC_DEC_H_
 
+typedef enum
+{ REQUEST_OK, KEK_NOT_LOADED, KEK_LOAD_ERROR, KEY_OR_DATA_ERROR, ENCRYPT_ERROR, DECRYPT_ERROR, REQUEST_TYPE_ERROR,
+  CHARBUF_ERROR, SIGNATURE_ERROR
+} RequestResponseStatus;
+
 /**
  * @brief Reads a file then will encrypt the file with hard coded key. The encrypted
  * file data will be written to a new file.
