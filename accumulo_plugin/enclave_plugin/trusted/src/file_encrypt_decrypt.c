@@ -1,5 +1,5 @@
 #include "charbuf.h"
-#include "file_encrypt_decrpyt.h"
+#include "file_encrypt_decrypt.h"
 #include "cipher/pelz_cipher.h"
 #include "pelz_enclave_log.h"
 

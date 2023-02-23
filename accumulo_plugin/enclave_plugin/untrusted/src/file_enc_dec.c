@@ -9,14 +9,27 @@
 #include <sys/stat.h>
 #include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
+#include <kmyth/memory_util.h>
 
 #include "pelz_log.h"
 #include "charbuf.h"
 #include "file_enc_dec.h"
 
+#include "sgx_urts.h"
 #include "accumulo_enclave.h"
 
 #define ENCLAVE_PATH "trusted/accumulo_enclave.signed.so"
+
+void ocall_malloc(size_t size, unsigned char **buf)
+{
+  *buf = (unsigned char *) malloc(size);
+}
+
+void ocall_free(void *ptr, size_t len)
+{
+  secure_memset(ptr, 0, len);
+  free(ptr);
+}
 
 int file_encrypt(char *filename, char **outpath, size_t outpath_size)
 {

@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "charbuf.h"
 #include "file_enc_dec.h"
 
 /**

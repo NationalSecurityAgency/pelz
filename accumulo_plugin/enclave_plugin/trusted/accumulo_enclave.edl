@@ -1,7 +1,6 @@
 enclave {
   from "sgx_tstdc.edl" import *;
 	from "sgx_tsgxssl.edl" import *;
-  from "kmyth_enclave.edl" import *;
 	include "charbuf.h"
   include "file_encrypt_decrypt.h"
 	trusted {
@@ -77,6 +76,30 @@ void ocall_malloc(size_t size, [out] unsigned char** buf);
  * @return none
  */
 void ocall_free([user_check] void* ptr, size_t len);
+
+/**
+ * @brief Supports calling logger from within enclave. Must pass information
+ *        about the event out explicitly since we must invoke the logging API
+ *        from untrusted space.
+ *
+ * @param[in] src_file         Source code filename string
+ *
+ * @param[in] src_func         Function name string
+ *
+ * @param[in] src_line         Integer specifying source code line number
+ *
+ * @param[in] severity         Integer representing the severity
+ *                             level of the event to be logged.
+ *
+ * @param[in] msg              String containing the message to be logged.
+ *
+ * @return                     None
+ */
+void log_event_ocall([in, string] const char *src_file,
+                     [in, string] const char *src_func,
+                     int src_line,
+                     int severity,
+                     [in, string] const char *msg);
 
 	};
 };	

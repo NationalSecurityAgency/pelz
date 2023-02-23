@@ -179,6 +179,7 @@ Enclave_Include_Paths += -I$(SGX_SSL_INCLUDE_PATH)
 Enclave_Include_Paths += -I/usr/local/include
 Enclave_Include_Paths += -Itrusted
 Enclave_Include_Paths += -Itrusted/include
+Enclave_Include_Paths += -Iuntrusted/include
 Enclave_Include_Paths += -I../../kmyth/sgx/untrusted/include/ocall
 
 Enclave_C_Flags := $(SGX_COMMON_CFLAGS) 
@@ -286,9 +287,7 @@ trusted/accumulo_enclave_u.c: $(SGX_EDGER8R) trusted/accumulo_enclave.edl
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
 					--search-path ../untrusted/include \
-				  --search-path ../../../include \
-					--search-path ../../../kmyth/sgx/trusted \
-				  --search-path ../../../kmyth/sgx/untrusted	
+				  --search-path ../../../include 
 	@echo "GEN  =>  $@"
 
 trusted/accumulo_enclave_u.o: trusted/accumulo_enclave_u.c
@@ -318,9 +317,8 @@ trusted/accumulo_enclave_t.c: $(SGX_EDGER8R) trusted/accumulo_enclave.edl
 					--search-path include \
 				  --search-path $(SGX_SDK)/include \
 				  --search-path $(SGX_SSL_INCLUDE_PATH) \
-					--search-path ../../../include \
-					--search-path ../../../kmyth/sgx/trusted \
-					--search-path ../../../kmyth/sgx/untrusted
+					--search-path ../untrusted/include \
+					--search-path ../../../include
 	@echo "GEN => $@"
 
 trusted/accumulo_enclave_t.o: trusted/accumulo_enclave_t.c
@@ -328,10 +326,6 @@ trusted/accumulo_enclave_t.o: trusted/accumulo_enclave_t.c
 	@echo "CC   <=  $<"
 
 trusted/file_encrypt_decrypt.o: trusted/src/file_encrypt_decrypt.c
-	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
-	@echo "CC   <=  $<"
-
-trusted/kmyth_enclave_memory_util.o: ../../kmyth/sgx/trusted/src/util/kmyth_enclave_memory_util.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
@@ -355,12 +349,10 @@ trusted/pelz_cipher.o: ../../src/cipher/pelz_cipher.c
 	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
-
 trusted/$(Enclave_Name): trusted/accumulo_enclave_t.o \
 		     trusted/file_encrypt_decrypt.o \
 		     trusted/pelz_aes_keywrap_3394nopad.o \
 		     trusted/charbuf.o \
-		     trusted/kmyth_enclave_memory_util.o \
 		     trusted/pelz_aes_gcm.o \
 		     trusted/memory_util.o \
 		     trusted/pelz_cipher.o \
