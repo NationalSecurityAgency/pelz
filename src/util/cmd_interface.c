@@ -79,6 +79,18 @@ CmdArgValue check_arg(char *arg)
     return CA;
   }
 
+  //Checking for encrypt keyword
+  if ((memcmp(arg, "encrypt", 7) == 0) && (strlen(arg) == 7))
+  {
+    return ENC;
+  }
+ 
+  //Checking for decrypt keyword
+  if ((memcmp(arg, "decrypt", 7) == 0) && (strlen(arg) == 7))
+  {
+    return DEC;
+  }
+
   return OTHER;        
 }
 
@@ -124,7 +136,18 @@ int msg_arg(char *pipe, size_t pipe_len, int cmd, char *arg, size_t arg_len)
   return ret;
 }
 
-int msg_list(char *pipe, size_t pipe_len, int cmd)
+int msg_two_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len, char *arg2, int arg2_len)
+{
+  int ret;
+  char *msg = (char *) calloc((11 + pipe_len + arg_len + arg2_len), sizeof(char));
+
+  sprintf(msg, "pelz %d %.*s %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg, arg2_len, arg2);
+  ret = msg_cmd(pipe, msg);
+  free(msg);
+  return ret;
+}
+
+int msg_list(char *pipe, int pipe_len, int cmd)
 {
   int ret;
 
