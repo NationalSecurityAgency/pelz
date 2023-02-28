@@ -237,7 +237,7 @@ RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf cipher
   pelz_sgx_log(LOG_DEBUG, "File Encryption");
   key->len = 32;
   ocall_malloc(key->len, &key->chars);
-  if(RAND_priv_bytes(key->chars, key->len) != 1)
+  if(RAND_priv_bytes(key->chars, (int)key->len) != 1)
   {
     pelz_sgx_log(LOG_DEBUG, "Key generation failed");
     return ENCRYPT_ERROR;

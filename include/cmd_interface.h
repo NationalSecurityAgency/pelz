@@ -94,7 +94,7 @@ typedef enum
  *
  * @returns 0 on success, 1 on error
  */
-  int msg_two_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len, char *arg2, int arg2_len);
+  int msg_two_arg(char *pipe, size_t pipe_len, int cmd, char *arg, size_t arg_len, char *arg2, size_t arg2_len);
 
 /**
  * @brief Creates and sends message then listens for a list of responses on the pipe provided.

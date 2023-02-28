@@ -422,8 +422,8 @@ int main(int argc, char **argv)
       break;
     case CMD_LOAD_PRIV:
       //Execute the pki load private <path> command
-      msg_two_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], (int) strlen(argv[cmd_param_index]), 
-                  argv[cmd_param_index + 1], (int) strlen(argv[cmd_param_index + 1]));
+      msg_two_arg(fifo_name, fifo_name_len, cmd, argv[cmd_param_index], strlen(argv[cmd_param_index]), 
+                  argv[cmd_param_index + 1], strlen(argv[cmd_param_index + 1]));
       break;
     case CMD_LIST_CERTS:
       //Execute the pki cert list command
