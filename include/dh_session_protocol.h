@@ -65,6 +65,11 @@ typedef struct _la_dh_session_t
             uint32_t counter; //Used to store Message Sequence Number
         }active;
     };
+
+    char *request_data;
+    size_t request_data_length;
+    char *response_data;
+    size_t response_data_length;
 } dh_session_t;
 
 
