@@ -94,7 +94,8 @@ uint32_t test_message_exchange()
         return ke_status;
     }
 
-    // TODO: Display the pelz server's response
+    log_ocall("Pelz Response Message:");
+    log_ocall(out_buff);
 
     SAFE_FREE(out_buff);
     return SUCCESS;
