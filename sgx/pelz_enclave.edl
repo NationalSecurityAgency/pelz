@@ -6,7 +6,7 @@ enclave {
 	include "cipher/pelz_aes_keywrap_3394nopad.h"
 	include "pelz_request_handler.h"
 	include "common_table.h"
-  include "channel_table.h"
+	include "channel_table.h"
 	include "key_load.h"
 	include "charbuf.h"
 	include "dh_datatypes.h"
@@ -182,7 +182,6 @@ public TableResponseStatus key_table_add_from_server(charbuf key_id,
  */
 public TableResponseStatus chan_table_init(int entry_num);
 
-
 /**
  * <pre>
  * This function destroys the channel table.
@@ -282,13 +281,94 @@ public RequestResponseStatus file_encrypt_in_enclave(charbuf plain_data, charbuf
  */
 public RequestResponseStatus file_decrypt_in_enclave(charbuf cipher_name, charbuf cipher_data, charbuf key, charbuf iv, charbuf tag, [out] charbuf* plain_data);
 
-// TODO: Add docstrings
+/**
+ * <pre>
+ * Handle an attestation request by generating the message 1 response and a session id
+ * <pre>
+ *
+ * @param[out] dh_msg1     the generated response message
+ * @param[out] session_id  the generated session identifier
+ *
+ * @return 0 on success, an error number indicating the type of error otherwise.
+ */
 public uint32_t session_request([out] sgx_dh_msg1_t *dh_msg1, [out] uint32_t *session_id);
+
+/**
+ * <pre>
+ * Process attestation message 2 and generate message 3.
+ * <pre>
+ *
+ * @param[in] dh_msg2     a pointer to the received message 2
+ * @param[out] dh_msg3    the generated message 3 response
+ * @param[in] session_id  the session identifier
+ *
+ * @return 0 on success, an error number indicating the type of error otherwise.
+ */
 public uint32_t exchange_report([in] sgx_dh_msg2_t *dh_msg2, [out] sgx_dh_msg3_t *dh_msg3, uint32_t session_id);
+
+/**
+ * <pre>
+ * Respond to the request from the peer enclave to close the session.
+ * <pre>
+ *
+ * @param[in] session_id  the session identifier
+ *
+ * @return 0 on success, an error number indicating the type of error otherwise.
+ */
 public uint32_t end_session(uint32_t session_id);
+
+/**
+ * <pre>
+ * Process an incoming message and store data in the session object.
+ * <pre>
+ *
+ * @param[in] req_message       a pointer to the incoming message
+ * @param[in] req_message_size  the size of the incoming message
+ * @param[in] session_id        the session identifier
+ *
+ * @return 0 on success, an error number indicating the type of error otherwise.
+ */
 public uint32_t handle_incoming_msg([in, size=req_message_size] secure_message_t *req_message, size_t req_message_size, uint32_t session_id);
+
+/**
+ * <pre>
+ * Construct an outgoing message containing data stored in the session object.
+ * <pre>
+ *
+ * @param[in] max_payload_size       the maximum size of the outgoing message payload
+ * @param[out] resp_message          a pointer to the constructed outgoing message, allocated inside the call
+ * @param[out] resp_message_size     the size of the constructed outgoing message
+ * @param[in] resp_message_max_size  the maximum size of the outgoing message
+ * @param[in] session_id             the session identifier
+ *
+ * @return 0 on success, an error number indicating the type of error otherwise.
+ */
 public uint32_t handle_outgoing_msg(size_t max_payload_size, [out] secure_message_t **resp_message, [out] size_t *resp_message_size, size_t resp_message_max_size, uint32_t session_id);
+
+/**
+ * <pre>
+ * Retrieve the contents of the most recent pelz request for this session.
+ * <pre>
+ *
+ * @param[in] session_id            the session identifier
+ * @param[out] request_data         a pointer to the request data, allocated inside the call
+ * @param[out] request_data_length  the size of the request data
+ *
+ * @return 0 on success, an error number indicating the type of error otherwise.
+ */
 public uint32_t get_request_data(uint32_t session_id, [out] char **request_data, [out] size_t *request_data_length);
+
+/**
+ * <pre>
+ * Store the contents of the next pelz response for this session.
+ * <pre>
+ *
+ * @param[in] session_id             the session identifier
+ * @param[out] response_data         a pointer to the response data
+ * @param[out] response_data_length  the size of the response data
+ *
+ * @return 0 on success, an error number indicating the type of error otherwise.
+ */
 public uint32_t save_response_data(uint32_t session_id, [in, count=response_data_length] char *response_data, size_t response_data_length);
 	};
 	untrusted {
