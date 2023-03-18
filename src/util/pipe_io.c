@@ -105,6 +105,11 @@ int read_from_pipe(const char *pipe, char **msg)
   if (ret > 0)
   {
     *msg = (char *) calloc((size_t)ret + 1, sizeof(char));
+    if(*msg == NULL)
+    {
+      pelz_log(LOG_ERR, "Failed to allocate memory to return pipe message.");
+      return 1;
+    }
     memcpy(*msg, buf, (size_t)ret);
   }
   else if (ret < 0)

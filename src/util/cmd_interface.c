@@ -129,6 +129,10 @@ int msg_arg(char *pipe, size_t pipe_len, int cmd, char *arg, size_t arg_len)
     return 1;
   }
   char *msg = (char *) calloc((10 + pipe_len + arg_len), sizeof(char));
+  if(msg == NULL)
+  {
+    return 1;
+  }
  
   sprintf(msg, "pelz %d %.*s %.*s", cmd, (int)pipe_len, pipe, (int)arg_len, arg);
   ret = msg_cmd(pipe, msg);
@@ -157,6 +161,10 @@ int msg_list(char *pipe, size_t pipe_len, int cmd)
     return 1;
   }
   char *msg = (char *) calloc((10 + pipe_len), sizeof(char));
+  if(msg == NULL)
+  {
+    return 1;
+  }
 
   sprintf(msg, "pelz %d %.*s", cmd, (int)pipe_len, pipe);
   ret = msg_cmd(pipe, msg);
