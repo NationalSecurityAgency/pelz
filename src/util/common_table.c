@@ -93,7 +93,7 @@ TableResponseStatus table_destroy(TableType type)
 
 TableResponseStatus table_delete(TableType type, charbuf id)
 {
-  int index = 0;
+  size_t index = 0;
   int data_size = 0;
   Table *table = get_table_by_type(type);
 
@@ -102,7 +102,7 @@ TableResponseStatus table_delete(TableType type, charbuf id)
     return ERR;
   }
 
-  for (unsigned int i = 0; i < table->num_entries; i++)
+  for (size_t i = 0; i < table->num_entries; i++)
   {
     if (cmp_charbuf(id, table->entries[i].id) == 0)
     {
@@ -115,7 +115,11 @@ TableResponseStatus table_delete(TableType type, charbuf id)
       else if (type == SERVER || type == CA_TABLE)
       {
         data_size = i2d_X509(table->entries[i].value.cert, NULL);
-        table->mem_size = table->mem_size - ((table->entries[i].id.len * sizeof(char)) + sizeof(size_t) + data_size);
+	if(data_size <= 0)
+	{
+	  return ERR;
+	}
+        table->mem_size = table->mem_size - ((table->entries[i].id.len * sizeof(char)) + sizeof(size_t) + (size_t)data_size);
       }
       free_charbuf(&table->entries[i].id);
       if (type == KEY)
@@ -143,7 +147,7 @@ TableResponseStatus table_delete(TableType type, charbuf id)
   }
   else
   {
-    for (unsigned int i = index; i < table->num_entries; i++)
+    for (size_t i = index; i < table->num_entries; i++)
     {
       table->entries[i - 1] = table->entries[i];
     }
@@ -164,7 +168,7 @@ TableResponseStatus table_delete(TableType type, charbuf id)
   return OK;
 }
 
-TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
+TableResponseStatus table_lookup(TableType type, charbuf id, size_t *index)
 {
   Table *table = get_table_by_type(type);
 
@@ -177,7 +181,7 @@ TableResponseStatus table_lookup(TableType type, charbuf id, int *index)
   {
     return ERR;
   }
-  for (unsigned int i = 0; i < table->num_entries; i++)
+  for (size_t i = 0; i < table->num_entries; i++)
   {
     if (cmp_charbuf(id, table->entries[i].id) == 0)
     {
@@ -201,7 +205,7 @@ TableResponseStatus table_id_count(TableType type, size_t *count)
   return OK;
 }
 
-TableResponseStatus table_id(TableType type, int index, charbuf *id)
+TableResponseStatus table_id(TableType type, size_t index, charbuf *id)
 {
   Table *table = get_table_by_type(type);
 

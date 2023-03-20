@@ -89,7 +89,7 @@ SGX_COMMON_FLAGS += -Wundef
 SGX_COMMON_FLAGS += -Wshadow
 SGX_COMMON_FLAGS += -Wcast-align
 SGX_COMMON_FLAGS += -Wcast-qual
-#SGX_COMMON_FLAGS += -Wconversion
+SGX_COMMON_FLAGS += -Wconversion
 SGX_COMMON_FLAGS += -Wredundant-decls
 
 SGX_COMMON_CFLAGS := $(SGX_COMMON_FLAGS)

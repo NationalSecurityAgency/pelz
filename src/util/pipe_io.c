@@ -32,12 +32,12 @@
 
 int write_to_pipe_fd(int fd, char *msg)
 {
-  int msg_len;
-  int bytes_written;
+  size_t msg_len;
+  ssize_t bytes_written;
 
   msg_len = strlen(msg);
   bytes_written = write(fd, msg, msg_len);
-  if (bytes_written == msg_len)
+  if ((bytes_written >= 0) && ((size_t)bytes_written == msg_len))
   {
     return 0;
   }
@@ -73,7 +73,7 @@ int write_to_pipe(const char *pipe, char *msg)
 int read_from_pipe(const char *pipe, char **msg)
 {
   int fd;
-  int ret;
+  ssize_t ret;
   char buf[BUFSIZE];
 
   if (file_check(pipe))
@@ -104,8 +104,13 @@ int read_from_pipe(const char *pipe, char **msg)
 
   if (ret > 0)
   {
-    *msg = (char *) calloc(ret + 1, sizeof(char));
-    memcpy(*msg, buf, ret);
+    *msg = (char *) calloc((size_t)ret + 1, sizeof(char));
+    if(*msg == NULL)
+    {
+      pelz_log(LOG_ERR, "Failed to allocate memory to return pipe message.");
+      return 1;
+    }
+    memcpy(*msg, buf, (size_t)ret);
   }
   else if (ret < 0)
   {
@@ -127,7 +132,7 @@ int read_listener(int fd)
   int rv;
   char msg[BUFSIZE];
   int line_start, line_len, i;
-  int bytes_read;
+  ssize_t bytes_read;
 
   FD_ZERO(&set);      // clear the set
   FD_SET(fd, &set);   // add file descriptor to the set

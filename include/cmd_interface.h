@@ -1,6 +1,8 @@
 #ifndef _CMD_INTERFACE_PELZ_H_
 #define _CMD_INTERFACE_PELZ_H_
 
+#include <stddef.h>
+
 /*
  *  0    seal <path>               Seals a file in .nkl format (pelz-service is not involved)
  *  1    exit                      Terminates running pelz-service
@@ -76,7 +78,7 @@ typedef enum
  *
  * @returns 0 on success, 1 on error
  */
-  int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len);
+  int msg_arg(char *pipe, size_t pipe_len, int cmd, char *arg, size_t arg_len);
 
 /**
  * @brief Creates and sends message then listens for response on the pipe provided.
@@ -92,7 +94,7 @@ typedef enum
  *
  * @returns 0 on success, 1 on error
  */
-  int msg_two_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len, char *arg2, int arg2_len);
+  int msg_two_arg(char *pipe, size_t pipe_len, int cmd, char *arg, size_t arg_len, char *arg2, size_t arg2_len);
 
 /**
  * @brief Creates and sends message then listens for a list of responses on the pipe provided.
@@ -103,5 +105,5 @@ typedef enum
  *
  * @returns 0 on success, 1 on error
  */
-  int msg_list(char *pipe, int pipe_len, int cmd);
+  int msg_list(char *pipe, size_t pipe_len, int cmd);
 #endif

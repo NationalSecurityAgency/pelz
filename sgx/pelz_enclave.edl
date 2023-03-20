@@ -64,7 +64,7 @@ public TableResponseStatus table_id_count(TableType type, [out] size_t *count);
  * @return OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public TableResponseStatus table_id(TableType type, int index, [out] charbuf* id);
+public TableResponseStatus table_id(TableType type, size_t index, [out] charbuf* id);
 
 /**
  * <pre>
@@ -180,7 +180,7 @@ public TableResponseStatus key_table_add_from_server(charbuf key_id,
  * @return OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-public TableResponseStatus chan_table_init(int entry_num);
+public TableResponseStatus chan_table_init(size_t entry_num);
 
 
 /**

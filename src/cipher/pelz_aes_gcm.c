@@ -88,7 +88,14 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  if (RAND_bytes(cipher_data->iv, cipher_data->iv_len) != 1)
+
+  if(cipher_data->iv_len > INT_MAX)
+  {
+    cipher_data->iv_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }  
+  if (RAND_bytes(cipher_data->iv, (int)cipher_data->iv_len) != 1)
   {
     free(cipher_data->iv);
     cipher_data->iv = NULL;
@@ -98,7 +105,15 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   }
 
   // set the IV length in the cipher context
-  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, cipher_data->iv_len, NULL))
+  if(cipher_data->iv_len > INT_MAX)
+  {
+    free(cipher_data->iv);
+    cipher_data->iv = NULL;
+    cipher_data->iv_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
+  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, (int)cipher_data->iv_len, NULL))
   {
     free(cipher_data->iv);
     cipher_data->iv = NULL;
@@ -132,7 +147,16 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   }
   
   // encrypt the input plaintext, put result in the output ciphertext buffer
-  if (!EVP_EncryptUpdate(ctx, cipher_data->cipher, &ciphertext_len, plain, plain_len))
+  if(plain_len > INT_MAX)
+  {
+    free(cipher_data->iv);
+    cipher_data->iv = NULL;
+    cipher_data->iv_len = 0;
+    cipher_data->cipher_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }     
+  if (!EVP_EncryptUpdate(ctx, cipher_data->cipher, &ciphertext_len, plain, (int)plain_len))
   {
     free(cipher_data->cipher);
     free(cipher_data->iv);
@@ -189,7 +213,21 @@ int pelz_aes_gcm_encrypt(unsigned char* key,
   }
 
   // get the AES/GCM tag value
-  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, cipher_data->tag_len, cipher_data->tag))
+  if(cipher_data->tag_len > INT_MAX)
+  {
+    free(cipher_data->cipher);
+    free(cipher_data->iv);
+    free(cipher_data->tag);
+    cipher_data->cipher = NULL;
+    cipher_data->tag = NULL;
+    cipher_data->iv = NULL;
+    cipher_data->cipher_len = 0;
+    cipher_data->tag_len = 0;
+    cipher_data->iv_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
+  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, (int)cipher_data->tag_len, cipher_data->tag))
   {
     free(cipher_data->cipher);
     free(cipher_data->iv);
@@ -281,14 +319,24 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
   }
 
   // set tag to expected tag passed in with input data
-  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, cipher_data.tag_len, cipher_data.tag))
+  if(cipher_data.tag_len > INT_MAX)
+  {
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }    
+  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, (int)cipher_data.tag_len, cipher_data.tag))
   {
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
 
   // set the IV length in the cipher context
-  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, cipher_data.iv_len, NULL))
+  if(cipher_data.iv_len > INT_MAX)
+  {
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
+  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, (int)cipher_data.iv_len, NULL))
   {
     EVP_CIPHER_CTX_free(ctx);
     return 1;
@@ -310,7 +358,7 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
     return 1;
   }
   // decrypt the input ciphertext, put result in the output plaintext buffer
-  if (!EVP_DecryptUpdate(ctx, *plain, &len, cipher_data.cipher, *plain_len))
+  if(*plain_len > INT_MAX)
   {
     free(*plain);
     *plain = NULL;
@@ -318,12 +366,21 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  plaintext_len += len;
+  if (!EVP_DecryptUpdate(ctx, *plain, &len, cipher_data.cipher, (int)*plain_len) || len < 0)
+  {
+    free(*plain);
+    *plain = NULL;
+    *plain_len = 0;
+    EVP_CIPHER_CTX_free(ctx);
+    return 1;
+  }
+  // We've already checked that len is non-negative.
+  plaintext_len += (size_t)len;
 
   // 'Finalize' Decrypt:
   //   - validate that resultant tag matches the expected tag passed in
   //   - should produce no more plaintext bytes in our case
-  if (EVP_DecryptFinal_ex(ctx, *plain + plaintext_len, &len) <= 0)
+  if (EVP_DecryptFinal_ex(ctx, *plain + plaintext_len, &len) <= 0 || len < 0)
   {
     free(*plain);
     *plain = NULL;
@@ -331,7 +388,8 @@ int pelz_aes_gcm_decrypt(unsigned char *key,
     EVP_CIPHER_CTX_free(ctx);
     return 1;
   }
-  plaintext_len += len;
+  // We've already checked that len is non-negative
+  plaintext_len += (size_t)len;
 
   // verify that the resultant PT length matches the input CT length
   if (plaintext_len != *plain_len)

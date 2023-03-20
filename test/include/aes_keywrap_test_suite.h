@@ -76,7 +76,7 @@ int aes_keywrap_suite_add_tests(CU_pSuite suite);
  *
  * @return     0 on success, 1 on error
  */
-int convert_HexString_to_ByteArray(char **result, char *hex_str, int str_size);
+int convert_HexString_to_ByteArray(char **result, char *hex_str, size_t str_size);
 
 /**
  * Parses NIST AES key wrap/unwrap test vector files.

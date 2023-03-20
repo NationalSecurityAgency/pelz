@@ -9,7 +9,7 @@
 #include "test_enclave_t.h"
 #include "cipher/pelz_cipher.h"
 
-TableResponseStatus test_table_lookup(TableType type, charbuf id, int *index)
+TableResponseStatus test_table_lookup(TableType type, charbuf id, size_t *index)
 {
   return (table_lookup(type, id, index));
 }

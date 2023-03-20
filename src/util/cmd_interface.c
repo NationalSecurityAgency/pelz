@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <limits.h>
 
 #include "cmd_interface.h"
 #include "pelz_log.h"
@@ -118,34 +119,54 @@ static int msg_cmd(char *pipe, char *msg)
   return ret;
 }
 
-int msg_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len)
+int msg_arg(char *pipe, size_t pipe_len, int cmd, char *arg, size_t arg_len)
 {
   int ret;
-  char *msg = (char *) calloc((10 + pipe_len + arg_len), sizeof(char));
 
-  sprintf(msg, "pelz %d %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg);
+  // Due to the way we encode messages pipe_len and arg_len can't be too big.
+  if(pipe_len > INT_MAX || arg_len > INT_MAX)
+  {
+    return 1;
+  }
+  char *msg = (char *) calloc((10 + pipe_len + arg_len), sizeof(char));
+  if(msg == NULL)
+  {
+    return 1;
+  }
+ 
+  sprintf(msg, "pelz %d %.*s %.*s", cmd, (int)pipe_len, pipe, (int)arg_len, arg);
   ret = msg_cmd(pipe, msg);
   free(msg);
   return ret;
 }
 
-int msg_two_arg(char *pipe, int pipe_len, int cmd, char *arg, int arg_len, char *arg2, int arg2_len)
+int msg_two_arg(char *pipe, size_t pipe_len, int cmd, char *arg, size_t arg_len, char *arg2, size_t arg2_len)
 {
   int ret;
   char *msg = (char *) calloc((11 + pipe_len + arg_len + arg2_len), sizeof(char));
 
-  sprintf(msg, "pelz %d %.*s %.*s %.*s", cmd, pipe_len, pipe, arg_len, arg, arg2_len, arg2);
+  sprintf(msg, "pelz %d %.*s %.*s %.*s", cmd, (int)pipe_len, pipe, (int)arg_len, arg, (int)arg2_len, arg2);
   ret = msg_cmd(pipe, msg);
   free(msg);
   return ret;
 }
 
-int msg_list(char *pipe, int pipe_len, int cmd)
+int msg_list(char *pipe, size_t pipe_len, int cmd)
 {
   int ret;
-  char *msg = (char *) calloc((10 + pipe_len), sizeof(char));
 
-  sprintf(msg, "pelz %d %.*s", cmd, pipe_len, pipe);
+  // Due to the way we encode messages pipe_len can't be too big.
+  if(pipe_len > INT_MAX)
+  {
+    return 1;
+  }
+  char *msg = (char *) calloc((10 + pipe_len), sizeof(char));
+  if(msg == NULL)
+  {
+    return 1;
+  }
+
+  sprintf(msg, "pelz %d %.*s", cmd, (int)pipe_len, pipe);
   ret = msg_cmd(pipe, msg);
   free(msg);
   return ret;

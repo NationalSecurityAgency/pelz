@@ -84,7 +84,7 @@ extern "C"
  * @return OK on success, an error message indicating the type of
  *                    error otherwise.
  */
-  TableResponseStatus table_lookup(TableType type, charbuf id, int *index);
+  TableResponseStatus table_lookup(TableType type, charbuf id, size_t *index);
 
 /**
  * <pre>

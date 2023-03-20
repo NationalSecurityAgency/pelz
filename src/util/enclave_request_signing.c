@@ -146,8 +146,14 @@ int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_
   charbuf serialized;
 
   const unsigned char* cert_ptr = cert.chars;
-  
-  requestor_x509 = d2i_X509(NULL, &cert_ptr, cert.len);
+
+  // Check that we cans safely down-convert cert.len for the
+  // d2i_x509 call.
+  if(cert.len > (size_t)LONG_MAX)
+  {
+    return result;
+  }
+  requestor_x509 = d2i_X509(NULL, &cert_ptr, (long int)cert.len);
   if(requestor_x509 == NULL)
   {
     return result;
@@ -176,7 +182,15 @@ int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_
     return result;
   }
 
-  if(ec_verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, signature.len) == EXIT_SUCCESS)
+  // Check we can safely down-convert signature.len to hand it to ec_verify_buffer.
+  if(signature.len > (size_t)UINT_MAX)
+  {
+    free_charbuf(&serialized);
+    X509_free(requestor_x509);
+    EVP_PKEY_free(requestor_pubkey);
+    return result;
+  }
+  if(ec_verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, (unsigned int)signature.len) == EXIT_SUCCESS)
   {
     result = 0;
   }
