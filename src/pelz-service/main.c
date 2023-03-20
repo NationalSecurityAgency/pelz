@@ -138,7 +138,7 @@ int main(int argc, char **argv)
   }
 
   sgx_status = private_pkey_init(eid, &status);
-  if (sgx_status != SGX_SUCCESS || ret != OK)
+  if (sgx_status != SGX_SUCCESS || status != OK)
   {
     pelz_log(LOG_ERR, "PKEY Init Failure, sgx_status: %#X, table_status: %d", sgx_status, status);
     kmyth_unsealed_data_table_cleanup(eid, &ret);
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
 
   pelz_log(LOG_INFO, "Shutdown Clean-up Start");
   sgx_status = private_pkey_free(eid, &status);
-  if (sgx_status != SGX_SUCCESS || ret != OK)
+  if (sgx_status != SGX_SUCCESS || status != OK)
   {
     pelz_log(LOG_ERR, "PKEY Free Failure");
   }
