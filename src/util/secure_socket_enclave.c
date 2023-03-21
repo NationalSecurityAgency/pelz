@@ -178,16 +178,12 @@ ATTESTATION_STATUS handle_incoming_msg(secure_message_t *req_message,
                                        size_t req_message_size,
                                        uint32_t session_id)
 {
-    uint32_t plaintext_length;
     uint8_t *decrypted_data;
     uint32_t decrypted_data_length;
-    uint32_t plain_text_offset;
     uint8_t l_tag[TAG_SIZE];
     size_t header_size, expected_payload_size;
     dh_session_t *session_info;
     sgx_status_t status;
-
-    plaintext_length = 0;
 
     if(!req_message)
     {
@@ -212,7 +208,6 @@ ATTESTATION_STATUS handle_incoming_msg(secure_message_t *req_message,
         return INVALID_PARAMETER_ERROR;
 
     memset(&l_tag, 0, 16);
-    plain_text_offset = decrypted_data_length;
     decrypted_data = (uint8_t*)malloc(decrypted_data_length);
     if(!decrypted_data)
     {
@@ -225,7 +220,8 @@ ATTESTATION_STATUS handle_incoming_msg(secure_message_t *req_message,
     status = sgx_rijndael128GCM_decrypt(&session_info->active.AEK, req_message->message_aes_gcm_data.payload,
                 decrypted_data_length, decrypted_data,
                 (uint8_t *)(&(req_message->message_aes_gcm_data.reserved)),
-                sizeof(req_message->message_aes_gcm_data.reserved), &(req_message->message_aes_gcm_data.payload[plain_text_offset]), plaintext_length,
+                sizeof(req_message->message_aes_gcm_data.reserved),
+                NULL, 0,
                 &req_message->message_aes_gcm_data.payload_tag);
 
     if(SGX_SUCCESS != status)
@@ -261,15 +257,10 @@ ATTESTATION_STATUS handle_outgoing_msg(size_t max_payload_size,
 {
     char* resp_data;
     size_t resp_data_length;
-    const uint8_t* plaintext;
-    uint32_t plaintext_length;
     size_t resp_message_calc_size;
     dh_session_t *session_info;
     secure_message_t* temp_resp_message;
     sgx_status_t status;
-
-    plaintext = (const uint8_t*)(" ");
-    plaintext_length = 0;
 
     //Retrieve the session information for the corresponding session id
     session_info = dh_sessions[session_id];
@@ -315,7 +306,8 @@ ATTESTATION_STATUS handle_outgoing_msg(size_t max_payload_size,
     status = sgx_rijndael128GCM_encrypt(&session_info->active.AEK, (uint8_t*)resp_data, data2encrypt_length,
                 (uint8_t *)(&(temp_resp_message->message_aes_gcm_data.payload)),
                 (uint8_t *)(&(temp_resp_message->message_aes_gcm_data.reserved)),
-                sizeof(temp_resp_message->message_aes_gcm_data.reserved), plaintext, plaintext_length,
+                sizeof(temp_resp_message->message_aes_gcm_data.reserved),
+                NULL, 0,
                 &(temp_resp_message->message_aes_gcm_data.payload_tag));
 
     if(SGX_SUCCESS != status)
