@@ -141,7 +141,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
       tag->len = 0;
 
       free(cipher_data_st.tag);
-      pelz_sgx_log(LOG_DEBUG, "Tag alloctation error");
+      pelz_sgx_log(LOG_DEBUG, "Tag allocation error");
       return ENCRYPT_ERROR;
     }
     tag->len = cipher_data_st.tag_len;

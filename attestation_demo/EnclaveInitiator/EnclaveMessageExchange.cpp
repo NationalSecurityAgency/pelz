@@ -301,7 +301,7 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
         return INVALID_PARAMETER_ERROR;
     }
 
-        //Update the value of the session nonce in the source enclave
+    //Update the value of the session nonce in the source enclave
     session_info->active.counter = session_info->active.counter + 1;
 
     memcpy(out_buff_len, &decrypted_data_length, sizeof(decrypted_data_length));

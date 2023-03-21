@@ -78,6 +78,12 @@ uint32_t send_request_ocall(uint32_t session_id, secure_message_t* req_message, 
  * */
 uint32_t end_session_ocall(uint32_t session_id);
 
+/* Function Description: this is OCALL interface for initiator enclave to print log messages
+ * Parameter Description:
+ *      [input] msg: this is pointer to log message string
+ * */
+void log_ocall(const char *msg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -72,7 +72,6 @@ extern "C" ATTESTATION_STATUS session_request_ocall(sgx_dh_msg1_t* dh_msg1, uint
         free(msg1_response);
 
 	return (ATTESTATION_STATUS)0;
-
 }
 
 /* Function Description: This is OCALL interface for initiator enclave to send ECDH message 2 to responder enclave, and receive ECDH message 3 from responder enclave
@@ -207,4 +206,9 @@ ATTESTATION_STATUS end_session_ocall(uint32_t session_id)
 	free(msgresp);
 
 	return (ATTESTATION_STATUS)0;
+}
+
+void log_ocall(const char *msg)
+{
+	fprintf(stderr, "[LOG] %s\n", msg);
 }

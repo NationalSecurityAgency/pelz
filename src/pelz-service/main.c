@@ -124,22 +124,23 @@ int main(int argc, char **argv)
     return (1);
   }
 
+  sgx_status_t sgx_status;
   TableResponseStatus status;
   int ret;
 
   sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
-  kmyth_unsealed_data_table_initialize(eid, &ret);
-  if (ret)
+  sgx_status = kmyth_unsealed_data_table_initialize(eid, &ret);
+  if (sgx_status != SGX_SUCCESS || ret != OK)
   {
-    pelz_log(LOG_ERR, "Unseal Table Init Failure");
+    pelz_log(LOG_ERR, "Unseal Table Init Failure, sgx_status: %#X, table_status: %d", sgx_status, status);
     sgx_destroy_enclave(eid);
     return (1);
   }
 
-  private_pkey_init(eid, &status);
-  if (status != OK)
+  sgx_status = private_pkey_init(eid, &status);
+  if (sgx_status != SGX_SUCCESS || status != OK)
   {
-    pelz_log(LOG_ERR, "PKEY Init Failure");
+    pelz_log(LOG_ERR, "PKEY Init Failure, sgx_status: %#X, table_status: %d", sgx_status, status);
     kmyth_unsealed_data_table_cleanup(eid, &ret);
     sgx_destroy_enclave(eid);
     return (1);
@@ -148,8 +149,8 @@ int main(int argc, char **argv)
   pelz_service((const int) max_requests, (const int) port_open, (const int) port_attested, secure);
 
   pelz_log(LOG_INFO, "Shutdown Clean-up Start");
-  private_pkey_free(eid, &status);
-  if (status != OK)
+  sgx_status = private_pkey_free(eid, &status);
+  if (sgx_status != SGX_SUCCESS || status != OK)
   {
     pelz_log(LOG_ERR, "PKEY Free Failure");
   }

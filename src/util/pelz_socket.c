@@ -30,6 +30,7 @@ int pelz_key_socket_init(int max_request, int port, int *socket_listen_id)
   struct addrinfo *bind_address;
 
   int socket_listen;
+  int reuse = 1;
   char portaddr[6];
 
   pelz_log(LOG_INFO, "Configuring local address...");
@@ -46,6 +47,11 @@ int pelz_key_socket_init(int max_request, int port, int *socket_listen_id)
   if (!ISVALIDSOCKET(socket_listen))
   {
     pelz_log(LOG_ERR, "socket() failed. (%d)", errno);
+    return (1);
+  }
+
+  if (setsockopt(socket_listen, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) == -1) {
+    pelz_log(LOG_ERR, "setsockopt() failed. (%d)", errno);
     return (1);
   }
 
