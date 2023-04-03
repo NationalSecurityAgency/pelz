@@ -311,7 +311,7 @@ int read_validate(char *filename, uint8_t ** data, size_t *data_len)
      pelz_log(LOG_ERR, "seal input data file read error ... exiting");
      return 1;
   }
-  pelz_log(LOG_DEBUG, "read in %d bytes of data to be wrapped", data_len);
+  pelz_log(LOG_DEBUG, "read in %zu bytes of data to be wrapped", *data_len);
 
   // validate non-empty plaintext buffer specified
   if (data_len == 0 || data == NULL)
