@@ -109,10 +109,11 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   charbuf iv;
   charbuf tag;
   RequestResponseStatus status;
+  sgx_status_t sgx_status;
 
   sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
-  file_encrypt_in_enclave(eid, &status, plain_data, cipher_name, &cipher_data, &key, &iv, &tag);
-  if (status != REQUEST_OK)
+  sgx_status = file_encrypt_in_enclave(eid, &status, plain_data, cipher_name, &cipher_data, &key, &iv, &tag);
+  if (sgx_status != SGX_SUCCESS || status != REQUEST_OK)
   {
     free_charbuf(&plain_data);
     sgx_destroy_enclave(eid);
@@ -225,10 +226,11 @@ int file_decrypt(char *filename, char **outpath, size_t outpath_size)
 
   charbuf plain_data;
   RequestResponseStatus status;
-  
+  sgx_status_t sgx_status;
+
   sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
-  file_decrypt_in_enclave(eid, &status, cipher_name, cipher_data, key, iv, tag, &plain_data);
-  if (status != REQUEST_OK)
+  sgx_status = file_decrypt_in_enclave(eid, &status, cipher_name, cipher_data, key, iv, tag, &plain_data);
+  if (sgx_status != SGX_SUCCESS || status != REQUEST_OK)
   {
     free_charbuf(&cipher_name);
     free_charbuf(&cipher_data);
