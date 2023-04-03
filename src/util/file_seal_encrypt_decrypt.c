@@ -110,7 +110,6 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   charbuf tag;
   RequestResponseStatus status;
 
-
   sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
   file_encrypt_in_enclave(eid, &status, plain_data, cipher_name, &cipher_data, &key, &iv, &tag);
   if (status != REQUEST_OK)
@@ -343,6 +342,7 @@ int outpath_validate(char *filename, char **outpath, size_t outpath_size, bool t
 
 int outpath_create(char *filename, char **outpath, bool tpm)
 {
+  char *temp_outpath;
   const char *ext;
   const char *TPM_EXT = ".ski";
   const char *NKL_EXT = ".nkl";
@@ -361,26 +361,27 @@ int outpath_create(char *filename, char **outpath, bool tpm)
   // a extension in the directory that the application is being run from.
   char *original_fn = basename(filename);
 
-  *outpath = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
+  temp_outpath = (char *) malloc((strlen(original_fn) + strlen(ext) + 1) * sizeof(char));
 
   // Make sure resultant default file name does not have empty basename
-  if (*outpath == NULL)
+  if (temp_outpath == NULL)
   {
     pelz_log(LOG_ERR, "invalid default filename derived ... exiting");
-    free(*outpath);
+    free(temp_outpath);
     return 1;
   }
 
-  sprintf(*outpath, "%.*s%.*s", (int) strlen(original_fn), original_fn, (int) strlen(ext), ext);
+  sprintf(temp_outpath, "%.*s%.*s", (int) strlen(original_fn), original_fn, (int) strlen(ext), ext);
   // Make sure default filename we constructed doesn't already exist
   struct stat st = { 0 };
-  if (!stat(*outpath, &st))
+  if (!stat(temp_outpath, &st))
   {
-    pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", *outpath);
-    free(*outpath);
+    pelz_log(LOG_ERR, "default output filename (%s) already exists ... exiting", temp_outpath);
+    free(temp_outpath);
     return 1;
   }
 
+  *outpath = temp_outpath;
   pelz_log(LOG_DEBUG, "output file not specified, default = %s", *outpath);
   return 0;
 }
