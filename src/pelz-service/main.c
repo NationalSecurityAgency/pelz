@@ -128,7 +128,12 @@ int main(int argc, char **argv)
   TableResponseStatus status;
   int ret;
 
-  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  sgx_status = sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  if (sgx_status != SGX_SUCCESS) {
+    pelz_log(LOG_ERR, "Failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_PATH, sgx_status);
+    return (1);
+  }
+
   sgx_status = kmyth_unsealed_data_table_initialize(eid, &ret);
   if (sgx_status != SGX_SUCCESS || ret != OK)
   {

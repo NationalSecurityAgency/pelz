@@ -111,7 +111,12 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   RequestResponseStatus status;
   sgx_status_t sgx_status;
 
-  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  sgx_status = sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  if (sgx_status != SGX_SUCCESS) {
+    pelz_log(LOG_ERR, "Failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_PATH, sgx_status);
+    return 1;
+  }
+
   sgx_status = file_encrypt_in_enclave(eid, &status, plain_data, cipher_name, &cipher_data, &key, &iv, &tag);
   if (sgx_status != SGX_SUCCESS || status != REQUEST_OK)
   {
@@ -228,7 +233,12 @@ int file_decrypt(char *filename, char **outpath, size_t outpath_size)
   RequestResponseStatus status;
   sgx_status_t sgx_status;
 
-  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  sgx_status = sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  if (sgx_status != SGX_SUCCESS) {
+    pelz_log(LOG_ERR, "Failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_PATH, sgx_status);
+    return 1;
+  }
+
   sgx_status = file_decrypt_in_enclave(eid, &status, cipher_name, cipher_data, key, iv, tag, &plain_data);
   if (sgx_status != SGX_SUCCESS || status != REQUEST_OK)
   {
@@ -279,7 +289,11 @@ int seal_ski(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t * data
 int seal_nkl(uint8_t * data, size_t data_len, uint8_t ** data_out, size_t *data_out_len)
 {
   pelz_log(LOG_DEBUG, "Seal_nkl function");        
-  sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  sgx_status_t sgx_status = sgx_create_enclave(ENCLAVE_PATH, SGX_DEBUG_FLAG, NULL, NULL, &eid, NULL);
+  if (sgx_status != SGX_SUCCESS) {
+    pelz_log(LOG_ERR, "Failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_PATH, sgx_status);
+    return 1;
+  }
 
   uint16_t key_policy = SGX_KEYPOLICY_MRENCLAVE;
   sgx_attributes_t attribute_mask;
