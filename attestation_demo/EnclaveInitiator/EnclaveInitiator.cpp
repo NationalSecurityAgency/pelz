@@ -68,39 +68,28 @@ extern "C" uint32_t test_create_session()
 /* Function Description:
  *   This is ECALL routine to transfer message with ECDH peer
  * */
-uint32_t test_message_exchange()
+uint32_t sgx_make_pelz_request(char *req_msg, size_t req_msg_len, size_t max_resp_len, char *resp_buff, size_t *resp_len)
 {
     ATTESTATION_STATUS ke_status = SUCCESS;
-    char* out_buff;
-    size_t out_buff_len;
-    size_t max_out_buff_size;
+    char *out_buff;
+    size_t out_buff_len = 0;
 
-    max_out_buff_size = 4096;
-
-    // TODO: 1. Change this placeholder message to an unsigned pelz request.
-    // TODO: 2. Change the message to a signed pelz request.
-    // TODO: 3. Change the message to a signed pelz request with individually encrypted fields.
-    // TODO: 4. Generate the request signature using a double-wrapped signing key (using kmyth).
-
-    char *req_msg = (char *) "{\"request_type\":1,\"key_id\":\"file:/tmp/key1.txt\",\"cipher\":\"AES/GCM/NoPadding/256\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}";
-    size_t req_len = strlen(req_msg);
-
-    //Core Reference Code function
-    ke_status = send_request_receive_response(&g_session, req_msg, req_len,
-                                                max_out_buff_size, &out_buff, &out_buff_len);
+    ke_status = send_request_receive_response(&g_session, req_msg, req_msg_len,
+                                                max_resp_len, &out_buff, &out_buff_len);
     if(ke_status != SUCCESS)
     {
-        SAFE_FREE(out_buff);
         return ke_status;
     }
 
     log_ocall("Pelz Response Message:");
     log_ocall(out_buff);
 
+    memcpy(resp_buff, out_buff, max_resp_len);
+    *resp_len = out_buff_len;
+
     SAFE_FREE(out_buff);
     return SUCCESS;
 }
-
 
 /* Function Description:
  *   This is ECALL interface to close secure session*/

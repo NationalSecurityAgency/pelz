@@ -36,7 +36,7 @@ enclave {
 
     trusted{
             public uint32_t test_create_session();
-            public uint32_t test_message_exchange();
+            public uint32_t sgx_make_pelz_request([in, count=req_msg_len] char *req_msg, size_t req_msg_len, size_t max_resp_len, [out, count=max_resp_len] char *resp_buff, [out] size_t *resp_len);
             public uint32_t test_close_session();
     };
 

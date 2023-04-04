@@ -29,6 +29,12 @@
  *
  */
 
+/* This application is a demonstration program for Pelz.
+ * It simulates a "worker" node by reading an encrypted data file
+ * and a wrapped data encryption key (DEK) from the filesystem,
+ * asking Pelz to unwrap the key using a confidential key encryption key (KEK),
+ * then decrypting the data file and using the data.
+ */
 
 #include <stdio.h>
 #include <map>
@@ -48,16 +54,61 @@
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT "10601"
 
+#define MAX_RESP_LEN 1024
+
+static sgx_enclave_id_t initiator_enclave_id = 0;
+
+
+// int unwrap_and_decrypt(const char *dek_path, const char *kek_id)
+int unwrap_and_decrypt()
+{
+
+    // TODO: 1. Change this placeholder message to an unsigned pelz request.
+    // TODO: 2. Change the message to a signed pelz request.
+    // TODO: 3. Change the message to a signed pelz request with individually encrypted fields.
+    // TODO: 4. Generate the request signature using a double-wrapped signing key (using kmyth).
+
+    // TODO: build request json
+
+    char *req_msg = (char *) "{\"request_type\":1,\"key_id\":\"file:/tmp/key1.txt\",\"cipher\":\"AES/GCM/NoPadding/256\",\"data\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"tag\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\",\"iv\":\"SwqqSZbNtN2SOfKGtE2jfklrcARSCZE9Tdl93pggkIsRkY3MrjevmQ==\\n\"}";
+    size_t req_msg_len = strlen(req_msg);
+    char resp_buff[MAX_RESP_LEN] = { 0 };
+    size_t resp_len = 0;
+    uint32_t ret_status = 0;
+    sgx_status_t sgx_status;
+
+    sgx_status = sgx_make_pelz_request(initiator_enclave_id, &ret_status, req_msg, req_msg_len, MAX_RESP_LEN, resp_buff, &resp_len);
+    if (sgx_status != SGX_SUCCESS || ret_status != 0) {
+        printf("make_pelz_request Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
+        return -1;
+    }
+
+    printf("pelz response %s, %zu\n", resp_buff, resp_len);
+
+    // TODO: decode request
+    // TODO: decrypt data
+    // TODO: do something with data
+
+    return 0;
+}
+
+
 int main(int argc, char* argv[])
 {
     int update = 0;
     uint32_t ret_status;
     sgx_status_t status;
     sgx_launch_token_t token = {0};
-    sgx_enclave_id_t initiator_enclave_id = 0;
 
-    (void)argc;
-    (void)argv;
+    if (argc != 4) {
+        printf("Missing command line arguments.\n");
+        printf("Usage: %s DATA_FILE DEK_FILE KEK_ID\n", argv[0]);
+        return -1;
+    }
+
+    const char *data_path = argv[1];
+    const char *dek_path = argv[2];
+    const char *kek_id = argv[3];
 
     // Establish the socket connection that will be used to communicate with Pelz
     if (connect_to_server(SERVER_ADDR, SERVER_PORT) == -1) {
@@ -73,7 +124,7 @@ int main(int argc, char* argv[])
     }
     printf("succeed to load enclave %s\n", ENCLAVE_INITIATOR_NAME);
 
-    // create ECDH session using initiator enclave, it would create ECDH session with responder enclave running in another process
+    // establish an ECDH session with the responder enclave running in another process
     status = test_create_session(initiator_enclave_id, &ret_status);
     if (status != SGX_SUCCESS || ret_status != 0) {
         printf("failed to establish secure channel: ECALL return 0x%x, error code is 0x%x.\n", status, ret_status);
@@ -82,14 +133,12 @@ int main(int argc, char* argv[])
     }
     printf("succeed to establish secure channel.\n");
 
-    // Test message exchange between initiator enclave and responder enclave running in another process
-    status = test_message_exchange(initiator_enclave_id, &ret_status);
-    if (status != SGX_SUCCESS || ret_status != 0) {
-        printf("test_message_exchange Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", status, ret_status);
+    // do work
+    if (unwrap_and_decrypt()) {
+        printf("unwrap_and_decrypt failed\n");
         sgx_destroy_enclave(initiator_enclave_id);
         return -1;
     }
-    printf("Succeed to exchange secure message...\n");
 
     // close ECDH session
     status = test_close_session(initiator_enclave_id, &ret_status);
