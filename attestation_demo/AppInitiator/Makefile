@@ -44,7 +44,7 @@ else
 endif
 
 INC:=-I$(SGX_SDK)/include -I../Include
-LIB := -l$(URTS_LIB_NAME) -l$(UAE_SERVICE_LIB) -L$(SGX_SDK)/lib64 -lpthread
+LIB := -l$(URTS_LIB_NAME) -l$(UAE_SERVICE_LIB) -L$(SGX_SDK)/lib64 -lpthread -lcjson -lkmyth-utils -lkmyth-logger -lssl
 CXXFLAGS += $(INC) $(LIB)
 CFLAGS += $(INC) $(LIB)
 
