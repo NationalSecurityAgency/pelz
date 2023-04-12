@@ -53,7 +53,7 @@
 
 #include "fifo_def.h"
 
-#define ENCLAVE_INITIATOR_NAME "libenclave_initiator.signed.so"
+#define ENCLAVE_INITIATOR_NAME "bin/libenclave_initiator.signed.so"
 
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT "10601"

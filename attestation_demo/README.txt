@@ -19,8 +19,7 @@ Use these commands to run the demo client:
     cd attestation_demo
     openssl genrsa -out EnclaveInitiator/EnclaveInitiator_private_test.pem -3 3072
     make SGX_MODE=SIM
-    cd bin
-    ./appinitiator
+    ./bin/appinitiator
 
 
 Building the Demo Client
@@ -62,8 +61,8 @@ Running the Demo Client
 Before running, install the SGX driver and PSW for Linux* OS.
 (This is also required to run the Pelz server.)
 
-To run the demo client, go to the "bin" directory
-then run `./appinitiator`
+To run the demo client, execute `./bin/appinitiator`
 
-Note: The client will not work properly if run outside of the "bin" directory.
-E.g. the command `./bin/appinitiator` will not work properly.
+Note: The client will not work properly if run outside of the "attestation_demo" directory.
+E.g. the command `attestation_demo/bin/appinitiator` will not work properly.
+This is consistent with the behavior of the pelz and pelz-service binaries.
