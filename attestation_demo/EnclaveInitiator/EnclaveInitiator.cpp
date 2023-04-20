@@ -81,9 +81,6 @@ uint32_t sgx_make_pelz_request(char *req_msg, size_t req_msg_len, size_t max_res
         return ke_status;
     }
 
-    log_ocall("Pelz Response Message:");
-    log_ocall(out_buff);
-
     memcpy(resp_buff, out_buff, max_resp_len);
     *resp_len = out_buff_len;
 

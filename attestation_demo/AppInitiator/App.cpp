@@ -142,7 +142,7 @@ int unwrap_and_decrypt(const char *kek_path, uint8_t *wrapped_dek, size_t wrappe
         return -1;
     }
 
-    printf("pelz response %s, %zu\n", resp_buff, resp_len);
+    printf("Pelz response json: %s\n", resp_buff);
 
     // TODO: decode request
     // TODO: decrypt data
