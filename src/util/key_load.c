@@ -102,7 +102,6 @@ ExtensionType get_file_ext(char *filename)
   return NO_EXT;
 }
 
-// TODO: Move key_load() into trusted code to avoid nested ECALL issues.
 int key_load(charbuf key_id)
 {
   charbuf key;

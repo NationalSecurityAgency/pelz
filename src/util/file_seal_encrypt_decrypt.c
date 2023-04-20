@@ -149,6 +149,8 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   }
   free_charbuf(&cipher_data);
 
+  // TODO: Prepend the KEY, IV, and TAG to the data instead of writing them to separate files.
+
   //Write bytes to file for KEY
   if (write_bytes_to_file("KEY", key.chars, key.len))
   {

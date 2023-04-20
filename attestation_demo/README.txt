@@ -33,7 +33,7 @@ You must also generate an enclave signing key before building
 otherwise you will be prompted to create one during the build.
 
 This demo client has the same SGX build options as the Pelz server
-and the same default values (simulation mode with debug enabled).
+and the same default values (SGX_MODE=SIM SGX_DEBUG=1).
 The most common build settings are listed below.
 
     a. Hardware Mode, Debug build:

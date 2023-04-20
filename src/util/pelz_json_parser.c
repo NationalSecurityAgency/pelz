@@ -136,8 +136,8 @@ int request_decoder(charbuf request, RequestType * request_type, charbuf * key_i
     encoded = get_JSON_string_field(json, "iv");
     if(encoded.chars != NULL && encoded.len > 0)
     {
-	decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
-	free_charbuf(&encoded);
+      decodeBase64Data(encoded.chars, encoded.len, &(iv->chars), &(iv->len));
+      free_charbuf(&encoded);
     }
     encoded = get_JSON_string_field(json, "tag");
     if(encoded.chars != NULL && encoded.len > 0)
