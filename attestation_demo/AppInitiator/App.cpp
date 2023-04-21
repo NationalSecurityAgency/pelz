@@ -29,10 +29,10 @@
  *
  */
 
-/* This application is a demonstration program for Pelz.
+/* This application is a demonstration program for pelz.
  * It simulates a "worker" node by reading an encrypted data file
  * and a wrapped data encryption key (DEK) from the filesystem,
- * asking Pelz to unwrap the key using a confidential key encryption key (KEK),
+ * asking pelz to unwrap the key using a confidential key encryption key (KEK),
  * then decrypting the data file and using the data.
  */
 
@@ -126,7 +126,7 @@ int unwrap_and_decrypt(const char *kek_path, uint8_t *wrapped_dek, size_t wrappe
         return -1;
     }
 
-    printf("Pelz request json: %s\n", request);
+    printf("pelz request json: %s\n", request);
 
     char resp_buff[MAX_RESP_LEN] = { 0 };
     size_t resp_len = 0;
@@ -142,7 +142,7 @@ int unwrap_and_decrypt(const char *kek_path, uint8_t *wrapped_dek, size_t wrappe
         return -1;
     }
 
-    printf("Pelz response json: %s\n", resp_buff);
+    printf("pelz response json: %s\n", resp_buff);
 
     // TODO: decode request
     // TODO: decrypt data
@@ -184,9 +184,9 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    // Establish the socket connection that will be used to communicate with Pelz
+    // Establish the socket connection that will be used to communicate with pelz
     if (connect_to_server(SERVER_ADDR, SERVER_PORT) == -1) {
-        printf("failed to connect to the Pelz server.\n");
+        printf("failed to connect to the pelz server.\n");
         return -1;
     }
 

@@ -56,7 +56,7 @@ def main():
         '-o', ENC_DATA_FILE,
     ]
     pelz_dir = DEMO_DIR.parent
-    print_log('Using Pelz to encrypt the data file ...')
+    print_log('Using pelz to encrypt the data file ...')
     print_log(' '.join([str(x) for x in cmd]))
     subprocess.run(cmd, check=True, cwd=pelz_dir)
     shutil.move(pelz_dir / 'KEY', ORIG_DEK_FILE)
@@ -77,14 +77,14 @@ def main():
     }
     wrap_req_str = json.dumps(wrap_req)
     print_log('Wrapping the DEK ...')
-    print_log(f'Pelz key wrap request: {wrap_req_str}')
+    print_log(f'pelz key wrap request: {wrap_req_str}')
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((PELZ_HOST, PELZ_PORT))
         s.send(wrap_req_str.encode())
         wrap_resp_str = s.recv(1024).decode()
 
-    print_log(f'Pelz key wrap response: {wrap_resp_str}')
+    print_log(f'pelz key wrap response: {wrap_resp_str}')
     wrap_resp = json.loads(wrap_resp_str)
     dek_enc = base64.b64decode(wrap_resp['data'])
 

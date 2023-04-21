@@ -47,7 +47,7 @@
 #define BUFFER_SIZE 4096  // This is somewhat arbitrary.
 
 // The Initiator demo originally used a new socket connection for each message,
-// but Pelz expects a single persistent connection for the entire session.
+// but pelz expects a single persistent connection for the entire session.
 static int server_sock_fd = -1;
 
 
