@@ -18,6 +18,17 @@
 
 #define ENCLAVE_PATH "sgx/pelz_enclave.signed.so"
 
+#define ENCRYPT_CIPHER "AES/GCM/NoPadding/256"
+#define ENCRYPT_FORMAT "PELZ001\0"
+
+typedef struct encrypt_bundle {
+  uint8_t format_code[8];
+  uint8_t key[32];
+  uint8_t iv[12];
+  uint8_t tag[16];
+  uint8_t cipher_data[];
+} encrypt_bundle;
+
 int seal(char *filename, char **outpath, size_t outpath_size, bool tpm)
 {
   uint8_t *data = NULL;
@@ -101,8 +112,8 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   memcpy(plain_data.chars, data, plain_data.len);
   free(data);
 
-  charbuf cipher_name = new_charbuf(21);
-  memcpy(cipher_name.chars, "AES/GCM/NoPadding/256", cipher_name.len);
+  charbuf cipher_name = new_charbuf(strlen(ENCRYPT_CIPHER));
+  memcpy(cipher_name.chars, ENCRYPT_CIPHER, cipher_name.len);
 
   charbuf cipher_data;
   charbuf key;
@@ -127,109 +138,81 @@ int file_encrypt(char *filename, char **outpath, size_t outpath_size)
   free_charbuf(&plain_data);
   sgx_destroy_enclave(eid);
 
+  size_t bundle_size = sizeof(encrypt_bundle) + cipher_data.len;
+  encrypt_bundle *bundle = calloc(bundle_size, sizeof(uint8_t));
+
+  //Check field sizes
+  if (!bundle
+      || (key.len != sizeof(bundle->key))
+      || (iv.len != sizeof(bundle->iv))
+      || (tag.len != sizeof(bundle->tag)))
+  {
+    free_charbuf(&key);
+    free_charbuf(&iv);
+    free_charbuf(&tag);
+    free_charbuf(&cipher_data);
+    return 1;
+  }
+
+  memcpy(bundle->format_code, ENCRYPT_FORMAT, sizeof(bundle->format_code));
+  memcpy(bundle->key, key.chars, sizeof(bundle->key));
+  memcpy(bundle->iv, iv.chars, sizeof(bundle->iv));
+  memcpy(bundle->tag, tag.chars, sizeof(bundle->tag));
+  memcpy(bundle->cipher_data, cipher_data.chars, cipher_data.len);
+
+  free_charbuf(&key);
+  free_charbuf(&iv);
+  free_charbuf(&tag);
+  free_charbuf(&cipher_data);
 
   //Checking and/or setting output path
   if (outpath_validate(filename, outpath, outpath_size, false))
   {
-    free_charbuf(&cipher_data);
-    free_charbuf(&iv);
-    free_charbuf(&tag);
+    free(bundle);
     return 1;
   }
+
+  // TODO: Wrap the DEK before writing it to the output file
 
   //Write bytes to file based on outpath
-  if (write_bytes_to_file(*outpath, cipher_data.chars, cipher_data.len))
+  if (write_bytes_to_file(*outpath, (uint8_t *) bundle, bundle_size))
   {
     pelz_log(LOG_ERR, "error writing data to output file ... exiting");
-    free_charbuf(&cipher_data);
-    free_charbuf(&key);
-    free_charbuf(&iv);
-    free_charbuf(&tag);
+    free(bundle);
     return 1;
   }
-  free_charbuf(&cipher_data);
 
-  // TODO: Prepend the KEY, IV, and TAG to the data instead of writing them to separate files.
-
-  //Write bytes to file for KEY
-  if (write_bytes_to_file("KEY", key.chars, key.len))
-  {
-    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
-    free_charbuf(&key);
-    free_charbuf(&iv);
-    free_charbuf(&tag);
-    return 1;
-  }
-  free_charbuf(&key);
-
-  //Write bytes to file for IV
-  if (write_bytes_to_file("KEY_IV", iv.chars, iv.len))
-  {
-    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
-    free_charbuf(&iv);
-    free_charbuf(&tag);
-    return 1;
-  }
-  free_charbuf(&iv);
-
-  //Write bytes to file for Tag
-  if (write_bytes_to_file("KEY_TAG", tag.chars, tag.len))
-  {
-    pelz_log(LOG_ERR, "error writing data to output file ... exiting");
-    free_charbuf(&tag);
-    return 1;
-  }
-  free_charbuf(&tag);
   return 0;
 }
 
 //Decrypt key for file is hard coded
 int file_decrypt(char *filename, char **outpath, size_t outpath_size)
 {
-  uint8_t *data = NULL;
-  size_t data_len = 0;
+  encrypt_bundle *bundle = NULL;
+  size_t bundle_len = 0;
   
   pelz_log(LOG_DEBUG, "File decryption function");
   //Validating filename and data from file
-  if (read_validate(filename, &data, &data_len))
+  if (read_validate(filename, (uint8_t **) &bundle, &bundle_len))
   { 
     return 1;
   }
 
-  charbuf cipher_data = new_charbuf(data_len);
-  memcpy(cipher_data.chars, data, cipher_data.len);
-  free(data);
-  data_len = 0;
+  charbuf cipher_name = new_charbuf(strlen(ENCRYPT_CIPHER));
+  memcpy(cipher_name.chars, ENCRYPT_CIPHER, cipher_name.len);
 
-  charbuf cipher_name = new_charbuf(21);
-  memcpy(cipher_name.chars, "AES/GCM/NoPadding/256", cipher_name.len);
+  charbuf cipher_data = new_charbuf(bundle_len - sizeof(encrypt_bundle));
+  charbuf key = new_charbuf(sizeof(bundle->key));
+  charbuf iv = new_charbuf(sizeof(bundle->iv));
+  charbuf tag = new_charbuf(sizeof(bundle->tag));
 
-  if (read_validate("KEY", &data, &data_len))
-  {
-    return 1;
-  }
-  charbuf key = new_charbuf(data_len);
-  memcpy(key.chars, data, key.len);
-  free(data);
-  data_len = 0;
+  memcpy(cipher_data.chars, bundle->cipher_data, cipher_data.len);
+  memcpy(key.chars, bundle->key, key.len);
+  memcpy(iv.chars, bundle->iv, iv.len);
+  memcpy(tag.chars, bundle->tag, tag.len);
 
-  if (read_validate("KEY_IV", &data, &data_len))
-  {
-    return 1;
-  }
-  charbuf iv = new_charbuf(data_len);
-  memcpy(iv.chars, data, iv.len);
-  free(data);
-  data_len = 0;
- 
-  if (read_validate("KEY_TAG", &data, &data_len))
-  {
-    return 1;
-  }
-  charbuf tag = new_charbuf(data_len);
-  memcpy(tag.chars, data, tag.len);
-  free(data);
-  data_len = 0;
+  free(bundle);
+  bundle = NULL;
 
   charbuf plain_data;
   RequestResponseStatus status;
