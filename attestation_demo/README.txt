@@ -14,16 +14,20 @@ and they can also authenticate using additional metadata such as the MRSIGNER va
 Quick Start
 -----------
 
-Use these commands to run the demo client:
+First, build and run the pelz-service application.
+Then, use these commands to build and run the demo client:
 
     cd attestation_demo
     openssl genrsa -out EnclaveInitiator/EnclaveInitiator_private_test.pem -3 3072
     make
-    ./bin/appinitiator
+    python3 run_demo.py
+
+The run_demo.py script first creates an encrypted data file associated with a wrapped "data encryption key".
+Then it starts the client application, which unwraps the data encryption key and decrypts the data file.
 
 
-Building the Demo Client
-------------------------
+Building the Client Application
+-------------------------------
 
 Before building, install the Intel(R) Software Guard Extensions (Intel(R) SGX) SDK for Linux* OS.
 (This is also required to build the pelz server.)
@@ -55,13 +59,15 @@ The most common build settings are listed below.
 When the build is successful, all executable binaries will be found in the "bin" directory.
 
 
-Running the Demo Client
------------------------
+Running the Client Application
+------------------------------
 
 Before running, install the SGX driver and PSW for Linux* OS.
 (This is also required to run the pelz server.)
 
-To run the demo client, execute `./bin/appinitiator`
+To run the demo client, execute `./bin/appinitiator DATA_FILE DEK_FILE KEK_ID`
+
+Note: The client's arguments are not yet finalized and will most likely change soon.
 
 Note: The client will not work properly if run outside of the "attestation_demo" directory.
 E.g. the command `attestation_demo/bin/appinitiator` will not work properly.
