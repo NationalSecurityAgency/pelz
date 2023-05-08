@@ -54,7 +54,7 @@ static int server_sock_fd = -1;
 // Create a socket and connect to the server_name:server_port
 // This function was adapted from create_socket() in
 // linux-sgx/SampleCode/SampleAttestedTLS/non_enc_client/client.cpp
-int connect_to_server(char* server_name, char* server_port)
+int connect_to_server(const char* server_name, const char* server_port)
 {
     int sockfd = -1;
     struct addrinfo hints, *dest_info, *curr_di;
