@@ -31,7 +31,7 @@
 
 include ../buildenv.mk
 
-TARGET = appinitiator
+TARGET = demo_worker
 
 RM = rm -f
 

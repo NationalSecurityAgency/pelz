@@ -94,7 +94,7 @@ def main():
     # 5. Initiate the worker client with the following command line arguments: path to encrypted file; path to encrypted DEK; path to KEK
 
     cmd = [
-        'bin/appinitiator',
+        'bin/demo_worker',
         ENC_DATA_FILE,
         ENC_DEK_FILE,
         KEK_FILE,

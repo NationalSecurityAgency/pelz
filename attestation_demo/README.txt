@@ -65,10 +65,10 @@ Running the Client Application
 Before running, install the SGX driver and PSW for Linux* OS.
 (This is also required to run the pelz server.)
 
-To run the demo client, execute `./bin/appinitiator DATA_FILE DEK_FILE KEK_ID`
+To run the demo client, execute `./bin/demo_worker DATA_FILE DEK_FILE KEK_ID`
 
 Note: The client's arguments are not yet finalized and will most likely change soon.
 
 Note: The client will not work properly if run outside of the "attestation_demo" directory.
-E.g. the command `attestation_demo/bin/appinitiator` will not work properly.
+E.g. the command `attestation_demo/bin/demo_worker` will not work properly.
 This is consistent with the behavior of the pelz and pelz-service binaries.
