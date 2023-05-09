@@ -1,7 +1,7 @@
 Attestation Demo
 ================
 
-This directory contains a custom Pelz client demonstrating a new method of connecting to the Pelz server.
+This directory contains a custom pelz client demonstrating a new method of connecting to the pelz server.
 The new client is primarily based on the LocalAttestation sample code from the linux-sgx repo
 (https://github.com/intel/linux-sgx/tree/master/SampleCode/LocalAttestation),
 and much of its code is taken directly from that example with minimal changes.
@@ -14,35 +14,38 @@ and they can also authenticate using additional metadata such as the MRSIGNER va
 Quick Start
 -----------
 
-Use these commands to run the demo client:
+First, build and run the pelz-service application.
+Then, use these commands to build and run the demo client:
 
     cd attestation_demo
     openssl genrsa -out EnclaveInitiator/EnclaveInitiator_private_test.pem -3 3072
-    make SGX_MODE=SIM
-    cd bin
-    ./appinitiator
+    make
+    python3 run_demo.py
+
+The run_demo.py script first creates an encrypted data file associated with a wrapped "data encryption key".
+Then it starts the client application, which unwraps the data encryption key and decrypts the data file.
 
 
-Building the Demo Client
-------------------------
+Building the Client Application
+-------------------------------
 
 Before building, install the Intel(R) Software Guard Extensions (Intel(R) SGX) SDK for Linux* OS.
-(This is also required to build the Pelz server.)
+(This is also required to build the pelz server.)
 
 You must also generate an enclave signing key before building
 (e.g. by running `openssl genrsa -out EnclaveInitiator/EnclaveInitiator_private_test.pem -3 3072`),
 otherwise you will be prompted to create one during the build.
 
-This demo client has the same SGX build options as the Pelz server,
-but the default options are different.
+This demo client has the same SGX build options as the pelz server
+and the same default values (SGX_MODE=SIM SGX_DEBUG=1).
 The most common build settings are listed below.
 
     a. Hardware Mode, Debug build:
-    $ make
+    $ make SGX_MODE=HW
     b. Hardware Mode, Pre-release build:
-    $ make SGX_PRERELEASE=1 SGX_DEBUG=0
+    $ make SGX_MODE=HW SGX_PRERELEASE=1 SGX_DEBUG=0
     c. Hardware Mode, release build:
-    $ make SGX_DEBUG=0
+    $ make SGX_MODE=HW SGX_DEBUG=0
     d. Simulation Mode, Debug build:
     $ make SGX_MODE=SIM
     e. Simulation Mode, Pre-release build:
@@ -50,20 +53,22 @@ The most common build settings are listed below.
     f. Simulation Mode, Release build:
     $ make SGX_MODE=SIM SGX_DEBUG=0
     g. Use Local Attestation 2.0 protocol, Hardware Mode, Debug build:
-    $ make LAv2=1
+    $ make SGX_MODE=HW LAv2=1
         Note: Local Attestation 2.0 protocol will be used if 'LAv2' is defined.
 
 When the build is successful, all executable binaries will be found in the "bin" directory.
 
 
-Running the Demo Client
------------------------
+Running the Client Application
+------------------------------
 
 Before running, install the SGX driver and PSW for Linux* OS.
-(This is also required to run the Pelz server.)
+(This is also required to run the pelz server.)
 
-To run the demo client, go to the "bin" directory
-then run `./appinitiator`
+To run the demo client, execute `./bin/appinitiator DATA_FILE DEK_FILE KEK_ID`
 
-Note: The client will not work properly if run outside of the "bin" directory.
-E.g. the command `./bin/appinitiator` will not work properly.
+Note: The client's arguments are not yet finalized and will most likely change soon.
+
+Note: The client will not work properly if run outside of the "attestation_demo" directory.
+E.g. the command `attestation_demo/bin/appinitiator` will not work properly.
+This is consistent with the behavior of the pelz and pelz-service binaries.

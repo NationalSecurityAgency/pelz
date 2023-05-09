@@ -214,15 +214,6 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
         return status;
     }
 
-    //Allocate memory for the response payload to be copied
-    *out_buff = (char*)malloc(max_out_buff_size);
-    if(!*out_buff)
-    {
-        SAFE_FREE(req_message);
-        return MALLOC_ERROR;
-    }
-    memset(*out_buff, 0, max_out_buff_size);
-
     //Allocate memory for the response message
     resp_message = (secure_message_t*)malloc(sizeof(secure_message_t)+ max_out_buff_size);
     if(!resp_message)
@@ -237,18 +228,17 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
     status = send_request_ocall(&retstatus, session_info->session_id, req_message,
                                 (sizeof(secure_message_t)+ inp_buff_len), max_out_buff_size,
                                 resp_message, (sizeof(secure_message_t)+ max_out_buff_size));
+    SAFE_FREE(req_message);
     if (status == SGX_SUCCESS)
     {
         if ((ATTESTATION_STATUS)retstatus != SUCCESS)
         {
-            SAFE_FREE(req_message);
             SAFE_FREE(resp_message);
             return ((ATTESTATION_STATUS)retstatus);
         }
     }
     else
     {
-        SAFE_FREE(req_message);
         SAFE_FREE(resp_message);
         return ATTESTATION_SE_ERROR;
     }
@@ -257,7 +247,6 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
 
     if(sizeof(resp_message) > max_resp_message_length)
     {
-        SAFE_FREE(req_message);
         SAFE_FREE(resp_message);
         return INVALID_PARAMETER_ERROR;
     }
@@ -269,7 +258,6 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
     decrypted_data = (uint8_t*)malloc(decrypted_data_length);
     if(!decrypted_data)
     {
-        SAFE_FREE(req_message);
         SAFE_FREE(resp_message);
         return MALLOC_ERROR;
     }
@@ -286,7 +274,6 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
 
     if(SGX_SUCCESS != status)
     {
-        SAFE_FREE(req_message);
         SAFE_FREE(decrypted_data);
         SAFE_FREE(resp_message);
         return status;
@@ -295,7 +282,6 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
     // Verify if the nonce obtained in the response is equal to the session nonce + 1 (Prevents replay attacks)
     if(*((uint32_t*)resp_message->message_aes_gcm_data.reserved) != (session_info->active.counter + 1 ))
     {
-        SAFE_FREE(req_message);
         SAFE_FREE(resp_message);
         SAFE_FREE(decrypted_data);
         return INVALID_PARAMETER_ERROR;
@@ -304,11 +290,20 @@ ATTESTATION_STATUS send_request_receive_response(dh_session_t *session_info,
     //Update the value of the session nonce in the source enclave
     session_info->active.counter = session_info->active.counter + 1;
 
+    //Allocate memory for the response payload to be copied
+    *out_buff = (char*)malloc(max_out_buff_size);
+    if(!*out_buff)
+    {
+        SAFE_FREE(decrypted_data);
+        SAFE_FREE(resp_message);
+        return MALLOC_ERROR;
+    }
+    memset(*out_buff, 0, max_out_buff_size);
+
     memcpy(out_buff_len, &decrypted_data_length, sizeof(decrypted_data_length));
     memcpy(*out_buff, decrypted_data, decrypted_data_length);
 
     SAFE_FREE(decrypted_data);
-    SAFE_FREE(req_message);
     SAFE_FREE(resp_message);
     return SUCCESS;
 }

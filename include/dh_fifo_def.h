@@ -37,7 +37,6 @@
 
 #include <stdio.h>
 #include <string.h>
-// #include <fcntl.h>
 #include <unistd.h>
 
 #include "sgx_eid.h"
@@ -66,7 +65,6 @@ typedef struct _fifomsg
 	FIFO_MSG_HEADER header;
 	unsigned char msgbuf[0];
 }FIFO_MSG;
-
 
 typedef struct _session_close
 {
@@ -98,16 +96,5 @@ typedef struct _fifo_msg_req
 	size_t size;
 	unsigned char buf[1];
 }FIFO_MSGBODY_REQ;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int connect_to_server(char* server_name, char* server_port);
-int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG **fiforesponse, size_t *fiforesponse_size);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
