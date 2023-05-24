@@ -43,8 +43,8 @@ else
 	UAE_SERVICE_LIB := sgx_uae_service
 endif
 
-INC:=-I$(SGX_SDK)/include -I../Include
-LIB := -l$(URTS_LIB_NAME) -l$(UAE_SERVICE_LIB) -L$(SGX_SDK)/lib64 -lpthread -lcjson -lkmyth-utils -lkmyth-logger -lssl
+INC:=-I$(SGX_SDK)/include -I$(SGX_SSL)/include -I../Include
+LIB := -l$(URTS_LIB_NAME) -l$(UAE_SERVICE_LIB) -L$(SGX_SDK)/lib64 -L$(SGX_SSL_LIBRARY_PATH) -lpthread -lcjson -lkmyth-utils -lkmyth-logger -lssl -lsgx_usgxssl
 CXXFLAGS += $(INC) $(LIB)
 CFLAGS += $(INC) $(LIB)
 
@@ -90,7 +90,7 @@ EnclaveInitiator_u.o: EnclaveInitiator_u.c
 	@echo "CC   <=  $<"
 
 EnclaveInitiator_u.c:
-	@$(SGX_EDGER8R) --untrusted ../EnclaveInitiator/EnclaveInitiator.edl --search-path $(SGX_SDK)/include
+	@$(SGX_EDGER8R) --untrusted ../EnclaveInitiator/EnclaveInitiator.edl --search-path $(SGX_SDK)/include --search-path $(SGX_SSL)/include
 
 $(TARGET): EnclaveInitiator_u.o $(SRC_OBJ)
 	@$(CXX) $^ $(CXXFLAGS) -o $@

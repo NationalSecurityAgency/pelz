@@ -57,23 +57,101 @@
 
 #define SERVER_ADDR "127.0.0.1"
 #define SERVER_PORT "10601"
+#define PELZ_REQ_ENC 1
 #define PELZ_REQ_DEC 2
-#define PELZ_CIPHER "AES/KeyWrap/RFC3394NoPadding/128"
-#define KEY_ID_PREFIX "file:"
+#define WRAP_CIPHER "AES/KeyWrap/RFC3394NoPadding/128"
 #define MAX_RESP_LEN 1024
+#define ENCRYPT_FORMAT "PELZ001\0"
 
 static sgx_enclave_id_t initiator_enclave_id = 0;
 
+typedef enum
+{
+    CMD_ENCRYPT,
+    CMD_DECRYPT,
+    CMD_SEARCH
+} command_codes;
 
-int create_pelz_request(const char *kek_path, uint8_t *wrapped_dek, size_t wrapped_dek_len, char **request_msg)
+typedef struct __attribute__ ((__packed__)) encrypt_bundle {
+  uint8_t format_code[8];
+  uint8_t kek_id[128];
+  uint8_t key[32];
+  uint8_t iv[12];
+  uint8_t tag[16];
+  uint8_t cipher_data[];
+} encrypt_bundle;
+
+void print_usage(const char *prog)
+{
+    fprintf(stdout,
+        "Usage: %s COMMAND ARGUMENTS ...\n"
+        "\n"
+        "Commands:\n"
+        "  encrypt DATA_FILE OUT_FILE KEK_ID\n"
+        "  decrypt DATA_FILE OUT_FILE\n"
+        "  search DATA_FILE KEYWORD\n"  // placeholder
+        , prog);
+}
+
+int parse_command(int argc, char* argv[])
+{
+    if (argc < 2) {
+        printf("Missing command line arguments.\n");
+        print_usage(argv[0]);
+        exit(-1);
+    }
+
+    char *command = argv[1];
+    if (strcmp(command, "encrypt") == 0)
+    {
+        if (argc != 5)
+        {
+            printf("Invalid command line arguments.\n");
+            print_usage(argv[0]);
+            exit(-1);
+        }
+        return CMD_ENCRYPT;
+    }
+    else if (strcmp(command, "decrypt") == 0)
+    {
+        if (argc != 4)
+        {
+            printf("Invalid command line arguments.\n");
+            print_usage(argv[0]);
+            exit(-1);
+        }
+        return CMD_DECRYPT;
+    }
+    else if (strcmp(command, "search") == 0)
+    {
+        if (argc != 4)
+        {
+            printf("Invalid command line arguments.\n");
+            print_usage(argv[0]);
+            exit(-1);
+        }
+        return CMD_SEARCH;
+    }
+    else
+    {
+        printf("Invalid command line arguments.\n");
+        print_usage(argv[0]);
+        exit(-1);
+    }
+}
+
+int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size_t dek_len, char **request_msg)
 {
     int ret;
     cJSON *request;
-    char *wrapped_encoded_dek;
-    size_t wrapped_encoded_dek_len;
-    char *kek_id;
+    char *encoded_dek;
+    size_t encoded_dek_len;
 
-    ret = encodeBase64Data(wrapped_dek, wrapped_dek_len, (uint8_t **) &wrapped_encoded_dek, &wrapped_encoded_dek_len);
+    // TODO: 1. Change the message to a signed pelz request.
+    // TODO: 2. Change the message to a signed pelz request with individually encrypted fields.
+    // TODO: 3. Generate the request signature using a double-wrapped signing key (using kmyth).
+
+    ret = encodeBase64Data(dek, dek_len, (uint8_t **) &encoded_dek, &encoded_dek_len);
     if (ret != 0)
     {
         printf("base-64 encoding failed\n");
@@ -82,26 +160,13 @@ int create_pelz_request(const char *kek_path, uint8_t *wrapped_dek, size_t wrapp
 
     request = cJSON_CreateObject();
 
-    cJSON_AddItemToObject(request, "request_type", cJSON_CreateNumber(PELZ_REQ_DEC));
-    cJSON_AddItemToObject(request, "cipher", cJSON_CreateString(PELZ_CIPHER));
-
-    cJSON_AddItemToObject(request, "data", cJSON_CreateString(wrapped_encoded_dek));
-    free(wrapped_encoded_dek);
-    wrapped_encoded_dek = NULL;
-
-    kek_id = (char *) calloc(strlen(KEY_ID_PREFIX) + strlen(kek_path) + 1, sizeof(char));
-    if (kek_id == NULL)
-    {
-        printf("allocation failure\n");
-        cJSON_Delete(request);
-        return -1;
-    }
-
-    sprintf(kek_id, "%s%s", KEY_ID_PREFIX, kek_path);
+    cJSON_AddItemToObject(request, "request_type", cJSON_CreateNumber(request_type));
+    cJSON_AddItemToObject(request, "cipher", cJSON_CreateString(WRAP_CIPHER));
     cJSON_AddItemToObject(request, "key_id", cJSON_CreateString(kek_id));
 
-    free(kek_id);
-    kek_id = NULL;
+    cJSON_AddItemToObject(request, "data", cJSON_CreateString(encoded_dek));
+    free(encoded_dek);
+    encoded_dek = NULL;
 
     *request_msg = cJSON_PrintUnformatted(request);
 
@@ -110,16 +175,131 @@ int create_pelz_request(const char *kek_path, uint8_t *wrapped_dek, size_t wrapp
     return 0;
 }
 
-int unwrap_and_decrypt(const char *kek_path, uint8_t *wrapped_dek, size_t wrapped_dek_len)
+int decode_response_data(char *json_str, uint8_t **data, size_t *len)
 {
+    cJSON *json = cJSON_Parse(json_str);
+    if (json == NULL)
+    {
+        printf("cJSON_Parse error");
+        return -1;
+    }
+
+    const char *field_name = "data";
+    const cJSON *field = cJSON_GetObjectItemCaseSensitive(json, field_name);
+    if (!cJSON_IsString(field) || field->valuestring == NULL)
+    {
+        printf("Missing JSON field: %s", field_name);
+        cJSON_Delete(json);
+        return -1;
+    }
+
+    if (decodeBase64Data((unsigned char *) field->valuestring, strlen(field->valuestring),
+                         data, len))
+    {
+        printf("decodeBase64Data error");
+        cJSON_Delete(json);
+        return -1;
+    }
+
+    cJSON_Delete(json);
+    return 0;
+}
+
+int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char *out_path)
+{
+    uint32_t ret_status;
+    sgx_status_t sgx_status;
+
+    size_t bundle_len = sizeof(encrypt_bundle) + data_len;
+    encrypt_bundle *bundle = (encrypt_bundle *) calloc(bundle_len, sizeof(uint8_t));
+    if (bundle == NULL)
+    {
+        printf("allocation error\n");
+        return -1;
+    }
+
+    if (strlen(kek_id) > sizeof(bundle->kek_id))
+    {
+        printf("kek id is too long\n");
+        return -1;
+    }
+
+    sgx_status = demo_encrypt(initiator_enclave_id, &ret_status, data, data_len, (uint8_t *) &bundle, bundle_len);
+    if (sgx_status != SGX_SUCCESS || ret_status != 0) {
+        printf("encrypt_data Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
+        free(bundle);
+        return -1;
+    }
+
+    char *request;
+    ret_status = create_pelz_request(PELZ_REQ_ENC, kek_id, bundle->key, sizeof(bundle->key), &request);
+    if (ret_status != 0)
+    {
+        printf("request encoding failed\n");
+        free(bundle);
+        return -1;
+    }
+
+    printf("pelz request json: %s\n", request);
+
+    char resp_buff[MAX_RESP_LEN] = { 0 };
+    size_t resp_len = 0;
+
+    sgx_status = sgx_make_pelz_request(initiator_enclave_id, &ret_status, request, strlen(request), MAX_RESP_LEN, resp_buff, &resp_len);
+    free(request);
+    request = NULL;
+
+    if (sgx_status != SGX_SUCCESS || ret_status != 0) {
+        printf("make_pelz_request Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
+        free(bundle);
+        return -1;
+    }
+
+    printf("pelz response json: %s\n", resp_buff);
+
+    uint8_t *wrapped_dek;
+    size_t wrapped_dek_len;
+    if (decode_response_data(resp_buff, &wrapped_dek, &wrapped_dek_len))
+    {
+        free(bundle);
+        return -1;
+    }
+
+    memcpy(bundle->key, wrapped_dek, sizeof(bundle->key));
+    free(wrapped_dek);
+
+    memcpy(bundle->format_code, ENCRYPT_FORMAT, sizeof(bundle->format_code));
+    memcpy(bundle->kek_id, kek_id, strlen(kek_id));
+
+    if (write_bytes_to_file(out_path, (uint8_t *) bundle, bundle_len))
+    {
+        printf("file write error\n");
+        return -1;
+    }
+
+    free(bundle);
+
+    return 0;
+}
+
+int unwrap_dek(uint8_t *bundle_data, size_t bundle_len)
+{
+    if (bundle_len < sizeof(encrypt_bundle))
+    {
+        printf("Invalid data file (size).");
+        return -1;
+    }
+
+    encrypt_bundle *bundle = (encrypt_bundle *) bundle_data;
+    if (strncmp((char *) bundle->format_code, ENCRYPT_FORMAT, sizeof(bundle->format_code)) != 0)
+    {
+        printf("Invalid data file (format code).");
+        return -1;
+    }
+
     int ret;
     char *request;
-
-    // TODO: 1. Change the message to a signed pelz request.
-    // TODO: 2. Change the message to a signed pelz request with individually encrypted fields.
-    // TODO: 3. Generate the request signature using a double-wrapped signing key (using kmyth).
-
-    ret = create_pelz_request(kek_path, wrapped_dek, wrapped_dek_len, &request);
+    ret = create_pelz_request(PELZ_REQ_DEC, (const char *) bundle->kek_id, bundle->key, sizeof(bundle->key), &request);
     if (ret != 0)
     {
         printf("request encoding failed\n");
@@ -144,43 +324,95 @@ int unwrap_and_decrypt(const char *kek_path, uint8_t *wrapped_dek, size_t wrappe
 
     printf("pelz response json: %s\n", resp_buff);
 
-    // TODO: decode request
-    // TODO: decrypt data
-    // TODO: do something with data
+    uint8_t *dek;
+    size_t dek_len;
+    if (decode_response_data(resp_buff, &dek, &dek_len))
+    {
+        return -1;
+    }
+    memcpy(bundle->key, dek, sizeof(bundle->key));
+    free(dek);
 
     return 0;
 }
 
+int unwrap_decrypt_store(uint8_t *bundle_data, size_t bundle_len, char *out_path)
+{
+    uint32_t ret_status;
+    sgx_status_t sgx_status;
+
+    if (unwrap_dek(bundle_data, bundle_len))
+    {
+        printf("pelz unwrapping failed\n");
+        return -1;
+    }
+
+    size_t decrypt_data_len = bundle_len - sizeof(encrypt_bundle);
+    uint8_t *decrypt_data = (uint8_t *) calloc(decrypt_data_len, sizeof(uint8_t));
+    if (decrypt_data == NULL)
+    {
+        printf("allocation error\n");
+        return -1;
+    }
+
+    sgx_status = demo_decrypt(initiator_enclave_id, &ret_status, bundle_data, bundle_len, decrypt_data, decrypt_data_len);
+    if (sgx_status != SGX_SUCCESS || ret_status != 0) {
+        printf("decrypt_data Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
+        free(decrypt_data);
+        return -1;
+    }
+
+    if (write_bytes_to_file(out_path, decrypt_data, decrypt_data_len))
+    {
+        printf("file write error\n");
+        free(decrypt_data);
+        return -1;
+    }
+
+    free(decrypt_data);
+
+    return 0;
+}
+
+int unwrap_decrypt_search(uint8_t *bundle_data, size_t bundle_len, char *search_term)
+{
+    uint32_t ret_status;
+    sgx_status_t sgx_status;
+
+    if (unwrap_dek(bundle_data, bundle_len))
+    {
+        printf("pelz unwrapping failed\n");
+        return -1;
+    }
+
+    int result_count;
+    sgx_status = demo_decrypt_search(initiator_enclave_id, &ret_status, bundle_data, bundle_len, search_term, &result_count);
+    if (sgx_status != SGX_SUCCESS || ret_status != 0) {
+        printf("decrypt_search_data Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
+        return -1;
+    }
+
+    printf("search for %s found %d occurrences\n", search_term, result_count);
+
+    return 0;
+}
 
 int main(int argc, char* argv[])
 {
+    int command_code = parse_command(argc, argv);
+
+    char *data_path = argv[2];
+
+    uint8_t *data;
+    size_t data_len;
+
     int update = 0;
     uint32_t ret_status;
     sgx_status_t status;
     sgx_launch_token_t token = {0};
 
-    if (argc != 4) {
-        printf("Missing command line arguments.\n");
-        printf("Usage: %s DATA_FILE DEK_FILE KEK_ID\n", argv[0]);
-        return -1;
-    }
-
-    char *data_path = argv[1];
-    char *dek_path = argv[2];
-    char *kek_id = argv[3];
-
-    uint8_t *data;
-    size_t data_len;
-    uint8_t *wrapped_dek;
-    size_t wrapped_dek_len;
-
     if (read_bytes_from_file(data_path, &data, &data_len)) {
         printf("failed to read the data file at %s.\n", data_path);
-        return -1;
-    }
-
-    if (read_bytes_from_file(dek_path, &wrapped_dek, &wrapped_dek_len)) {
-        printf("failed to read the dek file at %s.\n", data_path);
         return -1;
     }
 
@@ -207,11 +439,43 @@ int main(int argc, char* argv[])
     }
     printf("succeed to establish secure channel.\n");
 
-    // do work
-    if (unwrap_and_decrypt(kek_id, wrapped_dek, wrapped_dek_len)) {
-        printf("unwrap_and_decrypt failed\n");
-        sgx_destroy_enclave(initiator_enclave_id);
+    // execute command
+    switch (command_code)
+    {
+    case CMD_ENCRYPT:
+    {
+        char *out_path = argv[3];
+        char *kek_id = argv[4];
+        if (encrypt_wrap_store(data, data_len, kek_id, out_path)) {
+            printf("encrypt_wrap failed\n");
+            sgx_destroy_enclave(initiator_enclave_id);
+            return -1;
+        }
+        break;
+    }
+    case CMD_DECRYPT:
+    {
+        char *out_path = argv[3];
+        if (unwrap_decrypt_store(data, data_len, out_path)) {
+            printf("unwrap_decrypt failed\n");
+            sgx_destroy_enclave(initiator_enclave_id);
+            return -1;
+        }
+        break;
+    }
+    case CMD_SEARCH:
+    {
+        char *keyword = argv[3];
+        if (unwrap_decrypt_search(data, data_len, keyword)) {
+            printf("unwrap_decrypt_search failed\n");
+            sgx_destroy_enclave(initiator_enclave_id);
+            return -1;
+        }
+        break;
+    }
+    default:
         return -1;
+        break;
     }
 
     // close ECDH session

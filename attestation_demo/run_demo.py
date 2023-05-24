@@ -97,7 +97,7 @@ def main():
         'bin/demo_worker',
         ENC_DATA_FILE,
         ENC_DEK_FILE,
-        KEK_FILE,
+        f'file:{KEK_FILE}',
     ]
     print_log('Running the demo client ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')

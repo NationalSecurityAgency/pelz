@@ -175,3 +175,119 @@ extern "C" uint32_t message_exchange_response_generator(char* decrypted_data,
 
     return SUCCESS;
 }
+
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+
+typedef struct __attribute__ ((__packed__)) encrypt_bundle {
+  uint8_t format_code[8];
+  uint8_t kek_id[128];
+  uint8_t key[32];
+  uint8_t iv[12];
+  uint8_t tag[16];
+  uint8_t cipher_data[];
+} encrypt_bundle;
+
+
+// uint32_t do_decrypt(uint8_t *encrypt_data, size_t encrypt_data_len, uint8_t *decrypt_data, size_t decrypt_data_len)
+// {
+
+// }
+
+uint32_t demo_decrypt(uint8_t *encrypt_data, size_t encrypt_data_len, uint8_t *decrypt_data, size_t decrypt_data_len)
+{
+    return 0;
+}
+
+uint32_t demo_decrypt_search(uint8_t *encrypt_data, size_t encrypt_data_len, char *search_term, int *result_count)
+{
+    return 0;
+}
+
+uint32_t demo_encrypt(uint8_t *plain_data, size_t plain_data_len, uint8_t *encrypt_data, size_t encrypt_data_len)
+{
+    encrypt_bundle *bundle = (encrypt_bundle *) encrypt_data;
+
+    // validate non-NULL input plaintext buffer specified
+    if (plain_data == NULL || plain_data_len == 0)
+    {
+        return 1;
+    }
+
+    // Create the random key.
+    if (RAND_priv_bytes(bundle->key, sizeof(bundle->key)) != 1)
+    {
+        log_ocall("Key generation failed");
+        return 1;
+    }
+
+    // Create the random IV.
+    if (RAND_bytes(bundle->iv, sizeof(bundle->iv)) != 1)
+    {
+        log_ocall("IV generation failed");
+        return 1;
+    }
+
+    // initialize the cipher context to match cipher suite being used
+    EVP_CIPHER_CTX *ctx;
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+    {
+        return 1;
+    }
+
+    if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // set the IV length in the cipher context
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, (int) sizeof(bundle->iv), NULL))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // set the key and IV in the cipher context
+    if (!EVP_EncryptInit_ex(ctx, NULL, NULL, bundle->key, bundle->iv))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // variable to hold length of resulting CT - OpenSSL insists this be an int
+    int ciphertext_len = 0;
+
+    // encrypt the input plaintext, put result in the output ciphertext buffer
+    if (!EVP_EncryptUpdate(ctx, bundle->cipher_data, &ciphertext_len, plain_data, (int)plain_data_len))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // verify that the resultant CT length matches the input PT length
+    if ((size_t) ciphertext_len != plain_data_len)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // OpenSSL requires a "finalize" operation. For AES/GCM no data is written.
+    if (!EVP_EncryptFinal_ex(ctx, bundle->tag, &ciphertext_len))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // get the AES/GCM tag value
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, (int) sizeof(bundle->tag), bundle->tag))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // now that the encryption is complete, clean-up cipher context
+    EVP_CIPHER_CTX_free(ctx);
+
+    return 0;
+}

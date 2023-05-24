@@ -72,9 +72,10 @@ Enclave_Security_Link_Flags := -Wl,-z,relro,-z,now,-z,noexecstack
 # Do NOT move the libraries linked with `--start-group' and `--end-group' within `--whole-archive' and `--no-whole-archive' options.
 # Otherwise, you may get some undesirable errors.
 ENCLAVE_LINK_FLAGS := $(Enclave_Security_Link_Flags) \
-     -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) \
+     -Wl,--no-undefined -nostdlib -nodefaultlibs -nostartfiles -L$(SGX_LIBRARY_PATH) -L$(SGX_SSL_LIBRARY_PATH) \
              -Wl,--whole-archive -l$(Trts_Library_Name) -Wl,--no-whole-archive \
-             -Wl,--start-group -lsgx_tstdc -lsgx_tcxx -l$(Crypto_Library_Name) -l$(Service_Library_Name) -Wl,--end-group \
+			 -Wl,--whole-archive -lsgx_tsgxssl -Wl,--no-whole-archive -lsgx_tsgxssl_crypto \
+             -Wl,--start-group -lsgx_tstdc -lsgx_tcxx -lsgx_pthread -l$(Crypto_Library_Name) -l$(Service_Library_Name) -Wl,--end-group \
              -Wl,-Bstatic -Wl,-Bsymbolic -Wl,--no-undefined \
              -Wl,-pie,-eenclave_entry -Wl,--export-dynamic  \
              -Wl,--defsym,__ImageBase=0 -Wl,--gc-sections   \
@@ -88,7 +89,7 @@ SGX_COMMON_FLAGS += -Wall -Wextra -Winit-self -Wpointer-arith -Wreturn-type \
 SGX_COMMON_CFLAGS := $(SGX_COMMON_FLAGS) -Wjump-misses-init -Wstrict-prototypes -Wunsuffixed-float-constants
 SGX_COMMON_CXXFLAGS := $(SGX_COMMON_FLAGS) -Wnon-virtual-dtor -std=c++11
 
-Enclave_Include_Paths := -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx -I../Include
+Enclave_Include_Paths := -I$(SGX_SDK)/include -I$(SGX_SDK)/include/tlibc -I$(SGX_SDK)/include/libcxx -I$(SGX_SSL)/include -I../Include
 
 Enclave_C_Flags := $(Enclave_Include_Paths) -nostdinc -fvisibility=hidden -fpie -ffunction-sections -fdata-sections
 CC_BELOW_4_9 := $(shell expr "`$(CC) -dumpversion`" \< "4.9")
@@ -124,7 +125,7 @@ $(ENCLAVE_NAME):EnclaveInitiator_t.o $(ENCLAVE_CPP_OBJECTS)
 ######## Enclave Objects ########
 
 EnclaveInitiator_t.h: $(SGX_EDGER8R) EnclaveInitiator.edl
-	@$(SGX_EDGER8R) --trusted EnclaveInitiator.edl --search-path $(SGX_SDK)/include
+	@$(SGX_EDGER8R) --trusted EnclaveInitiator.edl --search-path $(SGX_SDK)/include --search-path $(SGX_SSL)/include
 	@echo "GEN  =>  $@"
 
 EnclaveInitiator_t.c: EnclaveInitiator_t.h
