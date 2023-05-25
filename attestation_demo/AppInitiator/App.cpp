@@ -52,6 +52,7 @@
 #include "EnclaveInitiator_u.h"
 
 #include "fifo_def.h"
+#include "encrypt_datatypes.h"
 
 #define ENCLAVE_INITIATOR_NAME "bin/libenclave_initiator.signed.so"
 
@@ -71,15 +72,6 @@ typedef enum
     CMD_DECRYPT,
     CMD_SEARCH
 } command_codes;
-
-typedef struct __attribute__ ((__packed__)) encrypt_bundle {
-  uint8_t format_code[8];
-  uint8_t kek_id[128];
-  uint8_t key[32];
-  uint8_t iv[12];
-  uint8_t tag[16];
-  uint8_t cipher_data[];
-} encrypt_bundle;
 
 void print_usage(const char *prog)
 {
@@ -159,6 +151,11 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     }
 
     request = cJSON_CreateObject();
+    if (request == NULL)
+    {
+        printf("cJSON_CreateObject error\n");
+        return -1;
+    }
 
     cJSON_AddItemToObject(request, "request_type", cJSON_CreateNumber(request_type));
     cJSON_AddItemToObject(request, "cipher", cJSON_CreateString(WRAP_CIPHER));
@@ -180,7 +177,7 @@ int decode_response_data(char *json_str, uint8_t **data, size_t *len)
     cJSON *json = cJSON_Parse(json_str);
     if (json == NULL)
     {
-        printf("cJSON_Parse error");
+        printf("cJSON_Parse error\n");
         return -1;
     }
 
@@ -188,7 +185,7 @@ int decode_response_data(char *json_str, uint8_t **data, size_t *len)
     const cJSON *field = cJSON_GetObjectItemCaseSensitive(json, field_name);
     if (!cJSON_IsString(field) || field->valuestring == NULL)
     {
-        printf("Missing JSON field: %s", field_name);
+        printf("Missing JSON field: %s\n", field_name);
         cJSON_Delete(json);
         return -1;
     }
@@ -196,7 +193,7 @@ int decode_response_data(char *json_str, uint8_t **data, size_t *len)
     if (decodeBase64Data((unsigned char *) field->valuestring, strlen(field->valuestring),
                          data, len))
     {
-        printf("decodeBase64Data error");
+        printf("decodeBase64Data error\n");
         cJSON_Delete(json);
         return -1;
     }
@@ -207,8 +204,11 @@ int decode_response_data(char *json_str, uint8_t **data, size_t *len)
 
 int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char *out_path)
 {
-    uint32_t ret_status;
-    sgx_status_t sgx_status;
+    if (strlen(kek_id) > KEK_ID_SIZE)
+    {
+        printf("kek id is too long\n");
+        return -1;
+    }
 
     size_t bundle_len = sizeof(encrypt_bundle) + data_len;
     encrypt_bundle *bundle = (encrypt_bundle *) calloc(bundle_len, sizeof(uint8_t));
@@ -218,13 +218,9 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
         return -1;
     }
 
-    if (strlen(kek_id) > sizeof(bundle->kek_id))
-    {
-        printf("kek id is too long\n");
-        return -1;
-    }
-
-    sgx_status = demo_encrypt(initiator_enclave_id, &ret_status, data, data_len, (uint8_t *) &bundle, bundle_len);
+    uint32_t ret_status;
+    sgx_status_t sgx_status;
+    sgx_status = demo_encrypt(initiator_enclave_id, &ret_status, data, data_len, (uint8_t *) bundle, bundle_len);
     if (sgx_status != SGX_SUCCESS || ret_status != 0) {
         printf("encrypt_data Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
         free(bundle);
@@ -232,6 +228,8 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     }
 
     char *request;
+    printf("create_pelz_request bundle: %p\n", bundle);
+    printf("create_pelz_request bundle->key: %p\n", bundle->key);
     ret_status = create_pelz_request(PELZ_REQ_ENC, kek_id, bundle->key, sizeof(bundle->key), &request);
     if (ret_status != 0)
     {
@@ -265,41 +263,40 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
         return -1;
     }
 
-    memcpy(bundle->key, wrapped_dek, sizeof(bundle->key));
+    size_t content_len = sizeof(encrypt_file_content) + data_len;
+    encrypt_file_content *content = (encrypt_file_content *) calloc(content_len, sizeof(uint8_t));
+    if (content == NULL)
+    {
+        printf("allocation error\n");
+        return -1;
+    }
+
+    memcpy(content->wrapped_key, wrapped_dek, KEY_SIZE_WRAPPED);
     free(wrapped_dek);
 
-    memcpy(bundle->format_code, ENCRYPT_FORMAT, sizeof(bundle->format_code));
-    memcpy(bundle->kek_id, kek_id, strlen(kek_id));
+    memcpy(content->tag, bundle->tag, TAG_SIZE);
+    memcpy(content->iv, bundle->iv, IV_SIZE);
+    memcpy(content->cipher_data, bundle->cipher_data, data_len);
 
-    if (write_bytes_to_file(out_path, (uint8_t *) bundle, bundle_len))
+    free(bundle);
+
+    memcpy(content->format_code, ENCRYPT_FORMAT, sizeof(content->format_code));
+    memcpy(content->kek_id, kek_id, strlen(kek_id));
+
+    if (write_bytes_to_file(out_path, (uint8_t *) content, content_len))
     {
         printf("file write error\n");
         return -1;
     }
 
-    free(bundle);
-
     return 0;
 }
 
-int unwrap_dek(uint8_t *bundle_data, size_t bundle_len)
+int unwrap_dek(const char *kek_id, uint8_t *wrapped_key, uint8_t *unwrapped_key)
 {
-    if (bundle_len < sizeof(encrypt_bundle))
-    {
-        printf("Invalid data file (size).");
-        return -1;
-    }
-
-    encrypt_bundle *bundle = (encrypt_bundle *) bundle_data;
-    if (strncmp((char *) bundle->format_code, ENCRYPT_FORMAT, sizeof(bundle->format_code)) != 0)
-    {
-        printf("Invalid data file (format code).");
-        return -1;
-    }
-
     int ret;
     char *request;
-    ret = create_pelz_request(PELZ_REQ_DEC, (const char *) bundle->kek_id, bundle->key, sizeof(bundle->key), &request);
+    ret = create_pelz_request(PELZ_REQ_DEC, (const char *) kek_id, wrapped_key, KEY_SIZE_WRAPPED, &request);
     if (ret != 0)
     {
         printf("request encoding failed\n");
@@ -330,20 +327,60 @@ int unwrap_dek(uint8_t *bundle_data, size_t bundle_len)
     {
         return -1;
     }
-    memcpy(bundle->key, dek, sizeof(bundle->key));
+    memcpy(unwrapped_key, dek, KEY_SIZE);
     free(dek);
 
     return 0;
 }
 
-int unwrap_decrypt_store(uint8_t *bundle_data, size_t bundle_len, char *out_path)
+int make_decryption_bundle(uint8_t *file_data, size_t content_len, uint8_t **bundle_data, size_t *bundle_len)
 {
-    uint32_t ret_status;
-    sgx_status_t sgx_status;
+    if (content_len <= sizeof(encrypt_file_content))
+    {
+        printf("Invalid data file (size).");
+        return -1;
+    }
 
-    if (unwrap_dek(bundle_data, bundle_len))
+    encrypt_file_content *content = (encrypt_file_content *) file_data;
+    if (strncmp((char *) content->format_code, ENCRYPT_FORMAT, sizeof(content->format_code)) != 0)
+    {
+        printf("Invalid data file (format code).");
+        return -1;
+    }
+
+    size_t encrypt_data_len = content_len - sizeof(encrypt_file_content);
+    size_t tmp_bundle_len = sizeof(encrypt_bundle) + encrypt_data_len;
+    encrypt_bundle *bundle = (encrypt_bundle *) calloc(tmp_bundle_len, sizeof(uint8_t));
+    if (bundle == NULL)
+    {
+        printf("allocation error\n");
+        return -1;
+    }
+
+    if (unwrap_dek(content->kek_id, content->wrapped_key, bundle->key))
     {
         printf("pelz unwrapping failed\n");
+        free(bundle);
+        return -1;
+    }
+
+    memcpy(bundle->tag, content->tag, TAG_SIZE);
+    memcpy(bundle->iv, content->iv, IV_SIZE);
+    memcpy(bundle->cipher_data, content->cipher_data, encrypt_data_len);
+
+    *bundle_data = (uint8_t *) bundle;
+    *bundle_len = tmp_bundle_len;
+
+    return 0;
+}
+
+int unwrap_decrypt_store(uint8_t *file_data, size_t content_len, char *out_path)
+{
+    uint8_t *bundle_data = NULL;
+    size_t bundle_len = 0;
+    if (make_decryption_bundle(file_data, content_len, &bundle_data, &bundle_len))
+    {
+        printf("decryption error\n");
         return -1;
     }
 
@@ -352,10 +389,14 @@ int unwrap_decrypt_store(uint8_t *bundle_data, size_t bundle_len, char *out_path
     if (decrypt_data == NULL)
     {
         printf("allocation error\n");
+        free(bundle_data);
         return -1;
     }
 
+    uint32_t ret_status;
+    sgx_status_t sgx_status;
     sgx_status = demo_decrypt(initiator_enclave_id, &ret_status, bundle_data, bundle_len, decrypt_data, decrypt_data_len);
+    free(bundle_data);
     if (sgx_status != SGX_SUCCESS || ret_status != 0) {
         printf("decrypt_data Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
         free(decrypt_data);
@@ -374,19 +415,21 @@ int unwrap_decrypt_store(uint8_t *bundle_data, size_t bundle_len, char *out_path
     return 0;
 }
 
-int unwrap_decrypt_search(uint8_t *bundle_data, size_t bundle_len, char *search_term)
+int unwrap_decrypt_search(uint8_t *file_data, size_t content_len, char *search_term)
 {
-    uint32_t ret_status;
-    sgx_status_t sgx_status;
-
-    if (unwrap_dek(bundle_data, bundle_len))
+    uint8_t *bundle_data = NULL;
+    size_t bundle_len = 0;
+    if (make_decryption_bundle(file_data, content_len, &bundle_data, &bundle_len))
     {
-        printf("pelz unwrapping failed\n");
+        printf("decryption error\n");
         return -1;
     }
 
     int result_count;
+    uint32_t ret_status;
+    sgx_status_t sgx_status;
     sgx_status = demo_decrypt_search(initiator_enclave_id, &ret_status, bundle_data, bundle_len, search_term, &result_count);
+    free(bundle_data);
     if (sgx_status != SGX_SUCCESS || ret_status != 0) {
         printf("decrypt_search_data Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
         return -1;
