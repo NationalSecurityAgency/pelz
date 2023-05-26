@@ -81,7 +81,7 @@ void print_usage(const char *prog)
         "Commands:\n"
         "  encrypt DATA_FILE OUT_FILE KEK_ID\n"
         "  decrypt DATA_FILE OUT_FILE\n"
-        "  search DATA_FILE KEYWORD\n"  // placeholder
+        "  search DATA_FILE KEYWORD\n"
         , prog);
 }
 
