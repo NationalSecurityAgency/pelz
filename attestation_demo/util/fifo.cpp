@@ -113,7 +113,7 @@ int connect_to_server(const char* server_name, const char* server_port)
         sockfd = -1;
         goto done;
     }
-    printf("connected to %s:%s\n", server_name, server_port);
+    printf("Connected to %s:%s\n", server_name, server_port);
 
 done:
     if (dest_info)

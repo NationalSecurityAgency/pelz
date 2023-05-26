@@ -228,8 +228,6 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     }
 
     char *request;
-    printf("create_pelz_request bundle: %p\n", bundle);
-    printf("create_pelz_request bundle->key: %p\n", bundle->key);
     ret_status = create_pelz_request(PELZ_REQ_ENC, kek_id, bundle->key, sizeof(bundle->key), &request);
     if (ret_status != 0)
     {
@@ -435,7 +433,7 @@ int unwrap_decrypt_search(uint8_t *file_data, size_t content_len, char *search_t
         return -1;
     }
 
-    printf("search for %s found %d occurrences\n", search_term, result_count);
+    printf("SEARCH RESULT: search for %s found %d occurrences\n", search_term, result_count);
 
     return 0;
 }
@@ -471,7 +469,7 @@ int main(int argc, char* argv[])
         printf("failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_INITIATOR_NAME, status);
         return -1;
     }
-    printf("succeed to load enclave %s\n", ENCLAVE_INITIATOR_NAME);
+    printf("Loaded enclave %s\n", ENCLAVE_INITIATOR_NAME);
 
     // establish an ECDH session with the responder enclave running in another process
     status = test_create_session(initiator_enclave_id, &ret_status);
@@ -480,7 +478,7 @@ int main(int argc, char* argv[])
         sgx_destroy_enclave(initiator_enclave_id);
         return -1;
     }
-    printf("succeed to establish secure channel.\n");
+    printf("Established secure channel.\n");
 
     // execute command
     switch (command_code)
@@ -528,7 +526,6 @@ int main(int argc, char* argv[])
         sgx_destroy_enclave(initiator_enclave_id);
         return -1;
     }
-    printf("Succeed to close Session...\n");
 
     sgx_destroy_enclave(initiator_enclave_id);
 
