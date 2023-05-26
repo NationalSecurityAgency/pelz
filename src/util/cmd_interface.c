@@ -79,18 +79,6 @@ CmdArgValue check_arg(char *arg)
     return CA;
   }
 
-  //Checking for encrypt keyword
-  if ((memcmp(arg, "encrypt", 7) == 0) && (strlen(arg) == 7))
-  {
-    return ENC;
-  }
- 
-  //Checking for decrypt keyword
-  if ((memcmp(arg, "decrypt", 7) == 0) && (strlen(arg) == 7))
-  {
-    return DEC;
-  }
-
   return OTHER;        
 }
 
