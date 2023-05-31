@@ -292,6 +292,8 @@ uint32_t demo_decrypt_search(uint8_t *encrypt_data, size_t encrypt_data_len, cha
         }
     }
 
+    free(decrypt_data);
+
     *result_count = count;
 
     return 0;

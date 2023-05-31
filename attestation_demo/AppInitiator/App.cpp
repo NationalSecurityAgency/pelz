@@ -154,6 +154,7 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     if (request == NULL)
     {
         printf("cJSON_CreateObject error\n");
+        free(encoded_dek);
         return -1;
     }
 
@@ -266,6 +267,8 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     if (content == NULL)
     {
         printf("allocation error\n");
+        free(bundle);
+        free(wrapped_dek);
         return -1;
     }
 
@@ -284,8 +287,11 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     if (write_bytes_to_file(out_path, (uint8_t *) content, content_len))
     {
         printf("file write error\n");
+        free(content);
         return -1;
     }
+
+    free(content);
 
     return 0;
 }
