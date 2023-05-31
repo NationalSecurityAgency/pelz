@@ -56,8 +56,8 @@
 
 #define ENCLAVE_INITIATOR_NAME "bin/libenclave_initiator.signed.so"
 
-#define SERVER_ADDR "127.0.0.1"
-#define SERVER_PORT "10601"
+#define REMOTE_ADDR "127.0.0.1"
+#define REMOTE_PORT "10601"
 #define PELZ_REQ_ENC 1
 #define PELZ_REQ_DEC 2
 #define WRAP_CIPHER "AES/KeyWrap/RFC3394NoPadding/128"
@@ -458,8 +458,8 @@ int main(int argc, char* argv[])
     }
 
     // Establish the socket connection that will be used to communicate with pelz
-    if (connect_to_server(SERVER_ADDR, SERVER_PORT) == -1) {
-        printf("failed to connect to the pelz server.\n");
+    if (connect_to_remote(REMOTE_ADDR, REMOTE_PORT) == -1) {
+        printf("failed to connect to pelz.\n");
         return -1;
     }
 
