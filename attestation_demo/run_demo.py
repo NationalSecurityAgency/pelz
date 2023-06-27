@@ -38,16 +38,16 @@ def main():
     # Currently using placeholder data.
     # TODO: Possibly save a data file in the repo instead.
     with open(ORIG_DATA_FILE, 'w') as f:
-        f.write('placeholder data\nabcdefghijklmnopqrstuvwx')
+        f.write('placeholder data\nabcdefghijklmnopqrstuvwxyz')
 
     # 3. Use the worker client to encrypt the file and wrap the generated DEK.
 
     cmd = [
         'bin/demo_worker',
         'encrypt',
-        ORIG_DATA_FILE,
-        ENC_DATA_FILE,
         f'file:{KEK_FILE}',
+        '-i', ORIG_DATA_FILE,
+        '-o', ENC_DATA_FILE,
     ]
     print_log('Encrypting the data file using the demo client ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')
@@ -59,8 +59,8 @@ def main():
     cmd = [
         'bin/demo_worker',
         'search',
-        ENC_DATA_FILE,
         'abcd',  # search term
+        '-i', ENC_DATA_FILE,
     ]
     print_log('Decrypting and searching the data file using the demo client ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')

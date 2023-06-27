@@ -37,6 +37,7 @@
  */
 
 #include <stdio.h>
+#include <getopt.h>
 #include <map>
 #include <sched.h>
 #include <sys/sysinfo.h>
@@ -66,70 +67,20 @@
 
 static sgx_enclave_id_t initiator_enclave_id = 0;
 
-typedef enum
-{
-    CMD_ENCRYPT,
-    CMD_DECRYPT,
-    CMD_SEARCH
-} command_codes;
-
 void print_usage(const char *prog)
 {
     fprintf(stdout,
         "Usage: %s COMMAND ARGUMENTS ...\n"
         "\n"
         "Commands:\n"
-        "  encrypt DATA_FILE OUT_FILE KEK_ID\n"
-        "  decrypt DATA_FILE OUT_FILE\n"
-        "  search DATA_FILE KEYWORD\n"
+        "  encrypt KEK_ID\n"
+        "  decrypt\n"
+        "  search KEYWORD\n"
+        "Options:\n"
+        "-i DATA_FILE, --input-file=DATA_FILE\n"
+        "-o OUT_FILE, --output-file=OUT_FILE\n"
+        "-h, --help\n"
         , prog);
-}
-
-int parse_command(int argc, char* argv[])
-{
-    if (argc < 2) {
-        printf("Missing command line arguments.\n");
-        print_usage(argv[0]);
-        exit(-1);
-    }
-
-    char *command = argv[1];
-    if (strcmp(command, "encrypt") == 0)
-    {
-        if (argc != 5)
-        {
-            printf("Invalid command line arguments.\n");
-            print_usage(argv[0]);
-            exit(-1);
-        }
-        return CMD_ENCRYPT;
-    }
-    else if (strcmp(command, "decrypt") == 0)
-    {
-        if (argc != 4)
-        {
-            printf("Invalid command line arguments.\n");
-            print_usage(argv[0]);
-            exit(-1);
-        }
-        return CMD_DECRYPT;
-    }
-    else if (strcmp(command, "search") == 0)
-    {
-        if (argc != 4)
-        {
-            printf("Invalid command line arguments.\n");
-            print_usage(argv[0]);
-            exit(-1);
-        }
-        return CMD_SEARCH;
-    }
-    else
-    {
-        printf("Invalid command line arguments.\n");
-        print_usage(argv[0]);
-        exit(-1);
-    }
 }
 
 int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size_t dek_len, char **request_msg)
@@ -444,30 +395,143 @@ int unwrap_decrypt_search(uint8_t *file_data, size_t content_len, char *search_t
     return 0;
 }
 
-int main(int argc, char* argv[])
+int establish_secure_channel()
 {
-    int command_code = parse_command(argc, argv);
-
-    char *data_path = argv[2];
-
-    uint8_t *data;
-    size_t data_len;
-
-    int update = 0;
     uint32_t ret_status;
     sgx_status_t status;
-    sgx_launch_token_t token = {0};
-
-    if (read_bytes_from_file(data_path, &data, &data_len)) {
-        printf("failed to read the data file at %s.\n", data_path);
-        return -1;
-    }
 
     // Establish the socket connection that will be used to communicate with pelz
     if (connect_to_remote(REMOTE_ADDR, REMOTE_PORT) == -1) {
         printf("failed to connect to pelz.\n");
         return -1;
     }
+
+    // establish an ECDH session with the responder enclave running in another process
+    status = test_create_session(initiator_enclave_id, &ret_status);
+    if (status != SGX_SUCCESS || ret_status != 0) {
+        printf("failed to establish secure channel: ECALL return 0x%x, error code is 0x%x.\n", status, ret_status);
+        return -1;
+    }
+    printf("Established secure channel.\n");
+    return 0;
+}
+
+int close_secure_channel()
+{
+    uint32_t ret_status;
+    sgx_status_t status;
+
+    // close ECDH session
+    status = test_close_session(initiator_enclave_id, &ret_status);
+    if (status != SGX_SUCCESS || ret_status != 0) {
+        printf("test_close_session Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", status, ret_status);
+        return -1;
+    }
+    printf("Closed secure channel.\n");
+    return 0;
+}
+
+int execute_command(int argc, char* argv[])
+{
+    static struct option long_opts[] =
+    {
+        {"input-file", required_argument, 0, 'i'},
+        {"output-file", required_argument, 0, 'o'},
+        {"help", no_argument, 0, 'h'},
+        {0, 0, 0, 0}
+    };
+
+    int options;
+    int option_index = 0;
+
+    uint8_t *data = NULL;
+    size_t data_len = 0;
+    char *out_path = NULL;
+
+    while ((options = getopt_long(argc, argv, "i:o:h", long_opts, &option_index)) != -1)
+    {
+        switch (options)
+        {
+        case 'i':
+            if (read_bytes_from_file(optarg, &data, &data_len)) {
+                printf("failed to read the input data file at %s.\n", optarg);
+                return -1;
+            }
+            break;
+        case 'o':
+            out_path = strdup(optarg);
+            break;
+        case 'h':
+            print_usage(argv[0]);
+            return -1;
+        default:
+            print_usage(argv[0]);
+            return -1;
+        }
+    }
+
+    if (optind >= argc)
+    {
+        print_usage(argv[0]);
+        return -1;
+    }
+    char *command = argv[optind++];
+
+    if (strcmp(command, "encrypt") == 0)
+    {
+        if (!data || !out_path || optind != argc - 1)
+        {
+            printf("invalid arguments for \"%s\" command\n", command);
+            print_usage(argv[0]);
+            return -1;
+        }
+        char *kek_id = argv[optind];
+        if (encrypt_wrap_store(data, data_len, kek_id, out_path)) {
+            printf("encrypt_wrap failed\n");
+            return -1;
+        }
+    }
+    else if (strcmp(command, "decrypt") == 0)
+    {
+        if (!data || !out_path || optind != argc)
+        {
+            printf("invalid arguments for \"%s\" command\n", command);
+            print_usage(argv[0]);
+            return -1;
+        }
+        if (unwrap_decrypt_store(data, data_len, out_path)) {
+            printf("unwrap_decrypt failed\n");
+            return -1;
+        }
+    }
+    else if (strcmp(command, "search") == 0)
+    {
+        if (!data || out_path || optind != argc - 1)
+        {
+            printf("invalid arguments for \"%s\" command\n", command);
+            print_usage(argv[0]);
+            return -1;
+        }
+        char *keyword = argv[optind];
+        if (unwrap_decrypt_search(data, data_len, keyword)) {
+            printf("unwrap_decrypt_search failed\n");
+            return -1;
+        }
+    }
+    else
+    {
+        printf("Invalid command line arguments.\n");
+        print_usage(argv[0]);
+        return -1;
+    }
+    return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    int update = 0;
+    sgx_launch_token_t token = {0};
+    sgx_status_t status;
 
     // create ECDH initiator enclave
     status = sgx_create_enclave(ENCLAVE_INITIATOR_NAME, SGX_DEBUG_FLAG, &token, &update, &initiator_enclave_id, NULL);
@@ -477,62 +541,14 @@ int main(int argc, char* argv[])
     }
     printf("Loaded enclave %s\n", ENCLAVE_INITIATOR_NAME);
 
-    // establish an ECDH session with the responder enclave running in another process
-    status = test_create_session(initiator_enclave_id, &ret_status);
-    if (status != SGX_SUCCESS || ret_status != 0) {
-        printf("failed to establish secure channel: ECALL return 0x%x, error code is 0x%x.\n", status, ret_status);
+    if (establish_secure_channel())
+    {
         sgx_destroy_enclave(initiator_enclave_id);
-        return -1;
-    }
-    printf("Established secure channel.\n");
-
-    // execute command
-    switch (command_code)
-    {
-    case CMD_ENCRYPT:
-    {
-        char *out_path = argv[3];
-        char *kek_id = argv[4];
-        if (encrypt_wrap_store(data, data_len, kek_id, out_path)) {
-            printf("encrypt_wrap failed\n");
-            sgx_destroy_enclave(initiator_enclave_id);
-            return -1;
-        }
-        break;
-    }
-    case CMD_DECRYPT:
-    {
-        char *out_path = argv[3];
-        if (unwrap_decrypt_store(data, data_len, out_path)) {
-            printf("unwrap_decrypt failed\n");
-            sgx_destroy_enclave(initiator_enclave_id);
-            return -1;
-        }
-        break;
-    }
-    case CMD_SEARCH:
-    {
-        char *keyword = argv[3];
-        if (unwrap_decrypt_search(data, data_len, keyword)) {
-            printf("unwrap_decrypt_search failed\n");
-            sgx_destroy_enclave(initiator_enclave_id);
-            return -1;
-        }
-        break;
-    }
-    default:
-        return -1;
-        break;
     }
 
-    // close ECDH session
-    status = test_close_session(initiator_enclave_id, &ret_status);
-    if (status != SGX_SUCCESS || ret_status != 0) {
-        printf("test_close_session Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", status, ret_status);
-        sgx_destroy_enclave(initiator_enclave_id);
-        return -1;
-    }
+    execute_command(argc, argv);
 
+    close_secure_channel();
     sgx_destroy_enclave(initiator_enclave_id);
 
     return 0;
