@@ -58,6 +58,12 @@ endif
 
 SGX_SDK_PATH ?= $(SGX_SDK)
 
+# -------------------------------------------------------------------
+# SGX SSL library is also required
+# -------------------------------------------------------------------
+
+SGX_SSL ?= /opt/intel/sgxssl
+
 #-------------------------------------------------------------------
 # This is the output folder.
 #-------------------------------------------------------------------
@@ -147,11 +153,13 @@ ifeq ($(SGX_ARCH), x86)
         SGX_LIBRARY_PATH := $(SGX_SDK)/lib
         SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x86/sgx_sign
         SGX_EDGER8R := $(SGX_SDK)/bin/x86/sgx_edger8r
+        SGX_SSL_LIBRARY_PATH := $(SGX_SSL)/lib
 else
         SGX_COMMON_FLAGS := -m64
         SGX_LIBRARY_PATH := $(SGX_SDK)/lib64
         SGX_ENCLAVE_SIGNER := $(SGX_SDK)/bin/x64/sgx_sign
         SGX_EDGER8R := $(SGX_SDK)/bin/x64/sgx_edger8r
+        SGX_SSL_LIBRARY_PATH := $(SGX_SSL)/lib64
 endif
 
 SGX_COMMON_FLAGS += $(COMMON_FLAGS)

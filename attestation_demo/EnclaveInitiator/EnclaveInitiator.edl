@@ -30,6 +30,9 @@
  */
 
 enclave {
+    from "sgx_pthread.edl" import *;
+    from "sgx_tsgxssl.edl" import *;
+
     include "sgx_eid.h"
     include "datatypes.h"
     include "dh_session_protocol.h"
@@ -38,6 +41,10 @@ enclave {
             public uint32_t test_create_session();
             public uint32_t sgx_make_pelz_request([in, count=req_msg_len] char *req_msg, size_t req_msg_len, size_t max_resp_len, [out, count=max_resp_len] char *resp_buff, [out] size_t *resp_len);
             public uint32_t test_close_session();
+
+            public uint32_t demo_encrypt([in, count=plain_data_len] uint8_t *plain_data, size_t plain_data_len, [out, count=encrypt_data_len] uint8_t *encrypt_data, size_t encrypt_data_len);
+            public uint32_t demo_decrypt([in, count=encrypt_data_len] uint8_t *encrypt_data, size_t encrypt_data_len, [out, count=decrypt_data_len] uint8_t *decrypt_data, size_t decrypt_data_len);
+            public uint32_t demo_decrypt_search([in, count=encrypt_data_len] uint8_t *encrypt_data, size_t encrypt_data_len, [in, string] char *search_term, [out] int *result_count);
     };
 
     untrusted{

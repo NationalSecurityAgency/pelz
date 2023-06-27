@@ -48,13 +48,13 @@
 
 // The Initiator demo originally used a new socket connection for each message,
 // but pelz expects a single persistent connection for the entire session.
-static int server_sock_fd = -1;
+static int remote_sock_fd = -1;
 
 
-// Create a socket and connect to the server_name:server_port
+// Create a socket and connect to the remote_name:remote_port
 // This function was adapted from create_socket() in
 // linux-sgx/SampleCode/SampleAttestedTLS/non_enc_client/client.cpp
-int connect_to_server(const char* server_name, const char* server_port)
+int connect_to_remote(const char* remote_name, const char* remote_port)
 {
     int sockfd = -1;
     struct addrinfo hints, *dest_info, *curr_di;
@@ -64,11 +64,11 @@ int connect_to_server(const char* server_name, const char* server_port)
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 
-    if ((res = getaddrinfo(server_name, server_port, &hints, &dest_info)) != 0)
+    if ((res = getaddrinfo(remote_name, remote_port, &hints, &dest_info)) != 0)
     {
         printf(
             "Error: Cannot resolve hostname %s. %s\n",
-            server_name,
+            remote_name,
             gai_strerror(res));
         goto done;
     }
@@ -88,7 +88,7 @@ int connect_to_server(const char* server_name, const char* server_port)
     {
         printf(
             "Error: Cannot get address for hostname %s.\n",
-            server_name);
+            remote_name);
         goto done;
     }
 
@@ -106,20 +106,20 @@ int connect_to_server(const char* server_name, const char* server_port)
     {
         printf(
             "failed to connect to %s:%s (errno=%d)\n",
-            server_name,
-            server_port,
+            remote_name,
+            remote_port,
             errno);
         close(sockfd);
         sockfd = -1;
         goto done;
     }
-    printf("connected to %s:%s\n", server_name, server_port);
+    printf("Connected to %s:%s\n", remote_name, remote_port);
 
 done:
     if (dest_info)
         freeaddrinfo(dest_info);
 
-    server_sock_fd = sockfd;
+    remote_sock_fd = sockfd;
 
     return sockfd;
 }
@@ -141,19 +141,19 @@ int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG
 
     // The original version of this function created a new UNIX socket connection here.
 
-    if (server_sock_fd == -1)
+    if (remote_sock_fd == -1)
     {
-        printf("ERROR, trying to send a message before connecting to the server");
+        printf("ERROR, trying to send a message before connecting to the remote");
     }
 
-    if ((byte_num = send(server_sock_fd, reinterpret_cast<char *>(fiforequest), static_cast<int>(fiforequest_size), 0)) == -1)
+    if ((byte_num = send(remote_sock_fd, reinterpret_cast<char *>(fiforequest), static_cast<int>(fiforequest_size), 0)) == -1)
     {
         printf("connection error, %s, line %d..\n", strerror(errno), __LINE__);
         ret = -1;
         goto CLEAN;
     }
 
-    byte_num = recv(server_sock_fd, reinterpret_cast<char *>(recv_msg), BUFFER_SIZE, 0);
+    byte_num = recv(remote_sock_fd, reinterpret_cast<char *>(recv_msg), BUFFER_SIZE, 0);
     if (byte_num > 0)
     {
         if (byte_num > BUFFER_SIZE)
@@ -181,12 +181,12 @@ int client_send_receive(FIFO_MSG *fiforequest, size_t fiforequest_size, FIFO_MSG
     }
     else if(byte_num < 0)
     {
-        printf("server error, error message is %s!\n", strerror(errno));
+        printf("remote service error, error message is %s!\n", strerror(errno));
         ret = -1;
     }
     else
     {
-        printf("server exit!\n");
+        printf("remote service exit!\n");
         ret = -1;
     }
 

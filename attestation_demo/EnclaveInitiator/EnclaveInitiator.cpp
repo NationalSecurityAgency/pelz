@@ -40,6 +40,10 @@
 #include "sgx_utils.h"
 #include <map>
 
+#include <openssl/evp.h>
+#include <openssl/rand.h>
+#include "encrypt_datatypes.h"
+
 #define UNUSED(val) (void)(val)
 
 #define RESPONDER_PRODID 0
@@ -174,4 +178,216 @@ extern "C" uint32_t message_exchange_response_generator(char* decrypted_data,
         return MALLOC_ERROR;
 
     return SUCCESS;
+}
+
+uint32_t demo_decrypt(uint8_t *encrypt_data, size_t encrypt_data_len, uint8_t *decrypt_data, size_t decrypt_data_len)
+{
+    encrypt_bundle *bundle = (encrypt_bundle *) encrypt_data;
+
+    // validate non-NULL buffers
+    if (encrypt_data == NULL || encrypt_data_len == 0 || decrypt_data == NULL || decrypt_data_len == 0)
+    {
+        return 1;
+    }
+
+    if (sizeof(encrypt_bundle) + decrypt_data_len != encrypt_data_len)
+    {
+        return 1;
+    }
+
+    // initialize the cipher context to match cipher suite being used
+    EVP_CIPHER_CTX *ctx;
+
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+    {
+        return 1;
+    }
+
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // set tag to expected tag passed in with input data
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, (int) sizeof(bundle->tag), bundle->tag))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // set the IV length in the cipher context
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, (int) sizeof(bundle->iv), NULL))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // set the key and IV in the cipher context
+    if (!EVP_DecryptInit_ex(ctx, NULL, NULL, bundle->key, bundle->iv))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // variables to hold/accumulate length returned by EVP library calls
+    //   - OpenSSL insists this be an int
+    int len = 0;
+    size_t plaintext_len = 0;
+
+    if (!EVP_DecryptUpdate(ctx, decrypt_data, &len, bundle->cipher_data, (int) decrypt_data_len) || len < 0)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+    // We've already checked that len is non-negative.
+    plaintext_len += (size_t) len;
+
+    // 'Finalize' Decrypt:
+    //   - validate that resultant tag matches the expected tag passed in
+    //   - should produce no more plaintext bytes in our case
+    if (EVP_DecryptFinal_ex(ctx, decrypt_data + plaintext_len, &len) <= 0 || len < 0)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+    // We've already checked that len is non-negative
+    plaintext_len += (size_t) len;
+
+    // verify that the resultant PT length matches the input CT length
+    if (plaintext_len != decrypt_data_len)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // now that the decryption is complete, clean-up cipher context used
+    EVP_CIPHER_CTX_free(ctx);
+
+    return 0;
+}
+
+uint32_t demo_decrypt_search(uint8_t *encrypt_data, size_t encrypt_data_len, char *search_term, int *result_count)
+{
+    size_t decrypt_data_len = encrypt_data_len - sizeof(encrypt_bundle);
+    uint8_t *decrypt_data = (uint8_t *) calloc(decrypt_data_len, sizeof(uint8_t));
+    demo_decrypt(encrypt_data, encrypt_data_len, decrypt_data, decrypt_data_len);
+
+    // search for substring in decrypted data
+    size_t term_len = strlen(search_term);
+    int count = 0;
+    size_t search_idx = 0;
+    size_t match_idx;
+    for (search_idx=0; search_idx + term_len <= decrypt_data_len; search_idx++)
+    {
+        for (match_idx=0; match_idx<term_len; match_idx++)
+        {
+            if (decrypt_data[search_idx + match_idx] != search_term[match_idx])
+            {
+                break;
+            }
+        }
+        if (match_idx == term_len) {
+            count++;
+        }
+    }
+
+    free(decrypt_data);
+
+    *result_count = count;
+
+    return 0;
+}
+
+uint32_t demo_encrypt(uint8_t *plain_data, size_t plain_data_len, uint8_t *encrypt_data, size_t encrypt_data_len)
+{
+    encrypt_bundle *bundle = (encrypt_bundle *) encrypt_data;
+
+    // validate non-NULL buffers
+    if (plain_data == NULL || plain_data_len == 0 || encrypt_data == NULL || encrypt_data_len == 0)
+    {
+        return 1;
+    }
+
+    if (sizeof(encrypt_bundle) + plain_data_len != encrypt_data_len)
+    {
+        return 1;
+    }
+
+    // Create the random key.
+    if (RAND_priv_bytes(bundle->key, sizeof(bundle->key)) != 1)
+    {
+        log_ocall("Key generation failed");
+        return 1;
+    }
+
+    // Create the random IV.
+    if (RAND_bytes(bundle->iv, sizeof(bundle->iv)) != 1)
+    {
+        log_ocall("IV generation failed");
+        return 1;
+    }
+
+    // initialize the cipher context to match cipher suite being used
+    EVP_CIPHER_CTX *ctx;
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+    {
+        return 1;
+    }
+
+    if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // set the IV length in the cipher context
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, (int) sizeof(bundle->iv), NULL))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // set the key and IV in the cipher context
+    if (!EVP_EncryptInit_ex(ctx, NULL, NULL, bundle->key, bundle->iv))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // variable to hold length of resulting CT - OpenSSL insists this be an int
+    int ciphertext_len = 0;
+
+    // encrypt the input plaintext, put result in the output ciphertext buffer
+    if (!EVP_EncryptUpdate(ctx, bundle->cipher_data, &ciphertext_len, plain_data, (int)plain_data_len))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // verify that the resultant CT length matches the input PT length
+    if ((size_t) ciphertext_len != plain_data_len)
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // OpenSSL requires a "finalize" operation. For AES/GCM no data is written.
+    if (!EVP_EncryptFinal_ex(ctx, bundle->tag, &ciphertext_len))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // get the AES/GCM tag value
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, (int) sizeof(bundle->tag), bundle->tag))
+    {
+        EVP_CIPHER_CTX_free(ctx);
+        return 1;
+    }
+
+    // now that the encryption is complete, clean-up cipher context
+    EVP_CIPHER_CTX_free(ctx);
+
+    return 0;
 }
