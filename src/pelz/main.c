@@ -194,7 +194,7 @@ int main(int argc, char **argv)
   }
 
   //Check for valid use of OutPath option 
-  if (out == true && cmd_arg[0] != SEAL && cmd_arg[0] != ENC && cmd_arg[0] != DEC )
+  if (out == true && cmd_arg[0] != SEAL)
   {
     usage(argv[0]);
     free(outPath);
@@ -344,20 +344,6 @@ int main(int argc, char **argv)
         return 1;
       }
       break;
-    case ENC:
-      if (cmd_arg[1] == OTHER && cmd_arg[2] == EMPTY)
-      {
-        cmd = CMD_ENCRYPT;
-        cmd_param_index = arg_index + 2;
-      }
-      break;
-    case DEC:
-      if (cmd_arg[1] == OTHER && cmd_arg[2] == EMPTY)
-      {
-        cmd = CMD_DECRYPT;
-        cmd_param_index = arg_index + 2;
-      }
-      break;
     default:
       usage(argv[0]);
       return 1;
@@ -456,38 +442,6 @@ int main(int argc, char **argv)
     case CMD_REMOVE_ALL_CA:
       //Execute the ca remove --all command
       msg_arg(fifo_name, fifo_name_len, cmd, NULL, 0);
-      break;
-    case CMD_ENCRYPT:
-      //Execute the file encrypt command
-      pelz_log(LOG_DEBUG, "Encrypt file <path> option");
-      if (file_encrypt(argv[cmd_param_index], &outPath, outPath_size))
-      {
-        pelz_log(LOG_ERR, "Error encrypt function");
-        if(outPath != NULL)
-        {
-          free(outPath);
-        }
-        remove_pipe(fifo_name);
-        return 1;
-      }
-      fprintf(stdout, "Successfully encrypted file contents to file: %s\n", outPath);
-      free(outPath);
-      break;
-    case CMD_DECRYPT:
-      //Execute the file decrypt command
-      pelz_log(LOG_DEBUG, "Decrypt file <path> option");
-      if (file_decrypt(argv[cmd_param_index], &outPath, outPath_size))
-      {
-        pelz_log(LOG_ERR, "Error encrypt function");
-        if(outPath != NULL)
-        {
-          free(outPath);
-        }
-        remove_pipe(fifo_name);
-        return 1;
-      }
-      fprintf(stdout, "Successfully decrypted file contents to file: %s\n", outPath);
-      free(outPath);
       break;
     default:
       usage(argv[0]);
