@@ -5,6 +5,7 @@
 import os
 import secrets
 import subprocess
+import sys
 
 from pathlib import Path
 
@@ -85,7 +86,11 @@ def main():
     ]
     print_log('Encrypting the data file using the demo client ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')
-    subprocess.run(cmd, check=True, cwd=DEMO_DIR)
+    try:
+        subprocess.run(cmd, check=True, cwd=DEMO_DIR)
+    except subprocess.CalledProcessError:
+        print_log('ERROR: demo encryption failed')
+        sys.exit(-1)
     print()
 
     # 6. Use the worker client to decrypt and search the file within the enclave.
@@ -100,7 +105,11 @@ def main():
     ]
     print_log('Decrypting and searching the data file using the demo client ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')
-    subprocess.run(cmd, check=True, cwd=DEMO_DIR)
+    try:
+        subprocess.run(cmd, check=True, cwd=DEMO_DIR)
+    except subprocess.CalledProcessError:
+        print_log('ERROR: demo decryption and search failed')
+        sys.exit(-1)
 
 
 if __name__ == '__main__':

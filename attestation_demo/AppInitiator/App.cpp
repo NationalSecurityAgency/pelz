@@ -83,6 +83,8 @@ void print_usage(const char *prog)
         "-r PRIV_KEY, --signing-key=PRIV_KEY    (required for all commands, PEM format)\n"
         "-u PUB_KEY, --signing-cert=PUB_KEY     (required for all commands, PEM X509 format)\n"
         "-h, --help\n"
+        "\n"
+        "Note: This demo program is not designed to handle large input files (>500 KB).\n"
         , prog);
 }
 
@@ -684,6 +686,11 @@ int execute_command(int argc, char* argv[])
                 printf("failed to read the input data file at %s.\n", optarg);
                 return -1;
             }
+            if (data_len > 100 * 1024)
+            {
+                printf("input data file exceeds recommended size limit of 100 KB.\n");
+                return -1;
+            }
             break;
         case 'o':
             out_path = strdup(optarg);
@@ -779,10 +786,10 @@ int main(int argc, char* argv[])
         sgx_destroy_enclave(initiator_enclave_id);
     }
 
-    execute_command(argc, argv);
+    int ret = execute_command(argc, argv);
 
     close_secure_channel();
     sgx_destroy_enclave(initiator_enclave_id);
 
-    return 0;
+    return ret;
 }
