@@ -44,6 +44,7 @@
 #include <unistd.h>
 
 #include <cjson/cJSON.h>
+#include <openssl/evp.h>
 #include <kmyth/file_io.h>
 #include <kmyth/formatting_tools.h>
 
@@ -59,8 +60,8 @@
 
 #define REMOTE_ADDR "127.0.0.1"
 #define REMOTE_PORT "10601"
-#define PELZ_REQ_ENC 1
-#define PELZ_REQ_DEC 2
+#define PELZ_REQ_ENC_SIGNED 3
+#define PELZ_REQ_DEC_SIGNED 4
 #define WRAP_CIPHER "AES/KeyWrap/RFC3394NoPadding/128"
 #define MAX_RESP_LEN 1024
 #define ENCRYPT_FORMAT "PELZ001\0"
@@ -77,27 +78,236 @@ void print_usage(const char *prog)
         "  decrypt\n"
         "  search KEYWORD\n"
         "Options:\n"
-        "-i DATA_FILE, --input-file=DATA_FILE\n"
-        "-o OUT_FILE, --output-file=OUT_FILE\n"
+        "-i DATA_FILE, --input-file=DATA_FILE   (required for all commands)\n"
+        "-o OUT_FILE, --output-file=OUT_FILE    (required for encrypt and decrypt commands)\n"
+        "-r PRIV_KEY, --signing-key=PRIV_KEY    (required for all commands, PEM format)\n"
+        "-u PUB_KEY, --signing-cert=PUB_KEY     (required for all commands, PEM X509 format)\n"
         "-h, --help\n"
         , prog);
 }
 
-int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size_t dek_len, char **request_msg)
+int serialize_request(uint64_t request_type, const char *kek_id, uint8_t *dek, size_t dek_len, uint8_t *cert, size_t cert_len, uint8_t **serial, size_t *serial_len)
+{
+    // IMPORTANT: serialized fields are not base-64 encoded, so better not to use the request json
+    uint64_t kek_id_len = (uint64_t) strlen(kek_id);
+    uint64_t cipher_len = (uint64_t) strlen(WRAP_CIPHER);
+    uint64_t iv_len = 0;
+    uint64_t tag_len = 0;
+    uint64_t total_size = sizeof(uint64_t) * 6 + kek_id_len + cipher_len + dek_len + cert_len;
+
+    if (request_type == PELZ_REQ_DEC_SIGNED)
+    {
+        total_size += sizeof(uint64_t) * 2 + iv_len + tag_len;
+    }
+
+    uint8_t *serial_tmp = (uint8_t *) calloc(total_size, sizeof(uint8_t));
+    uint8_t *dst = serial_tmp;
+
+    if (serial_tmp == NULL)
+    {
+        printf("calloc failed\n");
+        return -1;
+    }
+
+    memcpy(dst, &total_size, sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, &request_type, sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, &kek_id_len, sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, kek_id, kek_id_len);
+    dst += kek_id_len;
+
+    memcpy(dst, &cipher_len, sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, WRAP_CIPHER, cipher_len);
+    dst += cipher_len;
+
+    memcpy(dst, &dek_len, sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, dek, dek_len);
+    dst += dek_len;
+
+    // Decrypt requests always serialize iv and tag fields, although they may be empty.
+    if (request_type == PELZ_REQ_DEC_SIGNED)
+    {
+        memcpy(dst, &iv_len, sizeof(uint64_t));
+        dst += sizeof(uint64_t);
+
+        dst += iv_len;
+
+        memcpy(dst, &tag_len, sizeof(uint64_t));
+        dst += sizeof(uint64_t);
+
+        dst += tag_len;
+    }
+
+    memcpy(dst, &cert_len, sizeof(uint64_t));
+    dst += sizeof(uint64_t);
+
+    memcpy(dst, cert, cert_len);
+    dst += cert_len;
+
+    uint64_t written_size = (uint64_t) (dst - serial_tmp);
+    if (written_size != total_size)
+    {
+        printf("serialization length is incorrect. calculated size: %lu, written size: %lu\n", total_size, written_size);
+        free(serial_tmp);
+        return -1;
+    }
+
+    *serial = serial_tmp;
+    *serial_len = (size_t) total_size;
+    return 0;
+}
+
+int generate_request_signature(uint8_t *serial, size_t serial_len, const uint8_t *key_data, size_t key_data_len, uint8_t **signature, size_t *signature_len)
+{
+    // The signature parameters need to be compatible on ec_verify_buffer in kmyth
+
+    EVP_PKEY *sign_pkey = d2i_PrivateKey(EVP_PKEY_EC, NULL, &key_data, key_data_len);
+    if (sign_pkey == NULL)
+    {
+        printf("failed to convert pkey\n");
+        return -1;
+    }
+
+    // create message digest context
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+    if (mdctx == NULL)
+    {
+        printf("creation of message digest context failed\n");
+        return -1;
+    }
+
+    // configure signing context
+    if (EVP_SignInit(mdctx, EVP_sha512()) != 1)
+    {
+        printf("config of message digest signature context failed\n");
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    // hash data into the signature context
+    if (EVP_SignUpdate(mdctx, serial, serial_len) != 1)
+    {
+        printf("error hashing data into signature context\n");
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    // allocate memory for signature
+    int max_sig_len = EVP_PKEY_size(sign_pkey);
+    if (max_sig_len <= 0)
+    {
+        printf("invalid value for maximum signature length\n");
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    *signature = (uint8_t *) calloc((size_t)max_sig_len, sizeof(unsigned char));
+    if (*signature == NULL)
+    {
+        printf("malloc of signature buffer failed\n");
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    // sign the data (create signature)
+    if (EVP_SignFinal(mdctx, *signature, (unsigned int *) signature_len, sign_pkey) != 1)
+    {
+        printf("signature creation failed\n");
+        free(*signature);
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    // done - clean-up context
+    EVP_MD_CTX_free(mdctx);
+
+    return 0;
+}
+
+int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size_t dek_len, char *key_path, char *cert_path, char **request_msg)
 {
     int ret;
     cJSON *request;
+    uint8_t *sign_key;
+    size_t sign_key_len;
+    uint8_t *sign_cert;
+    size_t sign_cert_len;
+    uint8_t *serial;
+    size_t serial_len;
+    uint8_t *signature;
+    size_t signature_len;
+    char *encoded_signature;
+    size_t encoded_signature_len;
+    char *encoded_cert;
+    size_t encoded_cert_len;
     char *encoded_dek;
     size_t encoded_dek_len;
 
-    // TODO: 1. Change the message to a signed pelz request.
-    // TODO: 2. Change the message to a signed pelz request with individually encrypted fields.
-    // TODO: 3. Generate the request signature using a double-wrapped signing key (using kmyth).
+    if (read_bytes_from_file(key_path, &sign_key, &sign_key_len)) {
+        printf("failed to read the file at %s.\n", key_path);
+        return -1;
+    }
+
+    if (read_bytes_from_file(cert_path, &sign_cert, &sign_cert_len)) {
+        printf("failed to read the file at %s.\n", cert_path);
+        free(sign_key);
+        return -1;
+    }
+
+    ret = serialize_request(request_type, kek_id, dek, dek_len, sign_cert, sign_cert_len, &serial, &serial_len);
+    if (ret != 0)
+    {
+        printf("serialization failed\n");
+        free(sign_key);
+        free(sign_cert);
+        return -1;
+    }
+
+    generate_request_signature(serial, serial_len, sign_key, sign_key_len, &signature, &signature_len);
+    free(serial);
+    free(sign_key);
+    sign_key = NULL;
+    if (ret != 0)
+    {
+        printf("signing failed\n");
+        free(sign_cert);
+        return -1;
+    }
+
+    ret = encodeBase64Data(signature, signature_len, (uint8_t **) &encoded_signature, &encoded_signature_len);
+    free(signature);
+    signature = NULL;
+    if (ret != 0)
+    {
+        printf("signature base-64 encoding failed\n");
+        free(sign_cert);
+        return -1;
+    }
+
+    ret = encodeBase64Data(sign_cert, sign_cert_len, (uint8_t **) &encoded_cert, &encoded_cert_len);
+    free(sign_cert);
+    if (ret != 0)
+    {
+        printf("certificate base-64 encoding failed\n");
+        free(encoded_signature);
+        return -1;
+    }
 
     ret = encodeBase64Data(dek, dek_len, (uint8_t **) &encoded_dek, &encoded_dek_len);
     if (ret != 0)
     {
-        printf("base-64 encoding failed\n");
+        printf("data base-64 encoding failed\n");
+        free(encoded_signature);
+        free(encoded_cert);
         return -1;
     }
 
@@ -105,6 +315,8 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     if (request == NULL)
     {
         printf("cJSON_CreateObject error\n");
+        free(encoded_signature);
+        free(encoded_cert);
         free(encoded_dek);
         return -1;
     }
@@ -116,6 +328,14 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     cJSON_AddItemToObject(request, "data", cJSON_CreateString(encoded_dek));
     free(encoded_dek);
     encoded_dek = NULL;
+
+    cJSON_AddItemToObject(request, "request_sig", cJSON_CreateString(encoded_signature));
+    free(encoded_signature);
+
+    cJSON_AddItemToObject(request, "requestor_cert", cJSON_CreateString(encoded_cert));
+    free(encoded_cert);
+
+    // Note: we don't include the tag or iv fields because pelz will not accept empty strings in json requests
 
     *request_msg = cJSON_PrintUnformatted(request);
 
@@ -154,7 +374,7 @@ int decode_response_data(char *json_str, uint8_t **data, size_t *len)
     return 0;
 }
 
-int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char *out_path)
+int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char *out_path, char *key_path, char *cert_path)
 {
     if (strlen(kek_id) > KEK_ID_SIZE)
     {
@@ -180,7 +400,7 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     }
 
     char *request;
-    ret_status = create_pelz_request(PELZ_REQ_ENC, kek_id, bundle->key, sizeof(bundle->key), &request);
+    ret_status = create_pelz_request(PELZ_REQ_ENC_SIGNED, kek_id, bundle->key, sizeof(bundle->key), key_path, cert_path, &request);
     if (ret_status != 0)
     {
         printf("request encoding failed\n");
@@ -247,11 +467,11 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     return 0;
 }
 
-int unwrap_dek(const char *kek_id, uint8_t *wrapped_key, uint8_t *unwrapped_key)
+int unwrap_dek(const char *kek_id, uint8_t *wrapped_key, char *key_path, char *cert_path, uint8_t *unwrapped_key)
 {
     int ret;
     char *request;
-    ret = create_pelz_request(PELZ_REQ_DEC, (const char *) kek_id, wrapped_key, KEY_SIZE_WRAPPED, &request);
+    ret = create_pelz_request(PELZ_REQ_DEC_SIGNED, (const char *) kek_id, wrapped_key, KEY_SIZE_WRAPPED, key_path, cert_path, &request);
     if (ret != 0)
     {
         printf("request encoding failed\n");
@@ -288,7 +508,7 @@ int unwrap_dek(const char *kek_id, uint8_t *wrapped_key, uint8_t *unwrapped_key)
     return 0;
 }
 
-int make_decryption_bundle(uint8_t *file_data, size_t content_len, uint8_t **bundle_data, size_t *bundle_len)
+int make_decryption_bundle(uint8_t *file_data, size_t content_len, char *key_path, char *cert_path, uint8_t **bundle_data, size_t *bundle_len)
 {
     if (content_len <= sizeof(encrypt_file_content))
     {
@@ -312,7 +532,7 @@ int make_decryption_bundle(uint8_t *file_data, size_t content_len, uint8_t **bun
         return -1;
     }
 
-    if (unwrap_dek(content->kek_id, content->wrapped_key, bundle->key))
+    if (unwrap_dek(content->kek_id, content->wrapped_key, key_path, cert_path, bundle->key))
     {
         printf("pelz unwrapping failed\n");
         free(bundle);
@@ -329,11 +549,11 @@ int make_decryption_bundle(uint8_t *file_data, size_t content_len, uint8_t **bun
     return 0;
 }
 
-int unwrap_decrypt_store(uint8_t *file_data, size_t content_len, char *out_path)
+int unwrap_decrypt_store(uint8_t *file_data, size_t content_len, char *out_path, char *key_path, char *cert_path)
 {
     uint8_t *bundle_data = NULL;
     size_t bundle_len = 0;
-    if (make_decryption_bundle(file_data, content_len, &bundle_data, &bundle_len))
+    if (make_decryption_bundle(file_data, content_len, key_path, cert_path, &bundle_data, &bundle_len))
     {
         printf("decryption error\n");
         return -1;
@@ -370,11 +590,11 @@ int unwrap_decrypt_store(uint8_t *file_data, size_t content_len, char *out_path)
     return 0;
 }
 
-int unwrap_decrypt_search(uint8_t *file_data, size_t content_len, char *search_term)
+int unwrap_decrypt_search(uint8_t *file_data, size_t content_len, char *search_term, char *key_path, char *cert_path)
 {
     uint8_t *bundle_data = NULL;
     size_t bundle_len = 0;
-    if (make_decryption_bundle(file_data, content_len, &bundle_data, &bundle_len))
+    if (make_decryption_bundle(file_data, content_len, key_path, cert_path, &bundle_data, &bundle_len))
     {
         printf("decryption error\n");
         return -1;
@@ -437,6 +657,8 @@ int execute_command(int argc, char* argv[])
     {
         {"input-file", required_argument, 0, 'i'},
         {"output-file", required_argument, 0, 'o'},
+        {"signing-key", required_argument, 0, 'r'},
+        {"signing-cert", required_argument, 0, 'u'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
@@ -447,8 +669,10 @@ int execute_command(int argc, char* argv[])
     uint8_t *data = NULL;
     size_t data_len = 0;
     char *out_path = NULL;
+    char *key_path = NULL;
+    char *cert_path = NULL;
 
-    while ((options = getopt_long(argc, argv, "i:o:h", long_opts, &option_index)) != -1)
+    while ((options = getopt_long(argc, argv, "i:o:r:u:h", long_opts, &option_index)) != -1)
     {
         switch (options)
         {
@@ -460,6 +684,12 @@ int execute_command(int argc, char* argv[])
             break;
         case 'o':
             out_path = strdup(optarg);
+            break;
+        case 'r':
+            key_path = strdup(optarg);
+            break;
+        case 'u':
+            cert_path = strdup(optarg);
             break;
         case 'h':
             print_usage(argv[0]);
@@ -479,41 +709,41 @@ int execute_command(int argc, char* argv[])
 
     if (strcmp(command, "encrypt") == 0)
     {
-        if (!data || !out_path || optind != argc - 1)
+        if (!data || !out_path || !key_path || !cert_path || optind != argc - 1)
         {
             printf("invalid arguments for \"%s\" command\n", command);
             print_usage(argv[0]);
             return -1;
         }
         char *kek_id = argv[optind];
-        if (encrypt_wrap_store(data, data_len, kek_id, out_path)) {
+        if (encrypt_wrap_store(data, data_len, kek_id, out_path, key_path, cert_path)) {
             printf("encrypt_wrap failed\n");
             return -1;
         }
     }
     else if (strcmp(command, "decrypt") == 0)
     {
-        if (!data || !out_path || optind != argc)
+        if (!data || !out_path || !key_path || !cert_path || optind != argc)
         {
             printf("invalid arguments for \"%s\" command\n", command);
             print_usage(argv[0]);
             return -1;
         }
-        if (unwrap_decrypt_store(data, data_len, out_path)) {
+        if (unwrap_decrypt_store(data, data_len, out_path, key_path, cert_path)) {
             printf("unwrap_decrypt failed\n");
             return -1;
         }
     }
     else if (strcmp(command, "search") == 0)
     {
-        if (!data || out_path || optind != argc - 1)
+        if (!data || out_path || !key_path || !cert_path || optind != argc - 1)
         {
             printf("invalid arguments for \"%s\" command\n", command);
             print_usage(argv[0]);
             return -1;
         }
         char *keyword = argv[optind];
-        if (unwrap_decrypt_search(data, data_len, keyword)) {
+        if (unwrap_decrypt_search(data, data_len, keyword, key_path, cert_path)) {
             printf("unwrap_decrypt_search failed\n");
             return -1;
         }

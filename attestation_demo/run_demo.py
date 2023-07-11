@@ -13,6 +13,10 @@ KEY_BYTES = 32
 SCRIPT_NAME = Path(__file__).name
 DEMO_DIR = Path(__file__).parent.absolute()
 OUT_DIR = DEMO_DIR / 'test_data'
+CA_FILE = OUT_DIR / 'ca_pub.der'
+SEALED_CA_FILE = OUT_DIR / 'ca_pub.der.nkl'
+SIGN_KEY_FILE = OUT_DIR / 'worker_priv.der'
+SIGN_CERT_FILE = OUT_DIR / 'worker_pub.der'
 KEK_FILE = OUT_DIR / 'attdemo_kek.txt'
 ORIG_DATA_FILE = OUT_DIR / 'attdemo_data_orig.txt'
 ENC_DATA_FILE = OUT_DIR / 'attdemo_data_enc.txt'
@@ -38,8 +42,8 @@ def main():
     cmd = [
         'bin/pelz',
         'seal',
-        OUT_DIR / 'ca_pub.der',
-        '-o', OUT_DIR / 'ca_pub.der.nkl',
+        CA_FILE,
+        '-o', SEALED_CA_FILE,
     ]
     print_log('Sealing CA cert ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')
@@ -48,8 +52,8 @@ def main():
 
     cmd = [
         'bin/pelz',
-        'pki', 'load', 'cert',
-        OUT_DIR / 'ca_pub.der.nkl',
+        'ca', 'load',
+        SEALED_CA_FILE,
     ]
     print_log('Registering CA cert ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')
@@ -76,6 +80,8 @@ def main():
         f'file:{KEK_FILE}',
         '-i', ORIG_DATA_FILE,
         '-o', ENC_DATA_FILE,
+        '-r', SIGN_KEY_FILE,
+        '-u', SIGN_CERT_FILE,
     ]
     print_log('Encrypting the data file using the demo client ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')
@@ -89,6 +95,8 @@ def main():
         'search',
         'abcd',  # search term
         '-i', ENC_DATA_FILE,
+        '-r', SIGN_KEY_FILE,
+        '-u', SIGN_CERT_FILE,
     ]
     print_log('Decrypting and searching the data file using the demo client ...')
     print_log(' '.join([str(x) for x in cmd]) + '\n')
