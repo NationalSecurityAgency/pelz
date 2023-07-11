@@ -19,7 +19,7 @@ SEALED_CA_FILE = OUT_DIR / 'ca_pub.der.nkl'
 SIGN_KEY_FILE = OUT_DIR / 'worker_priv.der'
 SIGN_CERT_FILE = OUT_DIR / 'worker_pub.der'
 KEK_FILE = OUT_DIR / 'attdemo_kek.txt'
-ORIG_DATA_FILE = OUT_DIR / 'attdemo_data_orig.txt'
+ORIG_DATA_FILE = DEMO_DIR / 'input_data.txt'
 ENC_DATA_FILE = OUT_DIR / 'attdemo_data_enc.txt'
 
 
@@ -66,14 +66,7 @@ def main():
     with open(KEK_FILE, 'wb') as f:
         f.write(secrets.token_bytes(KEY_BYTES))
 
-    # 4. Create a text file representing application data.
-
-    # Currently using placeholder data.
-    # TODO: Possibly save a data file in the repo instead.
-    with open(ORIG_DATA_FILE, 'w') as f:
-        f.write('placeholder data\nabcdefghijklmnopqrstuvwxyz')
-
-    # 5. Use the worker client to encrypt the file and wrap the generated DEK.
+    # 4. Use the worker client to encrypt the input file and wrap the generated DEK.
 
     cmd = [
         'bin/demo_worker',
@@ -93,12 +86,12 @@ def main():
         sys.exit(-1)
     print()
 
-    # 6. Use the worker client to decrypt and search the file within the enclave.
+    # 5. Use the worker client to decrypt and search the file within the enclave.
 
     cmd = [
         'bin/demo_worker',
         'search',
-        'abcd',  # search term
+        'people',  # search term
         '-i', ENC_DATA_FILE,
         '-r', SIGN_KEY_FILE,
         '-u', SIGN_CERT_FILE,
