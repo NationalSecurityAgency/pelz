@@ -2,12 +2,8 @@
 
 # Attestation demo setup script
 
-import base64
-import json
 import os
 import secrets
-import socket
-import shutil
 import subprocess
 
 from pathlib import Path
@@ -29,18 +25,50 @@ def print_log(*args, **kwargs):
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    # 1. Create a random symmetric KEK (key encryption key).
+    # 1. Generate asymmetric keys for the client
+
+    cmd = ['../make_certs.sh']
+    print_log('Generating asymmetric keys ...')
+    print_log(' '.join([str(x) for x in cmd]) + '\n')
+    subprocess.run(cmd, check=True, cwd=OUT_DIR)
+    print()
+
+    # 2. Seal the CA cert and register with pelz
+
+    cmd = [
+        'bin/pelz',
+        'seal',
+        OUT_DIR / 'ca_pub.der',
+        '-o', OUT_DIR / 'ca_pub.der.nkl',
+    ]
+    print_log('Sealing CA cert ...')
+    print_log(' '.join([str(x) for x in cmd]) + '\n')
+    subprocess.run(cmd, check=True, cwd=DEMO_DIR.parent)
+    print()
+
+    cmd = [
+        'bin/pelz',
+        'pki', 'load', 'cert',
+        OUT_DIR / 'ca_pub.der.nkl',
+    ]
+    print_log('Registering CA cert ...')
+    print_log(' '.join([str(x) for x in cmd]) + '\n')
+    subprocess.run(cmd, check=True, cwd=DEMO_DIR.parent)
+    print()
+
+    # 3. Create a random symmetric KEK (key encryption key).
+
     with open(KEK_FILE, 'wb') as f:
         f.write(secrets.token_bytes(KEY_BYTES))
 
-    # 2. Create a text file representing application data.
+    # 4. Create a text file representing application data.
 
     # Currently using placeholder data.
     # TODO: Possibly save a data file in the repo instead.
     with open(ORIG_DATA_FILE, 'w') as f:
         f.write('placeholder data\nabcdefghijklmnopqrstuvwxyz')
 
-    # 3. Use the worker client to encrypt the file and wrap the generated DEK.
+    # 5. Use the worker client to encrypt the file and wrap the generated DEK.
 
     cmd = [
         'bin/demo_worker',
@@ -54,7 +82,7 @@ def main():
     subprocess.run(cmd, check=True, cwd=DEMO_DIR)
     print()
 
-    # 5. Use the worker client to decrypt and search the file within the enclave.
+    # 6. Use the worker client to decrypt and search the file within the enclave.
 
     cmd = [
         'bin/demo_worker',
