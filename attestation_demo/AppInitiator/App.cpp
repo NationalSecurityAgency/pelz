@@ -210,7 +210,7 @@ int generate_request_signature(uint8_t *serial, size_t serial_len, const uint8_t
         return -1;
     }
 
-    *signature = (uint8_t *) calloc((size_t)max_sig_len, sizeof(unsigned char));
+    *signature = (uint8_t *) calloc((size_t) max_sig_len, sizeof(unsigned char));
     if (*signature == NULL)
     {
         printf("malloc of signature buffer failed\n");
@@ -219,7 +219,8 @@ int generate_request_signature(uint8_t *serial, size_t serial_len, const uint8_t
     }
 
     // sign the data (create signature)
-    if (EVP_SignFinal(mdctx, *signature, (unsigned int *) signature_len, sign_pkey) != 1)
+    unsigned int temp_len = 0;
+    if (EVP_SignFinal(mdctx, *signature, &temp_len, sign_pkey) != 1)
     {
         printf("signature creation failed\n");
         free(*signature);
@@ -229,6 +230,8 @@ int generate_request_signature(uint8_t *serial, size_t serial_len, const uint8_t
 
     // done - clean-up context
     EVP_MD_CTX_free(mdctx);
+
+    *signature_len = (size_t) temp_len;
 
     return 0;
 }
@@ -272,7 +275,7 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
         return -1;
     }
 
-    generate_request_signature(serial, serial_len, sign_key, sign_key_len, &signature, &signature_len);
+    ret = generate_request_signature(serial, serial_len, sign_key, sign_key_len, &signature, &signature_len);
     free(serial);
     free(sign_key);
     sign_key = NULL;
