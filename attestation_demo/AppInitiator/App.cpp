@@ -784,6 +784,8 @@ int main(int argc, char* argv[])
     if (establish_secure_channel())
     {
         sgx_destroy_enclave(initiator_enclave_id);
+        printf("Make sure the pelz-service is running on this machine, then try again.\n");
+        return -1;
     }
 
     int ret = execute_command(argc, argv);
