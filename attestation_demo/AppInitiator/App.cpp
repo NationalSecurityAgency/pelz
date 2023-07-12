@@ -90,7 +90,7 @@ void print_usage(const char *prog)
 
 int serialize_request(uint64_t request_type, const char *kek_id, uint8_t *dek, size_t dek_len, uint8_t *cert, size_t cert_len, uint8_t **serial, size_t *serial_len)
 {
-    // IMPORTANT: serialized fields are not base-64 encoded, so better not to use the request json
+    // Note: Serialized fields are not base-64 encoded, unlike in the request json
     uint64_t kek_id_len = (uint64_t) strlen(kek_id);
     uint64_t cipher_len = (uint64_t) strlen(WRAP_CIPHER);
     uint64_t iv_len = 0;
@@ -170,7 +170,7 @@ int serialize_request(uint64_t request_type, const char *kek_id, uint8_t *dek, s
 
 int generate_request_signature(uint8_t *serial, size_t serial_len, const uint8_t *key_data, size_t key_data_len, uint8_t **signature, size_t *signature_len)
 {
-    // The signature parameters need to be compatible on ec_verify_buffer in kmyth
+    // Note: This signature needs to be compatible with ec_verify_buffer in kmyth
 
     EVP_PKEY *sign_pkey = d2i_PrivateKey(EVP_PKEY_EC, NULL, &key_data, key_data_len);
     if (sign_pkey == NULL)
@@ -340,7 +340,7 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     cJSON_AddItemToObject(request, "requestor_cert", cJSON_CreateString(encoded_cert));
     free(encoded_cert);
 
-    // Note: we don't include the tag or iv fields because pelz will not accept empty strings in json requests
+    // Note: We don't include the tag or iv fields because pelz will not accept empty strings in json requests
 
     *request_msg = cJSON_PrintUnformatted(request);
 
@@ -773,7 +773,6 @@ int main(int argc, char* argv[])
     sgx_launch_token_t token = {0};
     sgx_status_t status;
 
-    // create ECDH initiator enclave
     status = sgx_create_enclave(ENCLAVE_INITIATOR_NAME, SGX_DEBUG_FLAG, &token, &update, &initiator_enclave_id, NULL);
     if (status != SGX_SUCCESS) {
         printf("failed to load enclave %s, error code is 0x%x.\n", ENCLAVE_INITIATOR_NAME, status);
