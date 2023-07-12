@@ -71,17 +71,18 @@ static sgx_enclave_id_t initiator_enclave_id = 0;
 void print_usage(const char *prog)
 {
     fprintf(stdout,
-        "Usage: %s COMMAND ARGUMENTS ...\n"
+        "Usage: %s COMMAND OPTIONS ...\n"
         "\n"
         "Commands:\n"
         "  encrypt KEK_ID\n"
         "  decrypt\n"
         "  search KEYWORD\n"
+        "\n"
         "Options:\n"
         "-i DATA_FILE, --input-file=DATA_FILE   (required for all commands)\n"
-        "-o OUT_FILE, --output-file=OUT_FILE    (required for encrypt and decrypt commands)\n"
-        "-r PRIV_KEY, --signing-key=PRIV_KEY    (required for all commands, PEM format)\n"
-        "-u PUB_KEY, --signing-cert=PUB_KEY     (required for all commands, PEM X509 format)\n"
+        "-o OUT_FILE,  --output-file=OUT_FILE   (required for encrypt and decrypt commands)\n"
+        "-r PRIV_KEY,  --signing-key=PRIV_KEY   (required for all commands, DER format)\n"
+        "-u PUB_KEY,   --signing-cert=PUB_KEY   (required for all commands, DER X509 format)\n"
         "-h, --help\n"
         "\n"
         "Note: This demo program is not designed to handle large input files (>500 KB).\n"
