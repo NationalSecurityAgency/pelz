@@ -85,7 +85,7 @@ void print_usage(const char *prog)
         "-u PUB_KEY,   --signing-cert=PUB_KEY   (required for all commands, DER X509 format)\n"
         "-h, --help\n"
         "\n"
-        "Note: This demo program is not designed to handle large input files (>500 KB).\n"
+        "Note: This demo program is not designed to handle large input files (>100 KB).\n"
         , prog);
 }
 

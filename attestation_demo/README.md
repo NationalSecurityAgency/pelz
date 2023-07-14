@@ -95,7 +95,7 @@ Options:
 -u PUB_KEY,   --signing-cert=PUB_KEY   (required for all commands, DER X509 format)
 -h, --help
 
-Note: This demo program is not designed to handle large input files (>500 KB).
+Note: This demo program is not designed to handle large input files (>100 KB).
 ```
 
 Note: The client will not work properly if run outside of the "attestation_demo" directory.
