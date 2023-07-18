@@ -57,7 +57,7 @@
 dh_session_t *dh_sessions[MAX_SESSION_COUNT] = { 0 };
 
 ATTESTATION_STATUS generate_session_id(uint32_t *session_id);
-uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity);
+uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity, sgx_measurement_t *self_mr_signer);
 
 
 //Handle the request from Source Enclave for a session
@@ -151,8 +151,10 @@ ATTESTATION_STATUS exchange_report(sgx_dh_msg2_t *dh_msg2,
             break;
         }
 
+        sgx_measurement_t *self_mr_signer = &dh_msg3->msg3_body.report.body.mr_signer;
+
         //Verify source enclave's trust
-        if(verify_peer_enclave_trust(&initiator_identity) != SUCCESS)
+        if(verify_peer_enclave_trust(&initiator_identity, self_mr_signer) != SUCCESS)
         {
             return INVALID_SESSION;
         }
@@ -383,14 +385,14 @@ ATTESTATION_STATUS generate_session_id(uint32_t *session_id)
  *   2. peer enclave's PROD_ID is as expected
  *   3. peer enclave's attribute is reasonable that it should be INITIALIZED and without DEBUG attribute (except the project is built with DEBUG option)
  * */
-uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity)
+uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity, sgx_measurement_t *self_mr_signer)
 {
     if(!peer_enclave_identity)
         return INVALID_PARAMETER_ERROR;
 
-    // TODO: possibly compare peer enclave's MRSIGNER to known value
-    // if (memcmp((uint8_t *)&peer_enclave_identity->mr_signer, (uint8_t*)&g_initiator_mrsigner, sizeof(sgx_measurement_t)))
-    //     return ENCLAVE_TRUST_ERROR;
+    // Check that both enclaves have the same MRSIGNER value
+    if (memcmp((uint8_t *)&peer_enclave_identity->mr_signer, (uint8_t*)self_mr_signer, sizeof(sgx_measurement_t)))
+        return ENCLAVE_TRUST_ERROR;
 
     if(peer_enclave_identity->isv_prod_id != 0 || !(peer_enclave_identity->attributes.flags & SGX_FLAGS_INITTED))
         return ENCLAVE_TRUST_ERROR;
