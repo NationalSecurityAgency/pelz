@@ -190,7 +190,7 @@ int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_
   }
   if(ec_verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, (unsigned int)signature.len) == EXIT_SUCCESS)
   {
-    pelz_sgx_log(LOG_ERR, "Request signature did not match");
+    pelz_sgx_log(LOG_DEBUG, "Request signature matches");
     result = 0;
   }
   free_charbuf(&serialized);
