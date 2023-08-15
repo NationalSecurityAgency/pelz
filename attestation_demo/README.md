@@ -27,7 +27,7 @@ by encrypting a data file, wrapping the "data encryption key" using pelz,
 then storing the encrypted data and wrapped key together in a new file.
 Then it uses the demo client to unwrap the data encryption key using pelz,
 then decrypt the data and count the number of occurrences of a specific search term.
-(The decrypted data does not leave the protected SGX enclave).
+(The decrypted data does not leave the protected SGX enclave.)
 
 
 ## Building the Client Application
@@ -81,12 +81,21 @@ The client has three operating modes:
 
 Usage Details:
 ```
-Usage: ./bin/demo_worker COMMAND ARGUMENTS ...
+Usage: ./bin/demo_worker COMMAND OPTIONS ...
 
 Commands:
-  encrypt DATA_FILE OUT_FILE KEK_ID
-  decrypt DATA_FILE OUT_FILE
-  search DATA_FILE KEYWORD
+  encrypt KEK_ID
+  decrypt
+  search KEYWORD
+
+Options:
+-i DATA_FILE, --input-file=DATA_FILE   (required for all commands)
+-o OUT_FILE,  --output-file=OUT_FILE   (required for encrypt and decrypt commands)
+-r PRIV_KEY,  --signing-key=PRIV_KEY   (required for all commands, DER format)
+-u PUB_KEY,   --signing-cert=PUB_KEY   (required for all commands, DER X509 format)
+-h, --help
+
+Note: This demo program is not designed to handle large input files (>100 KB).
 ```
 
 Note: The client will not work properly if run outside of the "attestation_demo" directory.

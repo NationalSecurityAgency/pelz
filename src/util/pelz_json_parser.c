@@ -15,7 +15,7 @@
 
 /**
  * <pre>
- * Helper function to extract string fields from JSON structs.
+ * Helper function to extract non-empty string fields from JSON structs.
  * <pre>
  *
  * @param[in] json       The JSON structure.

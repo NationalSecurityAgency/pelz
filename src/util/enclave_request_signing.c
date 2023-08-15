@@ -3,7 +3,6 @@
 #include <openssl/x509v3.h>
 #include <string.h>
 
-
 #include ENCLAVE_HEADER_TRUSTED
 #include "kmyth_enclave_trusted.h"
 #include "charbuf.h"
@@ -12,8 +11,7 @@
 #include "common_table.h"
 #include "ca_table.h"
 #include "ecdh_util.h"
-
-
+#include "pelz_enclave_log.h"
 
 
 charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf data, charbuf iv, charbuf tag, charbuf requestor_cert)
@@ -81,7 +79,6 @@ charbuf serialize_request(RequestType request_type, charbuf key_id, charbuf ciph
   }
   total_size += requestor_cert.len;
 
-  
   charbuf serialized = new_charbuf(total_size);
   if(serialized.chars == NULL)
   {
@@ -159,9 +156,10 @@ int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_
     return result;
   }
 
-  /* Check that the requestors cert is signed by a known CA */
+  /* Check that the requestor's cert is signed by a known CA */
   if(validate_cert(requestor_x509) != 0)
   {
+    pelz_sgx_log(LOG_ERR, "Requestor cert is not recognized");
     X509_free(requestor_x509);
     return result;
   }
@@ -192,6 +190,7 @@ int validate_signature(RequestType request_type, charbuf key_id, charbuf cipher_
   }
   if(ec_verify_buffer(requestor_pubkey, serialized.chars, serialized.len, signature.chars, (unsigned int)signature.len) == EXIT_SUCCESS)
   {
+    pelz_sgx_log(LOG_DEBUG, "Request signature matches");
     result = 0;
   }
   free_charbuf(&serialized);

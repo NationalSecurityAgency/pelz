@@ -140,6 +140,7 @@ void *unsecure_socket_process(void *arg)
     switch(request_type)
     {
     case REQ_ENC:
+    case REQ_ENC_SIGNED:
       pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
       if (status == KEK_NOT_LOADED)
       {
@@ -154,6 +155,7 @@ void *unsecure_socket_process(void *arg)
       }
       break;
     case REQ_DEC:
+    case REQ_DEC_SIGNED:
       pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
       if (status == KEK_NOT_LOADED)
       {
