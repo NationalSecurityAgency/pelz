@@ -45,6 +45,9 @@ enclave {
             public uint32_t demo_encrypt([in, count=plain_data_len] uint8_t *plain_data, size_t plain_data_len, [out, count=encrypt_data_len] uint8_t *encrypt_data, size_t encrypt_data_len);
             public uint32_t demo_decrypt([in, count=encrypt_data_len] uint8_t *encrypt_data, size_t encrypt_data_len, [out, count=decrypt_data_len] uint8_t *decrypt_data, size_t decrypt_data_len);
             public uint32_t demo_decrypt_search([in, count=encrypt_data_len] uint8_t *encrypt_data, size_t encrypt_data_len, [in, string] char *search_term, [out] int *result_count);
+
+            public uint32_t demo_encrypt_message_string([in, count=plain_len] uint8_t *plaintext, size_t plain_len, [out, count=cipher_len] uint8_t *ciphertext, size_t cipher_len);
+            public uint32_t demo_decrypt_message_string([in, count=cipher_len] uint8_t *ciphertext, size_t cipher_len, [out, count=plain_len] uint8_t *plaintext, size_t plain_len);
     };
 
     untrusted{

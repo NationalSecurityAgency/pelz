@@ -37,6 +37,7 @@
 #include "error_codes.h"
 #include "Utility_E1.h"
 #include "sgx_dh.h"
+#include "sgx_tcrypto.h"
 #include "sgx_utils.h"
 #include <map>
 
@@ -382,4 +383,77 @@ uint32_t demo_encrypt(uint8_t *plain_data, size_t plain_data_len, uint8_t *encry
     EVP_CIPHER_CTX_free(ctx);
 
     return 0;
+}
+
+/* Encrypt data and append IV and TAG to ciphertext.
+ * Meant to be compatible with pelz_aes_gcm.h
+*/
+uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
+                                            uint8_t *ciphertext, size_t cipher_len)
+{
+    if (plain_len >= __UINT32_MAX__)
+    {
+        return 1;
+    }
+
+    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE))
+    {
+        return 1;
+    }
+
+    const uint8_t *aad = (const uint8_t *)(" ");
+    uint32_t aad_len = 0;
+
+    // Use a random IV.
+    uint8_t *iv = ciphertext + plain_len;
+    if (RAND_bytes(iv, SGX_AESGCM_IV_SIZE) != 1)
+    {
+        log_ocall("IV generation failed");
+        return 1;
+    }
+
+    uint8_t *tag = ciphertext + plain_len + SGX_AESGCM_IV_SIZE;
+
+    //Prepare the request message with the encrypted payload
+    sgx_status_t status = sgx_rijndael128GCM_encrypt(&g_session.active.AEK,
+                plaintext, (uint32_t) plain_len,
+                ciphertext,
+                iv, SGX_AESGCM_IV_SIZE,
+                aad, aad_len,
+                (sgx_aes_gcm_128bit_tag_t *) tag);
+
+    return status;
+}
+
+/* Decrypt data with IV and TAG appended to ciphertext.
+ * Meant to be compatible with pelz_aes_gcm.h
+ */
+uint32_t demo_decrypt_message_string(uint8_t *ciphertext, size_t cipher_len,
+                                            uint8_t *plaintext, size_t plain_len)
+{
+    if (plain_len >= __UINT32_MAX__)
+    {
+        return 1;
+    }
+
+    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE))
+    {
+        return 1;
+    }
+
+    //Additional authentication data is empty string
+    const uint8_t *aad = (const uint8_t*)(" ");
+    uint32_t aad_len = 0;
+
+    uint8_t *iv = ciphertext + plain_len;
+    uint8_t *tag = ciphertext + plain_len + SGX_AESGCM_IV_SIZE;
+
+    sgx_status_t status = sgx_rijndael128GCM_decrypt(&g_session.active.AEK,
+                ciphertext, (uint32_t) plain_len,
+                plaintext,
+                iv, SGX_AESGCM_IV_SIZE,
+                aad, aad_len,
+                (sgx_aes_gcm_128bit_tag_t *) tag);
+
+    return status;
 }
