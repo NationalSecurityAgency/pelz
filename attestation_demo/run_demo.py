@@ -104,6 +104,9 @@ def main():
         print_log('ERROR: demo decryption and search failed')
         sys.exit(-1)
 
+    print()
+    print_log('SUCCESS: Completed text search of encrypted data file.')
+
 
 if __name__ == '__main__':
     main()
