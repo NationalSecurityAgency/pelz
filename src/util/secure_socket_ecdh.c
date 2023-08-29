@@ -351,10 +351,10 @@ int handle_pelz_request_msg(uint32_t session_id, char* req_data, size_t req_leng
   const char *err_message;
   RequestType request_type = REQ_UNK;
 
-  charbuf key_id;
-  charbuf request_sig;
-  charbuf requestor_cert;
-  charbuf cipher_name;
+  charbuf key_id = new_charbuf(0);
+  charbuf request_sig = new_charbuf(0);
+  charbuf requestor_cert = new_charbuf(0);
+  charbuf cipher_name = new_charbuf(0);
 
   charbuf output = new_charbuf(0);
   charbuf input_data = new_charbuf(0);
