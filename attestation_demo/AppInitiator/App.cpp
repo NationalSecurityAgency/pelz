@@ -60,8 +60,8 @@
 
 #define REMOTE_ADDR "127.0.0.1"
 #define REMOTE_PORT "10601"
-#define PELZ_REQ_ENC_SIGNED 5
-#define PELZ_REQ_DEC_SIGNED 6
+#define PELZ_REQ_ENC_PROTECTED 5
+#define PELZ_REQ_DEC_PROTECTED 6
 #define WRAP_CIPHER "AES/KeyWrap/RFC3394NoPadding/128"
 #define MAX_RESP_LEN 1024
 #define ENCRYPT_FORMAT "PELZ001\0"
@@ -98,7 +98,7 @@ int serialize_request(uint64_t request_type, const char *kek_id, uint8_t *dek, s
     uint64_t tag_len = 0;
     uint64_t total_size = sizeof(uint64_t) * 6 + kek_id_len + cipher_len + dek_len + cert_len;
 
-    if (request_type == PELZ_REQ_DEC_SIGNED)
+    if (request_type == PELZ_REQ_DEC_PROTECTED)
     {
         total_size += sizeof(uint64_t) * 2 + iv_len + tag_len;
     }
@@ -137,7 +137,7 @@ int serialize_request(uint64_t request_type, const char *kek_id, uint8_t *dek, s
     dst += dek_len;
 
     // Decrypt requests always serialize iv and tag fields, although they may be empty.
-    if (request_type == PELZ_REQ_DEC_SIGNED)
+    if (request_type == PELZ_REQ_DEC_PROTECTED)
     {
         memcpy(dst, &iv_len, sizeof(uint64_t));
         dst += sizeof(uint64_t);
@@ -459,7 +459,7 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     }
 
     char *request;
-    ret_status = create_pelz_request(PELZ_REQ_ENC_SIGNED, kek_id, bundle->key, sizeof(bundle->key), key_path, cert_path, &request);
+    ret_status = create_pelz_request(PELZ_REQ_ENC_PROTECTED, kek_id, bundle->key, sizeof(bundle->key), key_path, cert_path, &request);
     if (ret_status != 0)
     {
         printf("request encoding failed\n");
@@ -530,7 +530,7 @@ int unwrap_dek(const char *kek_id, uint8_t *wrapped_key, char *key_path, char *c
 {
     int ret;
     char *request;
-    ret = create_pelz_request(PELZ_REQ_DEC_SIGNED, (const char *) kek_id, wrapped_key, KEY_SIZE_WRAPPED, key_path, cert_path, &request);
+    ret = create_pelz_request(PELZ_REQ_DEC_PROTECTED, (const char *) kek_id, wrapped_key, KEY_SIZE_WRAPPED, key_path, cert_path, &request);
     if (ret != 0)
     {
         printf("request encoding failed\n");

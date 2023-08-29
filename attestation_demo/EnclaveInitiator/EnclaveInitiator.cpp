@@ -386,7 +386,7 @@ uint32_t demo_encrypt(uint8_t *plain_data, size_t plain_data_len, uint8_t *encry
 }
 
 /* Encrypt data and concatenate IV | CIPHERTEXT | TAG.
- * Meant to be compatible with kmyth's aes_gcm.h
+ * Compatible with kmyth's aes_gcm.h
 */
 uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
                                             uint8_t *cipher_data, size_t cipher_len)
@@ -401,7 +401,7 @@ uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
         return 1;
     }
 
-    //Additional authentication data is empty string
+    // Additional authentication data is empty string
     const uint8_t *aad = (const uint8_t *)(" ");
     uint32_t aad_len = 0;
 
@@ -416,8 +416,6 @@ uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
     uint8_t *ciphertext = cipher_data + SGX_AESGCM_IV_SIZE;
     uint8_t *tag = cipher_data + SGX_AESGCM_IV_SIZE + plain_len;
 
-    log_ocall("DEBUG demo_encrypt_message_string 10");
-    //Prepare the request message with the encrypted payload
     sgx_status_t status = sgx_rijndael128GCM_encrypt(&g_session.active.AEK,
                 plaintext, (uint32_t) plain_len,
                 ciphertext,
@@ -429,7 +427,7 @@ uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
 }
 
 /* Decrypt concatenated IV | CIPHERTEXT | TAG.
- * Meant to be compatible with kmyth's aes_gcm.h
+ * Compatible with kmyth's aes_gcm.h
  */
 uint32_t demo_decrypt_message_string(uint8_t *cipher_data, size_t cipher_len,
                                             uint8_t *plaintext, size_t plain_len)
@@ -444,7 +442,7 @@ uint32_t demo_decrypt_message_string(uint8_t *cipher_data, size_t cipher_len,
         return 1;
     }
 
-    //Additional authentication data is empty string
+    // Additional authentication data is empty string
     const uint8_t *aad = (const uint8_t*)(" ");
     uint32_t aad_len = 0;
 
