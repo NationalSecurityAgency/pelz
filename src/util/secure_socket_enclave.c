@@ -450,3 +450,19 @@ ATTESTATION_STATUS save_response_data(uint32_t session_id, char *response_data, 
 
     return SUCCESS;
 }
+
+uint8_t * get_session_key(uint32_t session_id, size_t *key_size)
+{
+    dh_session_t *session_info;
+
+    //Retrieve the session information for the corresponding session id
+    session_info = dh_sessions[session_id];
+    if(session_info == NULL || session_info->status != ACTIVE || session_info->request_data == NULL)
+    {
+        *key_size = 0;
+        return NULL;
+    }
+
+    *key_size = sizeof(session_info->active.AEK);
+    return session_info->active.AEK;
+}

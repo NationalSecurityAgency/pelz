@@ -386,7 +386,7 @@ uint32_t demo_encrypt(uint8_t *plain_data, size_t plain_data_len, uint8_t *encry
 }
 
 /* Encrypt data and append IV and TAG to ciphertext.
- * Meant to be compatible with pelz_aes_gcm.h
+ * Meant to be compatible with kmyth's aes_gcm.h
 */
 uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
                                             uint8_t *ciphertext, size_t cipher_len)
@@ -426,7 +426,7 @@ uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
 }
 
 /* Decrypt data with IV and TAG appended to ciphertext.
- * Meant to be compatible with pelz_aes_gcm.h
+ * Meant to be compatible with kmyth's aes_gcm.h
  */
 uint32_t demo_decrypt_message_string(uint8_t *ciphertext, size_t cipher_len,
                                             uint8_t *plaintext, size_t plain_len)
