@@ -385,35 +385,38 @@ uint32_t demo_encrypt(uint8_t *plain_data, size_t plain_data_len, uint8_t *encry
     return 0;
 }
 
-/* Encrypt data and append IV and TAG to ciphertext.
+/* Encrypt data and concatenate IV | CIPHERTEXT | TAG.
  * Meant to be compatible with kmyth's aes_gcm.h
 */
 uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
-                                            uint8_t *ciphertext, size_t cipher_len)
+                                            uint8_t *cipher_data, size_t cipher_len)
 {
     if (plain_len >= __UINT32_MAX__)
     {
         return 1;
     }
 
-    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE))
+    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE))
     {
         return 1;
     }
 
+    //Additional authentication data is empty string
     const uint8_t *aad = (const uint8_t *)(" ");
     uint32_t aad_len = 0;
 
     // Use a random IV.
-    uint8_t *iv = ciphertext + plain_len;
+    uint8_t *iv = cipher_data;
     if (RAND_bytes(iv, SGX_AESGCM_IV_SIZE) != 1)
     {
         log_ocall("IV generation failed");
         return 1;
     }
 
-    uint8_t *tag = ciphertext + plain_len + SGX_AESGCM_IV_SIZE;
+    uint8_t *ciphertext = cipher_data + SGX_AESGCM_IV_SIZE;
+    uint8_t *tag = cipher_data + SGX_AESGCM_IV_SIZE + plain_len;
 
+    log_ocall("DEBUG demo_encrypt_message_string 10");
     //Prepare the request message with the encrypted payload
     sgx_status_t status = sgx_rijndael128GCM_encrypt(&g_session.active.AEK,
                 plaintext, (uint32_t) plain_len,
@@ -425,10 +428,10 @@ uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
     return status;
 }
 
-/* Decrypt data with IV and TAG appended to ciphertext.
+/* Decrypt concatenated IV | CIPHERTEXT | TAG.
  * Meant to be compatible with kmyth's aes_gcm.h
  */
-uint32_t demo_decrypt_message_string(uint8_t *ciphertext, size_t cipher_len,
+uint32_t demo_decrypt_message_string(uint8_t *cipher_data, size_t cipher_len,
                                             uint8_t *plaintext, size_t plain_len)
 {
     if (plain_len >= __UINT32_MAX__)
@@ -436,7 +439,7 @@ uint32_t demo_decrypt_message_string(uint8_t *ciphertext, size_t cipher_len,
         return 1;
     }
 
-    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE))
+    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE))
     {
         return 1;
     }
@@ -445,8 +448,9 @@ uint32_t demo_decrypt_message_string(uint8_t *ciphertext, size_t cipher_len,
     const uint8_t *aad = (const uint8_t*)(" ");
     uint32_t aad_len = 0;
 
-    uint8_t *iv = ciphertext + plain_len;
-    uint8_t *tag = ciphertext + plain_len + SGX_AESGCM_IV_SIZE;
+    uint8_t *iv = cipher_data;
+    uint8_t *ciphertext = cipher_data + SGX_AESGCM_IV_SIZE;
+    uint8_t *tag = cipher_data + SGX_AESGCM_IV_SIZE + plain_len;
 
     sgx_status_t status = sgx_rijndael128GCM_decrypt(&g_session.active.AEK,
                 ciphertext, (uint32_t) plain_len,
