@@ -44,7 +44,7 @@ Crypto_Library_Name := sgx_tcrypto
 ENCLAVE_NAME := libenclave_initiator.so
 SIGNED_ENCLAVE_NAME := libenclave_initiator.signed.so
 
-SIGNING_KEY := EnclaveInitiator_private_test.pem
+SIGNING_KEY := ../../sgx/pelz_enclave_private.pem
 
 # Message for missing Enclave Signing Key - Fatal Build Error
 define err_no_enclave_signing_key

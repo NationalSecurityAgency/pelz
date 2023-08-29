@@ -49,7 +49,7 @@ extern "C" {
 #endif
 
 uint32_t message_exchange_response_generator(char* decrypted_data, char** resp_buffer, size_t* resp_length);
-uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity);
+uint32_t verify_peer_enclave_trust(sgx_dh_session_enclave_identity_t* peer_enclave_identity, sgx_measurement_t *self_mr_signer);
 
 #ifdef __cplusplus
 }
@@ -137,8 +137,10 @@ ATTESTATION_STATUS create_session(dh_session_t *session_info)
         return status;
     }
 
+    sgx_measurement_t *self_mr_signer = &dh_msg2.report.body.mr_signer;
+
     // Verify the identity of the destination enclave
-    if(verify_peer_enclave_trust(&responder_identity) != SUCCESS)
+    if(verify_peer_enclave_trust(&responder_identity, self_mr_signer) != SUCCESS)
     {
         return INVALID_SESSION;
     }
