@@ -60,9 +60,9 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 
   if (request_type == REQ_ENC_PROTECTED)
   {
+    uint8_t *session_key;
     size_t session_key_size;
-    uint8_t *session_key = get_session_key(session_id, &session_key_size);
-    if (session_key == NULL)
+    if (get_protection_key(session_id, &session_key, &session_key_size))
     {
       return ENCRYPT_ERROR;
     }
@@ -73,6 +73,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
                         plain_data.chars, plain_data.len,
                         &decrypt_data.chars, &decrypt_data.len))
     {
+      free(session_key);
       return ENCRYPT_ERROR;
     }
 
@@ -88,6 +89,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
       free(cipher_data_st.cipher);
       free(cipher_data_st.iv);
       free(cipher_data_st.tag);
+      free(session_key);
       return ENCRYPT_ERROR;
     }
 
@@ -97,6 +99,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
                           cipher_data_st.cipher, cipher_data_st.cipher_len,
                           &encrypt_data.chars, &encrypt_data.len);
     free(cipher_data_st.cipher);
+    free(session_key);
     if (ret != 0)
     {
       free(cipher_data_st.iv);
@@ -259,8 +262,8 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   if (request_type == REQ_DEC_PROTECTED)
   {
     size_t session_key_size;
-    uint8_t *session_key = get_session_key(session_id, &session_key_size);
-    if (session_key == NULL)
+    uint8_t *session_key;
+    if (get_protection_key(session_id, &session_key, &session_key_size))
     {
       return DECRYPT_ERROR;
     }
@@ -270,6 +273,7 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
                         cipher_data.chars, cipher_data.len,
                         &cipher_data_st.cipher, &cipher_data_st.cipher_len))
     {
+      free(session_key);
       return DECRYPT_ERROR;
     }
 
@@ -283,6 +287,7 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
     free(cipher_data_st.cipher);
     if (ret != 0)
     {
+      free(session_key);
       return DECRYPT_ERROR;
     }
 
@@ -291,6 +296,7 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
     ret = aes_gcm_encrypt((unsigned char *) session_key, session_key_size,
                           pre_encrypt_data.chars, pre_encrypt_data.len,
                           &encrypt_data.chars, &encrypt_data.len);
+    free(session_key);
     if (ret != 0)
     {
       return DECRYPT_ERROR;

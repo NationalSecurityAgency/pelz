@@ -7,6 +7,6 @@
 
 #include <stdint.h>
 
-uint8_t * get_session_key(uint32_t session_id, size_t *key_size);
+uint32_t get_protection_key(uint32_t session_id, uint8_t **key_out, size_t *key_size);
 
 #endif
