@@ -82,6 +82,7 @@ SGX_COMMON_FLAGS += -Wpointer-arith
 SGX_COMMON_FLAGS += -Wreturn-type
 SGX_COMMON_FLAGS += -Waddress
 SGX_COMMON_FLAGS += -Wsequence-point
+SGX_COMMON_FLAGS += -Wformat
 SGX_COMMON_FLAGS += -Wformat-security
 SGX_COMMON_FLAGS += -Wmissing-include-dirs
 SGX_COMMON_FLAGS += -Wfloat-equal
@@ -593,7 +594,7 @@ sgx/enclave_request_signing.o: src/util/enclave_request_signing.c
 	@echo "CC  <=  $<"
 
 sgx/secure_socket_enclave.o: src/util/secure_socket_enclave.c
-	@$(CC) $(Enclave_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
+	@$(CC) $(Enclave_C_Flags) -Wno-cast-qual $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC  <=  $<"
 
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \

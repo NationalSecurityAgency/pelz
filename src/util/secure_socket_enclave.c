@@ -33,6 +33,7 @@
 
 #include <string.h>
 
+#include <openssl/evp.h>
 #include <openssl/kdf.h>
 
 #include "sgx_trts.h"
