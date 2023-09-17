@@ -80,7 +80,7 @@ Once the dependencies are in place, building pelz is done by:
 
     make
     
-which places the executible in the ```bin/``` directory.
+which places the executable in the ```bin/``` directory.
     
 The unit test suite can be run via:
 
@@ -108,7 +108,7 @@ To uninstall:
 
     ./accumulo_plugin/setup_plugin.sh -u -d ~/accumulo
 
-The choice to install/uninstall must always be specified, and a path to accumulo 
+The choice to install/uninstall must always be specified, and a path to Accumulo 
 must always be provided.
 
 ### Testing with uno:
