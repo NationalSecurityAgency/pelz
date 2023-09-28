@@ -335,13 +335,14 @@ charbuf get_error_response(const char *err_message)
 
 /* Function Description: Generates the response from the request message
  * Parameter Description:
+ * [input] session_id: id number for current communication session
  * [input] req_data: pointer to decrypted request message
  * [input] req_length: request length
  * [output] response: pointer to response message charbuf, which is initialized in this function
  * 
  * Returns: 0
  */
-int handle_pelz_request_msg(char* req_data, size_t req_length, charbuf *response)
+int handle_pelz_request_msg(uint32_t session_id, char* req_data, size_t req_length, charbuf *response)
 {
   int ret_val;
   charbuf message;
@@ -350,10 +351,10 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, charbuf *response
   const char *err_message;
   RequestType request_type = REQ_UNK;
 
-  charbuf key_id;
-  charbuf request_sig;
-  charbuf requestor_cert;
-  charbuf cipher_name;
+  charbuf key_id = new_charbuf(0);
+  charbuf request_sig = new_charbuf(0);
+  charbuf requestor_cert = new_charbuf(0);
+  charbuf cipher_name = new_charbuf(0);
 
   charbuf output = new_charbuf(0);
   charbuf input_data = new_charbuf(0);
@@ -375,7 +376,8 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, charbuf *response
   {
   case REQ_ENC:
   case REQ_ENC_SIGNED:
-    sgx_status = pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+  case REQ_ENC_PROTECTED:
+    sgx_status = pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert, session_id);
     if (sgx_status != SGX_SUCCESS)
     {
       status = ENCRYPT_ERROR;
@@ -385,7 +387,7 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, charbuf *response
       ret_val = key_load(key_id);
       if (ret_val == EXIT_SUCCESS)
       {
-        sgx_status = pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+        sgx_status = pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert, session_id);
         if (sgx_status != SGX_SUCCESS)
         {
           status = ENCRYPT_ERROR;
@@ -399,7 +401,8 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, charbuf *response
     break;
   case REQ_DEC:
   case REQ_DEC_SIGNED:
-    sgx_status = pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+  case REQ_DEC_PROTECTED:
+    sgx_status = pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert, session_id);
     if (sgx_status != SGX_SUCCESS)
     {
       status = DECRYPT_ERROR;
@@ -409,7 +412,7 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, charbuf *response
       ret_val = key_load(key_id);
       if (ret_val == EXIT_SUCCESS)
       {
-        sgx_status = pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+        sgx_status = pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert, session_id);
         if (sgx_status != SGX_SUCCESS)
         {
           status = DECRYPT_ERROR;
@@ -461,11 +464,14 @@ int handle_pelz_request_msg(char* req_data, size_t req_length, charbuf *response
     }
   }
 
+  secure_free_charbuf(&input_data);
   secure_free_charbuf(&key_id);
   secure_free_charbuf(&output);
   secure_free_charbuf(&iv);
   secure_free_charbuf(&tag);
   secure_free_charbuf(&cipher_name);
+  secure_free_charbuf(&request_sig);
+  secure_free_charbuf(&requestor_cert);
 
   *response = message;
 
@@ -488,7 +494,7 @@ int generate_response(uint32_t session_id)
 
   pelz_log(LOG_DEBUG, "Request Message & Length: %.*s, %d", (int) request_data_length, request_data, (int) request_data_length);
 
-  handle_pelz_request_msg(request_data, request_data_length, &response);
+  handle_pelz_request_msg(session_id, request_data, request_data_length, &response);
   memset(request_data, 0, request_data_length);
   free(request_data);
 

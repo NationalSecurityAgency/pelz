@@ -60,8 +60,8 @@
 
 #define REMOTE_ADDR "127.0.0.1"
 #define REMOTE_PORT "10601"
-#define PELZ_REQ_ENC_SIGNED 3
-#define PELZ_REQ_DEC_SIGNED 4
+#define PELZ_REQ_ENC_PROTECTED 5
+#define PELZ_REQ_DEC_PROTECTED 6
 #define WRAP_CIPHER "AES/KeyWrap/RFC3394NoPadding/128"
 #define MAX_RESP_LEN 1024
 #define ENCRYPT_FORMAT "PELZ001\0"
@@ -98,7 +98,7 @@ int serialize_request(uint64_t request_type, const char *kek_id, uint8_t *dek, s
     uint64_t tag_len = 0;
     uint64_t total_size = sizeof(uint64_t) * 6 + kek_id_len + cipher_len + dek_len + cert_len;
 
-    if (request_type == PELZ_REQ_DEC_SIGNED)
+    if (request_type == PELZ_REQ_DEC_PROTECTED)
     {
         total_size += sizeof(uint64_t) * 2 + iv_len + tag_len;
     }
@@ -137,7 +137,7 @@ int serialize_request(uint64_t request_type, const char *kek_id, uint8_t *dek, s
     dst += dek_len;
 
     // Decrypt requests always serialize iv and tag fields, although they may be empty.
-    if (request_type == PELZ_REQ_DEC_SIGNED)
+    if (request_type == PELZ_REQ_DEC_PROTECTED)
     {
         memcpy(dst, &iv_len, sizeof(uint64_t));
         dst += sizeof(uint64_t);
@@ -241,12 +241,15 @@ int generate_request_signature(uint8_t *serial, size_t serial_len, const uint8_t
 
 int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size_t dek_len, char *key_path, char *cert_path, char **request_msg)
 {
-    int ret;
+    sgx_status_t sgx_status;
+    uint32_t ret;
     cJSON *request;
     uint8_t *sign_key;
     size_t sign_key_len;
     uint8_t *sign_cert;
     size_t sign_cert_len;
+    uint8_t *encrypted_dek;
+    size_t encrypted_dek_len;
     uint8_t *serial;
     size_t serial_len;
     uint8_t *signature;
@@ -258,13 +261,31 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     char *encoded_dek;
     size_t encoded_dek_len;
 
-    if (read_bytes_from_file(key_path, &sign_key, &sign_key_len)) {
-        printf("failed to read the file at %s.\n", key_path);
+    // Encrypt sensitive fields
+    encrypted_dek_len = dek_len + SGX_AESGCM_IV_SIZE + SGX_AESGCM_MAC_SIZE;
+    encrypted_dek = (uint8_t *) calloc(encrypted_dek_len, sizeof(uint8_t));
+    if (encrypted_dek == NULL)
+    {
+        printf("calloc failed\n");
         return -1;
     }
 
+    sgx_status = demo_encrypt_message_string(initiator_enclave_id, &ret, dek, dek_len, encrypted_dek, encrypted_dek_len);
+    if (sgx_status != SGX_SUCCESS || ret != 0) {
+        printf("demo_encrypt_message_string Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret);
+        free(encrypted_dek);
+        return -1;
+    }
+
+    // Load signing keypair
+    if (read_bytes_from_file(key_path, &sign_key, &sign_key_len)) {
+        printf("failed to read the file at %s.\n", key_path);
+        free(encrypted_dek);
+        return -1;
+    }
     if (read_bytes_from_file(cert_path, &sign_cert, &sign_cert_len)) {
         printf("failed to read the file at %s.\n", cert_path);
+        free(encrypted_dek);
         free(sign_key);
         return -1;
     }
@@ -273,6 +294,7 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     if (ret != 0)
     {
         printf("serialization failed\n");
+        free(encrypted_dek);
         free(sign_key);
         free(sign_cert);
         return -1;
@@ -285,6 +307,7 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     if (ret != 0)
     {
         printf("signing failed\n");
+        free(encrypted_dek);
         free(sign_cert);
         return -1;
     }
@@ -295,6 +318,7 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     if (ret != 0)
     {
         printf("signature base-64 encoding failed\n");
+        free(encrypted_dek);
         free(sign_cert);
         return -1;
     }
@@ -304,11 +328,13 @@ int create_pelz_request(int request_type, const char *kek_id, uint8_t *dek, size
     if (ret != 0)
     {
         printf("certificate base-64 encoding failed\n");
+        free(encrypted_dek);
         free(encoded_signature);
         return -1;
     }
 
-    ret = encodeBase64Data(dek, dek_len, (uint8_t **) &encoded_dek, &encoded_dek_len);
+    ret = encodeBase64Data(encrypted_dek, encrypted_dek_len, (uint8_t **) &encoded_dek, &encoded_dek_len);
+    free(encrypted_dek);
     if (ret != 0)
     {
         printf("data base-64 encoding failed\n");
@@ -368,15 +394,42 @@ int decode_response_data(char *json_str, uint8_t **data, size_t *len)
         return -1;
     }
 
+    uint8_t *decoded_data = NULL;
+    size_t decoded_len;
     if (decodeBase64Data((unsigned char *) field->valuestring, strlen(field->valuestring),
-                         data, len))
+                         (unsigned char **) &decoded_data, &decoded_len))
     {
         printf("decodeBase64Data error\n");
         cJSON_Delete(json);
         return -1;
     }
-
     cJSON_Delete(json);
+
+    // Decrypt sensitive fields
+    size_t decrypted_len = decoded_len - SGX_AESGCM_IV_SIZE - SGX_AESGCM_MAC_SIZE;
+    uint8_t *decrypted_data = (uint8_t *) calloc(decrypted_len, sizeof(uint8_t));
+    if (decrypted_data == NULL)
+    {
+        printf("calloc failed\n");
+        return -1;
+    }
+
+    sgx_status_t sgx_status;
+    uint32_t ret_status;
+    sgx_status = demo_decrypt_message_string(initiator_enclave_id, &ret_status,
+                                            decoded_data, decoded_len,
+                                            decrypted_data, decrypted_len);
+    free(decoded_data);
+
+    if (sgx_status != SGX_SUCCESS || ret_status != 0) {
+        printf("demo_decrypt_message_string Ecall failed: ECALL return 0x%x, error code is 0x%x.\n", sgx_status, ret_status);
+        free(decrypted_data);
+        return -1;
+    }
+
+    *data = decrypted_data;
+    *len = decrypted_len;
+
     return 0;
 }
 
@@ -406,7 +459,7 @@ int encrypt_wrap_store(uint8_t *data, size_t data_len, const char *kek_id, char 
     }
 
     char *request;
-    ret_status = create_pelz_request(PELZ_REQ_ENC_SIGNED, kek_id, bundle->key, sizeof(bundle->key), key_path, cert_path, &request);
+    ret_status = create_pelz_request(PELZ_REQ_ENC_PROTECTED, kek_id, bundle->key, sizeof(bundle->key), key_path, cert_path, &request);
     if (ret_status != 0)
     {
         printf("request encoding failed\n");
@@ -477,7 +530,7 @@ int unwrap_dek(const char *kek_id, uint8_t *wrapped_key, char *key_path, char *c
 {
     int ret;
     char *request;
-    ret = create_pelz_request(PELZ_REQ_DEC_SIGNED, (const char *) kek_id, wrapped_key, KEY_SIZE_WRAPPED, key_path, cert_path, &request);
+    ret = create_pelz_request(PELZ_REQ_DEC_PROTECTED, (const char *) kek_id, wrapped_key, KEY_SIZE_WRAPPED, key_path, cert_path, &request);
     if (ret != 0)
     {
         printf("request encoding failed\n");

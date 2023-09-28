@@ -4,6 +4,8 @@
 #include "cipher/pelz_cipher.h"
 #include "pelz_enclave_log.h"
 #include "enclave_request_signing.h"
+#include "secure_socket_enclave.h"
+#include "aes_gcm.h"
 
 #include <openssl/rand.h>
 
@@ -11,7 +13,7 @@
 #include ENCLAVE_HEADER_TRUSTED
 
 
-RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag, charbuf signature, charbuf cert)
+RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf plain_data, charbuf * cipher_data, charbuf* iv, charbuf* tag, charbuf signature, charbuf cert, uint32_t session_id)
 {
   pelz_sgx_log(LOG_DEBUG, "Encrypt Request Handler");
   // Start by checking that the signature validates, if present (and required).
@@ -54,19 +56,75 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
     return KEK_NOT_LOADED;
   }
 
-  pelz_sgx_log(LOG_DEBUG, "Cipher Encrypt");
   cipher_data_t cipher_data_st;
-  if (cipher_struct.encrypt_fn(key_table.entries[index].value.key.chars,
-			       key_table.entries[index].value.key.len,
-			       plain_data.chars,
-			       plain_data.len,
-			       &cipher_data_st))
+
+  if (request_type == REQ_ENC_PROTECTED)
   {
+    uint8_t *session_key;
+    size_t session_key_size;
+    if (get_protection_key(session_id, &session_key, &session_key_size))
+    {
+      return ENCRYPT_ERROR;
+    }
+
+    // Decrypt protected input data
+    charbuf decrypt_data = new_charbuf(0);
+    if (aes_gcm_decrypt((unsigned char *) session_key, session_key_size,
+                        plain_data.chars, plain_data.len,
+                        &decrypt_data.chars, &decrypt_data.len))
+    {
+      free(session_key);
+      return ENCRYPT_ERROR;
+    }
+
+    // Generate output data
+    int ret = cipher_struct.encrypt_fn(key_table.entries[index].value.key.chars,
+                                        key_table.entries[index].value.key.len,
+                                        decrypt_data.chars,
+                                        decrypt_data.len,
+                                        &cipher_data_st);
+    secure_free_charbuf(&decrypt_data);
+    if (ret != 0 || cipher_data_st.cipher_len <= 0 || cipher_data_st.cipher == NULL)
+    {
+      free(cipher_data_st.cipher);
+      free(cipher_data_st.iv);
+      free(cipher_data_st.tag);
+      free(session_key);
+      return ENCRYPT_ERROR;
+    }
+
+    // Encrypt protected output data
+    charbuf encrypt_data = new_charbuf(0);
+    ret = aes_gcm_encrypt((unsigned char *) session_key, session_key_size,
+                          cipher_data_st.cipher, cipher_data_st.cipher_len,
+                          &encrypt_data.chars, &encrypt_data.len);
     free(cipher_data_st.cipher);
-    free(cipher_data_st.iv);
-    free(cipher_data_st.tag);
-    pelz_sgx_log(LOG_ERR, "Encrypt Error");
-    return ENCRYPT_ERROR;
+    free(session_key);
+    if (ret != 0)
+    {
+      free(cipher_data_st.iv);
+      free(cipher_data_st.tag);
+      return ENCRYPT_ERROR;
+    }
+
+    cipher_data_st.cipher = encrypt_data.chars;
+    cipher_data_st.cipher_len = encrypt_data.len;
+  }
+  else
+  {
+    pelz_sgx_log(LOG_DEBUG, "Cipher Encrypt");
+    if (cipher_struct.encrypt_fn(key_table.entries[index].value.key.chars,
+              key_table.entries[index].value.key.len,
+              plain_data.chars,
+              plain_data.len,
+              &cipher_data_st))
+    {
+      free(cipher_data_st.cipher);
+      free(cipher_data_st.iv);
+      free(cipher_data_st.tag);
+      pelz_sgx_log(LOG_ERR, "Encrypt Error");
+      return ENCRYPT_ERROR;
+    }
   }
 
 
@@ -148,7 +206,7 @@ RequestResponseStatus pelz_encrypt_request_handler(RequestType request_type, cha
 }
 
 
-RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data, charbuf signature, charbuf cert)
+RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, charbuf key_id, charbuf cipher_name, charbuf cipher_data, charbuf iv, charbuf tag, charbuf * plain_data, charbuf signature, charbuf cert, uint32_t session_id)
 {
   pelz_sgx_log(LOG_DEBUG, "Decrypt Request Handler");
   // Start by checking that the signature validates, if present (and required).
@@ -201,15 +259,63 @@ RequestResponseStatus pelz_decrypt_request_handler(RequestType request_type, cha
   cipher_data_st.tag = tag.chars;
   cipher_data_st.tag_len = tag.len;
 
-  pelz_sgx_log(LOG_DEBUG, "Cipher Decrypt");
-  if(cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars,
-			      key_table.entries[index].value.key.len,
-			      cipher_data_st,
-			      &plain_data_internal.chars,
-			      &plain_data_internal.len))
+  if (request_type == REQ_DEC_PROTECTED)
   {
-    pelz_sgx_log(LOG_ERR, "Decrypt Error");
-    return DECRYPT_ERROR;
+    size_t session_key_size;
+    uint8_t *session_key;
+    if (get_protection_key(session_id, &session_key, &session_key_size))
+    {
+      return DECRYPT_ERROR;
+    }
+
+    // Decrypt protected input data
+    if (aes_gcm_decrypt((unsigned char *) session_key, session_key_size,
+                        cipher_data.chars, cipher_data.len,
+                        &cipher_data_st.cipher, &cipher_data_st.cipher_len))
+    {
+      free(session_key);
+      return DECRYPT_ERROR;
+    }
+
+    // Generate output data
+    charbuf pre_encrypt_data = new_charbuf(0);
+    int ret = cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars,
+                                        key_table.entries[index].value.key.len,
+                                        cipher_data_st,
+                                        &pre_encrypt_data.chars,
+                                        &pre_encrypt_data.len);
+    free(cipher_data_st.cipher);
+    if (ret != 0)
+    {
+      free(session_key);
+      return DECRYPT_ERROR;
+    }
+
+    // Encrypt protected output data
+    charbuf encrypt_data = new_charbuf(0);
+    ret = aes_gcm_encrypt((unsigned char *) session_key, session_key_size,
+                          pre_encrypt_data.chars, pre_encrypt_data.len,
+                          &encrypt_data.chars, &encrypt_data.len);
+    free(session_key);
+    if (ret != 0)
+    {
+      return DECRYPT_ERROR;
+    }
+
+    plain_data_internal = encrypt_data;
+  }
+  else
+  {
+    pelz_sgx_log(LOG_DEBUG, "Cipher Decrypt");
+    if(cipher_struct.decrypt_fn(key_table.entries[index].value.key.chars,
+              key_table.entries[index].value.key.len,
+              cipher_data_st,
+              &plain_data_internal.chars,
+              &plain_data_internal.len))
+    {
+      pelz_sgx_log(LOG_ERR, "Decrypt Error");
+      return DECRYPT_ERROR;
+    }
   }
   
   plain_data->len = plain_data_internal.len;

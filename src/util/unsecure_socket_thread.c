@@ -141,12 +141,12 @@ void *unsecure_socket_process(void *arg)
     {
     case REQ_ENC:
     case REQ_ENC_SIGNED:
-      pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+      pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert, 0);
       if (status == KEK_NOT_LOADED)
       {
 	if (key_load(key_id) == 0)
         {
-          pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert);
+          pelz_encrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, &output, &iv, &tag, request_sig, requestor_cert, 0);
         }
         else
         {
@@ -156,12 +156,12 @@ void *unsecure_socket_process(void *arg)
       break;
     case REQ_DEC:
     case REQ_DEC_SIGNED:
-      pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+      pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert, 0);
       if (status == KEK_NOT_LOADED)
       {
 	if (key_load(key_id) == 0)
         {
-          pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert);
+          pelz_decrypt_request_handler(eid, &status, request_type, key_id, cipher_name, input_data, iv, tag, &output, request_sig, requestor_cert, 0);
         }
         else
         {

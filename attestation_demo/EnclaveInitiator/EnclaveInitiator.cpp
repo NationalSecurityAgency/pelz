@@ -37,16 +37,20 @@
 #include "error_codes.h"
 #include "Utility_E1.h"
 #include "sgx_dh.h"
+#include "sgx_tcrypto.h"
 #include "sgx_utils.h"
 #include <map>
 
 #include <openssl/evp.h>
+#include <openssl/kdf.h>
 #include <openssl/rand.h>
 #include "encrypt_datatypes.h"
 
 #define UNUSED(val) (void)(val)
 
 #define RESPONDER_PRODID 0
+
+#define HKDF_SALT "pelz"
 
 std::map<sgx_enclave_id_t, dh_session_t>g_src_session_info_map;
 
@@ -382,4 +386,156 @@ uint32_t demo_encrypt(uint8_t *plain_data, size_t plain_data_len, uint8_t *encry
     EVP_CIPHER_CTX_free(ctx);
 
     return 0;
+}
+
+uint32_t demo_derive_protection_key(uint8_t *key_in, uint8_t **key_out)
+{
+    EVP_PKEY_CTX *pctx;
+
+    pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
+    if (pctx == NULL)
+    {
+        return 1;
+    }
+
+    // initialize HKDF context
+    if (EVP_PKEY_derive_init(pctx) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return 1;
+    }
+
+    // set message digest for HKDF
+    if (EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha512()) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return 1;
+    }
+
+    // set 'salt' value for HKDF
+    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, HKDF_SALT, strlen(HKDF_SALT)) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return 1;
+    }
+
+    // set input key value for HKDF
+    if (EVP_PKEY_CTX_set1_hkdf_key(pctx, key_in, SGX_AESGCM_KEY_SIZE) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return 1;
+    }
+
+    // derive key bits
+    uint8_t *tmp_key_out = (uint8_t *) calloc(SGX_AESGCM_KEY_SIZE, sizeof(uint8_t));
+    size_t tmp_key_out_len = SGX_AESGCM_KEY_SIZE;
+    if (EVP_PKEY_derive(pctx, tmp_key_out, &tmp_key_out_len) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return 1;
+    }
+
+    EVP_PKEY_CTX_free(pctx);
+
+    if (tmp_key_out_len != SGX_AESGCM_KEY_SIZE)
+    {
+        return 1;
+    }
+
+    *key_out = tmp_key_out;
+
+    return 0;
+}
+
+/* Encrypt data and concatenate IV | CIPHERTEXT | TAG.
+ * Compatible with kmyth's aes_gcm.h
+*/
+uint32_t demo_encrypt_message_string(uint8_t *plaintext, size_t plain_len,
+                                            uint8_t *cipher_data, size_t cipher_len)
+{
+    if (plain_len >= __UINT32_MAX__)
+    {
+        return 1;
+    }
+
+    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE))
+    {
+        return 1;
+    }
+
+    // Additional authentication data is empty string
+    const uint8_t *aad = (const uint8_t *)(" ");
+    uint32_t aad_len = 0;
+
+    // Use a random IV.
+    uint8_t *iv = cipher_data;
+    if (RAND_bytes(iv, SGX_AESGCM_IV_SIZE) != 1)
+    {
+        log_ocall("IV generation failed");
+        return 1;
+    }
+
+    uint8_t *ciphertext = cipher_data + SGX_AESGCM_IV_SIZE;
+    uint8_t *tag = cipher_data + SGX_AESGCM_IV_SIZE + plain_len;
+
+    uint8_t *session_key;
+    if (demo_derive_protection_key((uint8_t *) &g_session.active.AEK, &session_key))
+    {
+        return 1;
+    }
+
+    sgx_status_t status = sgx_rijndael128GCM_encrypt(
+                (const sgx_aes_gcm_128bit_key_t *) session_key,
+                plaintext, (uint32_t) plain_len,
+                ciphertext,
+                iv, SGX_AESGCM_IV_SIZE,
+                aad, aad_len,
+                (sgx_aes_gcm_128bit_tag_t *) tag);
+
+    free(session_key);
+
+    return status;
+}
+
+/* Decrypt concatenated IV | CIPHERTEXT | TAG.
+ * Compatible with kmyth's aes_gcm.h
+ */
+uint32_t demo_decrypt_message_string(uint8_t *cipher_data, size_t cipher_len,
+                                            uint8_t *plaintext, size_t plain_len)
+{
+    if (plain_len >= __UINT32_MAX__)
+    {
+        return 1;
+    }
+
+    if (cipher_len != (plain_len + SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE))
+    {
+        return 1;
+    }
+
+    // Additional authentication data is empty string
+    const uint8_t *aad = (const uint8_t*)(" ");
+    uint32_t aad_len = 0;
+
+    uint8_t *iv = cipher_data;
+    uint8_t *ciphertext = cipher_data + SGX_AESGCM_IV_SIZE;
+    uint8_t *tag = cipher_data + SGX_AESGCM_IV_SIZE + plain_len;
+
+    uint8_t *session_key;
+    if (demo_derive_protection_key((uint8_t *) &g_session.active.AEK, &session_key))
+    {
+        return 1;
+    }
+
+    sgx_status_t status = sgx_rijndael128GCM_decrypt(
+                (const sgx_aes_gcm_128bit_key_t *) session_key,
+                ciphertext, (uint32_t) plain_len,
+                plaintext,
+                iv, SGX_AESGCM_IV_SIZE,
+                aad, aad_len,
+                (sgx_aes_gcm_128bit_tag_t *) tag);
+
+    free(session_key);
+
+    return status;
 }

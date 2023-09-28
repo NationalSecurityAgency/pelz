@@ -33,6 +33,9 @@
 
 #include <string.h>
 
+#include <openssl/evp.h>
+#include <openssl/kdf.h>
+
 #include "sgx_trts.h"
 #include "sgx_utils.h"
 #include "sgx_eid.h"
@@ -50,8 +53,8 @@
 
 #include ENCLAVE_HEADER_TRUSTED
 
-
 #define MAX_SESSION_COUNT  16
+#define HKDF_SALT "pelz"
 
 //Array of pointers to session info
 dh_session_t *dh_sessions[MAX_SESSION_COUNT] = { 0 };
@@ -449,4 +452,84 @@ ATTESTATION_STATUS save_response_data(uint32_t session_id, char *response_data, 
     session_info->response_data_length = response_data_length;
 
     return SUCCESS;
+}
+
+uint32_t derive_protection_key(uint8_t *key_in, size_t key_in_len,
+                                uint8_t **key_out, size_t key_out_len)
+{
+    EVP_PKEY_CTX *pctx;
+
+    pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
+    if (pctx == NULL)
+    {
+        return EXIT_FAILURE;
+    }
+
+    // initialize HKDF context
+    if (EVP_PKEY_derive_init(pctx) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return EXIT_FAILURE;
+    }
+
+    // set message digest for HKDF
+    if (EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha512()) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return EXIT_FAILURE;
+    }
+
+    // set 'salt' value for HKDF
+    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, HKDF_SALT, strlen(HKDF_SALT)) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return EXIT_FAILURE;
+    }
+
+    // set input key value for HKDF
+    if (EVP_PKEY_CTX_set1_hkdf_key(pctx, key_in, (int) key_in_len) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        return EXIT_FAILURE;
+    }
+
+    // derive key bits
+    uint8_t *tmp_key_out = calloc(key_out_len, sizeof(uint8_t));
+    size_t tmp_key_out_len = key_out_len;
+    if (EVP_PKEY_derive(pctx, tmp_key_out, &tmp_key_out_len) != 1)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        free(tmp_key_out);
+        return EXIT_FAILURE;
+    }
+
+    EVP_PKEY_CTX_free(pctx);
+
+    if (tmp_key_out_len != key_out_len)
+    {
+        free(tmp_key_out);
+        return EXIT_FAILURE;
+    }
+
+    *key_out = tmp_key_out;
+
+    return EXIT_SUCCESS;
+}
+
+uint32_t get_protection_key(uint32_t session_id, uint8_t **key_out, size_t *key_size)
+{
+    dh_session_t *session_info;
+
+    //Retrieve the session information for the corresponding session id
+    session_info = dh_sessions[session_id];
+    if(session_info == NULL || session_info->status != ACTIVE || session_info->request_data == NULL)
+    {
+        *key_size = 0;
+        *key_out = NULL;
+        return EXIT_FAILURE;
+    }
+
+    *key_size = sizeof(session_info->active.AEK);
+    return derive_protection_key((uint8_t *) session_info->active.AEK, *key_size,
+                                key_out, *key_size);
 }
