@@ -1,13 +1,21 @@
 # Attestation Demo
 
-This directory contains a custom pelz client demonstrating a new method of connecting to pelz.
-The new client is primarily based on the LocalAttestation sample code from the linux-sgx repo
+This directory contains an example of integrating pelz with a client. In this
+case, the sample pelz client is an application processing sensitive data
+(encrypted at rest) within another SGX enclave on the same host. The intent
+is to demonstrate a method of protecting all sensitive data and keys, even
+while in use. This approach could rather generically be employed for a
+diverse range of pelz client functionality.
+
+The demonstration client is primarily based on the LocalAttestation sample
+code from the linux-sgx repo
 (https://github.com/intel/linux-sgx/tree/master/SampleCode/LocalAttestation),
 and much of its code is taken directly from that example with minimal changes.
 
-The client establishes an encrypted communication channel to pelz using an ECDH protocol defined in libsgx.
-During the key exchange, both parties are able to verify that they are running on the same SGX hardware instance,
-and they can also authenticate using additional metadata such as the MRSIGNER value.
+The client establishes an encrypted communication channel to pelz using an ECDH
+protocol defined in libsgx. During the key exchange, both parties are able to
+verify that they are running on the same SGX hardware instance, and they can
+also authenticate using additional metadata such as the MRSIGNER value.
 
 
 ## Quick Start
@@ -25,9 +33,12 @@ python3 run_demo.py
 The run_demo.py script first uses the demo client to simulate application data at rest
 by encrypting a data file, wrapping the "data encryption key" using pelz,
 then storing the encrypted data and wrapped key together in a new file.
-Then it uses the demo client to unwrap the data encryption key using pelz,
-then decrypt the data and count the number of occurrences of a specific search term.
-(The decrypted data does not leave the protected SGX enclave.)
+Then it uses the demo client to unwrap the data encryption key using pelz. Using
+the unwrapped key, the encrypted data is decrypted. As a very simple analytic
+example, it then counts the number of occurrences of a specific search term found
+within the decrypted data. The key point of the demonstration is that the data
+can be processed, as requeired, without exposure, in unencrypted form, outside of
+the protected SGX enclave.
 
 
 ## Building the Client Application
