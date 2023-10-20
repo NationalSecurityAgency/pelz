@@ -30,15 +30,16 @@ make
 python3 run_demo.py
 ```
 
-The run_demo.py script first uses the demo client to simulate application data at rest
-by encrypting a data file, wrapping the "data encryption key" using pelz,
-then storing the encrypted data and wrapped key together in a new file.
-Then it uses the demo client to unwrap the data encryption key using pelz. Using
-the unwrapped key, the encrypted data is decrypted. As a very simple analytic
-example, it then counts the number of occurrences of a specific search term found
-within the decrypted data. The key point of the demonstration is that the data
-can be processed, as requeired, without exposure, in unencrypted form, outside of
-the protected SGX enclave.
+The run_demo.py script first uses the demo client to simulate application
+data at rest by encrypting a data file, wrapping the "data encryption key"
+using pelz, and then storing the encrypted data and wrapped key together in
+a new file. After this initial setup, the demo client uses pelz to unwrap
+the data encryption key. The encrypted data is then decrypted with the
+unwrapped key. As a very simple analytic example, it then counts the number
+of occurrences of a specific search term found within the decrypted data.
+The key focus is to demonstrate that this type of approach can be used to
+process sensitive data, as required, without exposure (in unencrypted form),
+outside of the protected SGX enclave.
 
 
 ## Building the Client Application
