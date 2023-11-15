@@ -12,6 +12,7 @@
 #include "parse_pipe_message.h"
 #include "pelz_socket.h"
 #include "fifo_thread.h"
+#include "pelz_service.h"
 
 #include "sgx_urts.h"
 #include "pelz_enclave.h"
@@ -19,8 +20,6 @@
 
 #define BUFSIZE 1024
 #define MODE 0600
-
-bool global_pipe_reader_active;
 
 int send_table_id_list(char *pipe_name, TableType table_type, const char *resp_msg)
 {
