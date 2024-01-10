@@ -142,12 +142,20 @@ void *fifo_thread_process(void *arg)
 
   if (mkfifo(PELZSERVICE, MODE) == 0)
   {
-    pelz_log(LOG_DEBUG, "Pipe created successfully");
+    pelz_log(LOG_DEBUG, "pelz named pipe (FIFO) created successfully");
   }
   else if (errno != EEXIST)
   {
     pelz_log(LOG_DEBUG, "Error: %s", strerror(errno));
   }
+
+  // global_pipe_reader_active: boolean indicating pipe monitored for commands
+  //   - monitoring is performed in do-while loop below
+  //   - checked in socket listener loops (inactive will cause their exit)
+  //   - EXIT command will break out of loop (stop monitoring of named pipe)
+  //   - failed REMOVE ALL KEYS or REMOVE ALL CERTS will break out of loop 
+  //   - this boolean is reset (set to false/inactive) on loop exit
+  global_pipe_reader_active = true;
 
   do
   {
@@ -216,8 +224,9 @@ void *fifo_thread_process(void *arg)
     }
   }
   while (true);
-  pelz_log(LOG_DEBUG, "Global pipe reader thread exit");
+  
   global_pipe_reader_active = false;
+
+  pelz_log(LOG_DEBUG, "Global pipe reader thread exit");
   pthread_exit(NULL);
 }
-

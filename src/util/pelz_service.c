@@ -16,7 +16,7 @@
 #include "unsecure_socket_thread.h"
 #include "secure_socket_thread.h"
 
-bool global_pipe_reader_active = true;
+bool global_pipe_reader_active = false;
 
 static void *unsecure_thread_wrapper(void *arg)
 {
