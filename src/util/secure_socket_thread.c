@@ -82,7 +82,10 @@ void *secure_socket_thread(void *arg)
     pelz_log(LOG_INFO, "Secure Socket Thread %d, %d", (int) stid[socket_id], socket_id);
   }
   while (socket_listen_id >= 0 && socket_id <= (max_requests + 1) && global_pipe_reader_active);
+  
+  pelz_log(LOG_DEBUG, "secure socket (%d) teardown", socket_listen_id);
   pelz_key_socket_teardown(&socket_listen_id);
+
   return NULL;
 }
 
