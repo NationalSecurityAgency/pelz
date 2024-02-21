@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <cjson/cJSON.h>
-#include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 
 #include <charbuf.h>

@@ -13,7 +13,6 @@
 #include <sys/select.h>
 #include <fcntl.h>
 #include <uriparser/Uri.h>
-#include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 #include <kmyth/memory_util.h>
 

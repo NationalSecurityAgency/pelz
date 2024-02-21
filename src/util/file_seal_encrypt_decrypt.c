@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <libgen.h>
 #include <sys/stat.h>
-#include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 
 #include "pelz_log.h"

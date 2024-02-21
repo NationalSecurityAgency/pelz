@@ -12,7 +12,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 
 #include "pelz_log.h"
