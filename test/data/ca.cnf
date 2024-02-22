@@ -1,0 +1,13 @@
+##############################################################################
+#        X509 configuration for pelz TestCA certificate                      #
+##############################################################################
+
+[req]
+md                      = sha256
+prompt                  = no
+distinguished_name      = dn
+
+[dn]
+C                       = "US"
+O                       = "pelz"
+CN                      = "TestCA"

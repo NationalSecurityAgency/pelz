@@ -1,0 +1,21 @@
+##############################################################################
+#      X509 configuration for pelz TestServer certificate                    #
+##############################################################################
+
+[req]
+md                      = sha512
+prompt                  = no
+distinguished_name      = dn
+req_extensions          = v3_ext
+
+[dn]
+C                       = "US"
+O                       = "pelz"
+CN                      = "DemoServer"
+
+[ v3_ext ]
+subjectAltName          = @alt_names
+
+[ alt_names ]
+DNS.0                   = localhost.demoServer
+IP.0                    = 127.0.0.1
