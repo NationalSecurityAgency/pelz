@@ -694,15 +694,10 @@ test: all test-all
 	@cd test/data && ./gen_test_keys_certs.bash
 	@echo "GEN => Test Key/Cert Files"
 	@cd kmyth/sgx && make demo-all 
-	@echo "\n"
-	@echo "================================================================="
-	@echo "DEMONSTRATION LOG:"
-	@echo "  pelz node (enclave client) =>-<= TLS Proxy =>-<= Demo Server"
-	@echo "=================================================================\n"
 	@./kmyth/sgx/demo/bin/demo-kmip-server -k test/data/server_priv.pem \
 	                                       -c test/data/server_pub.pem \
 	                                       -C test/data/ca_pub.pem \
-	                                       -p 7001 &
+	                                       -p 7001 > /dev/null &
 	@sleep 1
 	@./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem \
 	                                -c test/data/proxy_pub.pem \
@@ -714,7 +709,7 @@ test: all test-all
 	                                -I localhost \
 	                                -N demoServer \
 	                                -P 7001 \
-	                                -m 1 &
+	                                -m 1 > /dev/null &
 	@sleep 1
 	@./test/bin/pelz-test
 	@rm -f test/data/*.pem
