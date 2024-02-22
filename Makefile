@@ -693,14 +693,28 @@ pre:
 test: all test-all
 	@cd test/data && ./gen_test_keys_certs.bash
 	@echo "GEN => Test Key/Cert Files"
-	@cd kmyth/sgx && make demo-all demo-test-keys-certs 
+	@cd kmyth/sgx && make demo-all 
 	@echo "\n"
-	@echo "==================================================================================================="
-	@echo "  DEMONSTRATION LOG:  Enclave (client) =>> - <<= TLS Proxy =>> - <<= KMIP Key Server (simplified)"
-	@echo "===================================================================================================\n"
-	@./kmyth/sgx/demo/bin/demo-kmip-server -k test/data/server_priv.pem -c test/data/server_pub.pem -C test/data/ca_pub.pem -p 7001 &
+	@echo "================================================================="
+	@echo "DEMONSTRATION LOG:"
+	@echo "  pelz node (enclave client) =>-<= TLS Proxy =>-<= Demo Server"
+	@echo "=================================================================\n"
+	@./kmyth/sgx/demo/bin/demo-kmip-server -k test/data/server_priv.pem \
+	                                       -c test/data/server_pub.pem \
+	                                       -C test/data/ca_pub.pem \
+	                                       -p 7001 &
 	@sleep 1
-	@./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem -c test/data/proxy_pub.pem -u test/data/node_pub.pem -p 7000 -R test/data/proxy_priv.pem -U test/data/proxy_pub.pem -C test/data/ca_pub.pem -I 127.0.0.1 -P 7001 -m 1 &
+	@./kmyth/sgx/demo/bin/tls-proxy -r test/data/proxy_priv.pem \
+	                                -c test/data/proxy_pub.pem \
+	                                -u test/data/node_pub.pem \
+	                                -p 7000 \
+	                                -R test/data/proxy_priv.pem \
+	                                -U test/data/proxy_pub.pem \
+	                                -C test/data/ca_pub.pem \
+	                                -I localhost \
+	                                -N demoServer \
+	                                -P 7001 \
+	                                -m 1 &
 	@sleep 1
 	@./test/bin/pelz-test
 	@rm -f test/data/*.pem
