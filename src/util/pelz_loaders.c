@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <kmyth/file_io.h>
 #include <kmyth/memory_util.h>
+#include <kmyth/kmyth_seal_unseal_impl.h>
 
 #include "pelz_log.h"
 #include "pelz_loaders.h"
