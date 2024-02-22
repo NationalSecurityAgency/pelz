@@ -289,8 +289,8 @@ void test_table_lookup_func(void)
   free_charbuf(&tmp);
 
   //Testing the look-up function for server table
-  tmp = new_charbuf(strlen("TestClient"));
-  memcpy(tmp.chars, "TestClient", tmp.len);
+  tmp = new_charbuf(strlen("TestNode"));
+  memcpy(tmp.chars, "TestNode", tmp.len);
   test_table_lookup(eid, &status, SERVER, tmp, &index);
   CU_ASSERT(status == OK);
   CU_ASSERT(index == 0);
@@ -424,8 +424,8 @@ void test_table_delete(void)
   CU_ASSERT(status == NO_MATCH);
   free_charbuf(&tmp);
 
-  tmp = new_charbuf(strlen("TestClient"));
-  memcpy(tmp.chars, "TestClient", tmp.len);
+  tmp = new_charbuf(strlen("TestNode"));
+  memcpy(tmp.chars, "TestNode", tmp.len);
   table_delete(eid, &status, SERVER, tmp);
   CU_ASSERT(status == OK);
   table_delete(eid, &status, CA_TABLE, tmp);
