@@ -12,7 +12,6 @@
 #include <sys/stat.h>
 #include <sys/select.h>
 #include <fcntl.h>
-#include <kmyth/kmyth.h>
 #include <kmyth/file_io.h>
 #include <kmyth/memory_util.h>
 
