@@ -151,8 +151,8 @@ App_Include_Paths := -Iinclude
 App_Include_Paths += -Iinclude/cipher
 App_Include_Paths += -Isgx 
 App_Include_Paths += -I$(SGX_SDK)/include 
+App_Include_Paths += -Ikmyth/sgx/untrusted/include
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/wrapper
-App_Include_Paths += -Ikmyth/sgx/untrusted/include/ocall
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/util
 App_Include_Paths += -Ikmyth/sgx/common/include
 App_Include_Paths += -Ikmyth/include/network
@@ -350,19 +350,19 @@ endif
 ######## Common Objects ########
 
 sgx/ec_key_cert_marshal.o: kmyth/sgx/common/src/ec_key_cert_marshal.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ecdh_util.o: kmyth/sgx/common/src/ecdh_util.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/retrieve_key_protocol.o: kmyth/sgx/common/src/retrieve_key_protocol.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 ######## App Objects ########
@@ -376,21 +376,21 @@ sgx/memory_ocall.o: kmyth/sgx/untrusted/src/ocall/memory_ocall.c
 	@echo "CC   <=  $<"
 
 sgx/protocol_ocall.o: kmyth/sgx/untrusted/src/ocall/protocol_ocall.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/msg_util.o: kmyth/sgx/untrusted/src/util/msg_util.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl \
-				  --search-path . \
-				  --search-path $(SGX_SDK)/include \
-				  --search-path $(SGX_SSL_INCLUDE_PATH) \
-				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted \
-					--search-path ../../sgx
+							  --search-path . \
+							  --search-path $(SGX_SDK)/include \
+							  --search-path $(SGX_SSL_INCLUDE_PATH) \
+							  --search-path ../include \
+							  --search-path ../kmyth/sgx/trusted \
+							  --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -399,12 +399,12 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 
 test/include/test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --untrusted test_enclave.edl \
-                                           --search-path . \
-                                           --search-path $(SGX_SDK)/include \
-                                           --search-path $(SGX_SSL_INCLUDE_PATH) \
-                                           --search-path ../../include \
-                                           --search-path ../../kmyth/sgx/trusted \
-                                           --search-path ../../sgx
+                                       --search-path . \
+                                       --search-path $(SGX_SDK)/include \
+                                       --search-path $(SGX_SSL_INCLUDE_PATH) \
+                                       --search-path ../../include \
+                                       --search-path ../../kmyth/sgx/trusted \
+                                       --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
 sgx/test_enclave_u.o: test/include/test_enclave_u.c
