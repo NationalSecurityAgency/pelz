@@ -385,12 +385,12 @@ sgx/msg_util.o: kmyth/sgx/untrusted/src/util/msg_util.c
 
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl \
-                              --search-path . \
-                              --search-path $(SGX_SDK)/include \
-                              --search-path $(SGX_SSL_INCLUDE_PATH) \
-                              --search-path ../include \
-                              --search-path ../kmyth/sgx/trusted \
-                              --search-path ../../sgx
+	                          --search-path . \
+	                          --search-path $(SGX_SDK)/include \
+	                          --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                          --search-path ../include \
+	                          --search-path ../kmyth/sgx/trusted \
+	                          --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -399,12 +399,12 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 
 test/include/test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --untrusted test_enclave.edl \
-                                       --search-path . \
-                                       --search-path $(SGX_SDK)/include \
-                                       --search-path $(SGX_SSL_INCLUDE_PATH) \
-                                       --search-path ../../include \
-                                       --search-path ../../kmyth/sgx/trusted \
-                                       --search-path ../../sgx
+	                                   --search-path . \
+	                                   --search-path $(SGX_SDK)/include \
+	                                   --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                                   --search-path ../../include \
+	                                   --search-path ../../kmyth/sgx/trusted \
+	                                   --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
 sgx/test_enclave_u.o: test/include/test_enclave_u.c
@@ -426,17 +426,17 @@ test/bin/$(App_Name_Test): $(App_C_Test_Files) \
                            sgx/ecdh_util.o \
                            sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
-                    $(App_Include_Paths) \
-                    -Isgx \
-                    -Itest/include \
-                    $(App_C_Flags) \
-                    -g \
-                    $(ENCLAVE_HEADERS) \
-                    $(App_Link_Flags) \
-                    -lcrypto \
-                    -lcjson \
-                    -lpthread \
-                    -lcunit
+	                $(App_Include_Paths) \
+	                -Isgx \
+	                -Itest/include \
+	                $(App_C_Flags) \
+	                -g \
+	                $(ENCLAVE_HEADERS) \
+	                $(App_Link_Flags) \
+	                -lcrypto \
+	                -lcjson \
+	                -lpthread \
+	                -lcunit
 	@echo "LINK =>  $(App_Name_Test)"
 
 bin/$(App_Name_Service): $(App_Service_File) \
@@ -452,15 +452,15 @@ bin/$(App_Name_Service): $(App_Service_File) \
                          sgx/ecdh_util.o \
                          sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
-                    $(App_Include_Paths) \
-                    -Isgx \
-                    $(App_C_Flags) \
-                    $(ENCLAVE_HEADERS) \
-                    $(App_Link_Flags) \
-                    -Lsgx \
-                    -lcrypto \
-                    -lcjson \
-                    -lpthread
+	                $(App_Include_Paths) \
+	                -Isgx \
+	                $(App_C_Flags) \
+	                $(ENCLAVE_HEADERS) \
+	                $(App_Link_Flags) \
+	                -Lsgx \
+	                -lcrypto \
+	                -lcjson \
+	                -lpthread
 	@echo "LINK =>  $(App_Name_Service)"
 
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
@@ -477,26 +477,26 @@ bin/$(App_Name_Pipe): $(App_Pipe_File) \
                       sgx/ecdh_util.o \
                       sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
-                    $(App_Include_Paths) \
-                    -Isgx \
-                    $(App_C_Flags) \
-                    $(ENCLAVE_HEADERS) \
-                    $(App_Link_Flags) \
-                    -Lsgx \
-                    -lcrypto \
-                    -lcjson \
-                    -lpthread
+	                $(App_Include_Paths) \
+	                -Isgx \
+	                $(App_C_Flags) \
+	                $(ENCLAVE_HEADERS) \
+	                $(App_Link_Flags) \
+	                -Lsgx \
+	                -lcrypto \
+	                -lcjson \
+	                -lpthread
 	@echo "LINK =>  $(App_Name_Pipe)"
 
 ######## Enclave Objects ########
 
 sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl \
-                              --search-path . \
-                              --search-path $(SGX_SDK)/include \
-                              --search-path $(SGX_SSL_INCLUDE_PATH) \
-                              --search-path ../include \
-                              --search-path ../kmyth/sgx/trusted 
+	                          --search-path . \
+	                          --search-path $(SGX_SDK)/include \
+	                          --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                          --search-path ../include \
+	                          --search-path ../kmyth/sgx/trusted 
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
@@ -505,12 +505,12 @@ sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
 
 test/include/test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --trusted test_enclave.edl \
-                                       --search-path . \
-                                       --search-path $(SGX_SDK)/include \
-                                       --search-path $(SGX_SSL_INCLUDE_PATH) \
-                                       --search-path ../../include \
-                                       --search-path ../../kmyth/sgx/trusted \
-                                       --search-path ../../sgx 
+	                                   --search-path . \
+	                                   --search-path $(SGX_SDK)/include \
+	                                   --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                                   --search-path ../../include \
+	                                   --search-path ../../kmyth/sgx/trusted \
+	                                   --search-path ../../sgx 
 	@echo "GEN => $@"
 
 sgx/test_enclave_t.o: test/include/test_enclave_t.c
@@ -630,9 +630,9 @@ sgx/$(Enclave_Signing_Key):
 
 sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) \
-                                -enclave sgx/$(Enclave_Name) \
-                                -out $@ \
-                                -config $(Enclave_Config_File)
+	                            -enclave sgx/$(Enclave_Name) \
+	                            -out $@ \
+	                            -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
 sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
@@ -670,9 +670,9 @@ sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
 
 sgx/$(Signed_Test_Enclave_Name): sgx/$(Test_Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) \
-                                -enclave sgx/$(Test_Enclave_Name) \
-                                -out $@ \
-                                -config $(Enclave_Config_File)
+	                            -enclave sgx/$(Test_Enclave_Name) \
+	                            -out $@ \
+	                            -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
 .PHONY: pre
