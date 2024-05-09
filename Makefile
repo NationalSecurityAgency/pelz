@@ -114,36 +114,36 @@ App_Service_File := src/pelz-service/main.c
 App_Pipe_File := src/pelz/main.c
 
 App_C_Files := src/util/charbuf.c \
-		 src/util/pelz_json_parser.c \
-		 src/util/pelz_service.c \
-		 src/util/pelz_socket.c \
-		 src/util/fifo_thread.c \
-		 src/util/unsecure_socket_thread.c \
-		 src/util/secure_socket_thread.c \
-		 src/util/secure_socket_ecdh.c \
-		 src/util/key_load.c \
-		 src/util/parse_pipe_message.c \
-		 src/util/pipe_io.c \
-		 src/util/pelz_uri_helpers.c \
-		 src/util/pelz_loaders.c
+               src/util/pelz_json_parser.c \
+               src/util/pelz_service.c \
+               src/util/pelz_socket.c \
+               src/util/fifo_thread.c \
+               src/util/unsecure_socket_thread.c \
+               src/util/secure_socket_thread.c \
+               src/util/secure_socket_ecdh.c \
+               src/util/key_load.c \
+               src/util/parse_pipe_message.c \
+               src/util/pipe_io.c \
+               src/util/pelz_uri_helpers.c \
+               src/util/pelz_loaders.c
 
 App_C_Test_Files := test/src/pelz_test.c \
-		 test/src/util/util_test_suite.c \
-		 test/src/util/aes_keywrap_test_suite.c \
-		 test/src/util/pelz_json_parser_test_suite.c \
-		 test/src/util/test_helper_functions.c \
-		 test/src/util/test_pelz_uri_helpers.c \
-		 test/src/util/table_test_suite.c \
-		 test/src/util/request_test_suite.c \
-		 test/src/util/cmd_interface_test_suite.c \
-		 test/src/util/request_test_helpers.c \
-		 test/src/util/test_seal.c
+                    test/src/util/util_test_suite.c \
+                    test/src/util/aes_keywrap_test_suite.c \
+                    test/src/util/pelz_json_parser_test_suite.c \
+                    test/src/util/test_helper_functions.c \
+                    test/src/util/test_pelz_uri_helpers.c \
+                    test/src/util/table_test_suite.c \
+                    test/src/util/request_test_suite.c \
+                    test/src/util/cmd_interface_test_suite.c \
+                    test/src/util/request_test_helpers.c \
+                    test/src/util/test_seal.c
 
 App_C_Files_for_Test := src/util/common_table.c \
-		 src/util/key_table.c \
-		 src/util/server_table.c \
-		 src/cipher/pelz_aes_keywrap_3394nopad.c \
-		 src/util/pelz_request_handler.c
+                        src/util/key_table.c \
+                        src/util/server_table.c \
+                        src/cipher/pelz_aes_keywrap_3394nopad.c \
+                        src/util/pelz_request_handler.c
 
 App_C_Kmyth_Files := kmyth/sgx/untrusted/src/wrapper/sgx_seal_unseal_impl.c
 
@@ -151,8 +151,8 @@ App_Include_Paths := -Iinclude
 App_Include_Paths += -Iinclude/cipher
 App_Include_Paths += -Isgx 
 App_Include_Paths += -I$(SGX_SDK)/include 
+App_Include_Paths += -Ikmyth/sgx/untrusted/include
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/wrapper
-App_Include_Paths += -Ikmyth/sgx/untrusted/include/ocall
 App_Include_Paths += -Ikmyth/sgx/untrusted/include/util
 App_Include_Paths += -Ikmyth/sgx/common/include
 App_Include_Paths += -Ikmyth/include/network
@@ -172,11 +172,11 @@ App_C_Flags += -Wall
 #   Prerelease - Macro NDEBUG and EDEBUG enabled.
 #   Release - Macro NDEBUG enabled.
 ifeq ($(SGX_DEBUG), 1)
-		App_C_Flags += -DDEBUG -UNDEBUG -UEDEBUG
+	App_C_Flags += -DDEBUG -UNDEBUG -UEDEBUG
 else ifeq ($(SGX_PRERELEASE), 1)
-		App_C_Flags += -DNDEBUG -DEDEBUG -UDEBUG
+	App_C_Flags += -DNDEBUG -DEDEBUG -UDEBUG
 else
-		App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
+	App_C_Flags += -DNDEBUG -UEDEBUG -UDEBUG
 endif
 
 App_Cpp_Flags := $(SGX_COMMON_CXXFLAGS)
@@ -350,19 +350,19 @@ endif
 ######## Common Objects ########
 
 sgx/ec_key_cert_marshal.o: kmyth/sgx/common/src/ec_key_cert_marshal.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ec_key_cert_unmarshal.o: kmyth/sgx/common/src/ec_key_cert_unmarshal.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/ecdh_util.o: kmyth/sgx/common/src/ecdh_util.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/retrieve_key_protocol.o: kmyth/sgx/common/src/retrieve_key_protocol.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 ######## App Objects ########
@@ -376,21 +376,21 @@ sgx/memory_ocall.o: kmyth/sgx/untrusted/src/ocall/memory_ocall.c
 	@echo "CC   <=  $<"
 
 sgx/protocol_ocall.o: kmyth/sgx/untrusted/src/ocall/protocol_ocall.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/msg_util.o: kmyth/sgx/untrusted/src/util/msg_util.c
-	@$(CC) $(App_C_Flags) -c $< -o $@
+	@$(CC) $(App_C_Flags) $(ENCLAVE_HEADERS) -c $< -o $@
 	@echo "CC   <=  $<"
 
 sgx/pelz_enclave_u.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --untrusted pelz_enclave.edl \
-				  --search-path . \
-				  --search-path $(SGX_SDK)/include \
-				  --search-path $(SGX_SSL_INCLUDE_PATH) \
-				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted \
-					--search-path ../../sgx
+	                          --search-path . \
+	                          --search-path $(SGX_SDK)/include \
+	                          --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                          --search-path ../include \
+	                          --search-path ../kmyth/sgx/trusted \
+	                          --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
 sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
@@ -399,12 +399,12 @@ sgx/pelz_enclave_u.o: sgx/pelz_enclave_u.c
 
 test/include/test_enclave_u.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --untrusted test_enclave.edl \
-                                           --search-path . \
-                                           --search-path $(SGX_SDK)/include \
-                                           --search-path $(SGX_SSL_INCLUDE_PATH) \
-                                           --search-path ../../include \
-                                           --search-path ../../kmyth/sgx/trusted \
-                                           --search-path ../../sgx
+	                                   --search-path . \
+	                                   --search-path $(SGX_SDK)/include \
+	                                   --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                                   --search-path ../../include \
+	                                   --search-path ../../kmyth/sgx/trusted \
+	                                   --search-path ../../sgx
 	@echo "GEN  =>  $@"
 
 sgx/test_enclave_u.o: test/include/test_enclave_u.c
@@ -412,91 +412,91 @@ sgx/test_enclave_u.o: test/include/test_enclave_u.c
 	@echo "CC   <=  $<"
 
 test/bin/$(App_Name_Test): $(App_C_Test_Files) \
-			   $(App_C_Files) \
-				 src/util/cmd_interface.c \
-				 src/util/file_seal_encrypt_decrypt.c \
-			   $(App_C_Kmyth_Files) \
-				 sgx/test_enclave_u.o \
-				 sgx/ec_key_cert_marshal.o \
-				 sgx/ec_key_cert_unmarshal.o \
-				 sgx/retrieve_key_protocol.o \
-				 sgx/log_ocall.o \
-				 sgx/memory_ocall.o \
-				 sgx/protocol_ocall.o \
-				 sgx/ecdh_util.o \
-				 sgx/msg_util.o
+                           $(App_C_Files) \
+                           src/util/cmd_interface.c \
+                           src/util/file_seal_encrypt_decrypt.c \
+                           $(App_C_Kmyth_Files) \
+                           sgx/test_enclave_u.o \
+                           sgx/ec_key_cert_marshal.o \
+                           sgx/ec_key_cert_unmarshal.o \
+                           sgx/retrieve_key_protocol.o \
+                           sgx/log_ocall.o \
+                           sgx/memory_ocall.o \
+                           sgx/protocol_ocall.o \
+                           sgx/ecdh_util.o \
+                           sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
-			 $(App_Include_Paths) \
-			 -Isgx \
-			 -Itest/include \
-			 $(App_C_Flags) \
-			 -g \
-			 $(ENCLAVE_HEADERS) \
-			 $(App_Link_Flags) \
-			 -lcrypto \
-			 -lcjson \
-			 -lpthread \
-			 -lcunit
+	                $(App_Include_Paths) \
+	                -Isgx \
+	                -Itest/include \
+	                $(App_C_Flags) \
+	                -g \
+	                $(ENCLAVE_HEADERS) \
+	                $(App_Link_Flags) \
+	                -lcrypto \
+	                -lcjson \
+	                -lpthread \
+	                -lcunit
 	@echo "LINK =>  $(App_Name_Test)"
 
 bin/$(App_Name_Service): $(App_Service_File) \
-			 $(App_C_Files) \
-			 $(App_C_Kmyth_Files) \
-			 sgx/pelz_enclave_u.o \
-			 sgx/ec_key_cert_marshal.o \
-			 sgx/ec_key_cert_unmarshal.o \
-			 sgx/retrieve_key_protocol.o \
-			 sgx/log_ocall.o \
-			 sgx/memory_ocall.o \
-			 sgx/protocol_ocall.o \
-			 sgx/ecdh_util.o \
-			 sgx/msg_util.o
+                         $(App_C_Files) \
+                         $(App_C_Kmyth_Files) \
+                         sgx/pelz_enclave_u.o \
+                         sgx/ec_key_cert_marshal.o \
+                         sgx/ec_key_cert_unmarshal.o \
+                         sgx/retrieve_key_protocol.o \
+                         sgx/log_ocall.o \
+                         sgx/memory_ocall.o \
+                         sgx/protocol_ocall.o \
+                         sgx/ecdh_util.o \
+                         sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
-			 $(App_Include_Paths) \
-			 -Isgx \
-			 $(App_C_Flags) \
-			 $(ENCLAVE_HEADERS) \
-			 $(App_Link_Flags) \
-			 -Lsgx \
-			 -lcrypto \
-			 -lcjson \
-			 -lpthread
+	                $(App_Include_Paths) \
+	                -Isgx \
+	                $(App_C_Flags) \
+	                $(ENCLAVE_HEADERS) \
+	                $(App_Link_Flags) \
+	                -Lsgx \
+	                -lcrypto \
+	                -lcjson \
+	                -lpthread
 	@echo "LINK =>  $(App_Name_Service)"
 
 bin/$(App_Name_Pipe): $(App_Pipe_File) \
-		      $(App_C_Files) \
-		      src/util/cmd_interface.c \
-		      src/util/file_seal_encrypt_decrypt.c \
-		      $(App_C_Kmyth_Files) \
-		      sgx/pelz_enclave_u.o \
-					sgx/ec_key_cert_marshal.o \
-		      sgx/ec_key_cert_unmarshal.o \
-		      sgx/log_ocall.o \
-					sgx/memory_ocall.o \
-		      sgx/protocol_ocall.o \
-		      sgx/ecdh_util.o \
-					sgx/msg_util.o
+                      $(App_C_Files) \
+                      src/util/cmd_interface.c \
+                      src/util/file_seal_encrypt_decrypt.c \
+                      $(App_C_Kmyth_Files) \
+                      sgx/pelz_enclave_u.o \
+                      sgx/ec_key_cert_marshal.o \
+                      sgx/ec_key_cert_unmarshal.o \
+                      sgx/log_ocall.o \
+                      sgx/memory_ocall.o \
+                      sgx/protocol_ocall.o \
+                      sgx/ecdh_util.o \
+                      sgx/msg_util.o
 	@$(CC) $^ -o $@ $(App_C_Flags) \
-			 $(App_Include_Paths) \
-			 -Isgx \
-			 $(App_C_Flags) \
-			 $(ENCLAVE_HEADERS) \
-			 $(App_Link_Flags) \
-			 -Lsgx \
-			 -lcrypto \
-			 -lcjson \
-			 -lpthread
+	                $(App_Include_Paths) \
+	                -Isgx \
+	                $(App_C_Flags) \
+	                $(ENCLAVE_HEADERS) \
+	                $(App_Link_Flags) \
+	                -Lsgx \
+	                -lcrypto \
+	                -lcjson \
+	                -lpthread
 	@echo "LINK =>  $(App_Name_Pipe)"
 
 ######## Enclave Objects ########
 
 sgx/pelz_enclave_t.c: $(SGX_EDGER8R) sgx/pelz_enclave.edl
 	@cd sgx && $(SGX_EDGER8R) --trusted pelz_enclave.edl \
-				  --search-path . \
-				  --search-path $(SGX_SDK)/include \
-				  --search-path $(SGX_SSL_INCLUDE_PATH) \
-				  --search-path ../include \
-				  --search-path ../kmyth/sgx/trusted 
+	                          --search-path . \
+	                          --search-path $(SGX_SDK)/include \
+	                          --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                          --search-path ../include \
+	                          --search-path ../kmyth/sgx/trusted 
 	@echo "GEN => $@"
 
 sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
@@ -505,12 +505,12 @@ sgx/pelz_enclave_t.o: sgx/pelz_enclave_t.c
 
 test/include/test_enclave_t.c: $(SGX_EDGER8R) test/include/test_enclave.edl
 	@cd test/include && $(SGX_EDGER8R) --trusted test_enclave.edl \
-                                           --search-path . \
-                                           --search-path $(SGX_SDK)/include \
-                                           --search-path $(SGX_SSL_INCLUDE_PATH) \
-                                           --search-path ../../include \
-                                           --search-path ../../kmyth/sgx/trusted \
-                                           --search-path ../../sgx 
+	                                   --search-path . \
+	                                   --search-path $(SGX_SDK)/include \
+	                                   --search-path $(SGX_SSL_INCLUDE_PATH) \
+	                                   --search-path ../../include \
+	                                   --search-path ../../kmyth/sgx/trusted \
+	                                   --search-path ../../sgx 
 	@echo "GEN => $@"
 
 sgx/test_enclave_t.o: test/include/test_enclave_t.c
@@ -598,30 +598,30 @@ sgx/secure_socket_enclave.o: src/util/secure_socket_enclave.c
 	@echo "CC  <=  $<"
 
 sgx/$(Enclave_Name): sgx/pelz_enclave_t.o \
-		     sgx/common_table.o \
-		     sgx/key_table.o \
-		     sgx/server_table.o \
-	 	     sgx/channel_table.o \
-		     sgx/pelz_aes_keywrap_3394nopad.o \
-		     sgx/ca_table.o \
-		     sgx/secure_socket_enclave.o \
-		     sgx/pelz_request_handler.o \
-		     sgx/charbuf.o \
-		     sgx/kmyth_enclave_seal.o \
-		     sgx/kmyth_enclave_unseal.o \
-		     sgx/kmyth_enclave_memory_util.o \
-		     sgx/kmyth_enclave_retrieve_key.o \
-				 sgx/retrieve_key_protocol.o \
-				 sgx/ec_key_cert_marshal.o \
-		     sgx/ec_key_cert_unmarshal.o \
-		     sgx/ecdh_util.o \
-		     sgx/sgx_retrieve_key_impl.o \
-		     sgx/pelz_aes_gcm.o \
-		     sgx/aes_gcm.o \
-		     sgx/memory_util.o \
-		     sgx/kmip_util.o \
-		     sgx/pelz_cipher.o \
-		     sgx/enclave_request_signing.o
+                     sgx/common_table.o \
+                     sgx/key_table.o \
+                     sgx/server_table.o \
+                     sgx/channel_table.o \
+                     sgx/pelz_aes_keywrap_3394nopad.o \
+                     sgx/ca_table.o \
+                     sgx/secure_socket_enclave.o \
+                     sgx/pelz_request_handler.o \
+                     sgx/charbuf.o \
+                     sgx/kmyth_enclave_seal.o \
+                     sgx/kmyth_enclave_unseal.o \
+                     sgx/kmyth_enclave_memory_util.o \
+                     sgx/kmyth_enclave_retrieve_key.o \
+                     sgx/retrieve_key_protocol.o \
+                     sgx/ec_key_cert_marshal.o \
+                     sgx/ec_key_cert_unmarshal.o \
+                     sgx/ecdh_util.o \
+                     sgx/sgx_retrieve_key_impl.o \
+                     sgx/pelz_aes_gcm.o \
+                     sgx/aes_gcm.o \
+                     sgx/memory_util.o \
+                     sgx/kmip_util.o \
+                     sgx/pelz_cipher.o \
+                     sgx/enclave_request_signing.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>  $@"
 
@@ -630,9 +630,9 @@ sgx/$(Enclave_Signing_Key):
 
 sgx/$(Signed_Enclave_Name): sgx/$(Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) \
-				    -enclave sgx/$(Enclave_Name) \
-				    -out $@ \
-				    -config $(Enclave_Config_File)
+	                            -enclave sgx/$(Enclave_Name) \
+	                            -out $@ \
+	                            -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
 sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
@@ -640,39 +640,39 @@ sgx/enclave_helper_functions.o: test/src/util/enclave_helper_functions.c
 	@echo "CC  <= $<"
 
 sgx/$(Test_Enclave_Name): sgx/test_enclave_t.o \
-			  sgx/common_table.o \
-			  sgx/key_table.o \
-			  sgx/server_table.o \
-			  sgx/channel_table.o \
-			  sgx/pelz_aes_keywrap_3394nopad.o \
-			  sgx/pelz_request_handler.o \
-			  sgx/charbuf.o \
-			  sgx/kmyth_enclave_seal.o \
-			  sgx/kmyth_enclave_unseal.o \
-			  sgx/kmyth_enclave_memory_util.o \
-			  sgx/kmyth_enclave_retrieve_key.o \
-				sgx/retrieve_key_protocol.o \
-				sgx/ec_key_cert_marshal.o \
-			  sgx/ec_key_cert_unmarshal.o \
-			  sgx/ecdh_util.o \
-			  sgx/sgx_retrieve_key_impl.o \
-			  sgx/aes_gcm.o \
-			  sgx/pelz_aes_gcm.o \
-			  sgx/memory_util.o \
-			  sgx/kmip_util.o \
-			  sgx/enclave_helper_functions.o \
-			  sgx/pelz_cipher.o \
-			  sgx/ca_table.o \
-			  sgx/secure_socket_enclave.o \
-			  sgx/enclave_request_signing.o
+                          sgx/common_table.o \
+                          sgx/key_table.o \
+                          sgx/server_table.o \
+                          sgx/channel_table.o \
+                          sgx/pelz_aes_keywrap_3394nopad.o \
+                          sgx/pelz_request_handler.o \
+                          sgx/charbuf.o \
+                          sgx/kmyth_enclave_seal.o \
+                          sgx/kmyth_enclave_unseal.o \
+                          sgx/kmyth_enclave_memory_util.o \
+                          sgx/kmyth_enclave_retrieve_key.o \
+                          sgx/retrieve_key_protocol.o \
+                          sgx/ec_key_cert_marshal.o \
+                          sgx/ec_key_cert_unmarshal.o \
+                          sgx/ecdh_util.o \
+                          sgx/sgx_retrieve_key_impl.o \
+                          sgx/aes_gcm.o \
+                          sgx/pelz_aes_gcm.o \
+                          sgx/memory_util.o \
+                          sgx/kmip_util.o \
+                          sgx/enclave_helper_functions.o \
+                          sgx/pelz_cipher.o \
+                          sgx/ca_table.o \
+                          sgx/secure_socket_enclave.o \
+                          sgx/enclave_request_signing.o
 	@$(CXX) $^ -o $@ $(Enclave_Link_Flags) $(ENCLAVE_HEADERS)
 	@echo "LINK =>	$@"
 
 sgx/$(Signed_Test_Enclave_Name): sgx/$(Test_Enclave_Name) sgx/$(Enclave_Signing_Key)
 	@$(SGX_ENCLAVE_SIGNER) sign -key sgx/$(Enclave_Signing_Key) \
-                                    -enclave sgx/$(Test_Enclave_Name) \
-                                    -out $@ \
-                                    -config $(Enclave_Config_File)
+	                            -enclave sgx/$(Test_Enclave_Name) \
+	                            -out $@ \
+	                            -config $(Enclave_Config_File)
 	@echo "SIGN =>  $@"
 
 .PHONY: pre

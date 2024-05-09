@@ -455,7 +455,7 @@ ATTESTATION_STATUS save_response_data(uint32_t session_id, char *response_data, 
 }
 
 uint32_t derive_protection_key(uint8_t *key_in, size_t key_in_len,
-                                uint8_t **key_out, size_t key_out_len)
+                               uint8_t **key_out, size_t key_out_len)
 {
     EVP_PKEY_CTX *pctx;
 
@@ -480,7 +480,9 @@ uint32_t derive_protection_key(uint8_t *key_in, size_t key_in_len,
     }
 
     // set 'salt' value for HKDF
-    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, HKDF_SALT, strlen(HKDF_SALT)) != 1)
+    if (EVP_PKEY_CTX_set1_hkdf_salt(pctx,
+                                    (const unsigned char *) HKDF_SALT,
+                                    strlen(HKDF_SALT)) != 1)
     {
         EVP_PKEY_CTX_free(pctx);
         return EXIT_FAILURE;
